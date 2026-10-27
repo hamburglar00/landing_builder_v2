@@ -106,6 +106,14 @@ type PixelEditDraft = {
 
 type ActiveIntegration = "menu" | "meta" | "constructor" | "kommo" | "chatrace";
 
+const PIXEL_SETTINGS_TABS = [
+  { key: "general", label: "General" },
+  { key: "events", label: "Eventos" },
+  { key: "purchase", label: "Purchase" },
+  { key: "location", label: "Ubicación" },
+] as const;
+type PixelSettingsTab = (typeof PIXEL_SETTINGS_TABS)[number]["key"];
+
 function resolveIntegrationSection(section: string | null): ActiveIntegration | null {
   switch ((section ?? "").toLowerCase()) {
     case "meta":
@@ -289,6 +297,15 @@ export default function IntegracionesMetaCapi() {
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState<PixelEditDraft | null>(null);
   const [editSensitiveFields, setEditSensitiveFields] = useState(false);
+  const [editTab, setEditTab] = useState<PixelSettingsTab>("general");
+  const pixelSettingsId = useId();
+  const editBodyRef = useRef<HTMLDivElement>(null);
+  const purchaseSelectionInvalid = Boolean(draft?.send_purchase_capi && draft.include_purchase_type_capi && !draft.send_first_purchase_capi && !draft.send_repeat_purchase_capi);
+
+  function selectEditTab(tab: PixelSettingsTab) {
+    setEditTab(tab);
+    editBodyRef.current?.scrollTo({ top: 0 });
+  }
   const [selectedIntegration, setActiveIntegration] = useState<ActiveIntegration>("menu");
   const activeIntegration = canViewClientIntegration(selectedIntegration, modulePermissions) ? selectedIntegration : "menu";
   const [constructorCopyMsg, setConstructorCopyMsg] = useState<string | null>(null);
@@ -777,6 +794,7 @@ export default function IntegracionesMetaCapi() {
       is_default: !!px.is_default,
     });
     setEditSensitiveFields(false);
+    setEditTab("general");
     setEditOpen(true);
   }, []);
 
@@ -1961,10 +1979,10 @@ export default function IntegracionesMetaCapi() {
       {editOpen && draft && (
         <ModalPortal>
         <div className="ui-modal-backdrop z-50">
-          <div className="ui-modal integration-edit-modal flex max-w-3xl flex-col overflow-hidden">
+          <div role="dialog" aria-modal="true" aria-labelledby={`${pixelSettingsId}-title`} className="ui-modal integration-edit-modal flex max-w-xl flex-col overflow-hidden">
             <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--color-border-subtle)] px-3 py-3 sm:px-4">
               <div>
-                <h3 className="text-sm font-semibold text-zinc-100">Configurar píxel</h3>
+                <h3 id={`${pixelSettingsId}-title`} className="text-sm font-semibold text-zinc-100">Configurar píxel</h3>
                 <p className="mt-0.5 font-mono text-xs text-zinc-500">ID {draft.pixel_id}</p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
@@ -1983,10 +2001,31 @@ export default function IntegracionesMetaCapi() {
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 divide-y divide-zinc-800 overflow-y-auto px-4 sm:px-5">
+            <div role="tablist" aria-label="Secciones de configuración del píxel" className="grid shrink-0 grid-cols-4 border-b border-[var(--color-border-subtle)] px-4 sm:px-5">
+              {PIXEL_SETTINGS_TABS.map((tab, index) => (
+                <button key={tab.key} type="button" role="tab" id={`${pixelSettingsId}-${tab.key}-tab`}
+                  aria-selected={editTab === tab.key} aria-controls={`${pixelSettingsId}-panel`} tabIndex={editTab === tab.key ? 0 : -1}
+                  onClick={() => selectEditTab(tab.key)}
+                  onKeyDown={(event) => {
+                    const nextIndex = event.key === "ArrowRight" ? (index + 1) % PIXEL_SETTINGS_TABS.length
+                      : event.key === "ArrowLeft" ? (index + PIXEL_SETTINGS_TABS.length - 1) % PIXEL_SETTINGS_TABS.length
+                      : event.key === "Home" ? 0 : event.key === "End" ? PIXEL_SETTINGS_TABS.length - 1 : -1;
+                    if (nextIndex < 0) return;
+                    event.preventDefault();
+                    const next = PIXEL_SETTINGS_TABS[nextIndex].key;
+                    selectEditTab(next);
+                    document.getElementById(`${pixelSettingsId}-${next}-tab`)?.focus();
+                  }}
+                  className={`min-h-11 min-w-0 border-b-2 px-1 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lime-400 sm:text-sm ${editTab === tab.key ? "border-lime-400 text-lime-300" : "border-transparent text-zinc-400 hover:text-zinc-100"}`}
+                >{tab.label}</button>
+              ))}
+            </div>
+
+            <div ref={editBodyRef} role="tabpanel" id={`${pixelSettingsId}-panel`} aria-labelledby={`${pixelSettingsId}-${editTab}-tab`} className="min-h-0 flex-1 overflow-y-auto px-4 sm:px-5">
+              {editTab === "general" ? <>
               <section className="py-4">
                 <h4 className="text-sm font-semibold text-zinc-100">Identificación</h4>
-                <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,220px)]">
+                <div className="mt-3 space-y-3">
                   <label className="block text-xs text-zinc-400">
                     Nombre para reconocerlo
                     <input value={draft.comment} onChange={(e) => setDraft((p) => (p ? { ...p, comment: e.target.value } : p))} placeholder="Ej.: campaña principal" className="mt-1 h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
@@ -2000,7 +2039,7 @@ export default function IntegracionesMetaCapi() {
                 </div>
               </section>
 
-              <details className="py-4">
+              <details className="border-t border-zinc-800 py-4">
                 <summary className="cursor-pointer text-sm font-semibold text-zinc-100">Conexión y credenciales <span className="ml-1 text-[11px] font-normal text-zinc-500">· {draft.meta_currency} · datos protegidos</span></summary>
                 <div className="mt-3 flex items-center justify-end gap-2">
                   <HelpTooltip label="Datos protegidos" text="El ID, la moneda y el token están bloqueados para evitar cambios accidentales. Desbloquealos sólo cuando necesites modificarlos." />
@@ -2036,10 +2075,12 @@ export default function IntegracionesMetaCapi() {
                   )}
                 </div>
               </details>
+              </> : null}
 
+              {editTab === "events" ?
               <section className="py-4">
                 <h4 className="text-sm font-semibold text-zinc-100">Eventos enviados a Meta</h4>
-                <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                <div className="mt-3">
                   <SettingsSwitch
                     checked={draft.meta_ads_only_capi}
                     label="Solo eventos de Meta Ads"
@@ -2048,7 +2089,7 @@ export default function IntegracionesMetaCapi() {
                   />
                 </div>
                 <h5 className="mt-4 mb-2 text-xs font-semibold text-zinc-300">Tipos de evento</h5>
-                <div className="grid gap-2 sm:grid-cols-2">
+                <div>
                   <SettingsSwitch
                     checked={draft.send_contact_capi}
                     label="Contact"
@@ -2074,9 +2115,13 @@ export default function IntegracionesMetaCapi() {
                     onChange={() => setDraft((p) => (p ? { ...p, send_purchase_capi: !p.send_purchase_capi } : p))}
                   />
                 </div>
+              </section> : null}
+
+              {editTab === "purchase" ?
+              <section className="py-4">
+                <h4 className="text-sm font-semibold text-zinc-100">Opciones de Purchase</h4>
                 {draft.send_purchase_capi ? (
-                  <div className="mt-4 border-l-2 border-emerald-800/60 pl-3 sm:pl-4">
-                    <h5 className="mb-2 text-xs font-semibold text-emerald-300">Opciones de Purchase</h5>
+                  <div className="mt-3">
                     <SettingsSwitch
                       checked={draft.include_purchase_type_capi}
                       label="Clasificar Purchase (first/repeat)"
@@ -2084,7 +2129,7 @@ export default function IntegracionesMetaCapi() {
                       onChange={() => setDraft((p) => (p ? { ...p, include_purchase_type_capi: !p.include_purchase_type_capi } : p))}
                     />
                     {draft.include_purchase_type_capi ? (
-                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                      <div className="border-l border-zinc-700 pl-3">
                         <SettingsSwitch
                           checked={draft.send_first_purchase_capi}
                           label="First Purchase"
@@ -2131,13 +2176,6 @@ export default function IntegracionesMetaCapi() {
                         ) : null}
                       </div>
                     ) : null}
-                    {draft.include_purchase_type_capi &&
-                    !draft.send_first_purchase_capi &&
-                    !draft.send_repeat_purchase_capi ? (
-                      <p className="mt-2 text-[11px] text-amber-400">
-                        Elegí First Purchase, Repeat Purchase o ambas para poder guardar.
-                      </p>
-                    ) : null}
                     <div className="mt-3 border-t border-zinc-800/60 pt-2">
                       <SettingsSwitch
                         checked={draft.purchase_capi_min_amount_enabled}
@@ -2165,9 +2203,13 @@ export default function IntegracionesMetaCapi() {
                       ) : null}
                     </div>
                   </div>
-                ) : null}
-              </section>
+                ) : <div className="mt-3 space-y-3">
+                  <p className="text-xs leading-5 text-zinc-400">Activá Purchase en Eventos para configurar el envío de compras.</p>
+                  <button type="button" onClick={() => selectEditTab("events")} className="ui-button ui-button-secondary">Ir a Eventos</button>
+                </div>}
+              </section> : null}
 
+              {editTab === "location" ?
               <section className="py-4">
                 <h4 className="text-sm font-semibold text-zinc-100">Datos de ubicación</h4>
                 <div className="mt-3">
@@ -2178,7 +2220,7 @@ export default function IntegracionesMetaCapi() {
                     onChange={() => setDraft((p) => (p ? { ...p, send_geo_capi: !p.send_geo_capi } : p))}
                   />
                   {draft.send_geo_capi ? (
-                    <div className="ml-2 border-l border-zinc-700 pl-3 sm:grid sm:grid-cols-2 sm:gap-4">
+                    <div className="border-l border-zinc-700 pl-3">
                       <SettingsSwitch
                         checked={draft.geo_use_ipapi}
                         label="Geo por IP"
@@ -2194,26 +2236,21 @@ export default function IntegracionesMetaCapi() {
                     </div>
                   ) : null}
                 </div>
-              </section>
+              </section> : null}
             </div>
-            <div className="flex shrink-0 justify-end gap-2 border-t border-[var(--color-border-subtle)] bg-[rgba(11,15,21,0.96)] px-3 py-3 sm:px-4">
+            <div className="shrink-0 border-t border-[var(--color-border-subtle)] bg-[rgba(11,15,21,0.96)] px-3 py-3 sm:px-4">
+              {purchaseSelectionInvalid ? <p role="status" className="mb-2 text-xs leading-5 text-amber-300">Elegí First Purchase, Repeat Purchase o ambas en la pestaña Purchase para poder guardar.</p> : null}
+              <div className="flex justify-end gap-2">
               <button type="button" onClick={() => { setEditOpen(false); setDraft(null); setEditSensitiveFields(false); }} className="ui-button ui-button-secondary">Cancelar</button>
               <button
-                disabled={
-                  saving ||
-                  Boolean(
-                    draft.send_purchase_capi &&
-                    draft.include_purchase_type_capi &&
-                    !draft.send_first_purchase_capi &&
-                    !draft.send_repeat_purchase_capi
-                  )
-                }
+                disabled={saving || purchaseSelectionInvalid}
                 type="button"
                 onClick={() => void handleEditSave()}
                 className="ui-button ui-button-primary"
               >
                 Guardar
               </button>
+              </div>
             </div>
           </div>
         </div>

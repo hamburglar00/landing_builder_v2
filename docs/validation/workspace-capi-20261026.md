@@ -29,3 +29,11 @@ Interruptor por cliente/workspace en Integraciones → Meta CAPI y modal de píx
 - `constructor.panelbotadmin.com` y `mkt.panelbotadmin.com`: HTTP 200 en Integraciones, bundle público contiene el interruptor y el RPC nuevos. Verificación de solo lectura, sin iniciar sesiones de clientes ni guardar ajustes desde la UI de producción.
 - Funciones desplegadas verificadas: las tres incluyen la política y el archivo compartido. GET conversions → 405, POST sin autorización a retry-failed-conversions y conversions-test → 401. Sin crear conversiones ni enviar eventos reales.
 - Árbol de trabajo limpio y rama sincronizada tras el registro de publicación. Sin cambios ni despliegues en API2, Panel3, Atrio o los gateways.
+
+## Ajuste visual posterior: pestañas del píxel
+
+- General, Eventos, Purchase y Ubicación en el mismo modal, una opción por fila y switches alineados a la derecha. Ancho de escritorio reducido y altura de 38rem; en móvil se conserva el alto disponible. Pestañas y acciones permanecen visibles mientras se desplaza el contenido.
+- Navegación con flechas, Home/End y atributos de pestañas/panel/diálogo. Abrir comienza en General; el borrador se conserva entre pestañas y Cancelar lo descarta. Purchase desactivado ofrece volver a Eventos. Una combinación inválida de First/Repeat explica por qué no permite guardar desde cualquier pestaña.
+- Prueba de interfaz existente ampliada: ocho escenarios en Chromium/WebKit y los cuatro tamaños anteriores. Verificados navegación por teclado, conservación/guardado/cancelación entre pestañas, validación visible fuera de Purchase, alineación de todos los switches y ausencia de desbordes; se conserva la prueba de aislamiento del workspace. TypeScript aprobado; ESLint sin errores, con los mismos tres avisos previos.
+- Capturas con animaciones finalizadas en `.vercel/validation-pixel-tabs-20261026/`. Solo cambia la presentación, la prueba y la documentación; no cambia DB, RPC, filtros CAPI ni Edge Functions.
+- Publicación del ajuste visual: pendiente registrar después de verificar el despliegue.

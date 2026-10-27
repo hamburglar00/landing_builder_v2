@@ -8,7 +8,7 @@ const root=fileURLToPath(new URL('../',import.meta.url)),frontend=path.join(root
 const require=createRequire(path.join(frontend,'package.json'));
 const {build}=require('esbuild'),postcss=require('postcss'),tailwind=require('@tailwindcss/postcss');
 const browsers=require(process.env.PLAYWRIGHT_MODULE_PATH||path.join(process.env.APPDATA,'npm/node_modules/playwright'));
-const artifacts=path.join(root,'.vercel/validation-workspace-capi-20261026');await mkdir(artifacts,{recursive:true});
+const artifacts=path.join(root,'.vercel/validation-pixel-tabs-20261026');await mkdir(artifacts,{recursive:true});
 const uid='19000000-0000-4000-8000-000000000001';
 const pixel={id:'19000000-0000-4000-8000-000000000002',user_id:uid,pixel_id:'19000001',meta_access_token:'synthetic',comment:'Campaña de prueba',meta_currency:'ARS',meta_api_version:'v25.0',send_contact_capi:true,send_lead_capi:true,send_complete_registration_capi:false,meta_ads_only_capi:true,send_purchase_capi:true,include_purchase_type_capi:true,send_first_purchase_capi:true,send_repeat_purchase_capi:true,repeat_purchase_capi_window_days:null,purchase_capi_min_amount_enabled:false,purchase_capi_min_amount:0,send_geo_capi:true,geo_use_ipapi:true,geo_fill_only_when_missing:true,is_default:true};
 const fixture=`
@@ -46,25 +46,39 @@ for(const [engine,type]of[['Chromium',browsers.chromium],['WebKit',browsers.webk
   await page.getByRole('button',{name:'Montar pantalla'}).click();await page.getByRole('button',{name:'Montar pantalla'}).click();await sw.waitFor();assert.equal(await sw.getAttribute('aria-checked'),'false');
   const edit=page.getByRole('button',{name:'Editar píxel 19000001'});await edit.click();const modal=page.locator('.integration-edit-modal');await modal.waitFor();
   const ms=name=>modal.getByRole('switch',{name,exact:true});
+  const tab=name=>modal.getByRole('tab',{name,exact:true});
+  assert.equal(await modal.getByRole('tab').count(),4);assert.equal(await tab('General').getAttribute('aria-selected'),'true');
+  await tab('General').focus();await page.keyboard.press('End');assert.equal(await tab('Ubicación').getAttribute('aria-selected'),'true');
+  await page.keyboard.press('ArrowRight');assert.equal(await tab('General').getAttribute('aria-selected'),'true');
+  await page.keyboard.press('ArrowLeft');assert.equal(await tab('Ubicación').getAttribute('aria-selected'),'true');
+  await page.keyboard.press('Home');assert.equal(await tab('General').getAttribute('aria-selected'),'true');
+  await modal.getByLabel('Nombre para reconocerlo').fill('Campaña editada');await tab('Eventos').click();
   // Cancelling must not persist either pixel fields or workspace settings.
-  await ms('Contact').click();await modal.getByRole('button',{name:'Cancelar',exact:true}).click();await edit.click();assert.equal(await ms('Contact').getAttribute('aria-checked'),'true');
-  await ms('Purchase').click();assert.equal(await ms('Clasificar Purchase (first/repeat)').count(),0);await ms('Purchase').click();
+  await ms('Contact').click();await modal.getByRole('button',{name:'Cancelar',exact:true}).click();await edit.click();assert.equal(await tab('General').getAttribute('aria-selected'),'true');assert.equal(await modal.getByLabel('Nombre para reconocerlo').inputValue(),'Campaña de prueba');
+  await modal.getByLabel('Nombre para reconocerlo').fill('Campaña editada');await tab('Eventos').click();assert.equal(await ms('Contact').getAttribute('aria-checked'),'true');
+  await ms('Purchase').click();await tab('Purchase').click();await modal.getByText('Activá Purchase en Eventos para configurar el envío de compras.').waitFor();assert.equal(await ms('Clasificar Purchase (first/repeat)').count(),0);
+  await modal.getByRole('button',{name:'Ir a Eventos'}).click();await ms('Purchase').click();await tab('Purchase').click();
   await ms('Clasificar Purchase (first/repeat)').click();assert.equal(await ms('First Purchase').count(),0);await ms('Clasificar Purchase (first/repeat)').click();
-  await ms('First Purchase').click();await ms('Repeat Purchase').click();assert.equal(await modal.getByRole('button',{name:'Guardar',exact:true}).isDisabled(),true);await ms('Repeat Purchase').click();
+  await ms('First Purchase').click();await ms('Repeat Purchase').click();await tab('General').click();assert.equal(await modal.getByRole('button',{name:'Guardar',exact:true}).isDisabled(),true);await modal.getByRole('status').filter({hasText:'para poder guardar'}).waitFor();await tab('Purchase').click();await ms('Repeat Purchase').click();
   await ms('Limitar envío de Repeat Purchase').click();await modal.locator('button[aria-haspopup="listbox"]:enabled').click();await modal.getByRole('option',{name:'14 días',exact:true}).click();
   await ms('Filtrar Purchase por monto mínimo').click();await modal.getByLabel('Monto mínimo ARS',{exact:true}).fill('1500');
-  await ms('Enviar geo').click();assert.equal(await ms('Geo por IP').count(),0);await ms('Enviar geo').click();
+  await tab('Ubicación').click();await ms('Enviar geo').click();assert.equal(await ms('Geo por IP').count(),0);await ms('Enviar geo').click();
   const box=await modal.boundingBox();assert.ok(box.x>=0&&box.y>=0&&box.width<=viewport.width&&box.height<=viewport.height);
   assert.equal(await modal.evaluate(e=>e.scrollWidth<=e.clientWidth),true);
   assert.equal(await modal.locator('section').evaluateAll(nodes=>nodes.every(e=>getComputedStyle(e).borderRadius==='0px')),true);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   const saveBox=await modal.getByRole('button',{name:'Guardar',exact:true}).boundingBox();assert.ok(saveBox.y>=0&&saveBox.y+saveBox.height<=viewport.height);
-  if(engine==='Chromium'&&[390,1366].includes(viewport.width)){await modal.getByRole('heading',{name:'Eventos enviados a Meta'}).scrollIntoViewIfNeeded();await page.screenshot({path:path.join(artifacts,`pixel-${viewport.width}.png`)});}
+  for(const name of ['General','Eventos','Purchase','Ubicación']){
+   await tab(name).click();assert.equal(await modal.getByRole('tabpanel').getAttribute('aria-labelledby'),await tab(name).getAttribute('id'));
+   const rightEdges=await modal.getByRole('switch').evaluateAll(nodes=>nodes.map(e=>e.getBoundingClientRect().right));assert.ok(rightEdges.every(x=>Math.abs(x-rightEdges[0])<1));
+   assert.equal(await modal.getByRole('tablist').evaluate(e=>e.scrollWidth<=e.clientWidth),true);
+   if(engine==='Chromium'&&[390,1366].includes(viewport.width))await page.screenshot({path:path.join(artifacts,`pixel-${name}-${viewport.width}.png`),animations:'disabled'});
+  }
   await modal.getByRole('button',{name:'Guardar',exact:true}).click();await modal.waitFor({state:'hidden'});
-  const saved=await page.evaluate(()=>window.fixture);assert.equal(saved.pixel.send_first_purchase_capi,false);assert.equal(saved.pixel.repeat_purchase_capi_window_days,14);assert.equal(saved.pixel.purchase_capi_min_amount,1500);assert.deepEqual(saved.config.capi_workspace_settings,{PYG:false});
+  const saved=await page.evaluate(()=>window.fixture);assert.equal(saved.pixel.comment,'Campaña editada');assert.equal(saved.pixel.send_first_purchase_capi,false);assert.equal(saved.pixel.repeat_purchase_capi_window_days,14);assert.equal(saved.pixel.purchase_capi_min_amount,1500);assert.deepEqual(saved.config.capi_workspace_settings,{PYG:false});
   assert.ok(saved.writes.filter(w=>w.table==='conversions_config').every(w=>!Object.hasOwn(w.body,'capi_workspace_settings')));
   assert.ok(saved.writes.filter(w=>w.rpc).every(w=>w.args.p_user_id===uid&&w.args.p_currency==='PYG'));
-  await edit.click();assert.equal(await ms('First Purchase').getAttribute('aria-checked'),'false');await modal.getByRole('button',{name:'Cancelar',exact:true}).click();
+  await edit.click();assert.equal(await tab('General').getAttribute('aria-selected'),'true');await tab('Purchase').click();assert.equal(await ms('First Purchase').getAttribute('aria-checked'),'false');await modal.getByRole('button',{name:'Cancelar',exact:true}).click();
   if(engine==='Chromium'&&viewport.width===1366)await page.screenshot({path:path.join(artifacts,'workspace-desktop.png')});
   assert.deepEqual(errors,[]);checks.push({engine,viewport,workspaceIsolation:true,persistAndFailure:true,pixelSave:true,responsive:true});await page.close();
  }}finally{await browser.close();}
