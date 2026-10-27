@@ -1,0 +1,31 @@
+import { readFile, writeFile } from "node:fs/promises";
+
+const read = async url => (await readFile(url, "utf8")).replaceAll("\r\n", "\n");
+const source = await read(new URL("../../landing-autologuin/public/gateway-client.js", import.meta.url));
+const block = /  \/\/ BEGIN shared contextual install offer\n[\s\S]*?  \/\/ END shared contextual install offer/;
+const canonical = source.match(block)?.[0];
+if (!canonical) throw Error("Missing contextual install offer");
+const check = process.argv.includes("--check");
+for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "multi-skin-gateway"]) {
+  const target = new URL(`../../${repo}/public/gateway-client.js`, import.meta.url);
+  const before = await read(target);
+  const pattern = block.test(before) ? block : /  function initializeInstallAndPush\(\) \{[\s\S]*?\n  \}/;
+  if (!pattern.test(before)) throw Error(`Missing installation initialization: ${repo}`);
+  let after = before.replace(pattern, () => canonical);
+  const additions = [
+    ['      if (event.data.type === "atrio.widget.ready") {', '        publishInstallOfferState();'],
+    ['      if (event.data.type === "atrio.widget.request-install") {', '        if (event.data.fromOffer === true) dismissInstallOffer();'],
+    ['      if (event.data.type === "atrio.widget.invitation") {', '      if (event.data.type === "atrio.widget.dismiss-install-offer") dismissInstallOffer();', true],
+    ['    storageSet(localStorage, "gateway:installed", "1");', '    publishInstallOfferState();'],
+  ];
+  for (const [anchor, addition, prepend] of additions) {
+    const expected = prepend ? addition + "\n" + anchor : anchor + "\n" + addition;
+    if (!after.includes(expected)) {
+      if (!after.includes(anchor)) throw Error(`Missing install offer anchor: ${repo}`);
+      after = after.replace(anchor, expected);
+    }
+  }
+  if (check) { if (after !== before) throw Error(`Install offer differs: ${repo}`); }
+  else await writeFile(target, after);
+}
+console.log("Contextual installation synchronized across all four gateways.");

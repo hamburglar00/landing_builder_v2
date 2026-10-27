@@ -483,3 +483,11 @@ Pruebas y publicación: [CAPI por workspace](validation/workspace-capi-20261026.
 - No modificar todavía cuándo se ofrece instalar la app. El usuario pidió una explicación y propuesta; cambiar el disparador requiere una decisión posterior.
 
 Validación y textos del recorrido: [revisión de presentación](validation/entry-presentation-20261027.md).
+
+### Perfil e instalación contextual (27/10/2026)
+
+- En Mi perfil, Usuario y Clave tienen tarjetas interiores independientes dentro de Tu cuenta, con fondo y borde sutiles de la paleta elegida. Conservar el ojo, copiar y el tamaño compacto.
+- Reemplazar el ofrecimiento automático de instalación al entrar o cerrar el chat por una tarjeta discreta dentro de la conversación: «Guardá tu acceso en este teléfono» y «Instalar app». Aparece después de un mensaje enviado por el cliente y una respuesta del asesor/API2. No requiere una carga; bienvenida, CBU inicial, ausencia, promociones e invitaciones no cuentan como respuesta.
+- Posponer la tarjeta durante el envío, un formulario de retiro abierto o estados de procesamiento/pago pendientes visibles en los mensajes. Usar exclusivamente los metadatos existentes; no inferir resultados financieros por palabras ni añadir consultas o eventos. Ante un estado pendiente sin resolución visible, conservar oculta la sugerencia.
+- El instructivo existente se abre al tocar Instalar app. Se puede ocultar la sugerencia; recordar esa decisión en el navegador del gateway. No ofrecerla en modo app o cuando el navegador ya registró la instalación. Mantener las invitaciones explícitas del asesor, las notificaciones y el arranque diferido del SDK. Aplicar a los cuatro gateways y a ambos motores mediante el chat compartido.
+- La consulta sobre aprovechar la clave devuelta al crear el usuario es una revisión técnica: no cambia todavía el contrato de credenciales ni la consulta autenticada existente.
