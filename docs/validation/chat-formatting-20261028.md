@@ -12,4 +12,8 @@ Sintaxis: [Centro de ayuda de WhatsApp](https://faq.whatsapp.com/539178204879377
 
 ## Publicación
 
-Pendiente de registrar la publicación y comprobación pública. Solo Atrio necesita despliegue de aplicación. Los cuatro gateways conservan su chat remoto compartido; Ganamos+ también lo utiliza desde su dominio servido por Worker. Builder contiene documentación y la prueba de navegador.
+Publicado Atrio desde `77a4dd8778b8f5f18205342564fea398b1340d52` en `fix/atrio-inbox-validation`. Despliegue Vercel activo: `dpl_9X7nawLCjoSEZZwptN9by4w5NA4T`, compilación READY y SHA coincidente. Se preparó desde un archivo de Git del commit exacto y se promovió después de confirmar que producción seguía en `dpl_683DiXAWuLbgwjFEr8mKQupQAric`, disponible para rollback.
+
+Solo Atrio necesita despliegue de aplicación. Se verificó que la configuración de producción de Rey de Ases, Ases del Norte, Ganamos NET y Ganamos+ utiliza `https://www.atrio.website` como origen del chat. El Worker de Plus conserva esa integración; no requiere otra compilación por este cambio del iframe remoto. Builder contiene documentación y la prueba de navegador (`0df7cf6`), sin cambios de aplicación en este lote.
+
+[Comprobación pública](chat-formatting-public-20261028.json): `/embed/warm` referencia el JS y CSS con los estilos nuevos y los cuatro dominios sirven el puente de chat. Se verificó además el despliegue activo mediante Vercel. Solo GET de recursos públicos; no se ejecutaron mensajes, tracking ni operaciones reales.
