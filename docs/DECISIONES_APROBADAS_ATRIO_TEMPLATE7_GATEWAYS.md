@@ -1,5 +1,15 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Recordatorios de invitaciones (28/10/2026)
+
+- En los cuatro gateways, las invitaciones de instalar, completar perfil y activar notificaciones usan «Recordármelo después». La primera postergación habilita el recordatorio dos horas después del envío original; cada postergación posterior inicia otras dos horas desde el clic.
+- Reaparecer solo tras un nuevo mensaje/acción del cliente posterior al plazo y su respuesta. El paso del tiempo, una recarga o una respuesta antigua no alcanzan. Esperar el cierre de cargas/retiros pendientes y de formularios abiertos. La primera instalación conserva la tarjeta contextual dentro del chat, sin modal al ingresar.
+- Revalidar instalación/suscripción push en el gateway y consultar el perfil existente antes de repetir su invitación. Una acción completada cancela su recordatorio; un fallo de comprobación no significa que esté pendiente. Conservar las promociones fuera de este mecanismo.
+- Estado por jugador y tipo en el almacenamiento del navegador de Atrio, con reserva entre pestañas cuando Web Locks está disponible. Mantener el texto de la invitación para poder recordarla aunque salga de la ventana de mensajes. El gateway conserva un recibo transitorio de postergación para recuperarlo si se recarga antes de que lo reciba el iframe. No sincroniza otros dispositivos; borrar el almacenamiento elimina este recuerdo. Sin DB, migraciones, tracking nuevo ni cambios de API2.
+- Los gateways conservan una única fuente sincronizada para presentación y puente de recordatorios. Ganamos+ incluye Vercel y su Worker público.
+
+Validación y publicación: [recordatorios de invitaciones](validation/invitation-reminders-20261028.md).
+
 Actualizado el 23 de octubre de 2026. Este registro conserva los requisitos acordados con el usuario para que una mejora no elimine comportamientos ya aprobados. Se aplica a `landing-builder`, `landing-prueba-1`, `internal-chat`, `landing-autologuin`, `ases-gateway`, `ganamos-gateway` y `multi-skin-gateway`. API2 conserva su propio lote local.
 
 Una decisión nueva reemplaza una anterior solo cuando el usuario cambia explícitamente ese requisito. Registrar el cambio aquí y verificar los comportamientos relacionados antes de publicar. Un build correcto o una prueba con sesión insertada artificialmente no demuestran que el navegador real conserve la cuenta.

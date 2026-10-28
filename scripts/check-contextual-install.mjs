@@ -20,10 +20,11 @@ const bundle = await build({ absWorkingDir: atrio, stdin: { resolveDir: atrio, l
 } }] });
 const configs = [["landing-autologuin", "reydeases-gateway"], ["ases-gateway", "ases-del-norte-gateway"], ["ganamos-gateway", "ganamos-gateway"], ["multi-skin-gateway", "multi-skin-gateway"]];
 const checks = [];
-for (const [engine, type] of [["Chromium", chromium], ["WebKit", webkit]]) {
+const TWO_HOURS = 2 * 60 * 60 * 1000;
+for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", chromium]] : (process.argv.includes("--webkit") ? [["WebKit", webkit]] : [["Chromium", chromium], ["WebKit", webkit]]))) {
   const browser = await type.launch({ headless: true });
   try {
-    for (const [repo, fallbackSource] of configs) {
+    for (const [repo, fallbackSource] of (process.argv.includes("--quick") ? configs.slice(0, 1) : configs)) {
       const root = path.join(workspace, repo);
       const js = await readFile(path.join(root, "public/gateway-client.js"), "utf8");
       const source = js.match(/messageSource:.*?\|\| "([^"]+)"/)?.[1] || fallbackSource;
@@ -31,28 +32,32 @@ for (const [engine, type] of [["Chromium", chromium], ["WebKit", webkit]]) {
       const sdk = await readFile(path.join(root, "public/gateway-app-sdk.js"), "utf8");
       const context = await browser.newContext({ viewport: { width: 390, height: 844 }, userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile" });
       const page = await context.newPage(), errors = [];
+      page.setDefaultTimeout(15000);
       page.on("pageerror", error => errors.push(error.message));
       let serial = 0;
-      const msg = (sender, content, metadata = {}) => ({ id: `fixture-message-${++serial}`, sender, type: "texto", content, metadata, created_at: new Date(1793100000000 + serial * 1000).toISOString(), read_at: null });
+      let now = Date.now();
+      let profile = {};
+      await page.clock.setFixedTime(now);
+      const msg = (sender, content, metadata = {}) => ({ id: `fixture-message-${++serial}`, sender, type: "texto", content, metadata, created_at: new Date(now + serial).toISOString(), read_at: null });
       const wallet = msg("asesor", "Cuenta de prueba", { wallet: { accountNumber: "0000000000000000000000", alias: "fixture", holderName: "Fixture" } });
       let messages = [msg("asesor", "Bienvenida", { source: "auto_welcome" }), wallet];
       const props = { advisorSlug: "fixture", deviceId: "fixture-device-1234", embedded: true, embeddedParentOrigin: "https://gateway.test", embeddedGatewaySource: source, embeddedHasActiveWallet: false, conversationSessionToken: "fixture-token", widgetTemplate: "whatsapp", quickStarters: [], session: { advisor_id: "fixture-advisor", advisor_name: "Asesor de prueba", advisor_avatar_url: null, advisor_status: "disponible", player_id: "fixture-player", conversation_id: "fixture-conversation", player_display_name: "Prueba", player_platform: "ios", app_installed_status: "unknown", whatsapp_url: null, telegram_url: null } };
       await context.route("**/*", async route => {
         const url = new URL(route.request().url());
         if (url.hostname === "gateway.test") {
-          if (url.pathname === "/gateway-client.js") return route.fulfill({ contentType: "text/javascript", body: js });
-          if (url.pathname === "/gateway-app-sdk.js") return route.fulfill({ contentType: "text/javascript", body: sdk });
-          if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{background:#11001f}${css}</style></head><body><script src="/gateway-client.js" data-chat-url="https://chat.test/embed" data-initial-chat-open="true"></script></body></html>` });
+          if (url.pathname === "/gateway-client.js") return route.fulfill({ contentType: "text/javascript; charset=utf-8", body: js });
+          if (url.pathname === "/gateway-app-sdk.js") return route.fulfill({ contentType: "text/javascript; charset=utf-8", body: sdk });
+          if (url.pathname === "/") return route.fulfill({ contentType: "text/html; charset=utf-8", body: `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{background:#11001f}${css}</style></head><body><script src="/gateway-client.js" data-chat-url="https://chat.test/embed" data-initial-chat-open="true"></script></body></html>` });
           return route.fulfill({ json: { ok: true, active: false } });
         }
         if (url.hostname === "chat.test") {
-          if (url.pathname === "/embed") return route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>${chatCss}</style></head><body><div id="root"></div><script>window.fixtureProps=${JSON.stringify({ ...props, initialMessages: messages })}</script><script src="/chat.js"></script></body></html>` });
-          if (url.pathname === "/chat.js") return route.fulfill({ contentType: "text/javascript", body: bundle.outputFiles[0].text });
+          if (url.pathname === "/embed") return route.fulfill({ contentType: "text/html; charset=utf-8", body: `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${chatCss}</style></head><body><div id="root"></div><script>window.fixtureProps=${JSON.stringify({ ...props, initialMessages: messages })}</script><script src="/chat.js"></script></body></html>` });
+          if (url.pathname === "/chat.js") return route.fulfill({ contentType: "text/javascript; charset=utf-8", body: bundle.outputFiles[0].text });
           if (url.pathname === "/api/gateway/chat" && route.request().method() === "POST") {
             const body = route.request().postDataJSON();
             if (body.action === "message") { const message = msg("cliente", body.content); messages.push(message); return route.fulfill({ json: { message } }); }
           }
-          return route.fulfill({ json: { ok: true, messages, profile: {} } });
+          return route.fulfill({ json: { ok: true, messages, profile } });
         }
         return route.fulfill({ status: 204 });
       });
@@ -90,15 +95,63 @@ for (const [engine, type] of [["Chromium", chromium], ["WebKit", webkit]]) {
       await chat.getByRole("button", { name: "Instalar app", exact: true }).click();
       await page.getByRole("dialog").waitFor();
       assert.equal(await page.locator(".gateway-app-notice-copy").innerText(), await page.evaluate(() => window.GatewayApp.installationInstructions("ios")));
-      await page.getByRole("button", { name: "Ahora no", exact: true }).click();
+      assert.deepEqual(await page.locator(".gateway-app-notice-actions button").allTextContents(), ["Entendido", "Recordármelo después"]);
+      await page.getByRole("button", { name: "Recordármelo después", exact: true }).click();
       await page.reload();
       await chat.getByPlaceholder("Escribi un mensaje...").waitFor();
       await page.waitForFunction(() => !!window.GatewayApp);
       await page.waitForTimeout(300); assert.equal(await offer.count(), 0, "Dismissal survives reload");
-      // A later explicit advisor invitation remains available despite dismissing the offer.
+      // Another invitation of the same type must respect the postponed window.
       messages.push({ ...msg("asesor", "Instructivo enviado por el asesor", { source: "install_instructions_rpc" }), type: "instrucciones_instalacion" });
+      await page.waitForTimeout(1500);
+      assert.equal(await page.getByRole("dialog").count(), 0);
+      now += TWO_HOURS + 1000;
+      await page.clock.setFixedTime(now);
+      await page.waitForTimeout(1500);
+      assert.equal(await page.getByRole("dialog").count(), 0, "Time alone must not display a reminder");
+      await chat.getByPlaceholder("Escribi un mensaje...").fill("Otra consulta");
+      await chat.getByPlaceholder("Escribi un mensaje...").press("Enter");
+      await page.waitForTimeout(1500);
+      assert.equal(await page.getByRole("dialog").count(), 0, "Wait for the new turn's reply");
+      messages.push(msg("asesor", "Hola, te respondo"));
       await page.getByRole("dialog").waitFor();
       assert.equal(await page.locator(".gateway-app-notice-copy").innerText(), "Instructivo enviado por el asesor");
+      await page.getByRole("button", { name: "Recordármelo después", exact: true }).click();
+      await page.reload();
+      await chat.getByPlaceholder("Escribi un mensaje...").waitFor();
+      await page.waitForFunction(() => !!window.GatewayApp);
+      await page.waitForTimeout(600);
+      assert.equal(await page.getByRole("dialog").count(), 0, "An invitation in initial history must respect the saved snooze");
+      await page.waitForTimeout(300);
+      now += TWO_HOURS - 1000;
+      await page.clock.setFixedTime(now);
+      messages.push(msg("cliente", "Antes del plazo"), msg("asesor", "Todav?a no"));
+      await page.waitForTimeout(1500);
+      assert.equal(await page.getByRole("dialog").count(), 0, "Second deferral gets two full hours");
+      now += 2000;
+      await page.clock.setFixedTime(now);
+      messages.push(msg("cliente", "Estoy cargando"), status("processing"));
+      await page.waitForTimeout(1500);
+      assert.equal(await page.getByRole("dialog").count(), 0, "No interruption during a pending load");
+      messages.push(status("success"));
+      await page.getByRole("dialog").waitFor();
+      await page.evaluate(() => window.dispatchEvent(new Event("appinstalled")));
+      await page.getByRole("dialog").waitFor({ state: "detached" });
+      now += TWO_HOURS + 1000;
+      await page.clock.setFixedTime(now);
+      messages.push(msg("cliente", "App instalada"), msg("asesor", "Listo"));
+      await page.waitForTimeout(1500);
+      assert.equal(await page.getByRole("dialog").count(), 0, "Confirmed installation cancels reminders");
+      // Profile reminders re-check the real endpoint before resurfacing.
+      messages.push(msg("asesor", "Complet? tu perfil", { source: "profile_completion_invite" }));
+      await page.getByRole("dialog").waitFor();
+      await page.getByRole("button", { name: "Recordármelo después", exact: true }).click();
+      profile = { whatsapp: "fixture-phone", email: "fixture@example.invalid" };
+      now += TWO_HOURS + 1000;
+      await page.clock.setFixedTime(now);
+      messages.push(msg("cliente", "Ya complet? mis datos"), msg("asesor", "Gracias"));
+      await page.waitForTimeout(1500);
+      assert.equal(await page.getByRole("dialog").count(), 0, "Do not ask for a completed profile");
       await page.evaluate(() => localStorage.clear());
       messages = [msg("cliente", "Hola"), msg("asesor", "Te ayudo")];
       await page.addInitScript(() => {
@@ -111,7 +164,8 @@ for (const [engine, type] of [["Chromium", chromium], ["WebKit", webkit]]) {
       await page.waitForTimeout(300);
       assert.equal(await offer.count(), 0, "No install offer inside the installed app");
       assert.deepEqual(errors, []);
-      checks.push({ engine, repo, firstExchange: true, pendingLoadDeferred: true, noEntryOrCloseModal: true, dismissalPersisted: true, advisorInvitationPreserved: true, noStandaloneOffer: true });
+      checks.push({ engine, repo, firstExchange: true, pendingLoadDeferred: true, noEntryOrCloseModal: true, dismissalPersisted: true, twoHourReminders: true, repeatedSnooze: true, newAnsweredTurnRequired: true, installCompletion: true, profileCompletion: true, noStandaloneOffer: true });
+      console.log(JSON.stringify({ engine, repo, passed: true }));
       await context.close();
     }
   } finally { await browser.close(); }
