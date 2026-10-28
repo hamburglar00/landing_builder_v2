@@ -71,7 +71,7 @@ function valueForColumn(row: ConversionRow, column: ConversionColumnKey): string
     case "from_meta_ads":
       return row.from_meta_ads ? "Si" : "No";
     case "meta_pixel_id":
-      return row.meta_pixel_id || row.pixel_id || "-";
+      return row.meta_pixel_id || "-";
     case "dataset_id":
       return row.dataset_id || "-";
     case "pixel_attribution_source":

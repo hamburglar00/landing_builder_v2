@@ -8,6 +8,8 @@ import {
   trackingFilterAllLabel,
   trackingFilterKindForSource,
   trackingFilterLabel,
+  trackingFilterOptions,
+  type TrackingPixelComment,
 } from "@/components/conversiones/trackingFilter";
 
 export type ConversionFilterOption = {
@@ -63,6 +65,7 @@ type ConversionFiltersModalProps = {
   onChange: ConversionFilterChanges;
   onClose: () => void;
   onApply: () => void;
+  pixelConfigs?: readonly TrackingPixelComment[];
 };
 
 const selectClassName =
@@ -253,6 +256,7 @@ export default function ConversionFiltersModal({
   onChange,
   onClose,
   onApply,
+  pixelConfigs = [],
 }: ConversionFiltersModalProps) {
   const showLandingFilter = draft.sourcePlatform === "landing";
   const showMetaAdsFilters = draft.fromMetaAds === "true";
@@ -321,7 +325,7 @@ export default function ConversionFiltersModal({
                 label={trackingFilterLabel(trackingKind)}
                 value={draft.pixel}
                 allLabel={trackingFilterAllLabel(trackingKind)}
-                options={stringOptions(options.pixels)}
+                options={trackingFilterOptions(options.pixels, trackingKind, pixelConfigs)}
                 onChange={onChange.pixel}
               />
               <SearchableCheckboxField

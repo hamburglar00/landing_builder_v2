@@ -338,7 +338,7 @@ function cellValue(
       return <td key={col} className={dim} title={tip(c.from_meta_ads)}>{view === "friendly" ? (c.from_meta_ads ? "Sí" : "No") : (c.from_meta_ads ? "true" : "false")}</td>;
     case "geo_source": return <td key={col} className={dim} title={tip(c.geo_source)}>{c.geo_source || "-"}</td>;
     case "meta_pixel_id": {
-      const px = c.meta_pixel_id || c.pixel_id;
+      const px = c.meta_pixel_id;
       return <td key={col} className={dimMono} title={tip(px)}>{px || "-"}</td>;
     }
     case "pixel_id": return <td key={col} className={dimMono} title={tip(c.pixel_id)}>{c.pixel_id || "-"}</td>;
@@ -1752,6 +1752,7 @@ export default function DashboardConversionesPage() {
       {statsFilterModalOpen && (
         <ConversionFiltersModal
           title="Filtros globales"
+          pixelConfigs={pixelConfigs}
           draft={{
             landing: draftLandingFilter,
             pixel: draftPixelFilter,

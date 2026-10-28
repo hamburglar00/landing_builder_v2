@@ -1,5 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { trackingFilterOptions } from "../components/conversiones/trackingFilter";
+
+test("identifica píxeles por comentario sin cambiar el ID usado para filtrar", () => {
+  const pixels = [
+    { pixel_id: "123", comment: " Facebook de Diana " },
+    { pixel_id: "456", comment: " " },
+    { pixel_id: "789", comment: null },
+  ];
+  assert.deepEqual(trackingFilterOptions(["123", "456", "789"], "pixel", pixels), [
+    { value: "123", label: "123 (Facebook de Diana)" },
+    { value: "456", label: "456" },
+    { value: "789", label: "789" },
+  ]);
+  assert.deepEqual(trackingFilterOptions(["123"], "dataset", pixels), [{ value: "123", label: "123" }]);
+});
 
 test("usa Dataset para WhatsApp Cloud API y Pixel para Landing", async () => {
   const {

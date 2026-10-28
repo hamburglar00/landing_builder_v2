@@ -17,8 +17,6 @@ const EXPECTED_HIDDEN_COLUMNS: ConversionColumnKey[] = [
   "form_phone",
   "fbc",
   "fbp",
-  "meta_pixel_id",
-  "pixel_id",
   "dataset_id",
   "source_platform",
   "ctwa_clid",
@@ -101,6 +99,8 @@ test("la vista reducida oculta exactamente las columnas técnicas solicitadas", 
   for (const column of [
     "phone",
     "email",
+    "meta_pixel_id",
+    "pixel_id",
   ] satisfies ConversionColumnKey[]) {
     assert.equal(friendlyColumns.includes(column), true, column);
   }
@@ -118,6 +118,8 @@ test("la vista reducida usa encabezados comprensibles", () => {
   assert.equal(columnLabel("phone", "friendly"), "Teléfono");
   assert.equal(columnLabel("timestamp", "friendly"), "Fecha y hora");
   assert.equal(columnLabel("test_event_code", "friendly"), "Test Event Code");
+  assert.equal(columnLabel("meta_pixel_id", "friendly"), "Píxel recibido");
+  assert.equal(columnLabel("pixel_id", "friendly"), "Píxel usado para CAPI");
 });
 
 test("los tooltips cambian segun la vista de tabla", () => {
