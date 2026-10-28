@@ -360,6 +360,12 @@ Evidencia: [operaciones manuales y navegación entre chats](validation/atrio-man
 
 Evidencia y conciliación pendiente de la operación 13: [widget y Full Carga](validation/atrio-widget-full-carga-20261020.md). API2 permanece local.
 
+### Formato de mensajes de WhatsApp (28/10/2026)
+
+- Cliente y asesor interpretan `*negrita*`, `_cursiva_`, `~tachado~`, monoespaciado con tres acentos graves, código con uno, viñetas (`- ` o `* `), listas numeradas y citas (`> `). Usar la sintaxis documentada por WhatsApp, sin convertir HTML del mensaje en HTML ejecutable.
+- La presentación única de Atrio aplica a mensajes actuales y anteriores, automáticos y manuales, chat independiente y los cuatro gateways. Mantener el texto almacenado, las cuentas, sus claves, enlaces HTTP/HTTPS/wa.me, copia, paletas, contención y horarios. No interpretar marcadores interiores de URLs, emails, nombres con guiones bajos o fragmentos de código.
+- Verificación: [formato de WhatsApp](validation/chat-formatting-20261028.md). No requiere migraciones ni cambios de API2 o de los gateways; estos cargan el chat compartido de Atrio.
+
 ### Enlaces del chat y color del navegador (21/10/2026)
 
 - Reconocer enlaces HTTP/HTTPS, dominios sin protocolo y `wa.me` en los mensajes del cliente y del asesor. Los enlaces se distinguen con subrayado, heredan el color de texto del tema y abren su destino en otra pestaña o aplicación, conservando el chat. Mantener el texto completo, saltos de línea, copia y contención de direcciones largas. No interpretar HTML ni convertir protocolos ejecutables en enlaces.
