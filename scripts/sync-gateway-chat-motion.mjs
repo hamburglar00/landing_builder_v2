@@ -18,6 +18,8 @@ for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "mu
   if (!runtimePattern.test(client)) throw Error(`Missing widget state function: ${repo}`);
   client = client.replace(runtimePattern, () => runtime)
     .replace(/^    backdrop\.hidden = true;\n/m, "");
+  if (!client.includes('maximized: shell.dataset.maximized === "true"')) client = client.replace('open: shell.dataset.open === "true",', 'open: shell.dataset.open === "true",\n          maximized: shell.dataset.maximized === "true",');
+  if (!client.includes('event.data.type === "atrio.widget.maximize"')) client = client.replace('if (event.data.type === "atrio.widget.close") setOpen(false);', 'if (event.data.type === "atrio.widget.close") setOpen(false);\n      if (event.data.type === "atrio.widget.maximize" && typeof event.data.maximized === "boolean") setMaximized(event.data.maximized);');
   if (!client.includes('shell.dataset.motion = "closed"')) client = client.replace('shell.dataset.open = "false";', 'shell.dataset.open = "false";\n    shell.dataset.motion = "closed";');
   if (!client.includes('button.setAttribute("aria-expanded", "false")')) client = client.replace('button.setAttribute("aria-label", "Abrir chat de Atrio");', 'button.setAttribute("aria-label", "Abrir chat de Atrio");\n    button.setAttribute("aria-expanded", "false");');
   let sheet = await read(new URL("gateway-client.css", root));

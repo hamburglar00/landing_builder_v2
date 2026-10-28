@@ -1,0 +1,551 @@
+{
+  "fixtureOnly": true,
+  "physicalSafariToolbarVerified": false,
+  "productionWrites": 0,
+  "checks": [
+    {
+      "repo": "landing-autologuin",
+      "engine": "Chromium",
+      "landingEngine": "constructor",
+      "busyFeedbackBeforeConfirmation": true,
+      "duplicateClickIgnored": true,
+      "starts": 1,
+      "confirmations": 1,
+      "fixtureAccountCalls": 1
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "Chromium",
+      "landingEngine": "classic",
+      "busyFeedbackBeforeConfirmation": true,
+      "duplicateClickIgnored": true,
+      "starts": 1,
+      "confirmations": 1,
+      "fixtureAccountCalls": 0
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "Chromium",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "Chromium",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "Chromium",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "Chromium",
+      "landingEngine": "constructor",
+      "busyFeedbackBeforeConfirmation": true,
+      "duplicateClickIgnored": true,
+      "starts": 1,
+      "confirmations": 1,
+      "fixtureAccountCalls": 1
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "Chromium",
+      "landingEngine": "classic",
+      "busyFeedbackBeforeConfirmation": true,
+      "duplicateClickIgnored": true,
+      "starts": 1,
+      "confirmations": 1,
+      "fixtureAccountCalls": 0
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "Chromium",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "Chromium",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "Chromium",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "Chromium",
+      "landingEngine": "constructor",
+      "busyFeedbackBeforeConfirmation": true,
+      "duplicateClickIgnored": true,
+      "starts": 1,
+      "confirmations": 1,
+      "fixtureAccountCalls": 1
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "Chromium",
+      "landingEngine": "classic",
+      "busyFeedbackBeforeConfirmation": true,
+      "duplicateClickIgnored": true,
+      "starts": 1,
+      "confirmations": 1,
+      "fixtureAccountCalls": 0
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "Chromium",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "Chromium",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "Chromium",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "Chromium",
+      "landingEngine": "constructor",
+      "busyFeedbackBeforeConfirmation": true,
+      "duplicateClickIgnored": true,
+      "starts": 1,
+      "confirmations": 1,
+      "fixtureAccountCalls": 1
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "Chromium",
+      "landingEngine": "classic",
+      "busyFeedbackBeforeConfirmation": true,
+      "duplicateClickIgnored": true,
+      "starts": 1,
+      "confirmations": 1,
+      "fixtureAccountCalls": 0
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "Chromium",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "Chromium",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "Chromium",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "WebKit",
+      "landingEngine": "constructor",
+      "busyFeedbackBeforeConfirmation": true,
+      "duplicateClickIgnored": true,
+      "starts": 1,
+      "confirmations": 1,
+      "fixtureAccountCalls": 1
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "WebKit",
+      "landingEngine": "classic",
+      "busyFeedbackBeforeConfirmation": true,
+      "duplicateClickIgnored": true,
+      "starts": 1,
+      "confirmations": 1,
+      "fixtureAccountCalls": 0
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "WebKit",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "WebKit",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "WebKit",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "WebKit",
+      "landingEngine": "constructor",
+      "busyFeedbackBeforeConfirmation": true,
+      "duplicateClickIgnored": true,
+      "starts": 1,
+      "confirmations": 1,
+      "fixtureAccountCalls": 1
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "WebKit",
+      "landingEngine": "classic",
+      "busyFeedbackBeforeConfirmation": true,
+      "duplicateClickIgnored": true,
+      "starts": 1,
+      "confirmations": 1,
+      "fixtureAccountCalls": 0
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "WebKit",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "WebKit",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "WebKit",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "WebKit",
+      "landingEngine": "constructor",
+      "busyFeedbackBeforeConfirmation": true,
+      "duplicateClickIgnored": true,
+      "starts": 1,
+      "confirmations": 1,
+      "fixtureAccountCalls": 1
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "WebKit",
+      "landingEngine": "classic",
+      "busyFeedbackBeforeConfirmation": true,
+      "duplicateClickIgnored": true,
+      "starts": 1,
+      "confirmations": 1,
+      "fixtureAccountCalls": 0
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "WebKit",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "WebKit",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "WebKit",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "WebKit",
+      "landingEngine": "constructor",
+      "busyFeedbackBeforeConfirmation": true,
+      "duplicateClickIgnored": true,
+      "starts": 1,
+      "confirmations": 1,
+      "fixtureAccountCalls": 1
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "WebKit",
+      "landingEngine": "classic",
+      "busyFeedbackBeforeConfirmation": true,
+      "duplicateClickIgnored": true,
+      "starts": 1,
+      "confirmations": 1,
+      "fixtureAccountCalls": 0
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "WebKit",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "WebKit",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "WebKit",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "opensFromLauncher": true,
+      "contractsBeforeCollapsing": true,
+      "noProviderTouchBlock": true,
+      "rapidReversal": true,
+      "reducedMotion": true,
+      "darkEdgeInAllStates": true,
+      "frameNavigations": 1,
+      "sdkRequests": 0
+    }
+  ]
+}

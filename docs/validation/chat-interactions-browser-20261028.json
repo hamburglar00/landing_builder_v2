@@ -1,0 +1,210 @@
+{
+  "checks": [
+    {
+      "engine": "Chromium",
+      "theme": "atrio",
+      "width": 390,
+      "realClientAndAdvisorShells": true,
+      "gaps": [
+        3,
+        6
+      ],
+      "longPress": true,
+      "swipeReply": true,
+      "verticalScrollPreserved": true,
+      "reactionFailureRetry": true,
+      "twoParticipants": true,
+      "replyReload": true,
+      "maximizeRestoreHeader": true
+    },
+    {
+      "engine": "Chromium",
+      "theme": "atrio",
+      "width": 1280,
+      "realClientAndAdvisorShells": true,
+      "gaps": [
+        3,
+        6
+      ],
+      "longPress": true,
+      "swipeReply": true,
+      "verticalScrollPreserved": true,
+      "reactionFailureRetry": true,
+      "twoParticipants": true,
+      "replyReload": true,
+      "maximizeRestoreHeader": true
+    },
+    {
+      "engine": "Chromium",
+      "theme": "whatsapp",
+      "width": 390,
+      "realClientAndAdvisorShells": true,
+      "gaps": [
+        3,
+        6
+      ],
+      "longPress": true,
+      "swipeReply": true,
+      "verticalScrollPreserved": true,
+      "reactionFailureRetry": true,
+      "twoParticipants": true,
+      "replyReload": true,
+      "maximizeRestoreHeader": true
+    },
+    {
+      "engine": "Chromium",
+      "theme": "whatsapp",
+      "width": 1280,
+      "realClientAndAdvisorShells": true,
+      "gaps": [
+        3,
+        6
+      ],
+      "longPress": true,
+      "swipeReply": true,
+      "verticalScrollPreserved": true,
+      "reactionFailureRetry": true,
+      "twoParticipants": true,
+      "replyReload": true,
+      "maximizeRestoreHeader": true
+    },
+    {
+      "engine": "Chromium",
+      "theme": "page",
+      "width": 390,
+      "realClientAndAdvisorShells": true,
+      "gaps": [
+        3,
+        6
+      ],
+      "longPress": true,
+      "swipeReply": true,
+      "verticalScrollPreserved": true,
+      "reactionFailureRetry": true,
+      "twoParticipants": true,
+      "replyReload": true,
+      "maximizeRestoreHeader": true
+    },
+    {
+      "engine": "Chromium",
+      "theme": "page",
+      "width": 1280,
+      "realClientAndAdvisorShells": true,
+      "gaps": [
+        3,
+        6
+      ],
+      "longPress": true,
+      "swipeReply": true,
+      "verticalScrollPreserved": true,
+      "reactionFailureRetry": true,
+      "twoParticipants": true,
+      "replyReload": true,
+      "maximizeRestoreHeader": true
+    },
+    {
+      "engine": "WebKit",
+      "theme": "atrio",
+      "width": 390,
+      "realClientAndAdvisorShells": true,
+      "gaps": [
+        3,
+        6
+      ],
+      "longPress": true,
+      "swipeReply": true,
+      "verticalScrollPreserved": true,
+      "reactionFailureRetry": true,
+      "twoParticipants": true,
+      "replyReload": true,
+      "maximizeRestoreHeader": true
+    },
+    {
+      "engine": "WebKit",
+      "theme": "atrio",
+      "width": 1280,
+      "realClientAndAdvisorShells": true,
+      "gaps": [
+        3,
+        6
+      ],
+      "longPress": true,
+      "swipeReply": true,
+      "verticalScrollPreserved": true,
+      "reactionFailureRetry": true,
+      "twoParticipants": true,
+      "replyReload": true,
+      "maximizeRestoreHeader": true
+    },
+    {
+      "engine": "WebKit",
+      "theme": "whatsapp",
+      "width": 390,
+      "realClientAndAdvisorShells": true,
+      "gaps": [
+        3,
+        6
+      ],
+      "longPress": true,
+      "swipeReply": true,
+      "verticalScrollPreserved": true,
+      "reactionFailureRetry": true,
+      "twoParticipants": true,
+      "replyReload": true,
+      "maximizeRestoreHeader": true
+    },
+    {
+      "engine": "WebKit",
+      "theme": "whatsapp",
+      "width": 1280,
+      "realClientAndAdvisorShells": true,
+      "gaps": [
+        3,
+        6
+      ],
+      "longPress": true,
+      "swipeReply": true,
+      "verticalScrollPreserved": true,
+      "reactionFailureRetry": true,
+      "twoParticipants": true,
+      "replyReload": true,
+      "maximizeRestoreHeader": true
+    },
+    {
+      "engine": "WebKit",
+      "theme": "page",
+      "width": 390,
+      "realClientAndAdvisorShells": true,
+      "gaps": [
+        3,
+        6
+      ],
+      "longPress": true,
+      "swipeReply": true,
+      "verticalScrollPreserved": true,
+      "reactionFailureRetry": true,
+      "twoParticipants": true,
+      "replyReload": true,
+      "maximizeRestoreHeader": true
+    },
+    {
+      "engine": "WebKit",
+      "theme": "page",
+      "width": 1280,
+      "realClientAndAdvisorShells": true,
+      "gaps": [
+        3,
+        6
+      ],
+      "longPress": true,
+      "swipeReply": true,
+      "verticalScrollPreserved": true,
+      "reactionFailureRetry": true,
+      "twoParticipants": true,
+      "replyReload": true,
+      "maximizeRestoreHeader": true
+    }
+  ],
+  "productionWrites": 0,
+  "physicalTouchGesturesVerified": false
+}

@@ -1,5 +1,16 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Tamaño del widget, agrupación y respuestas a mensajes (28/10/2026)
+
+- Entre Perfil y Cerrar, el widget tiene Maximizar/Restaurar, con los íconos de un cuadrado y dos cuadrados. Amplía solo su altura, conservando ancho, paleta, espacio superior y adaptación al teclado. El padre valida origen y ventana antes de aceptar la acción; devuelve el tamaño vigente al iframe. Fuente compartida de movimiento para los cuatro gateways, incluido el Worker de Ganamos+.
+- La apertura conserva 520 ms. El cierre tarda 720 ms y mantiene visible el contenido durante la compresión hacia el botón; el desvanecimiento ocurre al final. Conservar inversión rápida, iframe montado, ausencia de bloqueo táctil estando cerrado y movimiento reducido.
+- La separación entre mensajes consecutivos del mismo emisor pasa de 6 a 3 px; entre emisores distintos se mantiene en 6 px. Respetar los separadores de fecha y los avisos. Aplica a cliente, asesor, móvil, escritorio y los tres temas.
+- Cliente y asesor pueden mantener presionada una burbuja para reaccionar con 👍, ❤️, 😂, 😮, 😢 o 🙏, cambiar/quitar su reacción y deslizar horizontalmente para responder. En escritorio, ofrecer también controles al pasar el cursor y con teclado. El scroll vertical, los enlaces y la copia se conservan.
+- Guardar una reacción por participante y mensaje; actualizar de forma atómica sin sobrescribir las de otros. Las respuestas muestran una cita validada por servidor dentro de la burbuja, con vista previa en el compositor, cancelación y acceso al original si está cargado. Conservar ambos datos al recargar y mostrarlos al otro participante mediante los canales existentes. No generar mensajes, LEAD ni tracking por reaccionar.
+- Rechazar referencias a otra conversación, avisos internos y mensajes no visibles. El gateway deriva jugador y conversación exclusivamente de su sesión firmada; el asesor usa su sesión y permisos de jerarquía. Los RPC anónimos conservan exclusivamente la identidad legacy y no acceden a conversaciones vinculadas a una plataforma. La lógica privilegiada nueva reside en un schema privado no expuesto; las fachadas públicas son invokers. No modificar API2.
+
+Validación y publicación: [interacciones del chat](validation/chat-interactions-20261028.md).
+
 ### Recordatorios de invitaciones (28/10/2026)
 
 - En los cuatro gateways, las invitaciones de instalar, completar perfil y activar notificaciones usan «Recordármelo después». La primera postergación habilita el recordatorio dos horas después del envío original; cada postergación posterior inicia otras dos horas desde el clic.

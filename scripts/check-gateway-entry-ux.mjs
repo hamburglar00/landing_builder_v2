@@ -89,10 +89,29 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
           const opening = await shell.evaluate(el => ({ width: el.getBoundingClientRect().width, layoutWidth: el.offsetWidth, opacity: Number(getComputedStyle(el).opacity), inert: el.inert }));
           assert.ok(opening.width > 0); assert.ok(opening.width < opening.layoutWidth); assert.equal(opening.inert, false);
           await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "open");
+          const normalBox = await shell.boundingBox();
+          // Reject requests from the provider window, even if it claims to be Atrio.
+          await page.evaluate(() => window.postMessage({source:"atrio-widget",type:"atrio.widget.maximize",maximized:true},location.origin));
+          assert.notEqual(await shell.getAttribute("data-maximized"), "true");
+          await page.frameLocator("#gateway-chat-shell iframe").locator("body").evaluate(() => parent.postMessage({source:"atrio-widget",type:"atrio.widget.maximize",maximized:true},"https://fixture.test"));
+          await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.maximized === "true");
+          await page.waitForTimeout(360);
+          const expandedBox = await shell.boundingBox();
+          assert.ok(Math.abs(normalBox.width-expandedBox.width)<1,"Maximize preserves width");
+          assert.ok(expandedBox.height>=normalBox.height,"Maximize cannot reduce the chat");
+          assert.ok(expandedBox.y>=0&&expandedBox.y<80,"Maximize leaves room near the header");
+          assert.ok(expandedBox.y+expandedBox.height<=viewport.height,"Maximize stays inside the viewport");
+          await page.frameLocator("#gateway-chat-shell iframe").locator("body").evaluate(() => parent.postMessage({source:"atrio-widget",type:"atrio.widget.maximize",maximized:false},"https://fixture.test"));
+          await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.maximized === "false");
+          await page.waitForTimeout(360);
+          assert.ok(Math.abs((await shell.boundingBox()).height-normalBox.height)<1,"Restore returns to original height");
           const openCanvas = await canvas(); assert.equal(openCanvas.background, before.background);
           await page.frameLocator("#gateway-chat-shell iframe").getByRole("button", { name: "Cerrar chat" }).click();
           await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.open === "false");
           const closing = await shell.evaluate(el => ({ width: el.offsetWidth, inert: el.inert })); assert.ok(closing.width > 0); assert.equal(closing.inert, true);
+          await page.waitForTimeout(350);
+          assert.ok(await shell.evaluate(el => Number(getComputedStyle(el).opacity)>.95),"Closing remains visible while compressing");
+          assert.equal(await shell.getAttribute("data-motion"),"animating");
           // Even during contraction, the closed frame/backdrop must pass touches through.
           await page.mouse.click(20, viewport.height - 40);
           await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "closed");
