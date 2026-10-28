@@ -238,12 +238,6 @@ function LandingCard({ landing, urlBase }: { landing: Landing; urlBase: string |
         ? `${urlBase.replace(/\/$/, "")}/${landing.name}`
         : "#"
       : buildLandingPublicUrl(landing.name, landing.publishTarget, urlBase);
-  const publishLabel =
-    landing.landingType === "external"
-      ? "Conectada externa"
-      : landing.publishTarget === "constructor"
-        ? "Constructor"
-        : "Clasico";
 
   return (
     <div
@@ -268,13 +262,6 @@ function LandingCard({ landing, urlBase }: { landing: Landing; urlBase: string |
                     {landing.pixelId
                       ? `Pixel: ${landing.pixelId}`
                       : "Pixel: sin configurar"}
-                  </p>
-                  <p className="truncate text-[10px] text-[var(--color-text-muted)]">
-                    Teléfono:{" "}
-                    {landing.phoneMode === "fair" ? "equitativo" : "aleatorio"}
-                  </p>
-                  <p className="truncate text-[10px] text-[var(--color-text-muted)]">
-                    Motor: {publishLabel}
                   </p>
                   {landing.comment ? (
                     <p className="truncate text-[10px] text-[var(--color-text-muted)]">
