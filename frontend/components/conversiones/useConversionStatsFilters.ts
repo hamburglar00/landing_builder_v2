@@ -12,6 +12,7 @@ export function useConversionStatsFilters() {
   const [statsFromMetaAdsFilter, setStatsFromMetaAdsFilter] = useState<string>(ALL_FILTER_VALUES);
   const [statsSourcePlatformFilter, setStatsSourcePlatformFilter] = useState<string>(ALL_FILTER_VALUES);
   const [statsSexoFilter, setStatsSexoFilter] = useState<string>(ALL_FILTER_VALUES);
+  const [statsFacebookFilter, setStatsFacebookFilter] = useState<string[]>([]);
   const [statsCampaignFilter, setStatsCampaignFilter] = useState<string[]>([]);
   const [statsAdSetFilter, setStatsAdSetFilter] = useState<string[]>([]);
   const [statsAdFilter, setStatsAdFilter] = useState<string[]>([]);
@@ -24,6 +25,7 @@ export function useConversionStatsFilters() {
   const [draftFromMetaAdsFilter, setDraftFromMetaAdsFilter] = useState<string>(ALL_FILTER_VALUES);
   const [draftSourcePlatformFilter, setDraftSourcePlatformFilter] = useState<string>(ALL_FILTER_VALUES);
   const [draftSexoFilter, setDraftSexoFilter] = useState<string>(ALL_FILTER_VALUES);
+  const [draftFacebookFilter, setDraftFacebookFilter] = useState<string[]>([]);
   const [draftCampaignFilter, setDraftCampaignFilter] = useState<string[]>([]);
   const [draftAdSetFilter, setDraftAdSetFilter] = useState<string[]>([]);
   const [draftAdFilter, setDraftAdFilter] = useState<string[]>([]);
@@ -37,9 +39,10 @@ export function useConversionStatsFilters() {
     setDraftFromMetaAdsFilter(statsFromMetaAdsFilter);
     setDraftSourcePlatformFilter(statsSourcePlatformFilter);
     setDraftSexoFilter(statsSexoFilter);
-    setDraftCampaignFilter([...statsCampaignFilter]);
-    setDraftAdSetFilter([...statsAdSetFilter]);
-    setDraftAdFilter([...statsAdFilter]);
+    setDraftFacebookFilter(statsFromMetaAdsFilter === "true" ? [...statsFacebookFilter] : []);
+    setDraftCampaignFilter(statsFromMetaAdsFilter === "true" ? [...statsCampaignFilter] : []);
+    setDraftAdSetFilter(statsFromMetaAdsFilter === "true" ? [...statsAdSetFilter] : []);
+    setDraftAdFilter(statsFromMetaAdsFilter === "true" ? [...statsAdFilter] : []);
     setDraftDeviceFilter(statsDeviceFilter);
     setStatsFilterModalOpen(true);
   }, [
@@ -50,6 +53,7 @@ export function useConversionStatsFilters() {
     statsFromMetaAdsFilter,
     statsSourcePlatformFilter,
     statsSexoFilter,
+    statsFacebookFilter,
     statsCampaignFilter,
     statsAdSetFilter,
     statsAdFilter,
@@ -64,9 +68,10 @@ export function useConversionStatsFilters() {
     setStatsFromMetaAdsFilter(draftFromMetaAdsFilter);
     setStatsSourcePlatformFilter(draftSourcePlatformFilter);
     setStatsSexoFilter(draftSexoFilter);
-    setStatsCampaignFilter([...draftCampaignFilter]);
-    setStatsAdSetFilter([...draftAdSetFilter]);
-    setStatsAdFilter([...draftAdFilter]);
+    setStatsFacebookFilter(draftFromMetaAdsFilter === "true" ? [...draftFacebookFilter] : []);
+    setStatsCampaignFilter(draftFromMetaAdsFilter === "true" ? [...draftCampaignFilter] : []);
+    setStatsAdSetFilter(draftFromMetaAdsFilter === "true" ? [...draftAdSetFilter] : []);
+    setStatsAdFilter(draftFromMetaAdsFilter === "true" ? [...draftAdFilter] : []);
     setStatsDeviceFilter(draftDeviceFilter);
     setStatsFilterModalOpen(false);
   }, [
@@ -77,6 +82,7 @@ export function useConversionStatsFilters() {
     draftFromMetaAdsFilter,
     draftSourcePlatformFilter,
     draftSexoFilter,
+    draftFacebookFilter,
     draftCampaignFilter,
     draftAdSetFilter,
     draftAdFilter,
@@ -91,6 +97,7 @@ export function useConversionStatsFilters() {
     setStatsFromMetaAdsFilter(ALL_FILTER_VALUES);
     setStatsSourcePlatformFilter(ALL_FILTER_VALUES);
     setStatsSexoFilter(ALL_FILTER_VALUES);
+    setStatsFacebookFilter([]);
     setStatsCampaignFilter([]);
     setStatsAdSetFilter([]);
     setStatsAdFilter([]);
@@ -102,6 +109,7 @@ export function useConversionStatsFilters() {
     setDraftFromMetaAdsFilter(ALL_FILTER_VALUES);
     setDraftSourcePlatformFilter(ALL_FILTER_VALUES);
     setDraftSexoFilter(ALL_FILTER_VALUES);
+    setDraftFacebookFilter([]);
     setDraftCampaignFilter([]);
     setDraftAdSetFilter([]);
     setDraftAdFilter([]);
@@ -119,6 +127,9 @@ export function useConversionStatsFilters() {
       statsFromMetaAdsFilter,
       statsSourcePlatformFilter,
       statsSexoFilter,
+      statsFacebookFilter.length > 0
+        ? statsFacebookFilter.join(", ")
+        : ALL_FILTER_VALUES,
       statsCampaignFilter.length > 0
         ? statsCampaignFilter.join(", ")
         : ALL_FILTER_VALUES,
@@ -138,6 +149,7 @@ export function useConversionStatsFilters() {
       statsFromMetaAdsFilter,
       statsSourcePlatformFilter,
       statsSexoFilter,
+      statsFacebookFilter,
       statsCampaignFilter,
       statsAdSetFilter,
       statsAdFilter,
@@ -165,6 +177,8 @@ export function useConversionStatsFilters() {
     setStatsSourcePlatformFilter,
     statsSexoFilter,
     setStatsSexoFilter,
+    statsFacebookFilter,
+    setStatsFacebookFilter,
     statsCampaignFilter,
     statsAdSetFilter,
     statsAdFilter,
@@ -189,6 +203,8 @@ export function useConversionStatsFilters() {
     setDraftSourcePlatformFilter,
     draftSexoFilter,
     setDraftSexoFilter,
+    draftFacebookFilter,
+    setDraftFacebookFilter,
     draftCampaignFilter,
     draftAdSetFilter,
     draftAdFilter,

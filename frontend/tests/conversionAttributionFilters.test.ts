@@ -13,6 +13,7 @@ test("campaign options include both columns, without blanks or duplicates", () =
     { campana: null, utm_campaign: "  ", conjunto: "", anuncio: null },
     {},
   ]), {
+    facebook: [],
     campaigns: ["Actual", "Anterior"],
     adSets: ["Grupo 1"],
     ads: ["Imagen", "Video"],
@@ -65,9 +66,11 @@ test("empty filters include legacy rows; missing attribution fails an active fil
 test("journey starts retain link attribution for the same global filters", () => {
   const row = journeyStartAttribution({
     utm_campaign: "Anterior",
-    event_source_url: "https://landing.example/l/demo?campana=Octubre&conjunto=Grupo+1&anuncio=Video%20%C3%BAnico&utm_campaign=Otra",
+    event_source_url: "https://landing.example/l/demo?facebook=Cuenta+A&campana=Octubre&conjunto=Grupo+1&anuncio=Video%20%C3%BAnico&utm_campaign=Otra",
   });
-  assert.deepEqual(row, { campana: "Octubre", utm_campaign: "Anterior", conjunto: "Grupo 1", anuncio: "Video único" });
+  assert.deepEqual(row, { facebook: "Cuenta A", campana: "Octubre", utm_campaign: "Anterior", conjunto: "Grupo 1", anuncio: "Video único" });
+  assert.equal(matchesConversionAttributionFilters(row, ["Octubre"], [], [], ["Cuenta A"]), true);
+  assert.equal(matchesConversionAttributionFilters(row, [], [], [], ["Cuenta B"]), false);
   assert.equal(matchesConversionAttributionFilters(row, ["Octubre"], ["Grupo 1"], ["Video único"]), true);
   assert.equal(matchesConversionAttributionFilters(row, ["Anterior"], [], []), true);
 });
@@ -78,4 +81,20 @@ test("invalid or missing journey URL does not break legacy UTM filtering", () =>
     assert.equal(matchesConversionAttributionFilters(row, ["Anterior"], [], []), true);
     assert.equal(matchesConversionAttributionFilters(row, [], ["Grupo 1"], []), false);
   }
+});
+
+test("Facebook options are normalized and match exactly alongside ad filters", () => {
+  const rows = [
+    { facebook: " Cuenta B ", campana: "Octubre" },
+    { facebook: "Cuenta A", campana: "Octubre" },
+    { facebook: "Cuenta A", campana: "Otra" },
+    { facebook: "  ", campana: "Octubre" },
+    { campana: "Octubre" },
+  ];
+  assert.deepEqual(conversionAttributionOptions(rows).facebook, ["Cuenta A", "Cuenta B"]);
+  assert.deepEqual(rows.map(row => matchesConversionAttributionFilters(row, ["Octubre"], [], [], ["Cuenta A"])), [false, true, false, false, false]);
+  assert.equal(matchesConversionAttributionFilters(rows[0], [], [], [], ["Cuenta A", "Cuenta B"]), true);
+  assert.equal(matchesConversionAttributionFilters(rows[0], [], [], [], ["Cuenta"]), false);
+  assert.equal(matchesConversionAttributionFilters(rows[4], [], [], []), true);
+  assert.equal(journeyStartAttribution({ facebook: " Guardada ", event_source_url: "https://landing.example/?facebook=Enlace" }).facebook, "Guardada");
 });

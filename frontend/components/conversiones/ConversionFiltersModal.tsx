@@ -23,6 +23,7 @@ export type ConversionFilterDraft = {
   fromMetaAds: string;
   sourcePlatform: string;
   sex: string;
+  facebook: string[];
   campaigns: string[];
   adSets: string[];
   ads: string[];
@@ -35,6 +36,7 @@ type ConversionFilterOptions = {
   phones: readonly string[];
   sourcePlatforms: readonly string[];
   sexes: readonly string[];
+  facebook: readonly string[];
   campaigns: readonly string[];
   adSets: readonly string[];
   ads: readonly string[];
@@ -48,6 +50,7 @@ type ConversionFilterChanges = {
   fromMetaAds: (value: string) => void;
   sourcePlatform: (value: string) => void;
   sex: (value: string) => void;
+  facebook: (value: string[]) => void;
   campaigns: (value: string[]) => void;
   adSets: (value: string[]) => void;
   ads: (value: string[]) => void;
@@ -252,11 +255,21 @@ export default function ConversionFiltersModal({
   onApply,
 }: ConversionFiltersModalProps) {
   const showLandingFilter = draft.sourcePlatform === "landing";
+  const showMetaAdsFilters = draft.fromMetaAds === "true";
   const trackingKind = trackingFilterKindForSource(draft.sourcePlatform);
   const handleSourcePlatformChange = (value: string) => {
     onChange.sourcePlatform(value);
     if (value !== "landing") onChange.landing("__all__");
     onChange.pixel("__all__");
+  };
+  const handleMetaAdsChange = (value: string) => {
+    onChange.fromMetaAds(value);
+    if (value !== "true") {
+      onChange.facebook([]);
+      onChange.campaigns([]);
+      onChange.adSets([]);
+      onChange.ads([]);
+    }
   };
 
   return (
@@ -329,8 +342,48 @@ export default function ConversionFiltersModal({
                   { value: "true", label: "Si" },
                   { value: "false", label: "No" },
                 ]}
-                onChange={onChange.fromMetaAds}
+                onChange={handleMetaAdsChange}
               />
+              {showMetaAdsFilters ? (
+                <>
+                  <SearchableCheckboxField
+                    id="conversion-filter-facebook"
+                    label="Facebook"
+                    values={draft.facebook}
+                    allLabel="Todos"
+                    selectedPluralLabel="seleccionados"
+                    options={stringOptions(options.facebook)}
+                    onChange={onChange.facebook}
+                  />
+                  <SearchableCheckboxField
+                    id="conversion-filter-campaign"
+                    label="Campaña"
+                    values={draft.campaigns}
+                    allLabel="Todas"
+                    selectedPluralLabel="campañas seleccionadas"
+                    options={stringOptions(options.campaigns)}
+                    onChange={onChange.campaigns}
+                  />
+                  <SearchableCheckboxField
+                    id="conversion-filter-ad-set"
+                    label="Conjunto de anuncios"
+                    values={draft.adSets}
+                    allLabel="Todos los conjuntos"
+                    selectedPluralLabel="conjuntos seleccionados"
+                    options={stringOptions(options.adSets)}
+                    onChange={onChange.adSets}
+                  />
+                  <SearchableCheckboxField
+                    id="conversion-filter-ad"
+                    label="Anuncio"
+                    values={draft.ads}
+                    allLabel="Todos los anuncios"
+                    selectedPluralLabel="anuncios seleccionados"
+                    options={stringOptions(options.ads)}
+                    onChange={onChange.ads}
+                  />
+                </>
+              ) : null}
               <FilterField
                 id="conversion-filter-sex"
                 label="Sexo"
@@ -341,33 +394,6 @@ export default function ConversionFiltersModal({
                   label: sexLabel(value),
                 }))}
                 onChange={onChange.sex}
-              />
-              <SearchableCheckboxField
-                id="conversion-filter-campaign"
-                label="Campaña"
-                values={draft.campaigns}
-                allLabel="Todas"
-                selectedPluralLabel="campañas seleccionadas"
-                options={stringOptions(options.campaigns)}
-                onChange={onChange.campaigns}
-              />
-              <SearchableCheckboxField
-                id="conversion-filter-ad-set"
-                label="Conjunto de anuncios"
-                values={draft.adSets}
-                allLabel="Todos los conjuntos"
-                selectedPluralLabel="conjuntos seleccionados"
-                options={stringOptions(options.adSets)}
-                onChange={onChange.adSets}
-              />
-              <SearchableCheckboxField
-                id="conversion-filter-ad"
-                label="Anuncio"
-                values={draft.ads}
-                allLabel="Todos los anuncios"
-                selectedPluralLabel="anuncios seleccionados"
-                options={stringOptions(options.ads)}
-                onChange={onChange.ads}
               />
             </div>
     </ModalShell>

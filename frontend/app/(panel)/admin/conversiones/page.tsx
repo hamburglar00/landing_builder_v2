@@ -313,6 +313,8 @@ export default function AdminConversionesPage() {
     setStatsSourcePlatformFilter,
     statsSexoFilter,
     setStatsSexoFilter,
+    statsFacebookFilter,
+    setStatsFacebookFilter,
     statsCampaignFilter,
     statsAdSetFilter,
     statsAdFilter,
@@ -337,6 +339,8 @@ export default function AdminConversionesPage() {
     setDraftSourcePlatformFilter,
     draftSexoFilter,
     setDraftSexoFilter,
+    draftFacebookFilter,
+    setDraftFacebookFilter,
     draftCampaignFilter,
     draftAdSetFilter,
     draftAdFilter,
@@ -541,6 +545,7 @@ export default function AdminConversionesPage() {
     [scopedJourneyStarts],
   );
   const {
+    facebook: statsFacebookOptions,
     campaigns: statsCampaignOptions,
     adSets: statsAdSetOptions,
     ads: statsAdOptions,
@@ -599,6 +604,12 @@ export default function AdminConversionesPage() {
     }
   }, [statsSexoFilter, statsSexoOptions, setStatsSexoFilter]);
   useEffect(() => {
+    const validFacebook = statsFacebookFilter.filter((value) => statsFacebookOptions.includes(value));
+    if (validFacebook.length !== statsFacebookFilter.length) {
+      setStatsFacebookFilter(validFacebook);
+    }
+  }, [statsFacebookFilter, statsFacebookOptions, setStatsFacebookFilter]);
+  useEffect(() => {
     const validCampaigns = statsCampaignFilter.filter((campaign) => statsCampaignOptions.includes(campaign));
     if (validCampaigns.length !== statsCampaignFilter.length) {
       setStatsCampaignFilter(validCampaigns);
@@ -638,7 +649,7 @@ export default function AdminConversionesPage() {
       const bySexo =
         statsSexoFilter === "__all__" ||
         normalizeSexValue((r as { inferred_sex?: string | null }).inferred_sex) === statsSexoFilter;
-      const byAttribution = matchesConversionAttributionFilters(r, statsCampaignFilter, statsAdSetFilter, statsAdFilter);
+      const byAttribution = matchesConversionAttributionFilters(r, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsFacebookFilter);
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byAttribution && byDevice;
     });
@@ -650,7 +661,7 @@ export default function AdminConversionesPage() {
         (labels) => gerenciaFilterMatchesLabels(statsGerenciaFilter, labels),
       ))
       .filter((row): row is ConversionRow => row !== null);
-  }, [statsConversions, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter, gerenciaByPhone]);
+  }, [statsConversions, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsFacebookFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter, gerenciaByPhone]);
   const statsAllConversionsFiltered = useMemo(() => {
     const filtered = statsAllConversions.filter((r) => {
       const byLanding = effectiveStatsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === effectiveStatsLandingFilter;
@@ -668,7 +679,7 @@ export default function AdminConversionesPage() {
       const bySexo =
         statsSexoFilter === "__all__" ||
         normalizeSexValue((r as { inferred_sex?: string | null }).inferred_sex) === statsSexoFilter;
-      const byAttribution = matchesConversionAttributionFilters(r, statsCampaignFilter, statsAdSetFilter, statsAdFilter);
+      const byAttribution = matchesConversionAttributionFilters(r, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsFacebookFilter);
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byAttribution && byDevice;
     });
@@ -680,7 +691,7 @@ export default function AdminConversionesPage() {
         (labels) => gerenciaFilterMatchesLabels(statsGerenciaFilter, labels),
       ))
       .filter((row): row is ConversionRow => row !== null);
-  }, [statsAllConversions, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter, gerenciaByPhone]);
+  }, [statsAllConversions, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsFacebookFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter, gerenciaByPhone]);
   const statsJourneyStartsFiltered = useMemo(() => {
     return statsJourneyStartsWithAttribution.filter((r) => {
       const byLanding = effectiveStatsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === effectiveStatsLandingFilter;
@@ -696,11 +707,11 @@ export default function AdminConversionesPage() {
         statsSourcePlatformFilter === "__all__" ||
         String(r.source_platform ?? "").trim().toLowerCase() === statsSourcePlatformFilter;
       const bySexo = statsSexoFilter === "__all__";
-      const byAttribution = matchesConversionAttributionFilters(r, statsCampaignFilter, statsAdSetFilter, statsAdFilter);
+      const byAttribution = matchesConversionAttributionFilters(r, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsFacebookFilter);
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byAttribution && byDevice;
     });
-  }, [statsJourneyStartsWithAttribution, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter, gerenciaByPhone]);
+  }, [statsJourneyStartsWithAttribution, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsFacebookFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter, gerenciaByPhone]);
   const showJourneyStartStats = statsSourcePlatformFilter === "landing" ||
     statsSourcePlatformFilter === "whatsapp_cloud_api";
   const filteredPhoneSet = useMemo(
@@ -738,11 +749,11 @@ export default function AdminConversionesPage() {
       const bySexo =
         statsSexoFilter === "__all__" ||
         normalizeSexValue((r as { inferred_sex?: string | null }).inferred_sex) === statsSexoFilter;
-      const byAttribution = matchesConversionAttributionFilters(r, statsCampaignFilter, statsAdSetFilter, statsAdFilter);
+      const byAttribution = matchesConversionAttributionFilters(r, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsFacebookFilter);
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byAttribution && byDevice;
     });
-  }, [activeConversions, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter, gerenciaByPhone]);
+  }, [activeConversions, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsFacebookFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter, gerenciaByPhone]);
   const filteredConversions = useMemo(() => {
     const q = tableSearch.trim();
     if (!q) return tableConversionsFiltered;
@@ -800,6 +811,7 @@ export default function AdminConversionesPage() {
     }
     if (statsSourcePlatformFilter !== "__all__") filters.push(`Origen: ${friendlySourcePlatform(statsSourcePlatformFilter)}`);
     if (statsSexoFilter !== "__all__") filters.push(`Sexo: ${statsSexoFilter}`);
+    if (statsFacebookFilter.length > 0) filters.push(`Facebook: ${statsFacebookFilter.join(", ")}`);
     if (statsCampaignFilter.length > 0) filters.push(`Campanas: ${statsCampaignFilter.join(", ")}`);
     if (statsAdSetFilter.length > 0) filters.push(`Conjuntos: ${statsAdSetFilter.join(", ")}`);
     if (statsAdFilter.length > 0) filters.push(`Anuncios: ${statsAdFilter.join(", ")}`);
@@ -808,6 +820,7 @@ export default function AdminConversionesPage() {
   }, [
     currencyScope,
     dateRange,
+    statsFacebookFilter,
     statsCampaignFilter,
     statsAdSetFilter,
     statsAdFilter,
@@ -835,7 +848,7 @@ export default function AdminConversionesPage() {
   );
   useEffect(() => {
     setTablePage(1);
-  }, [tableSearch, dateRange, effectiveStatsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter, demoMode, currencyScope]);
+  }, [tableSearch, dateRange, effectiveStatsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsFacebookFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter, demoMode, currencyScope]);
   useEffect(() => {
     if (tablePage > totalTablePages) setTablePage(totalTablePages);
   }, [tablePage, totalTablePages]);
@@ -1341,6 +1354,7 @@ export default function AdminConversionesPage() {
             fromMetaAds: draftFromMetaAdsFilter,
             sourcePlatform: draftSourcePlatformFilter,
             sex: draftSexoFilter,
+            facebook: draftFacebookFilter,
             campaigns: draftCampaignFilter,
             adSets: draftAdSetFilter,
             ads: draftAdFilter,
@@ -1352,6 +1366,7 @@ export default function AdminConversionesPage() {
             phones: statsTelefonoOptions,
             sourcePlatforms: statsSourcePlatformOptions,
             sexes: statsSexoOptions,
+            facebook: statsFacebookOptions,
             campaigns: statsCampaignOptions,
             adSets: statsAdSetOptions,
             ads: statsAdOptions,
@@ -1364,6 +1379,7 @@ export default function AdminConversionesPage() {
             fromMetaAds: setDraftFromMetaAdsFilter,
             sourcePlatform: setDraftSourcePlatformFilter,
             sex: setDraftSexoFilter,
+            facebook: setDraftFacebookFilter,
             campaigns: setDraftCampaignFilter,
             adSets: setDraftAdSetFilter,
             ads: setDraftAdFilter,

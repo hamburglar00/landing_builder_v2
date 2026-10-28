@@ -23,10 +23,11 @@ async function main() {
         import { useConversionStatsFilters } from "./components/conversiones/useConversionStatsFilters";
         import { conversionAttributionOptions, matchesConversionAttributionFilters } from "./components/conversiones/attributionFilters";
         const rows = [
-          { id: 1, campana: "Octubre", utm_campaign: "Anterior", conjunto: "Grupo 1", anuncio: "Video" },
-          { id: 2, utm_campaign: "Octubre", conjunto: "Grupo 2", anuncio: "Video" },
-          { id: 3, campana: "Octubre", conjunto: "Grupo 1", anuncio: "Imagen" },
-          { id: 4, campana: "Otra", conjunto: "Grupo 1", anuncio: "Video" },
+          { id: 1, from_meta_ads: true, facebook: "Cuenta A", campana: "Octubre", utm_campaign: "Anterior", conjunto: "Grupo 1", anuncio: "Video" },
+          { id: 2, from_meta_ads: true, facebook: "Cuenta B", utm_campaign: "Octubre", conjunto: "Grupo 2", anuncio: "Video" },
+          { id: 3, from_meta_ads: true, facebook: "Cuenta B", campana: "Octubre", conjunto: "Grupo 1", anuncio: "Imagen" },
+          { id: 4, from_meta_ads: true, facebook: "Cuenta A", campana: "Otra", conjunto: "Grupo 1", anuncio: "Video" },
+          { id: 5, from_meta_ads: false },
         ];
         const attributionOptions = conversionAttributionOptions(rows);
         function Fixture() {
@@ -35,13 +36,14 @@ async function main() {
             <button id="open" onClick={f.openStatsFilterModal}>Aplicar filtros</button>
             <button id="clear" onClick={f.clearAllStatsFilters}>Limpiar filtros</button>
             <output id="results">{JSON.stringify({
-              ids: rows.filter(row => matchesConversionAttributionFilters(row, f.statsCampaignFilter, f.statsAdSetFilter, f.statsAdFilter)).map(row => row.id),
+              ids: rows.filter(row => (f.statsFromMetaAdsFilter === "__all__" || row.from_meta_ads === (f.statsFromMetaAdsFilter === "true")) && matchesConversionAttributionFilters(row, f.statsCampaignFilter, f.statsAdSetFilter, f.statsAdFilter, f.statsFacebookFilter)).map(row => row.id),
               count: f.statsFiltersCount, applied: f.hasStatsFiltersApplied,
             })}</output>
             {f.statsFilterModalOpen && <ConversionFiltersModal title="Filtros" draft={{
               landing: f.draftLandingFilter, pixel: f.draftPixelFilter, gerencia: f.draftGerenciaFilter,
               phone: f.draftTelefonoFilter, fromMetaAds: f.draftFromMetaAdsFilter,
               sourcePlatform: f.draftSourcePlatformFilter, sex: f.draftSexoFilter,
+              facebook: f.draftFacebookFilter,
               campaigns: f.draftCampaignFilter, adSets: f.draftAdSetFilter, ads: f.draftAdFilter,
             }} options={{
               landings: [], pixels: [], gerencias: [], phones: [], sourcePlatforms: [], sexes: [], ...attributionOptions,
@@ -49,6 +51,7 @@ async function main() {
               landing: f.setDraftLandingFilter, pixel: f.setDraftPixelFilter, gerencia: f.setDraftGerenciaFilter,
               phone: f.setDraftTelefonoFilter, fromMetaAds: f.setDraftFromMetaAdsFilter,
               sourcePlatform: f.setDraftSourcePlatformFilter, sex: f.setDraftSexoFilter,
+              facebook: f.setDraftFacebookFilter,
               campaigns: f.setDraftCampaignFilter, adSets: f.setDraftAdSetFilter, ads: f.setDraftAdFilter,
             }} onClose={() => f.setStatsFilterModalOpen(false)} onApply={f.applyStatsFilters} />}
           </>;
@@ -112,6 +115,16 @@ async function main() {
     await click(`#${id}`);
   };
   const result = () => evaluate('JSON.parse(document.getElementById("results").textContent)');
+  const selectMetaOrigin = async (label: string) => {
+    await click("#conversion-filter-meta-origin");
+    await evaluate(`(() => {
+      const option = [...document.querySelectorAll('[role="option"]')].find(element => element.textContent.trim() === ${JSON.stringify(label)});
+      if (!option) throw new Error("Missing Meta origin option");
+      option.id = "fixture-meta-origin";
+    })()`);
+    await click("#fixture-meta-origin");
+  };
+  const visibleAdFilters = () => evaluate(`['facebook','campaign','ad-set','ad'].filter(key => document.getElementById('conversion-filter-' + key))`);
   try {
     for (const [width, height] of [[1365, 900], [390, 844], [844, 390]]) {
       await browser.send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: width < 900 });
@@ -121,30 +134,59 @@ async function main() {
         assert.deepEqual(errors, []);
         await pause();
       }
-      assert.deepEqual(await result(), { ids: [1, 2, 3, 4], count: 0, applied: false });
+      assert.deepEqual(await result(), { ids: [1, 2, 3, 4, 5], count: 0, applied: false });
       await click("#open");
+      assert.deepEqual(await visibleAdFilters(), []);
+      await selectMetaOrigin("Si");
+      assert.deepEqual(await visibleAdFilters(), ["facebook", "campaign", "ad-set", "ad"]);
+      assert.deepEqual(await evaluate(`Array.from(document.querySelectorAll('label[for^="conversion-filter-"]')).map(label => label.htmlFor).slice(-5)`), ["conversion-filter-facebook", "conversion-filter-campaign", "conversion-filter-ad-set", "conversion-filter-ad", "conversion-filter-sex"]);
+      await select("conversion-filter-facebook", "Cuenta A");
       await select("conversion-filter-campaign", "Octubre");
       await select("conversion-filter-ad-set", "Grupo 1");
       await select("conversion-filter-ad", "Video");
       assert.equal((await result()).count, 0, "Draft edits must wait for Guardar");
       await click("footer .ui-button-primary");
-      assert.deepEqual(await result(), { ids: [1], count: 3, applied: true });
+      assert.deepEqual(await result(), { ids: [1], count: 5, applied: true });
       await click("#open");
       assert.match(await evaluate('document.getElementById("conversion-filter-ad-set").textContent'), /Grupo 1/);
       assert.match(await evaluate('document.getElementById("conversion-filter-ad").textContent'), /Video/);
       await select("conversion-filter-ad", "Imagen");
+      await selectMetaOrigin("No");
+      assert.deepEqual(await visibleAdFilters(), []);
       await click("footer .ui-button-secondary");
-      assert.deepEqual(await result(), { ids: [1], count: 3, applied: true }, "Closing discards draft edits");
+      assert.deepEqual(await result(), { ids: [1], count: 5, applied: true }, "Closing discards draft edits, including hidden ad filters");
       await click("#open");
       assert.match(await evaluate('document.getElementById("conversion-filter-ad").textContent'), /Video/);
-      await click("footer .ui-button-secondary");
-      await click("#clear");
-      assert.deepEqual(await result(), { ids: [1, 2, 3, 4], count: 0, applied: false });
+      assert.match(await evaluate('document.getElementById("conversion-filter-facebook").textContent'), /Cuenta A/);
+      await selectMetaOrigin("No");
+      await click("footer .ui-button-primary");
+      assert.deepEqual(await result(), { ids: [5], count: 1, applied: true }, "No must remove every hidden ad filter");
       await click("#open");
+      assert.deepEqual(await visibleAdFilters(), []);
+      await selectMetaOrigin("Si");
+      assert.match(await evaluate('document.getElementById("conversion-filter-facebook").textContent'), /Todos/);
+      assert.match(await evaluate('document.getElementById("conversion-filter-campaign").textContent'), /Todas/);
+      await select("conversion-filter-facebook", "Cuenta B");
+      await click("footer .ui-button-primary");
+      assert.deepEqual(await result(), { ids: [2, 3], count: 2, applied: true }, "Facebook independently filters conversion rows");
+      await click("#open");
+      await selectMetaOrigin("Todos");
+      assert.deepEqual(await visibleAdFilters(), []);
+      await click("footer .ui-button-primary");
+      assert.deepEqual(await result(), { ids: [1, 2, 3, 4, 5], count: 0, applied: false }, "Todos must remove hidden ad filters");
+      await click("#open");
+      await selectMetaOrigin("Si");
+      await select("conversion-filter-facebook", "Cuenta A");
+      await click("footer .ui-button-primary");
+      await click("#clear");
+      assert.deepEqual(await result(), { ids: [1, 2, 3, 4, 5], count: 0, applied: false });
+      await click("#open");
+      assert.deepEqual(await visibleAdFilters(), []);
+      await selectMetaOrigin("Si");
       await select("conversion-filter-campaign", "Anterior");
       await click("footer .ui-button-primary");
-      assert.deepEqual(await result(), { ids: [1], count: 1, applied: true }, "Legacy campaign remains selectable alongside campana");
-      console.log(`PASS ${width}x${height}: draft, apply, combined filters, reopen, cancel, clear, legacy campaign`);
+      assert.deepEqual(await result(), { ids: [1], count: 2, applied: true }, "Legacy campaign remains selectable alongside campana");
+      console.log(`PASS ${width}x${height}: conditional ad filters, Facebook, order, draft, apply, reopen, cancel, No/Todos cleanup, clear, legacy campaign`);
     }
     assert.deepEqual(errors, []);
   } finally {
