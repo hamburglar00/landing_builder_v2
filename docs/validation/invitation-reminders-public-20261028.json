@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-28T18:35:37.498Z",
+  "publicReadOnly": true,
+  "results": [
+    {
+      "repo": "landing-autologuin",
+      "origin": "https://www.reydeases.fun",
+      "sourceMatches": true,
+      "sha256": "8f56cb79b7bdf28b9a4e7584d50e07f12e62f4c9aaeb177cb7d7bc81add8bd02"
+    },
+    {
+      "repo": "ases-gateway",
+      "origin": "https://www.asesdelnorte.online",
+      "sourceMatches": true,
+      "sha256": "6bfa0d2647d55231cd8a32e5692be3c18ad6ca6ce61c163231f1869e9ce7575b"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "origin": "https://www.ganamosnet.icu",
+      "sourceMatches": true,
+      "sha256": "9ddc014676717ca86255e0f5d1c05267bfc8d0cc6c7f0622567dae30be737795"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "origin": "https://ganamosnet.global",
+      "sourceMatches": true,
+      "sha256": "c9254ddaa479cce7a2723a6eb461699abcac22ccf483f7d3212f3c57686f018b"
+    },
+    {
+      "repo": "internal-chat",
+      "bundle": "/_next/static/immutable/chunks/0t76lti2sogcq.js",
+      "reminderControllerPresent": true,
+      "sha256": "c72b8437d7031245e2c52afded8e1ca621eeabe9276342daea9e754e928c22e4"
+    }
+  ]
+}
