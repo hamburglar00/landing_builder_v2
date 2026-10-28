@@ -8,7 +8,9 @@ const root=fileURLToPath(new URL("../../",import.meta.url)),atrio=path.join(root
 const require=createRequire(new URL("../frontend/package.json",import.meta.url));
 const appRequire=createRequire(path.join(atrio,"package.json"));
 const {build}=require("esbuild"),{chromium,webkit}=require(path.join(process.env.APPDATA,"npm/node_modules/playwright"));
-const out=new URL("../.vercel/validation-chat-interactions/",import.meta.url);await mkdir(out,{recursive:true});
+const stickerMode=process.argv.includes("--stickers");
+const out=new URL(stickerMode?"../.vercel/validation-chat-stickers/":"../.vercel/validation-chat-interactions/",import.meta.url);await mkdir(out,{recursive:true});
+const stickerImage=await appRequire("sharp")({create:{width:64,height:64,channels:4,background:{r:130,g:40,b:200,alpha:.5}}}).webp().toBuffer();
 const cssPath=path.join(atrio,"src/app/globals.css");
 const css=(await appRequire("postcss")([appRequire("@tailwindcss/postcss")({base:atrio})]).process(await readFile(cssPath,"utf8"),{from:cssPath})).css;
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,"0")}`,player=id(1),advisor=id(2),conversation=id(3);
@@ -33,22 +35,38 @@ const checks=[];
 for(const [engine,type] of [["Chromium",chromium],["WebKit",webkit]]){
   const browser=await type.launch({headless:true});
   try{for(const theme of ["atrio","whatsapp","page"])for(const width of [390,1280]){
+    if(process.env.CHAT_TEST_FAST && (engine!=="Chromium"||theme!=="atrio"||width!==390))continue;
     let messages=[{id:id(11),conversation_id:conversation,sender:"asesor",type:"texto",content:"*Hola*, te ayudo con tu cuenta",metadata:{},created_at:date,read_at:null,delivered_at:null},
       {id:id(12),conversation_id:conversation,sender:"asesor",type:"texto",content:"Segunda burbuja",metadata:{},created_at:date,read_at:null,delivered_at:null},
       {id:id(13),conversation_id:conversation,sender:"cliente",type:"texto",content:"Quiero consultar algo",metadata:{},created_at:date,read_at:null,delivered_at:null}];
-    let serial=20,failNext=false;const errors=[],requests=[];
+    let serial=20,failNext=false,failStickerSend=true,otherDevice;const errors=[],requests=[],stickerRequests=[];
+    const libraries={client:[],advisor:[]};const asset="a".repeat(64);
     const context=await browser.newContext({viewport:{width,height:900},hasTouch:true});
     const palette={code:"fixture",colors:{primary:"#9637c4",primaryHover:"#a748d5",accent:"#e8b6ff",background:"#11001f",surface:"#270538",surfaceAlt:"#31074d",bubble:"#270538",avatar:"#31074d",text:"#ffffff",mutedText:"#d0b4db",border:"#9637c4",success:"#4ade80",danger:"#ef4444"}};
     async function route(route){const url=new URL(route.request().url());
       if(url.hostname!=="fixture.test")return route.fulfill({json:{}});
       if(url.pathname==="/client.js")return route.fulfill({contentType:"application/javascript",body:compiled.outputFiles[0].text});
+      if(url.pathname==="/sticker.webp")return route.fulfill({contentType:"image/webp",body:stickerImage});
       if(url.pathname==="/"){
         const kind=url.searchParams.get("kind")||"client";
         if(kind==='host')return route.fulfill({contentType:'text/html',body:`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0"><iframe src="/?kind=client" style="border:0;width:100vw;height:100dvh"></iframe><script>addEventListener('message',event=>{const frame=document.querySelector('iframe');if(event.origin===location.origin&&event.source===frame.contentWindow&&event.data?.source==='atrio-widget'&&event.data.type==='atrio.widget.maximize')frame.contentWindow.postMessage({source:'reydeases-gateway',type:'gateway.chat.visibility',open:true,maximized:event.data.maximized},location.origin);});</script></body></html>`});
         const fixture={kind,theme,palette,messages,conversation:{...shared,lastMessage:messages.at(-1)},profile:{id:advisor,role:"advisor",fullName:"Asesor fixture",slug:"fixture",status:"disponible"},session:{advisor_id:advisor,advisor_name:"Asesor fixture",advisor_avatar_url:null,advisor_status:"disponible",player_id:player,conversation_id:conversation,player_display_name:"Cliente fixture",player_platform:"android",app_installed_status:"unknown",whatsapp_url:null,telegram_url:null}};
         return route.fulfill({contentType:"text/html",body:`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style></head><body><div id="root"></div><script>window.fixture=${JSON.stringify(fixture)}</script><script src="/client.js"></script></body></html>`});
       }
-      const raw=route.request().postData();const body=raw?JSON.parse(raw):{};
+      const raw=route.request().postData();const body=raw&&route.request().headers()['content-type']?.includes('application/json')?JSON.parse(raw):{};
+      if(url.pathname==="/api/chat/stickers"){
+        const kind=route.request().headers().authorization?'client':'advisor',library=libraries[kind];
+        if(route.request().method()==='GET')return route.fulfill({json:{stickers:library}});
+        const add=()=>{let row=library.find(row=>row.asset===asset);if(!row){row={id:id(kind==='client'?50:51),asset,name:'Sticker',url:'https://fixture.test/sticker.webp',animated:false,favorite:true,lastUsedAt:null};library.push(row);}row.favorite=true;return row;};
+        if(route.request().headers()['content-type']?.includes('multipart/form-data')||body.action==='save')return route.fulfill({json:{sticker:add()}});
+        if(body.action==='favorite'){const sticker=library.find(row=>row.id===body.stickerId);sticker.favorite=body.favorite;return route.fulfill({json:{sticker}});}
+        if(body.action==='send'){
+          stickerRequests.push(body);const sticker=library.find(row=>row.id===body.stickerId);let message=messages.find(row=>row.id===body.requestId);
+          if(!message){message={id:body.requestId,conversation_id:conversation,sender:kind==='client'?'cliente':'asesor',type:'imagen',content:sticker.url,metadata:{source:'chat_sticker',file_name:'Sticker',mime_type:'image/webp',size:stickerImage.length,sticker:{v:1,asset,animated:false}},created_at:new Date(Date.parse(date)+serial++*1000).toISOString(),delivered_at:null,read_at:null};messages.push(message);sticker.lastUsedAt=message.created_at;}
+          if(failStickerSend){failStickerSend=false;return route.fulfill({status:503,json:{error:'No se pudo enviar. Reintentá.'}});}
+          return route.fulfill({json:{message,sticker}});
+        }
+      }
       if(url.pathname==="/api/gateway/chat"){
         if(route.request().method()==="GET")return route.fulfill({json:{messages}});
         if(body.action==="reaction"||body.action==="message"){
@@ -116,13 +134,42 @@ for(const [engine,type] of [["Chromium",chromium],["WebKit",webkit]]){
     await peer.getByPlaceholder('Escribi un mensaje...').filter({visible:true}).fill('Respuesta citada del asesor');await peer.getByRole('button',{name:'Enviar respuesta',exact:true}).filter({visible:true}).click();
     await page.getByText('Respuesta citada del asesor',{exact:true}).waitFor();
     await first.locator('.chat-message-reactions button',{hasText:'❤️'}).click();await page.waitForFunction(id=>!document.querySelector(`[data-chat-message-id="${id}"]`).querySelector('.chat-message-reactions button[aria-pressed=true]'),id(11));
-    await page.goto(page.url());await page.locator('.chat-reply-preview').first().waitFor();assert.equal(await page.locator('.chat-reply-preview').count(),2);
+    await page.waitForLoadState('networkidle');await page.goto(page.url());await page.locator('.chat-reply-preview').first().waitFor();assert.equal(await page.locator('.chat-reply-preview').count(),2);
     assert.equal(await page.locator('.chat-reply-preview a').count(),0,'Quote previews cannot nest links inside buttons');
     assert.equal(await page.locator('.chat-reply-preview strong').filter({hasText:'Hola'}).count(),1,'Quote previews preserve WhatsApp formatting');
+    if(stickerMode){
+      await page.getByRole('button',{name:'Stickers',exact:true}).click();const picker=page.getByRole('dialog',{name:'Stickers',exact:true});await picker.waitFor();
+      await picker.getByRole('tab',{name:'Mis stickers',exact:true}).click();
+      await picker.getByLabel('Imagen para sticker').setInputFiles({name:'fixture.webp',mimeType:'image/webp',buffer:stickerImage});
+      const send=picker.getByRole('button',{name:'Enviar Sticker',exact:true});await send.waitFor();await send.click();
+      await picker.getByRole('alert').filter({hasText:'Reintentá'}).waitFor();await send.click();
+      await page.locator('.chat-sticker-message').waitFor();assert.equal(stickerRequests[0].requestId,stickerRequests[1].requestId,'A lost response retries the same send');
+      assert.equal(messages.filter(m=>m.metadata?.sticker).length,1,'Retry cannot duplicate a sticker');
+      await picker.getByRole('button',{name:'Cerrar stickers',exact:true}).click();
+      const received=peer.locator('.chat-sticker-message:visible');await received.waitFor();await received.getByRole('button',{name:'Ver opciones del sticker',exact:true}).click();
+      await received.getByRole('button',{name:'Añadir a mis stickers',exact:true}).click();await received.getByRole('button',{name:'Añadido a mis stickers',exact:true}).waitFor();
+      await peer.getByRole('button',{name:'Stickers',exact:true}).filter({visible:true}).click();const peerPicker=peer.getByRole('dialog',{name:'Stickers',exact:true}).filter({visible:true});
+      await peerPicker.getByRole('tab',{name:'Mis stickers',exact:true}).click();
+      try { await peerPicker.getByRole('button',{name:'Enviar Sticker',exact:true}).waitFor({timeout:10000}); } catch(error) { console.log(JSON.stringify({libraries,errors,picker:(await peer.locator('body').innerText()).slice(-1600)})); throw error; }
+      await peerPicker.getByRole('button',{name:'Enviar Sticker',exact:true}).click();
+      await page.waitForFunction(()=>document.querySelectorAll('.chat-sticker-message').length===2);
+      await peerPicker.getByRole('button',{name:'Cerrar stickers',exact:true}).click();
+      await page.getByRole('button',{name:'Stickers',exact:true}).click();
+      await picker.getByRole('tab',{name:'Recientes',exact:true}).click();await picker.getByRole('button',{name:'Enviar Sticker',exact:true}).waitFor();
+      await picker.getByRole('button',{name:'Quitar de mis stickers',exact:true}).click();await picker.getByRole('tab',{name:'Mis stickers',exact:true}).click();
+      await picker.getByText('Añadí tus stickers o guardá los que recibas.',{exact:true}).waitFor();
+      await page.waitForLoadState('networkidle');await page.goto(page.url());await page.locator('.chat-sticker-message').first().waitFor();assert.equal(await page.locator('.chat-sticker-message').count(),2);
+      await page.getByRole('button',{name:'Stickers',exact:true}).click();await page.getByRole('dialog',{name:'Stickers',exact:true}).getByRole('button',{name:'Enviar Sticker',exact:true}).waitFor();
+      assert.equal(await page.locator('.chat-sticker-message').first().evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(0, 0, 0, 0)');
+      assert.equal(libraries.client.length,1);assert.equal(libraries.advisor.length,1);
+      otherDevice=await browser.newContext({viewport:{width,height:900}});await otherDevice.route('**/*',route);
+      const newPage=await otherDevice.newPage();newPage.on('pageerror',e=>errors.push(e.stack||e.message));await newPage.goto('https://fixture.test/?kind=host');const newFrame=newPage.frames().find(frame=>frame.parentFrame());
+      await newFrame.getByRole('button',{name:'Stickers',exact:true}).click();await newFrame.getByRole('dialog',{name:'Stickers',exact:true}).getByRole('button',{name:'Enviar Sticker',exact:true}).waitFor();
+    }
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual(errors,[]);
     if(width===390)await hostPage.screenshot({path:fileURLToPath(new URL(`${engine}-${theme}.png`,out))});
-    checks.push({engine,theme,width,realClientAndAdvisorShells:true,gaps:[3,6],longPress:true,swipeReply:true,verticalScrollPreserved:true,reactionFailureRetry:true,twoParticipants:true,replyReload:true,maximizeRestoreHeader:true});
-    await context.close();console.log(JSON.stringify(checks.at(-1)));
+    checks.push({engine,theme,width,realClientAndAdvisorShells:true,gaps:[3,6],longPress:true,swipeReply:true,verticalScrollPreserved:true,reactionFailureRetry:true,twoParticipants:true,replyReload:true,maximizeRestoreHeader:true,...(stickerMode?{stickerUpload:true,stickerRetryDeduplicated:true,receivedStickerSaved:true,advisorStickerSend:true,recentStickersAfterReload:true,stickerCollectionsIsolated:true,stickersOnAnotherDevice:true}: {})});
+    await context.close();await otherDevice?.close();console.log(JSON.stringify(checks.at(-1)));
   }}finally{await browser.close();}
 }
 await writeFile(new URL('report.json',out),JSON.stringify({checks,productionWrites:0,physicalTouchGesturesVerified:false},null,2));

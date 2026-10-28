@@ -1,5 +1,16 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Stickers en los chats (28/10/2026)
+
+- Cliente y asesor tienen el botón de stickers con el símbolo de hoja/cuadrado y esquina doblada, junto al selector de emojis. Un selector compartido ofrece Recientes, Mis stickers y Añadir sticker. Abrir uno cierra el selector de emojis; conservar paletas, teclado, ancho y espacio del compositor.
+- Añadir imágenes PNG/JPG/WebP/GIF y guardar stickers recibidos tocándolos o desde sus opciones. Enviar desde la grilla, quitar de Mis stickers y conservar los usados entre los 30 más recientes. Colecciones personales persistidas por jugador o usuario interno; se recuperan al abrir desde otro navegador con la misma identidad. No intentar acceder a la colección privada de WhatsApp.
+- Preparar WebP de 512 × 512 manteniendo encuadre, transparencia y animación cuando la entrada la tiene. Entrada máxima 4 MB; salida máxima 1 MB. Validar formato real, dimensiones y cantidad de cuadros en el servidor, retirar metadatos y deduplicar archivos por hash. Los stickers se presentan sin la burbuja rectangular, con horario y tildes; conservar reacciones y respuestas.
+- Guardar la colección y los recientes en Supabase. El jugador se resuelve desde la sesión firmada del chat y el usuario interno desde su sesión; autorizar la conversación del asesor con RLS. El navegador elige únicamente un sticker de su colección o un mensaje recibido de su conversación. Nunca aceptar una URL ni un propietario elegidos por el cliente. Las tablas no tienen acceso directo por anon/authenticated y el RPC de envío es exclusivo del servidor.
+- El envío y la actualización de recientes son atómicos e idempotentes por intento, conversación, sticker y participante. Una respuesta perdida conserva el identificador al reintentar. Mantener actividad del mensaje, notificaciones y LEAD según sus reglas existentes; excluir stickers de inferencia de carga, análisis de comprobantes y archivos enviados a la automatización de API2.
+- Implementación única de Atrio para cliente, ambas vistas del inbox, los tres temas y los cuatro gateways, incluido el embed servido por Ganamos+ desde su Worker. No requiere modificar ni volver a desplegar los padres de los gateways.
+
+Validación y publicación: [stickers del chat](validation/chat-stickers-20261028.md).
+
 ### Tamaño del widget, agrupación y respuestas a mensajes (28/10/2026)
 
 - Entre Perfil y Cerrar, el widget tiene Maximizar/Restaurar, con los íconos de un cuadrado y dos cuadrados. Amplía solo su altura, conservando ancho, paleta, espacio superior y adaptación al teclado. El padre valida origen y ventana antes de aceptar la acción; devuelve el tamaño vigente al iframe. Fuente compartida de movimiento para los cuatro gateways, incluido el Worker de Ganamos+.
