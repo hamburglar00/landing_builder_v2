@@ -1,0 +1,95 @@
+{
+  "at": "2026-10-28T00:24:31.175Z",
+  "checks": 48,
+  "productionAccess": "GET HTML only",
+  "browserRequests": "mocked",
+  "accountsCreated": 0,
+  "ticketsActivated": 0,
+  "realConversions": 0,
+  "results": [
+    {
+      "engine": "Chromium",
+      "name": "classic",
+      "url": "https://landing.panelbotadmin.com/diana",
+      "sha256": "000eb74c563d7a12221b8bd4e041005981fb60eab8e55ee008495d6c3c19b07a",
+      "scenarios": 4
+    },
+    {
+      "engine": "Chromium",
+      "name": "builder",
+      "url": "https://mkt.panelbotadmin.com/l/ganamos-net-demo",
+      "sha256": "f22af50308a9adb776b986d223bd0de9b31cd0c37aa6cfc4a8d1b88c379a8c2c",
+      "scenarios": 4
+    },
+    {
+      "engine": "Chromium",
+      "name": "rey",
+      "url": "https://www.reydeases.fun/prepare?t=p1.public-deploy-check",
+      "sha256": "7b7713052ca4e6e520cbcf699736628bc21f17d70269aa50d9a69115d61c3da8",
+      "scenarios": 4
+    },
+    {
+      "engine": "Chromium",
+      "name": "ases",
+      "url": "https://www.asesdelnorte.online/prepare?t=p1.public-deploy-check",
+      "sha256": "7b7713052ca4e6e520cbcf699736628bc21f17d70269aa50d9a69115d61c3da8",
+      "scenarios": 4
+    },
+    {
+      "engine": "Chromium",
+      "name": "net",
+      "url": "https://www.ganamosnet.icu/prepare?t=p1.public-deploy-check",
+      "sha256": "7b7713052ca4e6e520cbcf699736628bc21f17d70269aa50d9a69115d61c3da8",
+      "scenarios": 4
+    },
+    {
+      "engine": "Chromium",
+      "name": "plus-worker",
+      "url": "https://ganamosnet.global/prepare?t=p1.public-deploy-check",
+      "sha256": "7fa4136cc547029bf23dfa76e4d040f2c5690c16a590752a207c08514f898aa2",
+      "scenarios": 4
+    },
+    {
+      "engine": "WebKit",
+      "name": "classic",
+      "url": "https://landing.panelbotadmin.com/diana",
+      "sha256": "000eb74c563d7a12221b8bd4e041005981fb60eab8e55ee008495d6c3c19b07a",
+      "scenarios": 4
+    },
+    {
+      "engine": "WebKit",
+      "name": "builder",
+      "url": "https://mkt.panelbotadmin.com/l/ganamos-net-demo",
+      "sha256": "f22af50308a9adb776b986d223bd0de9b31cd0c37aa6cfc4a8d1b88c379a8c2c",
+      "scenarios": 4
+    },
+    {
+      "engine": "WebKit",
+      "name": "rey",
+      "url": "https://www.reydeases.fun/prepare?t=p1.public-deploy-check",
+      "sha256": "7b7713052ca4e6e520cbcf699736628bc21f17d70269aa50d9a69115d61c3da8",
+      "scenarios": 4
+    },
+    {
+      "engine": "WebKit",
+      "name": "ases",
+      "url": "https://www.asesdelnorte.online/prepare?t=p1.public-deploy-check",
+      "sha256": "7b7713052ca4e6e520cbcf699736628bc21f17d70269aa50d9a69115d61c3da8",
+      "scenarios": 4
+    },
+    {
+      "engine": "WebKit",
+      "name": "net",
+      "url": "https://www.ganamosnet.icu/prepare?t=p1.public-deploy-check",
+      "sha256": "7b7713052ca4e6e520cbcf699736628bc21f17d70269aa50d9a69115d61c3da8",
+      "scenarios": 4
+    },
+    {
+      "engine": "WebKit",
+      "name": "plus-worker",
+      "url": "https://ganamosnet.global/prepare?t=p1.public-deploy-check",
+      "sha256": "7fa4136cc547029bf23dfa76e4d040f2c5690c16a590752a207c08514f898aa2",
+      "scenarios": 4
+    }
+  ]
+}

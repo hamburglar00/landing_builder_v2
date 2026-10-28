@@ -534,3 +534,12 @@ Publicación del lote: Builder `0d7c96e` (`dpl_7jKkueVayfcfdySrAhZ8AeubjW4B`), c
 - Una migración API2 nueva: `20261027000001_add_atrio_provision_recovery.ts`, antes del arranque del código. Sin migración Builder nueva ni cambios de Panel3/internal-chat. Entrega detallada en `api2/docs/validation/atrio-entry-recovery-20261027.md`.
 - Validación local: API2 109 pruebas aisladas y 15 en MySQL real descartable; web 3 pruebas de recuperación y 56 escenarios Chromium/WebKit con los HTML/funciones compiladas reales. Sin llamadas de negocio externas. La prueba con proveedor real y la verificación del siguiente intento de Benja quedan para después del despliegue.
 - Publicar juntos Builder, clásico, Rey, Ases, NET y Plus (incluido Worker). Esta revisión prepara el código y Git; no promueve despliegues a producción.
+
+### Publicación web de la recuperación durable (27/10/2026)
+
+- Autorización posterior explícita del usuario: publicar todo lo que podemos desplegar; API2 queda a cargo del programador. Esta decisión habilita la promoción web que el apartado anterior dejaba pendiente.
+- Publicados Builder, clásico y los cuatro gateways en Vercel; también el Worker de Ganamos+. No hubo cambios adicionales de aplicación, migraciones ni despliegues de API2, Panel3 o Atrio en este paso.
+- Verificación de versiones activas y 48 escenarios Chromium/WebKit sobre las funciones descargadas de las páginas públicas. Solo lecturas HTTP en producción; solicitudes del navegador simuladas. Sin altas, activación de pases, conversiones ni operaciones financieras reales.
+- La verificación del alta completa depende del código activo de API2 y del proveedor; la publicación web no confirma que API2 esté ejecutando `2752ebe3`. Ganamos+ sigue sin integración PBAdmin para altas.
+
+Versiones publicadas, evidencia y referencias de rollback: [publicación de recuperación](validation/entry-recovery-production-20261027.md).
