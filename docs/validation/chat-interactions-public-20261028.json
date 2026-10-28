@@ -1,0 +1,150 @@
+{
+  "at": "2026-10-28T19:44:47.704Z",
+  "deployments": [
+    {
+      "name": "atrio",
+      "id": "dpl_JAKyjAkeMzjwbgTaXZ8iH4LghU1y",
+      "previous": "dpl_9X7nawLCjoSEZZwptN9by4w5NA4T",
+      "rootDirectory": null,
+      "repo": "internal-chat",
+      "url": "internal-chat-ipvga276g-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "sha": "a5797cd821eff8bf9e9690f905666674ca5596bf",
+      "active": true
+    },
+    {
+      "name": "rey",
+      "id": "dpl_BcEMBvQXSURHuDgSVcL38MFDFWSA",
+      "previous": "dpl_645gfJDkLA2NVwKRU1xeMG4aFQ22",
+      "rootDirectory": null,
+      "repo": "landing-autologuin",
+      "url": "reydeases-gateway-ra73ubjho-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "sha": "aeaabb66ee8a3331c43ddb96189354436fdd09b8",
+      "active": true
+    },
+    {
+      "name": "ases",
+      "id": "dpl_B5mqizKNZaHhXMbR8yhcf6MPyoeL",
+      "previous": "dpl_7d25bJbQv3JUjjwxRW4BpzEVcUzx",
+      "rootDirectory": null,
+      "repo": "ases-gateway",
+      "url": "ases-del-norte-gateway-ik51tbghl-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "sha": "21d988aae6a90963d4dcd983c696fdebe6a41318",
+      "active": true
+    },
+    {
+      "name": "net",
+      "id": "dpl_J5T1GaG9pSFKX8Qa4ZUqE555zcNz",
+      "previous": "dpl_B6x6AzKGwLeNLmxZRwJ7LAr7iFDh",
+      "rootDirectory": null,
+      "repo": "ganamos-gateway",
+      "url": "ganamos-net-gateway-qzymff4vq-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "sha": "0f93e3855816b312e518cf5e74ff34a72fd05b8d",
+      "active": true
+    },
+    {
+      "name": "plus",
+      "id": "dpl_H34yfDk2crK4HuKvxafxDGP8sR97",
+      "previous": "dpl_DAzJp6TbgvoTqxmiFQwGLpMQxViu",
+      "rootDirectory": null,
+      "repo": "multi-skin-gateway",
+      "url": "multi-skin-gateway-n71s7uuo6-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "sha": "1e838fe3d2a8b1d57a8b615ed6d7d0003e7e6364",
+      "active": true
+    }
+  ],
+  "gateways": [
+    {
+      "origin": "https://www.reydeases.fun",
+      "repo": "landing-autologuin",
+      "assets": [
+        {
+          "file": "gateway-client.js",
+          "status": 200,
+          "sha256": "fcf89fcfd0214f49e1f6afc569982247383660b02a0207edc2ee2c8db90002a8"
+        },
+        {
+          "file": "gateway-client.css",
+          "status": 200,
+          "sha256": "92cbebf04f7405740cde2b50ead5aafe43235310f877f488a93c20b43d7d74b5"
+        }
+      ]
+    },
+    {
+      "origin": "https://www.asesdelnorte.online",
+      "repo": "ases-gateway",
+      "assets": [
+        {
+          "file": "gateway-client.js",
+          "status": 200,
+          "sha256": "0d98f61b59912cbd9e12565d4e42cb87f1200904ef02fed07390a6d5d86cc083"
+        },
+        {
+          "file": "gateway-client.css",
+          "status": 200,
+          "sha256": "861997db067eb570d2e859dc78cffa8d722fd1c4e9c43a1c0463b0dd7d5a05d4"
+        }
+      ]
+    },
+    {
+      "origin": "https://www.ganamosnet.icu",
+      "repo": "ganamos-gateway",
+      "assets": [
+        {
+          "file": "gateway-client.js",
+          "status": 200,
+          "sha256": "d7940705467f8991ec3509a7688f7523ba77c16902121c580fd1be18bd15c1de"
+        },
+        {
+          "file": "gateway-client.css",
+          "status": 200,
+          "sha256": "861997db067eb570d2e859dc78cffa8d722fd1c4e9c43a1c0463b0dd7d5a05d4"
+        }
+      ]
+    },
+    {
+      "origin": "https://ganamosnet.global",
+      "repo": "multi-skin-gateway",
+      "assets": [
+        {
+          "file": "gateway-client.js",
+          "status": 200,
+          "sha256": "d2c83445d9e14eb58927eb1000ac7f02fe32fdb5c58ea60a17e09f673313d4c7"
+        },
+        {
+          "file": "gateway-client.css",
+          "status": 200,
+          "sha256": "0ffdc2631c96d40a323263f38b519a82e6e4492b925c12d4e64402a70a78287e"
+        }
+      ]
+    }
+  ],
+  "atrio": {
+    "origin": "https://www.atrio.website",
+    "status": 200,
+    "chunks": [
+      "/_next/static/immutable/chunks/1rwlf5oy2kj-9.js"
+    ],
+    "css": [
+      "/_next/static/immutable/chunks/2i93cgcy6d9_r.css",
+      "/_next/static/immutable/chunks/3iz674vw4i066.css"
+    ],
+    "publicClientMarkersVerified": [
+      "atrio.widget.maximize",
+      "client_message_interaction",
+      "chat-reply-preview",
+      "Reaccionar al mensaje"
+    ],
+    "advisorVerifiedByActiveDeploymentSha": true
+  },
+  "worker": {
+    "id": "747d0181-8b2b-431c-93c8-832f7858eed7",
+    "previous": "02d76cdd-3b34-4846-9117-a231cb60bce3"
+  },
+  "migration": "20261028193637_chat_reactions_and_replies",
+  "productionBusinessWrites": 0
+}
