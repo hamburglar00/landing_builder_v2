@@ -478,7 +478,7 @@ export default function DashboardLandingEditarPage() {
     setSaveError(null);
     try {
       await deleteLanding(landing.id);
-      router.push("/dashboard");
+      router.push("/dashboard/landings");
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : "Error al eliminar");
     } finally {
@@ -535,7 +535,7 @@ export default function DashboardLandingEditarPage() {
         )}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Link
-            href="/dashboard"
+            href="/dashboard/landings"
             className="ui-button ui-button-secondary"
           >
             <span className="text-sm" aria-hidden>
