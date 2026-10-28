@@ -25,4 +25,8 @@ Selector compartido para cliente y asesor: Recientes, Mis stickers y Añadir sti
 
 Aplicada y verificada en Atrio: `20261028201150_chat_stickers.sql`. Se confirmaron tablas/RLS, permisos, bucket y RPC. Una consulta de PostgREST con cero filas verificó que el servidor ve las tablas nuevas y su relación. La auditoría de seguridad conserva exactamente los avisos previos, sin hallazgos nuevos.
 
-El cambio vive únicamente en Atrio; los cuatro padres de gateways conservan su versión y cargan la misma implementación compartida. Se registrarán aquí commit, despliegue activo y comprobación pública.
+Publicado Atrio `fe5a658ddfece3880374d70de0b80fed2fa5c5f5`, rama `fix/atrio-inbox-validation`, en `dpl_HprcHdJ8qNXfZX7hjquHv52Anp1y`. Anterior para rollback: `dpl_JAKyjAkeMzjwbgTaXZ8iH4LghU1y`. Build de Vercel y promoción correctos, SHA y despliegue activo verificados.
+
+El embed público sirve el nuevo chunk `26-5xkmiq4cl2.js` y los estilos de stickers. La ruta pública `/api/chat/stickers` responde 401 sin sesión, verificando también que el módulo servidor con Sharp carga correctamente. Los cuatro proyectos conservan el origen compartido `https://www.atrio.website`; sus scripts públicos coinciden con las versiones anteriores, incluido el dominio servido por el Worker de Ganamos+. Esta mejora de Atrio no requiere desplegar nuevamente esos padres.
+
+[Evidencia pública y configuración comprobada](chat-stickers-public-20261028.json). Builder solo recibió pruebas/documentación (`9915f75` y cierre de publicación); no se despliega su aplicación. Todos los cambios quedaron pusheados y los árboles de trabajo limpios. La comprobación pública fue de lectura; no envió stickers ni creó conversaciones reales.

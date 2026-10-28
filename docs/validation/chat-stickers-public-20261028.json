@@ -1,0 +1,72 @@
+{
+  "at": "2026-10-28T20:22:10.683Z",
+  "commit": "fe5a658ddfece3880374d70de0b80fed2fa5c5f5",
+  "deployment": "dpl_HprcHdJ8qNXfZX7hjquHv52Anp1y",
+  "previousDeployment": "dpl_JAKyjAkeMzjwbgTaXZ8iH4LghU1y",
+  "active": true,
+  "migration": "20261028201150_chat_stickers",
+  "publicStickerChunks": [
+    "/_next/static/immutable/chunks/26-5xkmiq4cl2.js"
+  ],
+  "styles": [
+    "/_next/static/immutable/chunks/2i93cgcy6d9_r.css",
+    "/_next/static/immutable/chunks/3a2pcj213-cr7.css"
+  ],
+  "markers": [
+    "/api/chat/stickers",
+    "Mis stickers",
+    "Recientes",
+    "chat-sticker-picker"
+  ],
+  "unauthenticatedApiStatus": 401,
+  "gateways": [
+    {
+      "repo": "landing-autologuin",
+      "origin": "https://www.reydeases.fun",
+      "status": 200,
+      "unchangedParent": true,
+      "sha256": "fcf89fcfd0214f49e1f6afc569982247383660b02a0207edc2ee2c8db90002a8"
+    },
+    {
+      "repo": "ases-gateway",
+      "origin": "https://www.asesdelnorte.online",
+      "status": 200,
+      "unchangedParent": true,
+      "sha256": "0d98f61b59912cbd9e12565d4e42cb87f1200904ef02fed07390a6d5d86cc083"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "origin": "https://www.ganamosnet.icu",
+      "status": 200,
+      "unchangedParent": true,
+      "sha256": "d7940705467f8991ec3509a7688f7523ba77c16902121c580fd1be18bd15c1de"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "origin": "https://ganamosnet.global",
+      "status": 200,
+      "unchangedParent": true,
+      "sha256": "d2c83445d9e14eb58927eb1000ac7f02fe32fdb5c58ea60a17e09f673313d4c7"
+    }
+  ],
+  "embedConfiguration": [
+    {
+      "name": "Rey de Ases",
+      "sharedAtrioOrigin": true
+    },
+    {
+      "name": "Ases del Norte",
+      "sharedAtrioOrigin": true
+    },
+    {
+      "name": "Ganamos NET",
+      "sharedAtrioOrigin": true
+    },
+    {
+      "name": "Ganamos+",
+      "sharedAtrioOrigin": true
+    }
+  ],
+  "physicalIPhoneVerified": false,
+  "productionBusinessWrites": 0
+}
