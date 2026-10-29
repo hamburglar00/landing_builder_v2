@@ -100,6 +100,7 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
           assert.ok(Math.abs(normalBox.width-expandedBox.width)<1,"Maximize preserves width");
           assert.ok(expandedBox.height>=normalBox.height,"Maximize cannot reduce the chat");
           assert.ok(expandedBox.y>=0&&expandedBox.y<80,"Maximize leaves room near the header");
+          if (viewport.width <= 640) assert.ok(expandedBox.y<=33,"Maximized mobile chat leaves only 32px above it");
           assert.ok(expandedBox.y+expandedBox.height<=viewport.height,"Maximize stays inside the viewport");
           await page.frameLocator("#gateway-chat-shell iframe").locator("body").evaluate(() => parent.postMessage({source:"atrio-widget",type:"atrio.widget.maximize",maximized:false},"https://fixture.test"));
           await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.maximized === "false");
@@ -109,9 +110,11 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
           await page.frameLocator("#gateway-chat-shell iframe").getByRole("button", { name: "Cerrar chat" }).click();
           await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.open === "false");
           const closing = await shell.evaluate(el => ({ width: el.offsetWidth, inert: el.inert })); assert.ok(closing.width > 0); assert.equal(closing.inert, true);
-          await page.waitForTimeout(350);
+          await page.waitForTimeout(220);
           assert.ok(await shell.evaluate(el => Number(getComputedStyle(el).opacity)>.95),"Closing remains visible while compressing");
           assert.equal(await shell.getAttribute("data-motion"),"animating");
+          const closeDuration = await shell.evaluate(el=>getComputedStyle(el).transitionDuration.split(',')[0]);
+          assert.equal(closeDuration,"0.52s","Compression returns to the faster 520ms duration");
           // Even during contraction, the closed frame/backdrop must pass touches through.
           await page.mouse.click(20, viewport.height - 40);
           await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "closed");
