@@ -76,7 +76,7 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
         });
         await page.route("https://chat.test/**", route => {
           frameNavigations++;
-          return route.fulfill({ contentType: "text/html", body: `<html><body style="margin:0;background:#efe7e1;color:#161616;font-family:system-ui"><header style="padding:20px;background:#08786b;color:white">Tu asesor <button id="close" onclick="parent.postMessage({source:'atrio-widget',type:'atrio.widget.close'},'https://fixture.test')">Cerrar chat</button></header><p>Chat listo</p><script>parent.postMessage({source:'atrio-widget',type:'atrio.widget.bootstrap',presentation:{template:'whatsapp',primary:'#00cc66',primaryHover:'#00dd77',accent:'#08786b',background:'#efe7e1',surface:'#ffffff',text:'#161616',buttonText:'#ffffff',border:'#00cc66'}},'https://fixture.test');parent.postMessage({source:'atrio-widget',type:'atrio.widget.ready'},'https://fixture.test');</script></body></html>` });
+          return route.fulfill({ contentType: "text/html", body: `<html style="height:100%"><body style="margin:0;height:100%;display:flex;flex-direction:column;background:#efe7e1;color:#161616;font-family:system-ui"><header style="padding:20px;background:#08786b;color:white">Tu asesor <button id="close" onclick="parent.postMessage({source:'atrio-widget',type:'atrio.widget.close'},'https://fixture.test')">Cerrar chat</button></header><main style="flex:1;min-height:0;overflow:auto">${Array.from({length:100},(_,i)=>`<p style="margin:6px 16px;padding:12px;border-radius:16px;background:white">Mensaje de prueba ${i+1}. Conversación con varias burbujas para comprobar el movimiento.</p>`).join("")}</main><footer style="padding:20px;background:white">Escribí un mensaje…</footer><script>parent.postMessage({source:'atrio-widget',type:'atrio.widget.bootstrap',presentation:{template:'whatsapp',primary:'#00cc66',primaryHover:'#00dd77',accent:'#08786b',background:'#efe7e1',surface:'#ffffff',text:'#161616',buttonText:'#ffffff',border:'#00cc66'}},'https://fixture.test');parent.postMessage({source:'atrio-widget',type:'atrio.widget.ready'},'https://fixture.test');</script></body></html>` });
         });
         await page.goto("https://fixture.test/");
         const launcher = page.locator("#gateway-chat-button"), shell = page.locator("#gateway-chat-shell");
@@ -84,6 +84,11 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
         await page.evaluate(() => {
           const shell = document.querySelector("#gateway-chat-shell");
           window.chatMotionSamples = {};
+          window.chatResizeContinuity = [];
+          let resizeBefore;
+          window.addEventListener("message", event => {
+            if (event.data?.type === "atrio.widget.maximize") resizeBefore = shell.getBoundingClientRect();
+          }, true);
           function capture() {
             const phase = shell.dataset.open === "true" ? "opening" : "closing";
             const samples = window.chatMotionSamples[phase] = [];
@@ -100,7 +105,22 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
             requestAnimationFrame(sample);
           }
           document.querySelector("#gateway-chat-button").addEventListener("click", capture);
-          window.addEventListener("message", event => { if (event.data?.type === "atrio.widget.close") capture(); });
+          window.addEventListener("message", event => {
+            if (event.data?.type === "atrio.widget.close") capture();
+            if (event.data?.type !== "atrio.widget.maximize" || shell.dataset.motion !== "resizing") return;
+            const after = shell.getBoundingClientRect();
+            window.chatResizeContinuity.push(Math.abs(after.height - resizeBefore.height));
+            const phase = event.data.maximized ? "maximizing" : "restoring";
+            const samples = window.chatMotionSamples[phase] = [];
+            function sample() {
+              if (shell.dataset.motion !== "resizing") return;
+              const box = shell.getBoundingClientRect();
+              samples.push({height:shell.querySelector("iframe").offsetHeight,visibleHeight:box.height,bottom:box.bottom,
+                heightAnimation:shell.getAnimations().some(animation=>animation.effect.getKeyframes().some(frame=>"height" in frame))});
+              requestAnimationFrame(sample);
+            }
+            requestAnimationFrame(sample);
+          });
         });
         const stableMotionLayout = async phase => {
           const samples = await page.evaluate(phase => window.chatMotionSamples[phase], phase);
@@ -112,6 +132,21 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
             assert.ok(samples.some(s => s.elapsed >= 80 && s.elapsed <= 300 && s.opacity > .95), "Content remains visible during the measured contraction");
             assert.equal(samples[0].duration, "0.52s", "Compression keeps the 520ms duration");
           }
+        };
+        const resizeChat = async maximized => {
+          await page.frameLocator("#gateway-chat-shell iframe").locator("body").evaluate((_,maximized) => parent.postMessage({source:"atrio-widget",type:"atrio.widget.maximize",maximized},"https://fixture.test"),maximized);
+          await page.waitForFunction(maximized => {
+            const shell=document.querySelector("#gateway-chat-shell");
+            return shell.dataset.maximized===String(maximized)&&shell.dataset.motion==="open";
+          },maximized);
+        };
+        const stableResizeLayout = async phase => {
+          const samples=await page.evaluate(phase=>window.chatMotionSamples[phase],phase);
+          assert.ok(samples.length>=2,`${phase}: intermediate frames with 100 fixture messages`);
+          assert.ok(Math.max(...samples.map(s=>s.height))-Math.min(...samples.map(s=>s.height))<=1,`${phase}: iframe layout stays fixed during visual resizing`);
+          assert.equal(samples.some(s=>s.heightAnimation),false,`${phase}: no frame-by-frame height layout`);
+          assert.ok(new Set(samples.map(s=>Math.round(s.visibleHeight))).size>1,`${phase}: visible height changes continuously`);
+          assert.ok(Math.max(...samples.map(s=>s.bottom))-Math.min(...samples.map(s=>s.bottom))<=1,`${phase}: bottom edge stays anchored`);
         };
         const canvas = async () => page.locator("#gateway-browser-edge").evaluate(el => ({ background: getComputedStyle(el).backgroundColor, opacity: getComputedStyle(el).opacity, bottom: el.getBoundingClientRect().bottom, height: el.getBoundingClientRect().height, viewport: innerHeight, hitTarget: document.elementFromPoint(innerWidth / 2, innerHeight - 2)?.id }));
         for (let cycle = 0; cycle < 2; cycle++) {
@@ -126,9 +161,8 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
           // Reject requests from the provider window, even if it claims to be Atrio.
           await page.evaluate(() => window.postMessage({source:"atrio-widget",type:"atrio.widget.maximize",maximized:true},location.origin));
           assert.notEqual(await shell.getAttribute("data-maximized"), "true");
-          await page.frameLocator("#gateway-chat-shell iframe").locator("body").evaluate(() => parent.postMessage({source:"atrio-widget",type:"atrio.widget.maximize",maximized:true},"https://fixture.test"));
-          await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.maximized === "true");
-          await page.waitForTimeout(360);
+          await resizeChat(true);
+          await stableResizeLayout("maximizing");
           const expandedBox = await shell.boundingBox();
           assert.ok(Math.abs(normalBox.width-expandedBox.width)<1,"Maximize preserves width");
           assert.ok(expandedBox.height>=normalBox.height,"Maximize cannot reduce the chat");
@@ -154,9 +188,8 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
             await page.waitForTimeout(360);
           }
           assert.ok(expandedBox.y+expandedBox.height<=viewport.height,"Maximize stays inside the viewport");
-          await page.frameLocator("#gateway-chat-shell iframe").locator("body").evaluate(() => parent.postMessage({source:"atrio-widget",type:"atrio.widget.maximize",maximized:false},"https://fixture.test"));
-          await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.maximized === "false");
-          await page.waitForTimeout(360);
+          await resizeChat(false);
+          await stableResizeLayout("restoring");
           assert.ok(Math.abs((await shell.boundingBox()).height-normalBox.height)<1,"Restore returns to original height");
           const openCanvas = await canvas(); assert.equal(openCanvas.background, before.background);
           await page.frameLocator("#gateway-chat-shell iframe").getByRole("button", { name: "Cerrar chat" }).click();
@@ -170,13 +203,42 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
         }
         assert.equal(frameNavigations, 1); assert.equal(sdkRequests, 0); assert.equal(await page.evaluate(() => window.providerClicks), 2); assert.deepEqual(errors, []);
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+        // Reverse resizing from its current visible pose, then close mid-resize.
+        await launcher.click(); await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "open");
+        await page.frameLocator("#gateway-chat-shell iframe").locator("body").evaluate(async () => {
+          parent.postMessage({source:"atrio-widget",type:"atrio.widget.maximize",maximized:true},"https://fixture.test");
+          await new Promise(resolve=>setTimeout(resolve,120));
+          parent.postMessage({source:"atrio-widget",type:"atrio.widget.maximize",maximized:false},"https://fixture.test");
+        });
+        await page.waitForFunction(() => {const shell=document.querySelector("#gateway-chat-shell");return shell.dataset.maximized==="false"&&shell.dataset.motion==="open"});
+        assert.ok((await page.evaluate(()=>window.chatResizeContinuity)).every(delta=>delta<=1),"Resizing/reversing begins at the visible pose without a snap");
+        await page.frameLocator("#gateway-chat-shell iframe").locator("body").evaluate(async () => {
+          parent.postMessage({source:"atrio-widget",type:"atrio.widget.maximize",maximized:true},"https://fixture.test");
+          await new Promise(resolve=>setTimeout(resolve,120));
+          parent.postMessage({source:"atrio-widget",type:"atrio.widget.close"},"https://fixture.test");
+        });
+        await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "closed");
+        assert.equal(await shell.evaluate(el=>el.offsetHeight),0,"Closing during resize reaches the launcher");
+        await launcher.click(); await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "open");
+        await resizeChat(false);
+        // A viewport change must not retain the scale for an obsolete geometry.
+        await page.frameLocator("#gateway-chat-shell iframe").locator("body").evaluate(() => parent.postMessage({source:"atrio-widget",type:"atrio.widget.maximize",maximized:true},"https://fixture.test"));
+        await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.maximized === "true");
+        await page.setViewportSize({width:viewport.width,height:viewport.height+40});
+        await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "open");
+        assert.equal(await shell.evaluate(el=>getComputedStyle(el).transform),"matrix(1, 0, 0, 1, 0, 0)");
+        await page.setViewportSize(viewport); await resizeChat(false);
+        await page.keyboard.press("Escape"); await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "closed");
         // Reverse a closing animation before it finishes; stale timers must not collapse an open chat.
         await launcher.click(); await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "open");
         await page.keyboard.press("Escape"); await launcher.evaluate(el => el.click());
         await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "open");
         assert.equal(await shell.getAttribute("data-open"), "true"); assert.ok(await shell.evaluate(el => el.offsetWidth) > 0);
         if (asset.repo === repos[0] && viewport.width === 390) await page.screenshot({ path: path.join(artifact, engine + "-chat-open.png") });
-        await page.emulateMedia({ reducedMotion: "reduce" }); await page.keyboard.press("Escape");
+        await page.emulateMedia({ reducedMotion: "reduce" });
+        await resizeChat(true); await resizeChat(false);
+        assert.equal(await shell.evaluate(el=>el.getAnimations().length),0,"Reduced motion skips size animations");
+        await page.keyboard.press("Escape");
         await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "closed");
         assert.equal(await shell.getAttribute("data-motion"), "closed");
         // The invitation uses the same centered brand header in every gateway.
@@ -187,7 +249,7 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
           return {center:box.x+box.width/2,logoCenter:mark.x+mark.width/2};
         });
         assert.ok(Math.abs(brand.center-brand.logoCenter)<1,"Invitation logo is centered");
-        checks.push({ repo: asset.repo, engine, viewport, opensFromLauncher: true, contractsBeforeCollapsing: true, noProviderTouchBlock: true, rapidReversal: true, reducedMotion: true, darkEdgeInAllStates: true, frameNavigations, sdkRequests });
+        checks.push({ repo: asset.repo, engine, viewport, opensFromLauncher: true, contractsBeforeCollapsing: true, noProviderTouchBlock: true, rapidReversal: true, smoothMaximizeRestore: true, fixedIframeLayoutWith100Messages: true, resizeReversal: true, closeDuringResize: true, viewportDuringResize: true, reducedMotion: true, darkEdgeInAllStates: true, frameNavigations, sdkRequests });
         await page.close();
       }
       console.log(JSON.stringify({ engine, repo: asset.repo, passed: checks.filter(check => check.engine === engine && check.repo === asset.repo).length }));

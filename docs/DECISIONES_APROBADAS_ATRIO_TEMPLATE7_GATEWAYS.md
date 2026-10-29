@@ -1,5 +1,13 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Maximizar y restaurar con movimiento continuo (29/10/2026)
+
+- Mantener el alto maximizado y la apertura/compresión ya aprobados. Maximizar y restaurar deben ser fluidos: ajustar el tamaño interno una sola vez por cambio y animar la transformación visual, sin una transición de altura que reacomode todo el chat en cada cuadro.
+- Conservar ancho, anclaje inferior, margen superior móvil de 8 px, teclado, movimiento reducido e iframe montado. Una inversión rápida parte de la posición visible y cerrar durante el cambio continúa hacia el botón. Los cambios nativos de viewport cancelan cualquier transformación de tamaño antigua.
+- Sincronizar, probar y publicar los dos assets de UI en los cuatro gateways, incluido el Worker de Plus, conservando pendiente el lote funcional que depende de API2.
+
+Validación y publicación: [maximizar y restaurar](validation/smooth-chat-resize-20261029.md).
+
 ### Movimiento continuo y altura del teclado (28/10/2026, ajuste posterior)
 
 - Mantener la duración de 520 ms de apertura y cierre, con una curva continua en ambos sentidos. Preparar el tamaño completo del iframe antes de iniciar la escala desde el botón, sin animar la restauración desde altura cero. Conservar el iframe, inversión rápida, foco/teclado, paletas, accesibilidad y paso de toques al cerrar.
