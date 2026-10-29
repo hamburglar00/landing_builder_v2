@@ -1,8 +1,12 @@
 /** Only use with account-entry endpoints that resume a persisted identity/token. */
 export async function fetchWithEntryRecovery(url: string, init: RequestInit, onRetry?: () => void): Promise<Response> {
+  const deadline = Date.now() + 30000;
   for (let attempt = 0; attempt < 4; attempt++) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) throw new Error('entry_recovery_pending');
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 45000);
+    const timer = setTimeout(() => controller.abort(), Math.min(15000, remaining));
+    const feedback = onRetry ? setTimeout(onRetry, Math.min(8000, remaining)) : undefined;
     let response: Response | undefined;
     let failure: unknown;
     let retryAfter = 0;
@@ -24,13 +28,15 @@ export async function fetchWithEntryRecovery(url: string, init: RequestInit, onR
       if (header) retryAfter = /^\d+$/.test(header) ? Number(header) * 1000 : Math.max(0, Date.parse(header) - Date.now());
       if (retryAfter > 60000) return response;
     } catch (error) { failure = error; }
-    finally { clearTimeout(timer); }
+    finally { clearTimeout(timer); if (feedback !== undefined) clearTimeout(feedback); }
     if (attempt === 3) {
       if (response) return response;
       throw failure;
     }
     if (onRetry) onRetry();
-    await new Promise(resolve => setTimeout(resolve, Math.max(Number.isFinite(retryAfter) ? retryAfter : 0, [500, 1500, 3500][attempt])));
+    const delay = Math.max(Number.isFinite(retryAfter) ? retryAfter : 0, [500, 1500, 3500][attempt]);
+    if (Date.now() + delay >= deadline) { if (response) return response; throw failure || new Error('entry_recovery_pending'); }
+    await new Promise(resolve => setTimeout(resolve, delay));
   }
   throw new Error("entry_recovery_exhausted");
 }

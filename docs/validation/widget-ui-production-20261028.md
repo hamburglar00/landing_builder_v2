@@ -32,6 +32,8 @@ Los ocho assets devolvieron HTTP 200 y SHA-256 idéntico al archivo del commit a
 
 ## Pendiente funcional
 
+Actualización posterior: el usuario autorizó comitear y pushear todo el lote funcional para su despliegue coordinado. Las referencias a trabajo local siguientes corresponden al momento en que se publicó la UI; el despliegue funcional sigue dependiendo de API2 y de las dos migraciones nuevas.
+
 API2: recuperación breve, sustitución de candidatos no vinculados, historial y estado privado; crédito NET seguro y revisión por transferencia. Dos migraciones aditivas de altas, con alternativas SQL/Adonis. Sigue local y no desplegado; la conciliación del bono histórico de Kobe no se aplicó.
 
 Web: retoma de cuentas y presupuestos acotados en Atrio, constructor, clásico y los cuatro gateways, incluidas pruebas y sincronización. Sigue local para coordinar su publicación después de API2. No hay otros commits de UI pendientes de push en los cuatro gateways.

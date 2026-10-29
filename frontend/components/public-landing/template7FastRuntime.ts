@@ -78,25 +78,31 @@ export function buildTemplate7FastRuntime(
   {
     source = replaceOnce(source, '      function init() {', `
       function warmTemplate7Entry() {
+        function resume(advisor, name, promo) {
+          if (window.__T7_ENTRY_STARTED__) return;
+          window.__T7_ENTRY_STARTED__ = true; clickLocked = true;
+          if (template7Transition) template7Transition.start('preparing');
+          return fetchWithEntryRecovery('${classicDeviceIdScript ? "/api/template7/start" : "/api/template7/prepare"}', {
+            method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({${classicDeviceIdScript ? "device_id:getOrCreateDeviceId()," : ""}landing_id:cfg.landingId,landing_slug:cfg.slug,
+              atrio_client_id:advisor.atrioClientId || advisor.atrio_client_id,advisor_id:advisor.atrioId || advisor.atrio_id,
+              advisor_slug:advisor.atrioSlug || advisor.atrio_slug,name:name,promo_code:promo,attribution:{target_provider:cfg.targetProvider}})
+          }).then(function(response){if(!response.ok)throw new Error('entry pending');return response.json()}).then(function(result){
+            if(!result || typeof result.handoff_url !== 'string')throw new Error('entry pending');
+            window.location.replace(template7TransitionUrl(result.handoff_url));
+          }).catch(function(){
+            window.__T7_ENTRY_STARTED__ = false; clickLocked = false;
+            if(template7Transition)template7Transition.finish();
+            var nameField=document.querySelector('[data-template7-name]');if(nameField)nameField.value=name;
+            setTemplate7Error('Tu acceso sigue pendiente. Podés retomar el mismo intento sin volver a completar tus datos.');
+          });
+        }
         Promise.all([window.__LB_IDENTITY_READY__ || Promise.resolve(), ensureAtrioPromise()]).then(function (values) {
           var advisor = values[1];
           if (!advisor || (window.__LB_IDENTITY_READY__ && values[0] !== true)) return;
           if (advisor.preparationReady) {
             if (!advisor.existingName || !advisor.promoCode || window.__T7_ENTRY_STARTED__) return;
-            return fetch('${classicDeviceIdScript ? "/api/template7/start" : "/api/template7/prepare"}', {
-              method: 'POST', credentials: 'same-origin', cache: 'no-store',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ${classicDeviceIdScript ? "device_id: getOrCreateDeviceId(), " : ""}landing_id: cfg.landingId, landing_slug: cfg.slug,
-                atrio_client_id: advisor.atrioClientId, advisor_id: advisor.atrioId, advisor_slug: advisor.atrioSlug,
-                name: advisor.existingName, promo_code: advisor.promoCode,
-                attribution: { target_provider: cfg.targetProvider } })
-            }).then(function(response) { return response.ok ? response.json() : null; }).then(function(result) {
-              if (!result || typeof result.handoff_url !== 'string' || window.__T7_ENTRY_STARTED__) return;
-              var restored = new URL(result.handoff_url);
-              if (restored.protocol !== 'https:' || !restored.searchParams.has('t')) return;
-              window.__T7_ENTRY_STARTED__ = true;
-              window.location.replace(template7TransitionUrl(restored.href));
-            });
+            return resume(advisor,advisor.existingName,advisor.promoCode);
           }
           return fetch('/api/template7/warm', {
             method: 'POST', credentials: 'same-origin', cache: 'no-store',
@@ -106,6 +112,8 @@ export function buildTemplate7FastRuntime(
               advisor_id: advisor.atrioId || advisor.atrio_id,
               advisor_slug: advisor.atrioSlug || advisor.atrio_slug })
           }).then(function (response) { return response.ok ? response.json() : null; }).then(function (result) {
+            if(result && typeof result.existing_name === 'string' && typeof result.promo_code === 'string')
+              return resume(advisor,result.existing_name,result.promo_code);
             if (result && typeof result.handoff_url === 'string' && !window.__T7_ENTRY_STARTED__) {
               var restored = new URL(result.handoff_url);
               if (restored.protocol === 'https:' && restored.pathname === '/prepare' && restored.searchParams.has('t')) {

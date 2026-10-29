@@ -87,7 +87,40 @@ for(const [engine,type] of [['Chromium',chromium],['WebKit',webkit]]){
    },{source,scenario});
    assert.deepEqual(result,{count:3,status:200,bodies:['same-identity','same-identity','same-identity'],body:{}});checks++;await page.close();
   }
-  console.log(engine+': gateway recovery and both compiled landing engines passed');
+  for (const asset of assets) {
+   const page=await browser.newPage({viewport:{width:390,height:844}}),requests=[],errors=[];
+   let held, starts=0;
+   page.on('pageerror',error=>errors.push(error.message));
+   await page.clock.install();
+   await page.route('**/*',async route=>{
+    const pathname=new URL(route.request().url()).pathname;
+    if(pathname==='/api/preparations/complete'){
+     requests.push(route.request().postData());
+     return route.fulfill({json:{username:'fixtureplayer',continuation_token:'c1.fixture',handoff_url:'https://fixture.test/start?t=fixture'}});
+    }
+    if(pathname==='/start'){
+     starts++;if(starts===1){held=route;return;}
+     return route.fulfill({json:{username:'fixtureplayer',password:'fixture-password',redirect_url:'https://fixture.test/home',entry_wait:{enabled:true,seconds:60}}});
+    }
+    if(pathname==='/api/session/recover')return route.fulfill({json:{active:true}});
+    if(pathname==='/prepare')return route.fulfill({contentType:'text/html',body:asset.html});
+    return route.fulfill({body:''});
+   });
+   await page.goto('https://fixture.test/prepare');
+   await page.locator('#username').filter({hasText:'fixtureplayer'}).waitFor();
+   await page.clock.fastForward(45001);
+   await page.locator('main[data-view="error"]').waitFor();
+   assert.match(await page.locator('section.error').innerText(),/Tu acceso sigue pendiente/);
+   assert.ok(held,'Actual login request was held');
+   await held.fulfill({json:{username:'fixtureplayer',password:'fixture-password',redirect_url:'https://fixture.test/home',entry_wait:{enabled:false,seconds:4}}}).catch(()=>{});
+   await page.waitForTimeout(1);
+   assert.equal(new URL(page.url()).pathname,'/prepare','Late login must not navigate');
+   await page.locator('#retry').click();
+   await page.locator('#password').filter({hasText:'fixture-password'}).waitFor();
+   assert.equal(requests.length,2);assert.equal(new Set(requests).size,1);
+   assert.deepEqual(errors,[]);checks++;await page.close();
+  }
+  console.log(engine+': gateway recovery, bounded waits and both compiled landing engines passed');
  }finally{await browser.close();}
 }
 console.log('PASS '+checks+' browser scenarios; zero external business requests.');

@@ -5,7 +5,7 @@ import { buildTemplate7FastRuntime } from "../components/public-landing/template
 import { buildTemplate7HandoffRuntimeScript } from "../components/public-landing/template7HandoffScript";
 
 const advisor = { atrioClientId: "client", atrioId: "advisor", atrioSlug: "gera" };
-async function runWarm(value: object, classic = false) {
+async function runWarm(value: object, classic = false, warmResult: object = {ready: true}) {
   const source = buildTemplate7FastRuntime("test", { id: "landing", name: "test", layout: { template: 7 } } as never,
     classic ? "function getOrCreateDeviceId(){return 'device';}" : "");
   const start = source.indexOf("      function warmTemplate7Entry()");
@@ -14,14 +14,16 @@ async function runWarm(value: object, classic = false) {
   const requests: { url: string; payload: object }[] = [], redirects: string[] = [];
   const transitionStart = source.indexOf("      function template7TransitionUrl(raw) {");
   const transitionEnd = source.indexOf("      function failTemplate7(button) {", transitionStart);
+  const fetch = async (url: string, init: { body: string }) => {
+    requests.push({ url, payload: JSON.parse(init.body) });
+    return { ok: true, json: async () => url.includes('/warm') ? warmResult : {handoff_url:`https://casino.test/${classic ? 'start' : 'prepare'}?t=opaque`} };
+  };
   new Script(buildTemplate7HandoffRuntimeScript() + source.slice(transitionStart, transitionEnd) + source.slice(start, end) + "\nwarmTemplate7Entry();").runInNewContext({
     Promise, URL, cfg: { landingId: "landing", slug: "test", targetProvider: "ganamos_net" },
     window: { location: { replace: (url: string) => redirects.push(url) } },
     ensureAtrioPromise: async () => value, getOrCreateDeviceId: () => "device",
-    fetch: async (url: string, init: { body: string }) => {
-      requests.push({ url, payload: JSON.parse(init.body) });
-      return { ok: true, json: async () => url.includes("/warm") ? { ready: true } : { handoff_url: `https://casino.test/${classic ? "start" : "prepare"}?t=opaque` } };
-    },
+    fetch, fetchWithEntryRecovery: fetch, template7Transition: null, clickLocked: false,
+    document: {querySelector: () => null}, setTemplate7Error: () => {},
   });
   await new Promise(resolve => setImmediate(resolve));
   return { requests, redirects };
@@ -43,6 +45,15 @@ test("classic pool recovery preserves its stable device identifier and start end
   assert.equal(requests.length, 1); assert.equal(requests[0].url, "/api/template7/start");
   assert.equal(Reflect.get(requests[0].payload, "device_id"), "device");
   assert.deepEqual(redirects, ["https://casino.test/prepare?t=opaque"], "classic also enters through the visible transition");
+});
+
+test('classic without a manager pool resumes the remembered pending entry without another name', async () => {
+  const {requests,redirects} = await runWarm(advisor,true,{ready:true,existing_name:'Benja',promo_code:'ORIGINAL'});
+  assert.deepEqual(requests.map(request=>request.url),['/api/template7/warm','/api/template7/start']);
+  assert.equal(Reflect.get(requests[1].payload,'name'),'Benja');
+  assert.equal(Reflect.get(requests[1].payload,'promo_code'),'ORIGINAL');
+  assert.equal(Reflect.get(requests[1].payload,'device_id'),'device');
+  assert.deepEqual(redirects,['https://casino.test/prepare?t=opaque']);
 });
 
 test("a pending or completed valid destination survives soft timeouts without another request", async () => {

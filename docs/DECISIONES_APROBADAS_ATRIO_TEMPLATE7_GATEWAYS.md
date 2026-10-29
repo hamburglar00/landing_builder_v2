@@ -1,5 +1,47 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Entrega completa autorizada a Git (28/10/2026, instrucción posterior)
+
+- El usuario autorizó comitear y pushear todo el lote pendiente, incluido API2. Las menciones previas de trabajo local describen la preparación; esta autorización permite su entrega en las ramas actuales, sin cambiar ramas ni publicar API2.
+- Primero aplicar las dos migraciones nuevas de altas y desplegar API2; después publicar la recuperación de cuentas en Atrio, constructor, clásico y los cuatro gateways, incluido el Worker de Plus. La conciliación histórica de Kobe no es automática ni forma parte de las migraciones.
+
+### Cargas independientes y publicación separada del widget (28/10/2026)
+
+- Una carga pendiente protege esa transferencia, sin impedir validar otra distinta. Mantener deduplicación por el movimiento verificado, reservas ante resultados inciertos y una sola solicitud activa por jugador. No reintentar el dinero de una operación en revisión. Si se perdieron IDs históricos, distinguir por evidencia del banco/HG, nunca por otro archivo o fecha OCR. El bono único incierto permanece protegido sin retener el capital nuevo.
+- La UI de altura y compresión se publica ahora, por separado: commits de dos assets por gateway, Vercel y Worker de Plus. El lote de recuperación de cuentas sigue local y depende de API2/migraciones. Publicar UI no confirma un despliegue del backend financiero.
+
+Evidencia: [UI del widget en producción](validation/widget-ui-production-20261028.md).
+
+### Sustituir altas no vinculadas y ajuste del widget (28/10/2026, acuerdo posterior)
+
+- Este acuerdo reemplaza la obligación anterior de conservar indefinidamente un username incierto. El usuario acepta cuentas huérfanas en el proveedor: intentar recuperar brevemente y, si no se confirma, archivar el candidato como reemplazado y crear otra variante del mismo nombre. Una cuenta ya vinculada permanece estable. Solo una cuenta se vincula a la identidad del navegador; las respuestas viejas no pueden reemplazarla.
+- Recuperación de proveedor de hasta 1,8 s por candidato y alta de hasta 8 s por llamada en el recorrido foreground de Atrio. Hasta tres intentos; el éxito inicial conserva una única creación. Persistencia del vínculo y sustitución serializadas sobre la misma fila; historial cifrado y transiciones condicionadas por username. Ante un fallo de vinculación local, primero reintentar esa vinculación y solo sustituir si sigue sin credenciales asociadas. La ventana del worker sigue siendo interna, nunca una espera normal del cliente.
+- Aplica a los tres adaptadores de alta PBAdmin utilizados por los dos motores y a la recuperación compartida de los cuatro gateways. Ganamos+ conserva su integración propia, sin alta PBAdmin ni sustitución por NET.
+- Cierre del chat: volver de 720 a 520 ms, manteniendo el contenido durante la compresión. Maximizado móvil: reducir el margen superior de 64 a 32 px (más safe area), conservando ancho, restauración, teclado y movimiento reducido. Fuente sincronizada en los cuatro gateways, incluido el código servido por el Worker de Plus.
+- Kobe: revisar el bloqueo de carga sin tratarlo como un pendiente de creación. Atrio Full Carga NET usa un único crédito API, con autenticación/búsqueda antes de armar la guarda persistente. Un error previo al crédito no consume el bono ni genera una incertidumbre financiera falsa; un resultado monetario incierto sigue bloqueado y no se reintenta. Los demás canales conservan el recorrido anterior. La conciliación del incidente histórico es explícita, acotada a Kobe, respaldada por lecturas frescas del proveedor y sin enviar dinero.
+- El lote funcional de altas/API2 permanece local hasta el despliegue coordinado de API2/migraciones por el programador y la posterior publicación web. La UI independiente de compresión/altura se publicó por separado por instrucción posterior del usuario.
+
+Entrega vigente: [altas, widget y conciliación de Kobe](validation/safe-entry-widget-kobe-20261028.md).
+
+### Alta rápida con nombre y variantes numéricas (28/10/2026)
+
+- Mantener el recorrido que ya crea la cuenta en pocos segundos: un primer intento exitoso no agrega búsquedas ni verificaciones remotas. Las altas nuevas de Atrio usan el nombre normalizado más seis cifras; conservar los usuarios existentes y los intentos pendientes con su usuario reservado.
+- Ante un rechazo explícito de nombre ocupado, primero comprobar si esa cuenta corresponde al mismo intento y su clave. Recuperarla si coincide. Si se confirma la ausencia o un rechazo explícito de sus credenciales, reservar otra variante del mismo nombre y clave, dentro del mismo intento. Cambiar la reserva de forma atómica, con exclusión entre procesos y protección contra respuestas tardías de otra variante.
+- No interpretar un timeout, HTML de protección, suspensión, correo repetido o error genérico como nombre ocupado. Un resultado incierto conserva su usuario y se concilia. Hasta tres intentos cortos por solicitud, sin pausa artificial por una colisión confirmada; conservar los presupuestos web acotados y la recuperación durable como mecanismo interno.
+- Aplica a los adaptadores de altas Atrio de Rey, Ases y NET, usados por ambos motores. Los bots anteriores conservan sus métodos y el sufijo predeterminado de cuatro cifras. Ganamos+ conserva su integración actual y no adquiere un alta PBAdmin. No cambiar cargas, retiros, datos bancarios ni cuentas ya creadas.
+- No se implementa una reserva de cuentas precreadas. El objetivo es entregar una cuenta con el nombre del cliente durante el ingreso; las recuperaciones prolongadas no son el recorrido normal de alta.
+
+### Retomar altas pendientes al volver a la landing (28/10/2026)
+
+- Reconocer el navegador con su identidad estable y buscar tanto la cuenta vinculada como el intento de alta pendiente. No pedir otro nombre para recuperar el intento. Conservar asesor, bot, gerencia, proveedor, identidad, usuario/clave reservados y promo originales. Cubrir constructor y clásico, con y sin pool de managers. No adoptar una cuenta de otro navegador por coincidencia de nombre.
+- Una identidad recordada sin cuenta vinculada solo se retoma automáticamente tras consultar el estado privado de API2 para ese jugador, asesor, bot, gerencia y proveedor. La consulta no crea usuarios ni devuelve credenciales. Una cuenta pendiente no se presenta como lista. Reutilizar la conciliación existente: verificar pertenencia y clave; únicamente NET permite volver a solicitar el mismo usuario/clave después de confirmar su ausencia. Conservar la protección contra altas inciertas de los demás proveedores.
+- El límite interno de 24 horas corresponde a una ventana de recuperación, no a la edad de la cuenta. Un regreso autorizado puede abrir otra ventana para un intento detenido, manteniendo fecha e identidad originales. Los reintentos simultáneos no reinician ni extienden una ventana activa. Mantener exclusión entre trabajadores y alertas internas existentes.
+- Limitar los reintentos del navegador a 30 segundos en total y cada petición a 15 segundos. Mostrar feedback tras 8 segundos. Si el recorrido completo del gateway sigue pendiente a los 45 segundos, ofrecer «Retomar mi acceso» y explicar que no hace falta completar los datos nuevamente. Ignorar resultados tardíos de una ejecución anterior; reintentar con el mismo token. Conservar paletas, usuario/clave, espera configurada y ausencia de avisos de autoredirección.
+- Misma página y transporte compartidos para los cuatro gateways, incluido el Worker de Ganamos+. Plus conserva su falta de altas PBAdmin; no crear una cuenta NET para ese destino. No cambiar cargas, retiros, saldos ni operaciones bancarias.
+- Requiere una columna nueva en API2 (`recovery_started_at`). API2 y su migración quedan para el programador; este lote no publica ni reintenta cuentas reales. Publicar la parte web después de API2 para disponer del endpoint privado de estado.
+
+Entrega y verificación: [recuperación de intentos antiguos](validation/entry-recovery-20261028.md).
+
 ### Stickers en los chats (28/10/2026)
 
 - Cliente y asesor tienen el botón de stickers con el símbolo de hoja/cuadrado y esquina doblada, junto al selector de emojis. Un selector compartido ofrece Recientes, Mis stickers y Añadir sticker. Abrir uno cierra el selector de emojis; conservar paletas, teclado, ancho y espacio del compositor.

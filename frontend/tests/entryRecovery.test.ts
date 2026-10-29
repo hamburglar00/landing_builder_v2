@@ -3,9 +3,25 @@ import test from "node:test";
 import { fetchWithEntryRecovery } from "../lib/reyDeAses/request-recovery";
 import { resolveTargetAccount, TargetIntegrationError } from "../lib/reyDeAses/integrations.server";
 
+test('a prolonged outage has a total budget and cannot sleep through a long Retry-After', async () => {
+  const originalFetch = globalThis.fetch, originalNow = Date.now, originalTimer = globalThis.setTimeout;
+  let now = 100000, calls = 0;
+  Date.now = () => now;
+  globalThis.setTimeout = ((callback: () => void, ms: number) => originalTimer(callback, ms >= 8000 ? ms : 0)) as typeof setTimeout;
+  try {
+    globalThis.fetch = async () => {calls++; now += 16000; return Response.json({}, {status:503});};
+    const response = await fetchWithEntryRecovery('/entry', {body:'original-token'});
+    assert.equal(response.status,503); assert.equal(calls,2);
+    calls = 0; now = 100000;
+    globalThis.fetch = async () => {calls++; return Response.json({}, {status:429,headers:{'Retry-After':'45'}});};
+    assert.equal((await fetchWithEntryRecovery('/entry', {body:'original-token'})).status,429);
+    assert.equal(calls,1,'A long Retry-After returns control instead of another invisible wait');
+  } finally { globalThis.fetch=originalFetch; Date.now=originalNow; globalThis.setTimeout=originalTimer; }
+});
+
 test("partial JSON, body errors and body timeouts resume the same entry request", async () => {
   const originalFetch = globalThis.fetch, originalTimer = globalThis.setTimeout;
-  globalThis.setTimeout = ((callback: () => void, ms: number) => originalTimer(callback, ms === 45000 ? 25 : 0)) as typeof setTimeout;
+  globalThis.setTimeout = ((callback: () => void, ms: number) => originalTimer(callback, ms === 15000 ? 25 : 0)) as typeof setTimeout;
   try {
     for (const scenario of ["truncated", "stream-error", "body-timeout", "always-truncated"]) {
       let calls = 0;
@@ -41,8 +57,8 @@ test("entry recovery keeps the exact request, respects Retry-After and stops on 
   const requests: string[] = [], waits: number[] = [];
   // Abort deadlines stay real; retry delays are recorded and accelerated.
   globalThis.setTimeout = ((callback: () => void, ms: number) => {
-    if (ms !== 45000) waits.push(ms);
-    return originalTimer(callback, ms === 45000 ? ms : 0);
+    if (ms !== 15000) waits.push(ms);
+    return originalTimer(callback, ms === 15000 ? ms : 0);
   }) as typeof setTimeout;
   try {
     const outcomes = [new TypeError("connection lost"), Response.json({}, { status: 429, headers: { "Retry-After": "2" } }), Response.json({}, { status: 503 }), Response.json({ ok: true })];
