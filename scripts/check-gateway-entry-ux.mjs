@@ -81,6 +81,38 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
         await page.goto("https://fixture.test/");
         const launcher = page.locator("#gateway-chat-button"), shell = page.locator("#gateway-chat-shell");
         await launcher.waitFor();
+        await page.evaluate(() => {
+          const shell = document.querySelector("#gateway-chat-shell");
+          window.chatMotionSamples = {};
+          function capture() {
+            const phase = shell.dataset.open === "true" ? "opening" : "closing";
+            const samples = window.chatMotionSamples[phase] = [];
+            const started = performance.now();
+            function sample() {
+              if (shell.dataset.motion !== "animating") return;
+              samples.push({ width: shell.offsetWidth, height: shell.offsetHeight,
+                visibleWidth: shell.getBoundingClientRect().width,
+                elapsed: performance.now() - started, opacity: Number(getComputedStyle(shell).opacity),
+                duration: getComputedStyle(shell).transitionDuration.split(",")[0],
+                heightAnimation: shell.getAnimations().some(animation => animation.effect.getKeyframes().some(frame => "height" in frame)) });
+              requestAnimationFrame(sample);
+            }
+            requestAnimationFrame(sample);
+          }
+          document.querySelector("#gateway-chat-button").addEventListener("click", capture);
+          window.addEventListener("message", event => { if (event.data?.type === "atrio.widget.close") capture(); });
+        });
+        const stableMotionLayout = async phase => {
+          const samples = await page.evaluate(phase => window.chatMotionSamples[phase], phase);
+          assert.ok(samples.length >= 2, `${phase}: motion has intermediate frames`);
+          assert.ok(Math.max(...samples.map(s => s.height)) - Math.min(...samples.map(s => s.height)) <= 1, `${phase}: iframe height stays fixed while scaling`);
+          assert.equal(samples.some(s => s.heightAnimation), false, `${phase}: opening/closing never relayouts the iframe through a height animation`);
+          assert.ok(new Set(samples.map(s => Math.round(s.visibleWidth))).size > 1, `${phase}: visible size changes continuously`);
+          if (phase === "closing") {
+            assert.ok(samples.some(s => s.elapsed >= 80 && s.elapsed <= 300 && s.opacity > .95), "Content remains visible during the measured contraction");
+            assert.equal(samples[0].duration, "0.52s", "Compression keeps the 520ms duration");
+          }
+        };
         const canvas = async () => page.locator("#gateway-browser-edge").evaluate(el => ({ background: getComputedStyle(el).backgroundColor, opacity: getComputedStyle(el).opacity, bottom: el.getBoundingClientRect().bottom, height: el.getBoundingClientRect().height, viewport: innerHeight, hitTarget: document.elementFromPoint(innerWidth / 2, innerHeight - 2)?.id }));
         for (let cycle = 0; cycle < 2; cycle++) {
           const before = await canvas(); assert.equal(before.background, paletteRgb); assert.equal(before.opacity, "1"); assert.equal(before.bottom, before.viewport); assert.ok(before.height >= 8); assert.notEqual(before.hitTarget, "gateway-browser-edge");
@@ -89,6 +121,7 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
           const opening = await shell.evaluate(el => ({ width: el.getBoundingClientRect().width, layoutWidth: el.offsetWidth, opacity: Number(getComputedStyle(el).opacity), inert: el.inert }));
           assert.ok(opening.width > 0); assert.ok(opening.width < opening.layoutWidth); assert.equal(opening.inert, false);
           await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "open");
+          await stableMotionLayout("opening");
           const normalBox = await shell.boundingBox();
           // Reject requests from the provider window, even if it claims to be Atrio.
           await page.evaluate(() => window.postMessage({source:"atrio-widget",type:"atrio.widget.maximize",maximized:true},location.origin));
@@ -100,7 +133,26 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
           assert.ok(Math.abs(normalBox.width-expandedBox.width)<1,"Maximize preserves width");
           assert.ok(expandedBox.height>=normalBox.height,"Maximize cannot reduce the chat");
           assert.ok(expandedBox.y>=0&&expandedBox.y<80,"Maximize leaves room near the header");
-          if (viewport.width <= 640) assert.ok(expandedBox.y<=33,"Maximized mobile chat leaves only 32px above it");
+          if (viewport.width <= 640) {
+            assert.ok(Math.abs(expandedBox.y - 8) <= 1,"Maximized chat uses the keyboard's 8px top gap");
+            // Model the mobile visual viewport; no real keyboard or player session.
+            await page.evaluate(height => {
+              window.originalChatVisualViewport = window.visualViewport;
+              Object.defineProperty(window, "visualViewport", { configurable: true, value: Object.assign(new EventTarget(), { height, offsetTop: 0 }) });
+              window.dispatchEvent(new Event("resize"));
+            }, viewport.height - 300);
+            await page.waitForFunction(() => document.documentElement.dataset.gatewayKeyboard === "true");
+            await page.waitForTimeout(360);
+            const keyboardBox = await shell.boundingBox();
+            assert.ok(Math.abs(keyboardBox.y - expandedBox.y) <= 1,"Maximized and keyboard layouts reach the same top edge");
+            assert.ok(keyboardBox.y + keyboardBox.height <= viewport.height - 300 + 1,"Keyboard layout stays inside the visible viewport");
+            await page.evaluate(() => {
+              Object.defineProperty(window, "visualViewport", { configurable: true, value: window.originalChatVisualViewport });
+              window.dispatchEvent(new Event("resize"));
+            });
+            await page.waitForFunction(() => document.documentElement.dataset.gatewayKeyboard === "false");
+            await page.waitForTimeout(360);
+          }
           assert.ok(expandedBox.y+expandedBox.height<=viewport.height,"Maximize stays inside the viewport");
           await page.frameLocator("#gateway-chat-shell iframe").locator("body").evaluate(() => parent.postMessage({source:"atrio-widget",type:"atrio.widget.maximize",maximized:false},"https://fixture.test"));
           await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.maximized === "false");
@@ -110,14 +162,10 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
           await page.frameLocator("#gateway-chat-shell iframe").getByRole("button", { name: "Cerrar chat" }).click();
           await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.open === "false");
           const closing = await shell.evaluate(el => ({ width: el.offsetWidth, inert: el.inert })); assert.ok(closing.width > 0); assert.equal(closing.inert, true);
-          await page.waitForTimeout(220);
-          assert.ok(await shell.evaluate(el => Number(getComputedStyle(el).opacity)>.95),"Closing remains visible while compressing");
-          assert.equal(await shell.getAttribute("data-motion"),"animating");
-          const closeDuration = await shell.evaluate(el=>getComputedStyle(el).transitionDuration.split(',')[0]);
-          assert.equal(closeDuration,"0.52s","Compression returns to the faster 520ms duration");
           // Even during contraction, the closed frame/backdrop must pass touches through.
           await page.mouse.click(20, viewport.height - 40);
           await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "closed");
+          await stableMotionLayout("closing");
           assert.equal(await shell.evaluate(el => el.offsetWidth), 0);
         }
         assert.equal(frameNavigations, 1); assert.equal(sdkRequests, 0); assert.equal(await page.evaluate(() => window.providerClicks), 2); assert.deepEqual(errors, []);

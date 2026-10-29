@@ -1,5 +1,13 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Movimiento continuo y altura del teclado (28/10/2026, ajuste posterior)
+
+- Mantener la duración de 520 ms de apertura y cierre, con una curva continua en ambos sentidos. Preparar el tamaño completo del iframe antes de iniciar la escala desde el botón, sin animar la restauración desde altura cero. Conservar el iframe, inversión rápida, foco/teclado, paletas, accesibilidad y paso de toques al cerrar.
+- Maximizado móvil: alcanzar el margen superior de 8 px usado por el chat cuando aparece el teclado, conservando ancho y separación inferior de la paleta del gateway. El teclado sigue ajustando el chat al área realmente visible. Este acuerdo reemplaza el margen previo de 32 px.
+- Aplicar y comprobar en los cuatro gateways, incluido el fuente de Plus. Estos assets de UI son independientes del deploy pendiente de API2; su publicación debe conservar el código funcional actualmente desplegado.
+
+Validación y publicación: [movimiento continuo y altura](validation/smooth-chat-motion-20261028.md).
+
 ### Entrega completa autorizada a Git (28/10/2026, instrucción posterior)
 
 - El usuario autorizó comitear y pushear todo el lote pendiente, incluido API2. Las menciones previas de trabajo local describen la preparación; esta autorización permite su entrega en las ramas actuales, sin cambiar ramas ni publicar API2.
