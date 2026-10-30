@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { normalizeTemplate8Cover, template8Provider } from "../lib/landing/template8";
+import { normalizeTemplate8Cover, template8Provider, template8SkinCode } from "../lib/landing/template8";
+import { configuredSkinCode } from "../lib/reyDeAses/start.server";
+import { MULTI_SKIN_CODES } from "../lib/multi-skin-catalog";
 import { buildLandingConfig } from "../lib/landing/buildLandingConfig";
 import { DEFAULT_CONFIG } from "../lib/landing/mocks";
 import { switchLandingTemplate } from "../lib/landing/templateVariants";
@@ -51,9 +53,10 @@ test("destination prewarm reserves by saved card; selection commits once; Ganamo
   assert.equal(calls[0].reserve_only,true); assert.equal(calls[0].target_provider,"ganamos_net");
   assert.equal((await handleTemplate7Destination(request({card_index:1,commit:true}),id(8),backend)).status,200);
   assert.equal(calls[1].reserve_only,false);
-  assert.equal((await handleTemplate7Destination(request({card_index:2}),id(8),backend)).status,503);
+  // Multi Skin is available, but a NET assignment must never satisfy its scope.
+  assert.equal((await handleTemplate7Destination(request({card_index:2}),id(8),backend)).status,403);
   for (const data of [{}, {card_index:0}, {card_index:"1"}, {card_index:9}, {card_index:1,target_provider:"rey_de_ases"}, {card_index:1,commit:"true"}]) assert.ok((await handleTemplate7Destination(request(data),id(8),backend)).status>=400);
-  assert.equal(calls.length,2);
+  assert.equal(calls.length,3);
   assert.equal((await handleTemplate7Destination(request({card_index:1}),null,backend)).status,409);
 });
 test("shared preparation token payload preserves the selected card with strict validation", () => {
@@ -61,4 +64,37 @@ test("shared preparation token payload preserves the selected card with strict v
   assert.equal(parseTemplate7StartPayload(payload)?.card_index,3);
   assert.equal(parseTemplate7StartPayload(payload)?.attribution?.card_index,"3");
   assert.equal(parseTemplate7StartPayload({...payload,card_index:"3"}),null);
+});
+
+test("each Multi Skin card preserves its own skin through editor drafts and both public renderers", () => {
+  for (const skin of MULTI_SKIN_CODES) {
+    const cards = [...cover.cards];
+    cards[1] = { ...cards[1], multiSkinCode: skin };
+    cards[3] = { ...cards[3], targetProvider: "multi_skin", multiSkinCode: "ganamos_plus" };
+    const saved = { ...config, multiSkinCode: "jugamos" as const, template8Cover: normalizeTemplate8Cover({ ...cover, cards }) };
+    const restored = switchLandingTemplate(switchLandingTemplate(saved, "template7"), "template8");
+    assert.equal(restored.template8Cover?.cards[1].multiSkinCode, skin);
+    assert.equal(template8SkinCode(saved, 2), skin);
+    assert.equal(template8SkinCode(saved, 4), "ganamos_plus");
+    const row = { id:id(1),name:"test8",user_id:id(4),workspace_currency:"ARS",config:saved,landing_config:{} };
+    assert.equal(configuredSkinCode(row, "multi_skin", 2), skin);
+    const payload = buildLandingConfig({ id:id(1),name:"test8",comment:"",pixelId:"123",postUrl:"",landingTag:"TEST",config:saved });
+    assert.equal(payload.content?.template8?.cards[1].multiSkinCode, skin);
+    for (const classic of [false, true]) {
+      const html = classic ? renderClassicTemplate7InlineHtml({ slug:"test8",config:payload as never }, `function getOrCreateDeviceId(){return '${id(8)}';}`) : renderPublicLandingHtml({ slug:"test8",config:payload as never });
+      assert.ok(html.includes(`"multiSkinCode":"${skin}"`));
+      assert.ok(html.includes("cfg.skinCode = card.multiSkinCode"));
+    }
+  }
+});
+
+test("legacy cards stay on Ganamos+ regardless of Template 7's skin and malformed card skins fail closed", () => {
+  const legacy = { ...config, multiSkinCode:"bet30" };
+  const cards = cover.cards.map(card => { const copy = {...card}; delete copy.multiSkinCode; return copy; });
+  assert.equal(template8SkinCode({ ...legacy, template8Cover:{ ...cover,cards } }, 2), "ganamos_plus");
+  for (const skin of [null, "foreign-domain", "https://bet30e.lat", ""]) {
+    const invalid = { ...config, template8Cover:{ ...cover,cards:cards.map((card,i) => i===1 ? {...card,multiSkinCode:skin} : card) } };
+    assert.equal(template8SkinCode(invalid, 2), null);
+  }
+  for (const index of [undefined, 0, "2", 9]) assert.equal(template8SkinCode(config, index), null);
 });

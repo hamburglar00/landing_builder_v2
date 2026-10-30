@@ -250,7 +250,7 @@ export function buildLandingConfig({
       ctaDestination: (config.template === "template7" || config.template === "template8") ? "atrio" : "whatsapp",
       ...((config.template === "template7" || config.template === "template8") ? { target_provider: config.targetProvider } : {}),
       ...((config.template === "template7" || config.template === "template8") && config.targetProvider === "multi_skin"
-        ? { skin_code: "ganamos_plus" as const }
+        ? { skin_code: config.multiSkinCode }
         : {}),
       atrioRedirectUrl: config.atrioRedirectUrl.trim(),
       atrioClientId: (config.atrioClientId ?? "").trim(),

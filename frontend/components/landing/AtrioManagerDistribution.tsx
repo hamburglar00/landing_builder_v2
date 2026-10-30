@@ -18,10 +18,9 @@ export function AtrioManagerDistribution({ landingId, provider, providers, clien
   onDraftChange: (draft: ManagerDestinationDraft) => void;
 }) {
   const requestedProviders = providers ?? [provider ?? "rey_de_ases"];
-  const scopeKey = [...new Set(requestedProviders.filter(value => value !== "multi_skin"))].sort().join(",");
+  const scopeKey = [...new Set(requestedProviders)].sort().join(",");
   const loadKey = `${landingId}:${scopeKey}`;
   const activeProviders = useMemo(() => scopeKey ? scopeKey.split(",") as TargetProvider[] : [], [scopeKey]);
-  const pendingIntegration = requestedProviders.includes("multi_skin");
   const draftCache = useRef(new Map<string, ManagerDestinationDraft>());
   const [advisors, setAdvisors] = useState<AdvisorDirectory[]>([]);
   const [destinations, setDestinations] = useState<DestinationConfiguration["destinations"]>([]);
@@ -80,8 +79,7 @@ export function AtrioManagerDistribution({ landingId, provider, providers, clien
       onDraftChange(draft);
     }
   }, [landingId, activeProviders, connections, loadKey, loaded, loadedScope, mode, criterion, destinations, onDraftChange]);
-  const pendingNotice = <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">Ganamos+ todavía no está integrado con PBAdmin. Sus bots no se comparten con Ganamos NET.</p>;
-  if (!activeProviders.length) return pendingIntegration ? pendingNotice : null;
+  if (!activeProviders.length) return null;
   return <div className="space-y-4">
     <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] p-3">
       <p className="font-medium text-sm">{providers ? "Destinos de Atrio" : `Destinos de ${CASINO_NAMES[provider ?? "rey_de_ases"]}`}</p>
@@ -106,7 +104,6 @@ export function AtrioManagerDistribution({ landingId, provider, providers, clien
       </div>}
       {mode === "fair" && <div role="group" aria-label="Criterio de reparto equitativo" className="mt-3 flex w-fit rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">{(["usage_count", "messages_received"] as const).map((value, index) => <button key={value} type="button" disabled={busy} onClick={() => setCriterion(value)} aria-pressed={criterion === value} className={`cursor-pointer px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-400 ${index === 0 ? "rounded-l-lg border-r border-zinc-700" : "rounded-r-lg"} ${criterion === value ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"}`}>{value === "usage_count" ? "Por contador" : "Chats iniciados"}</button>)}</div>}
     </div>
-    {pendingIntegration && pendingNotice}
     {mixedConfiguration && <p className="text-xs text-amber-300">Había criterios distintos guardados por casino. Al guardar se aplicará el criterio seleccionado a todos los destinos.</p>}
     {busy && !loaded && <p className="text-xs text-[var(--color-text-muted)]">Consultando bots…</p>}
     {loaded && !configured && <p className="text-xs text-amber-300">Elegí los bots y guardá los cambios de la landing. Las cuentas existentes conservan su destino.</p>}

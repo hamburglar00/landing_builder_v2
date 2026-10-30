@@ -9,10 +9,11 @@ export class TargetIntegrationError extends Error {
   }
 }
 
-const API2_PLATFORM_BY_PROVIDER: Record<Exclude<TargetProvider, "multi_skin">, number> = {
+const API2_PLATFORM_BY_PROVIDER: Record<TargetProvider, number> = {
   ases_del_norte: 1,
   ganamos_net: 2,
   rey_de_ases: 5,
+  multi_skin: 7,
 };
 
 function configuredOrigin(raw: string | undefined): URL {
@@ -115,8 +116,6 @@ export async function resolveInternalChatPlayer(input: PlayerResolveRequest): Pr
 }
 
 export async function resolveTargetAccount(request: Api2ResolveAccountRequest): Promise<TargetAccount> {
-  // Ganamos+ has no PBAdmin integration. Never treat a NET manager as its provider.
-  if (request.target_provider === "multi_skin") throw new TargetIntegrationError("integration_pending");
   if (!Number.isSafeInteger(request.agency_id) || Number(request.agency_id)<=0 || !Number.isSafeInteger(request.manager_id) || Number(request.manager_id)<=0) throw new TargetIntegrationError("integration_pending");
   if (api2Readiness()) throw new TargetIntegrationError("integration_pending");
   const origin = configuredOrigin(process.env.API2_ORIGIN);
@@ -133,7 +132,7 @@ export async function resolveTargetAccount(request: Api2ResolveAccountRequest): 
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ external_user_id: request.external_user_id, name: request.name, advisor_id: request.advisor_id, agency_id:request.agency_id,
-          ...(request.target_provider === "ganamos_net" ? {creation_mode: "create_only"} : {}),
+          ...(["ganamos_net", "multi_skin"].includes(request.target_provider) ? {creation_mode: "create_only"} : {}),
         }),
         signal: controller.signal,
         cache: "no-store",

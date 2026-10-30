@@ -1,5 +1,5 @@
 import { getOrCreateClientIdentity } from './clientIdentity.server';
-import { configuredTargetProvider, isTemplate7Landing, parseTemplate7StartPayload, type StartDb } from './start.server';
+import { configuredTargetProvider, configuredSkinCode, isTemplate7Landing, parseTemplate7StartPayload, type StartDb } from './start.server';
 import { gatewayOriginFor } from './gatewayOrigins';
 
 type WarmInput = { advisor_id: string; advisor_slug: string; device_id: string; landing_id: string; target_provider: string };
@@ -35,13 +35,15 @@ export function createTemplate7WarmHandler(deps: {
         advisor.atrio_id !== payload.advisor_id || advisor.slug !== payload.advisor_slug || await deps.db.blocked(landing.user_id)) return json({ error: 'unavailable' }, 403);
       const provider = configuredTargetProvider(landing);
       if (!provider) return json({ error: 'unavailable' }, 503);
+      const skinCode=configuredSkinCode(landing,provider);
+      if (provider==='multi_skin' && !skinCode) return json({error:'unavailable'},503);
       const prepared = await deps.prepare({ advisor_id: advisor.atrio_id, advisor_slug: advisor.slug, device_id: identity.deviceId, landing_id: landing.id, target_provider: provider });
       if (prepared?.existing_name && prepared.promo_code && deps.recover) {
-        const response = await deps.recover(request, {...value,name:prepared.existing_name,promo_code:prepared.promo_code,attribution:{target_provider:provider,...(provider==='multi_skin'?{skin_code:'ganamos_plus'}:{})}});
+        const response = await deps.recover(request, {...value,name:prepared.existing_name,promo_code:prepared.promo_code,attribution:{target_provider:provider,...(skinCode?{skin_code:skinCode}:{})}});
         if (!response.ok) return response;
         return json({ready:true,...await response.json()},200);
       }
-      const gateway = new URL(gatewayOriginFor(provider, provider === 'multi_skin' ? 'ganamos_plus' : null, deps.env) || '');
+      const gateway = new URL(gatewayOriginFor(provider, skinCode, deps.env) || '');
       if (gateway.protocol !== 'https:' || gateway.username || gateway.password || gateway.pathname !== '/' || gateway.search || gateway.hash) return json({ ready: true }, 200);
       return json({ ready: true, gateway_origin: gateway.origin }, 200);
     } catch { return json({ error: 'preparation_unavailable' }, 503); }

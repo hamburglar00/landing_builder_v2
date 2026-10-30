@@ -12,6 +12,7 @@ import { ColorSelect } from "./ColorSelect";
 import { ImageUploader } from "./ImageUploader";
 import { buildLandingConfig } from "@/lib/landing/buildLandingConfig";
 import { normalizeTemplate8Cover, TEMPLATE8_PROVIDER_NAMES } from "@/lib/landing/template8";
+import { MULTI_SKIN_CODES, MULTI_SKIN_CATALOG, type MultiSkinCode } from "@/lib/multi-skin-catalog";
 import { normalizeTemplate6Cover, TEMPLATE6_CARD_COUNT, template6Lines } from "@/lib/landing/template6";
 import {
   switchLandingTemplate,
@@ -332,7 +333,7 @@ export function LandingEditorForm({
     }));
   };
 
-  const updateTemplate6Card = (index: number, patch: Partial<(typeof template6Cover.cards)[number]> & { targetProvider?: LandingThemeConfig["targetProvider"] }) => {
+  const updateTemplate6Card = (index: number, patch: Partial<(typeof template6Cover.cards)[number]> & { targetProvider?: LandingThemeConfig["targetProvider"]; multiSkinCode?: MultiSkinCode }) => {
     setConfig((current) => {
       const cover = readCover(current);
       return {
@@ -717,7 +718,14 @@ export function LandingEditorForm({
                 {template6Cover.cards.slice(0, isTemplate8 ? template6Cover.cardCount : TEMPLATE6_CARD_COUNT[template6Cover.grid]).map((card, index) => (
                   <div key={index} className="space-y-3 rounded-xl border border-zinc-700 bg-zinc-950/40 p-3">
                     <h5 className="text-xs font-semibold text-zinc-200">Tarjeta {index + 1}</h5>
-                    {isTemplate8 && <label className="block text-xs text-zinc-400">Página<CustomSelect portal value={normalizeTemplate8Cover(config.template8Cover).cards[index].targetProvider} onChange={value => updateTemplate6Card(index, { targetProvider: value as LandingThemeConfig["targetProvider"] })} options={Object.entries(TEMPLATE8_PROVIDER_NAMES).map(([value, label]) => ({ value, label }))} /></label>}
+                    {isTemplate8 && <label className="block text-xs text-zinc-400">Página<CustomSelect portal ariaLabel={`Página de tarjeta ${index + 1}`} value={normalizeTemplate8Cover(config.template8Cover).cards[index].targetProvider} onChange={value => updateTemplate6Card(index, { targetProvider: value as LandingThemeConfig["targetProvider"] })} options={Object.entries(TEMPLATE8_PROVIDER_NAMES).map(([value, label]) => ({ value, label }))} /></label>}
+                    {isTemplate8 && normalizeTemplate8Cover(config.template8Cover).cards[index].targetProvider === "multi_skin" && (
+                      <label className="block text-xs text-zinc-400">Página de Multi Skin
+                        <CustomSelect portal ariaLabel={`Página de Multi Skin de tarjeta ${index + 1}`} value={normalizeTemplate8Cover(config.template8Cover).cards[index].multiSkinCode ?? "ganamos_plus"}
+                          onChange={value => updateTemplate6Card(index, { multiSkinCode: value as MultiSkinCode })}
+                          options={MULTI_SKIN_CODES.map(value => ({ value, label: MULTI_SKIN_CATALOG[value].name }))} />
+                      </label>
+                    )}
                     <ImageUploader
                       label="Imagen cuadrada (.avif)"
                       value={card.imageUrl ? [card.imageUrl] : []}

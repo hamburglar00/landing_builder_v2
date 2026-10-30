@@ -22,10 +22,11 @@ function App(){const[draft,setDraft]=useState({displayName:"Prueba",whatsapp:"",
 const configs=[["landing-autologuin","rey_de_ases","#141414"],["ases-gateway","ases_del_norte","#071b2c"],["ganamos-gateway","ganamos_net","#11001f"],["multi-skin-gateway","multi_skin","#121212"]];
 const rgb=hex=>"rgb("+[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)).join(", ")+")";
 const assets=await Promise.all(configs.map(async([repo,provider,palette])=>{
- const cwd=path.join(workspace,repo), result=await build({absWorkingDir:cwd,stdin:{resolveDir:cwd,loader:"ts",contents:'export{renderPreparationPage}from"./src/lib/preparation-page";export{renderGatewayEntryTransition,GATEWAY_ENTRY_TRANSITION_RUNTIME}from"./src/lib/gateway-entry-transition";'},bundle:true,write:false,platform:"node",format:"cjs"});
+ const cwd=path.join(workspace,repo), result=await build({absWorkingDir:cwd,stdin:{resolveDir:cwd,loader:"ts",contents:'export{renderPreparationPage}from"./src/lib/preparation-page";export{renderGatewayEntryTransition,GATEWAY_ENTRY_TRANSITION_RUNTIME}from"./src/lib/gateway-entry-transition";'+(repo==='multi-skin-gateway'?'export{skinPreparationTheme}from"./src/lib/skin-presentation";':'')},bundle:true,write:false,platform:"node",format:"cjs"});
  const module={exports:{}};new Function("module","exports",result.outputFiles[0].text)(module,module.exports);
- const route=await readFile(path.join(cwd,"src/app/prepare/route.ts"),"utf8"),logo=route.match(/const LOGO\s*=\s*"([^"]+)"/)[1];
- const theme=new Function("LOGO","return ("+route.match(/renderPreparationPage\(token,\s*(\{[\s\S]*?\})\)\)/)[1]+")")(logo);
+ const route=await readFile(path.join(cwd,"src/app/prepare/route.ts"),"utf8");
+ const theme=repo==='multi-skin-gateway'?module.exports.skinPreparationTheme('ganamos_plus')
+   :new Function("LOGO","return ("+route.match(/renderPreparationPage\(token,\s*(\{[\s\S]*?\})\)\)/)[1]+")")(route.match(/const LOGO\s*=\s*"([^"]+)"/)[1]);
  return {repo,provider,palette,cwd,theme,...module.exports};
 }));
 const checks=[];
@@ -65,10 +66,10 @@ for(const[engine,type]of[["Chromium",chromium],["WebKit",webkit]]){
     await page.addInitScript(()=>Object.defineProperty(navigator,"clipboard",{value:{writeText:async value=>{window.copied=value}}}));
     await page.route("https://fixture.test/**",async route=>{
      const pathname=new URL(route.request().url()).pathname;
-     if(pathname==="/api/preparations/complete")return route.fulfill({json:{username:"fixtureplayer",continuation_token:"c1.fixture",handoff_url:"https://fixture.test/start?t=fixture"}});
-     if(pathname==="/start")return route.fulfill({json:{username:"fixtureplayer",password:"fixture-password",redirect_url:"https://fixture.test/home",entry_wait:{enabled:true,seconds:60}}});
+     if(pathname==="/api/preparations/complete")return route.fulfill({json:{username:"fixtureplayer",continuation_token:"c1.fixture",entry_token:"ge1.fixture",handoff_url:"https://fixture.test/start?t=fixture"}});
+     if(pathname==="/start")return route.fulfill({json:{username:"fixtureplayer",password:"fixture-password",entry_confirmation:"ge1.confirmed",entry_id:"fixture-entry",redirect_url:"https://fixture.test/home",entry_wait:{enabled:true,seconds:60}}});
      if(pathname==="/api/session/credentials")throw Error("Entry must reuse /start credentials");
-     if(pathname==="/api/session/recover")return route.fulfill({json:{active:true}});
+     if(pathname==="/api/session/recover")return route.fulfill({json:{active:true,entry_confirmed:true,entry_id:'fixture-entry'}});
      if(pathname.endsWith(".avif")||pathname.endsWith(".webp"))return route.fulfill({body:await readFile(path.join(asset.cwd,"public",pathname)),contentType:pathname.endsWith(".avif")?"image/avif":"image/webp"});
      if(pathname==="/overlay")return route.fulfill({contentType:"text/html",body:`<html><head><meta name="theme-color" content="#000000"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>html,body{background:#000}</style></head><body>${asset.renderGatewayEntryTransition(asset.provider,{active:true,stage:"creating"})}<script>${asset.GATEWAY_ENTRY_TRANSITION_RUNTIME};window.transition=createGatewayEntryTransition(document.getElementById("gateway-entry-transition"));transition.start("creating");</script></body></html>`});
      return route.fulfill({contentType:"text/html",body:asset.renderPreparationPage("p1.fixture",asset.theme)});

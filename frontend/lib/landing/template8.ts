@@ -1,8 +1,9 @@
 import type { LandingTemplate8CoverConfig, TargetProvider } from "./types";
+import { isMultiSkinCode, MULTI_SKIN_CATALOG, type MultiSkinCode } from "../multi-skin-catalog";
 
 export const TEMPLATE8_PROVIDERS: readonly TargetProvider[] = ["ganamos_net", "multi_skin", "rey_de_ases", "ases_del_norte"];
 export const TEMPLATE8_PROVIDER_NAMES: Record<TargetProvider, string> = {
-  ganamos_net: "Ganamos NET", multi_skin: "Ganamos+", rey_de_ases: "Rey de Ases", ases_del_norte: "Ases del Norte",
+  ganamos_net: "Ganamos NET", multi_skin: "Multi Skin", rey_de_ases: "Rey de Ases", ases_del_norte: "Ases del Norte",
 };
 export function normalizeTemplate8Cover(value?: Partial<LandingTemplate8CoverConfig> | null): LandingTemplate8CoverConfig {
   const count = Number(value?.cardCount ?? 4);
@@ -14,9 +15,20 @@ export function normalizeTemplate8Cover(value?: Partial<LandingTemplate8CoverCon
     cards: Array.from({ length: 6 }, (_, i) => {
       const card = value?.cards?.[i];
       const provider = TEMPLATE8_PROVIDERS.includes(card?.targetProvider as TargetProvider) ? card!.targetProvider : TEMPLATE8_PROVIDERS[i % 4];
-      return { imageUrl: card?.imageUrl || "", text: card?.text ?? TEMPLATE8_PROVIDER_NAMES[provider], ctaText: card?.ctaText || "", targetProvider: provider };
+      const skin = isMultiSkinCode(card?.multiSkinCode) ? card.multiSkinCode : "ganamos_plus";
+      return { imageUrl: card?.imageUrl || "", text: card?.text ?? (provider === "multi_skin" ? MULTI_SKIN_CATALOG[skin].name : TEMPLATE8_PROVIDER_NAMES[provider]), ctaText: card?.ctaText || "", targetProvider: provider,
+        ...(provider === "multi_skin" ? { multiSkinCode: skin } : {}),
+      };
     }),
   };
+}
+
+/** Only the saved card chooses its skin. Legacy cards always meant Ganamos+. */
+export function template8SkinCode(config: unknown, cardIndex: unknown): MultiSkinCode | null {
+  if (template8Provider(config, cardIndex) !== "multi_skin") return null;
+  const card = (config as { template8Cover: LandingTemplate8CoverConfig }).template8Cover.cards[Number(cardIndex) - 1];
+  if (card.multiSkinCode === undefined) return "ganamos_plus";
+  return isMultiSkinCode(card.multiSkinCode) ? card.multiSkinCode : null;
 }
 
 /** Strict server selector: never infer a page from an untrusted provider or a default card. */

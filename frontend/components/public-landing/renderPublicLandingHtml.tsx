@@ -9,6 +9,8 @@ import { buildTemplate7ReentryScript, guardTemplate7ReentryScripts } from "./tem
 import { optimizeTemplate7Images } from "../../lib/landing/template7Images";
 import { gatewayOriginFor } from "../../lib/reyDeAses/gatewayOrigins";
 import { renderGatewayEntryTransition } from "../../lib/gateway-entry-transition";
+import { isMultiSkinCode } from "../../lib/multi-skin-catalog";
+import { getMultiSkinBrand } from "../../lib/skin-branding";
 import {
   buildPixelInitScript,
   buildPixelNoscript,
@@ -538,6 +540,9 @@ function renderTemplate2({ config }: RenderParams) {
 }
 
 function renderTemplate7({ config }: RenderParams) {
+  const code = config.tracking?.skin_code;
+  const skinBrand = config.tracking?.target_provider === 'multi_skin' && isMultiSkinCode(code)
+    ? getMultiSkinBrand(code) : undefined;
   const hasLogo = Boolean(config.content?.logoUrl);
   const titleLines = (config.content?.title || []).map((line) => line.trim()).filter(Boolean);
   const subtitleLines = (config.content?.subtitle || []).map((line) => line.trim()).filter(Boolean);
@@ -561,7 +566,7 @@ function renderTemplate7({ config }: RenderParams) {
     background: config.colors?.ctaBackground ?? "#FFD700",
     "--template7-cta-size": `${config.typography?.cta?.sizePx ?? 18}px`,
     "font-weight": config.typography?.cta?.weight ?? 700,
-  })} disabled><span data-public-landing-cta-label>${escapeHtml(ctaText)}</span></button><p class="template7__error" data-template7-error role="alert" hidden></p></form></section></main>${renderGatewayEntryTransition(config.tracking?.target_provider || "rey_de_ases", { stage: "creating", gatewayOrigin: template7GatewayOrigin(config) })}`;
+  })} disabled><span data-public-landing-cta-label>${escapeHtml(ctaText)}</span></button><p class="template7__error" data-template7-error role="alert" hidden></p></form></section></main>${renderGatewayEntryTransition(config.tracking?.target_provider || "rey_de_ases", { stage: "creating", gatewayOrigin: template7GatewayOrigin(config), brand: skinBrand })}`;
 }
 
 function renderTemplate3({ config }: RenderParams) {
@@ -660,7 +665,7 @@ function renderTemplate6({ config }: RenderParams) {
       image
         ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(caption)}" width="480" height="480" loading="${index < 2 ? "eager" : "lazy"}" decoding="async"${index === 0 && !backgroundImageUrl ? ' fetchpriority="high"' : ""}>`
         : `<span>Imagen ${index + 1}</span>`
-    }</div><p class="template6__caption">${escapeHtml(caption)}</p><button type="button" class="template6__cta" ${isTemplate8 ? `data-template8-card-index="${index + 1}" ${config.content?.template8?.cards[index]?.targetProvider === "multi_skin" ? 'disabled title="Integración pendiente"' : ""}` : "data-public-landing-cta"} data-template6-card-index="${index + 1}" data-public-landing-rest-label="${escapeHtml(label)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin número disponible" aria-label="${escapeHtml(label)}"><span data-public-landing-cta-label>${escapeHtml(label)}</span>${cover?.showWhatsAppLogo === false ? "" : renderWhatsAppIcon("template6__cta-icon")}</button></article>`;
+    }</div><p class="template6__caption">${escapeHtml(caption)}</p><button type="button" class="template6__cta" ${isTemplate8 ? `data-template8-card-index="${index + 1}" ` : "data-public-landing-cta"} data-template6-card-index="${index + 1}" data-public-landing-rest-label="${escapeHtml(label)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin número disponible" aria-label="${escapeHtml(label)}"><span data-public-landing-cta-label>${escapeHtml(label)}</span>${cover?.showWhatsAppLogo === false ? "" : renderWhatsAppIcon("template6__cta-icon")}</button></article>`;
   }).join("");
   const styles = styleAttr({
     ...(isTemplate8 ? {
@@ -684,7 +689,7 @@ function renderTemplate6({ config }: RenderParams) {
 
 function resourceWarmup(config: PublicLandingConfig) {
   if (config.layout?.template !== 8) return buildTemplate7ResourceWarmup(template7GatewayOrigin(config));
-  const origins = [...new Set((config.content?.template8?.cards || []).filter(card => card.targetProvider !== "multi_skin").map(card => gatewayOriginFor(card.targetProvider, "ganamos_plus") || "").filter(Boolean))];
+  const origins = [...new Set((config.content?.template8?.cards || []).map(card => gatewayOriginFor(card.targetProvider, card.multiSkinCode ?? "ganamos_plus") || "").filter(Boolean))];
   return origins.length ? origins.map((origin, i) => buildTemplate7ResourceWarmup(origin, i ? "" : undefined)).join("") : buildTemplate7ResourceWarmup("");
 }
 function renderTemplate8(params: RenderParams) {

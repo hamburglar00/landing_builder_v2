@@ -29,6 +29,25 @@ const validPayload = {
   attribution: { utm_campaign: "campana", fbp: "fb.1.123.abc" },
 };
 
+test("Template 8 resolves the saved card skin for account preparation and signed handoff", async () => {
+  const { deps } = dependencies(null, "multi_skin");
+  const read = deps.db.landing;
+  deps.db.landing = async id => {
+    const row = (await read(id))!;
+    return { ...row, config:{ template:"template8",ctaDestination:"atrio",multiSkinCode:"ganamos_plus",template8Cover:{cardCount:2,cards:[{targetProvider:"multi_skin",multiSkinCode:"ganamos_plus"},{targetProvider:"multi_skin",multiSkinCode:"bet30"}]} } };
+  };
+  const skins: unknown[] = [];
+  deps.resolveAccount = async input => {
+    skins.push(input.skin_code);
+    return { username:"secret-user",password:"secret-pass",platform:"multi_skin",created:false };
+  };
+  const handoff = deps.createHandoff;
+  deps.createHandoff = async (...args) => { skins.push(args[5]); assert.equal(args[3].target_provider,"multi_skin"); return handoff(...args); };
+  const response = await handleReyStart(request({...validPayload,card_index:2,attribution:{skin_code:"jugamos"}}), deps);
+  assert.equal(response.status, 200);
+  assert.deepEqual(skins, ["bet30","bet30"]);
+});
+
 function request(payload: unknown, headers: Record<string, string> = {}): Request {
   return new Request("https://example.com/api/rey-de-ases/start", {
     method: "POST", headers: { "Content-Type": "application/json", Cookie: `lb_cid=${deviceId}`, ...headers }, body: JSON.stringify(payload),
@@ -370,7 +389,7 @@ test("adaptador API2 crea o recupera la cuenta por advisor_id y valida la plataf
   process.env.API2_API_KEY = "api-key";
   process.env.API2_API_SECRET = "api-secret";
   const platformCodes: Partial<Record<TargetProvider, number>> = {
-    ases_del_norte: 1, ganamos_net: 2, rey_de_ases: 5,
+    ases_del_norte: 1, ganamos_net: 2, rey_de_ases: 5, multi_skin: 7,
   };
   try {
     for (const provider of Object.keys(platformCodes) as TargetProvider[]) {
@@ -382,7 +401,7 @@ test("adaptador API2 crea o recupera la cuenta por advisor_id y valida la plataf
         assert.deepEqual(JSON.parse(String(init?.body)), {
           external_user_id: playerId,
           name: "Martín", advisor_id:advisorId, agency_id:272,
-          ...(provider === "ganamos_net" ? { creation_mode: "create_only" } : {}),
+          ...(["ganamos_net", "multi_skin"].includes(provider) ? { creation_mode: "create_only" } : {}),
         });
         return Response.json({
           success: true,
@@ -407,11 +426,11 @@ test("adaptador API2 crea o recupera la cuenta por advisor_id y valida la plataf
       });
     }
 
-    globalThis.fetch = async () => { throw new Error("Ganamos+ must not reuse a NET manager"); };
+    globalThis.fetch = async () => Response.json({success:true,username:'wrong-provider',password:'secret',platform:2,is_new:true});
     await assert.rejects(resolveTargetAccount({
       manager_id:1035, agency_id:272, external_user_id: playerId, name: "Prueba", target_provider: "multi_skin",
       advisor_id: advisorId, advisor_slug: "gera",
-    }), { code: "integration_pending" });
+    }), { code: "upstream_unavailable" });
 
     globalThis.fetch = async () => Response.json({
       success: true, username: "wrong-platform", password: "secret", platform: 1, is_new: true,

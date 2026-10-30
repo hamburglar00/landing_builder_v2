@@ -141,8 +141,32 @@ test("account finaliza en el mismo viaje y finalize compatible no duplica la vin
     body: JSON.stringify({ continuation_token: accountBody.continuation_token }),
   }), env, dependencies, now + 2000);
   assert.equal(finalize.status, 200);
-  assert.deepEqual(await finalize.json(), { handoff_url: "https://gateway.example.com/start?t=handoff" });
+  assert.deepEqual(await finalize.json(), { handoff_url: "https://gateway.example.com/start?t=handoff", username: "player" });
   assert.deepEqual(trace, { links: 1, handoffs: 1 });
+});
+
+test("renewing an expired pass preserves the account and never resolves or provisions a player again", async () => {
+  const token = await prepareToken();
+  const trace = { links: 0, handoffs: 0 }, dependencies = deps(trace);
+  const account = await handleTemplate7PreparationAccount(new Request("https://mkt.example.com/api/template7/preparations/account", {
+    method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}` },
+    body: JSON.stringify({token}),
+  }), env, dependencies, now + 1000);
+  const {continuation_token} = await account.json() as {continuation_token:string};
+  dependencies.resolvePlayer = async () => { throw Error("must not resolve another identity"); };
+  dependencies.resolveAccount = async () => { throw Error("must not create another account"); };
+  dependencies.createHandoff = async (_provider, _advisor, _device, player, selected) => {
+    assert.equal(player.player_id, playerId); assert.equal(player.player_provider_account_id, providerAccountId);
+    assert.equal(selected.username, "player"); trace.handoffs++;
+    return {handoff_url:"https://gateway.example.com/start?t=fresh-pass",expires_at:"2026-10-29T23:00:00Z",binding_created:false};
+  };
+  const renewed = await handleTemplate7PreparationFinalize(new Request("https://mkt.example.com/api/template7/preparations/finalize", {
+    method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}`},
+    body:JSON.stringify({continuation_token,renew_handoff:true}),
+  }), env, dependencies, now + 2000);
+  assert.equal(renewed.status,200);
+  assert.deepEqual(await renewed.json(),{handoff_url:"https://gateway.example.com/start?t=fresh-pass",username:"player"});
+  assert.deepEqual(trace,{links:2,handoffs:2});
 });
 
 test("stage timings preserve parallel link and handoff work and never expose identity or credentials", { timeout: 1000 }, async () => {
@@ -259,5 +283,15 @@ test("prepare dirige ganamos_net exclusivamente al gateway configurado", async (
   assert.equal(new URL(body.handoff_url).origin, "https://ganamos-net.example.com");
 });
 
-for (const provider of ["multi_skin", "ases_del_norte", "ganamos_net"] as const) {
-}
+test("Bet30 preparation uses the generic gateway and carries only a cosmetic skin hint", async () => {
+  const response = await handleTemplate7Prepare(new Request("https://mkt.example.com/api/template7/prepare", {
+    method: "POST", headers: { "Content-Type": "application/json", Cookie: `lb_cid=${deviceId}` },
+    body: JSON.stringify({ ...payload, attribution: { target_provider: "multi_skin", skin_code: "bet30" } }),
+  }), { ...env, MULTI_SKIN_GATEWAY_ORIGIN: "https://shared.example.workers.dev", GANAMOS_PLUS_GATEWAY_ORIGIN: "https://plus.example" }, now);
+  assert.equal(response.status, 200);
+  const url = new URL((await response.json()).handoff_url);
+  assert.equal(url.origin, 'https://shared.example.workers.dev');
+  assert.equal(url.searchParams.get('skin'), 'bet30');
+  assert.match(url.searchParams.get('t') || '', /^p1\./);
+  assert.equal(url.searchParams.size, 2);
+});

@@ -57,7 +57,7 @@ export async function handleTemplate7Destination(
     const isTemplate8 = config.template === "template8";
     const provider = isTemplate8 ? template8Provider(config, input.card_index) : config.targetProvider || "rey_de_ases";
     if (isTemplate8 && !provider || !isTemplate8 && input.card_index !== undefined) return respond({ error: "invalid_page" }, 400);
-    if (!["rey_de_ases", "ases_del_norte", "ganamos_net"].includes(String(provider))) return respond({ error: "integration_pending" }, 503);
+    if (!["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_skin"].includes(String(provider))) return respond({ error: "integration_pending" }, 503);
     if (context.blocked !== false) return respond({ error: "landing_unavailable" }, 403);
     const advisors = context.advisors;
     if (!advisors.length || advisors.some(a => a.user_id !== landing.user_id || a.workspace_currency !== landing.workspace_currency || !uuid.test(a.atrio_id))) return respond({ error: "advisor_not_assigned" }, 403);

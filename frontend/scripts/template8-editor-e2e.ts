@@ -96,6 +96,12 @@ async function main() {
       catch { throw Error(JSON.stringify({mode,errors,body:(await page.locator("body").innerText()).slice(0,1200),redirect:await page.evaluate(()=>(window as any).fixtureDestination)})); }
       await page.locator('input[value="Nueva-landing-fixture"]').fill("editor8test");
       await page.locator('input[value="template8"]').check();
+      const skinCard = page.getByRole("heading",{name:"Tarjeta 2",exact:true}).locator("..");
+      await skinCard.getByRole("button",{name:"Página de Multi Skin de tarjeta 2",exact:true}).click();
+      await page.getByRole("option").first().waitFor();
+      assert.equal(await page.getByRole("option").count(),14);
+      await page.getByRole("option",{name:"Bet30",exact:true}).click();
+      assert.match(await skinCard.getByRole("button",{name:"Página de Multi Skin de tarjeta 2",exact:true}).innerText(),/Bet30/);
       await page.getByRole("button",{name:"Redirección",exact:true}).click();
       await page.getByText("gera",{exact:true}).click();await page.getByText("diana",{exact:true}).click();
       assert.equal(landing.config.template,"template1","Reading the editor must not persist its draft");
@@ -113,12 +119,16 @@ async function main() {
       await page.getByRole("button",{name:"Guardar",exact:true}).first().click();
       await page.waitForFunction(()=>Boolean((window as any).fixtureDestination));
       assert.equal(landing.config.template,"template8");assert.equal(landing.config.ctaDestination,"atrio");
+      assert.equal(landing.config.template8Cover.cards[1].multiSkinCode,"bet30");
       assert.equal(pools.ganamos_net.mode,mode==="dashboard"?"fair":"weighted_random");assert.equal(pools.ganamos_net.criterion,mode==="dashboard"?"messages_received":"usage_count");assert.equal(pools.ganamos_net.destinations.length,2);
       assert.equal(pools.ganamos_net.destinations.find((value:any)=>value.connection_id===connections[4].connection_id).weight,mode==="dashboard"?1:3);
       assert.equal(pools.rey_de_ases.mode,"fixed");assert.equal(pools.ases_del_norte.mode,"fixed");assert.equal(pools.multi_skin,undefined);
       assert.ok(operations.findIndex(value=>value.action==="save")<operations.findIndex(value=>value.action==="configure"));
       assert.equal(operations.at(-1).action,"publish");
-      await page.goto(url);await page.getByRole("button",{name:"Redirección",exact:true}).click();
+      await page.goto(url);
+      await page.getByRole("heading",{name:"Tarjeta 2",exact:true}).waitFor();
+      assert.match(await page.getByRole("button",{name:"Página de Multi Skin de tarjeta 2",exact:true}).innerText(),/Bet30/);
+      await page.getByRole("button",{name:"Redirección",exact:true}).click();
       await page.getByText("gera",{exact:true}).click();await page.getByText("diana",{exact:true}).click();
       for(const manager of [1035,1040,1041,1044])assert.equal(await page.getByRole("checkbox",{name:`Seleccionar bot ${manager}`,exact:true}).isChecked(),true);
       assert.equal(await page.getByRole("button",{name:mode==="dashboard"?"Equitativa":"Aleatoria",exact:true}).getAttribute("aria-pressed"),"true");

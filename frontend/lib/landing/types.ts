@@ -74,11 +74,12 @@ export type LandingWorkspaceCurrency = "ARS" | "PYG";
  */
 export type BackgroundMode = "single" | "rotating";
 
+import type { MultiSkinCode } from "../multi-skin-catalog";
 export type PhoneKind = "carga" | "ads" | "mkt" | "assistant";
 
 export type LandingCtaDestination = "whatsapp" | "atrio";
 export type TargetProvider = "rey_de_ases" | "multi_skin" | "ases_del_norte" | "ganamos_net";
-export type MultiSkinCode = "ganamos_plus";
+export type { MultiSkinCode } from "../multi-skin-catalog";
 
 export interface LandingLeadCaptureConfig {
   enabled: boolean;
@@ -130,7 +131,7 @@ export interface LandingTemplate6CoverConfig {
 
 export interface LandingTemplate8CoverConfig extends Omit<LandingTemplate6CoverConfig, "grid" | "showWhatsAppLogo" | "cards"> {
   cardCount: number;
-  cards: (LandingTemplate6Card & { targetProvider: TargetProvider })[];
+  cards: (LandingTemplate6Card & { targetProvider: TargetProvider; multiSkinCode?: MultiSkinCode })[];
 }
 
 /**

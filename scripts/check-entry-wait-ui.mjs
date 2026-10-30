@@ -45,9 +45,9 @@ for (const [engine, browserType] of [["Chromium", browsers.chromium], ["WebKit",
       const html = module.exports.renderPreparationPage(classic ? "classic-fixture" : "p1.fixture", { title: "Fixture", logo: "/logo.webp", logoAlt: "Fixture", background: "#080808", accent: "#f6c84b", accentText: "#171105", text: "#fff", muted: "#ddd", panel: "#17140d", panelBorder: "#725b20", spinnerTrack: "#5b481b", shadow: "none" });
       await page.route("https://fixture.test/**", route => {
         const url = new URL(route.request().url());
-        if (url.pathname === "/api/preparations/complete") { accounts++; return route.fulfill({ json: { username: "fixtureplayer", continuation_token: "c1.fixture", handoff_url: "https://fixture.test/start?t=opaque" } }); }
-        if (url.pathname === "/start") { logins++; return route.fulfill({ json: { username: "fixtureplayer", redirect_url: "https://fixture.test/home", entry_wait: { enabled: true, seconds: 1 } } }); }
-        if (url.pathname === "/api/session/recover") return route.fulfill({ json: { active: true } });
+        if (url.pathname === "/api/preparations/complete") { accounts++; return route.fulfill({ json: { username: "fixtureplayer", continuation_token: "c1.fixture", entry_token: "ge1.fixture", handoff_url: "https://fixture.test/start?t=opaque" } }); }
+        if (url.pathname === "/start") { logins++; return route.fulfill({ json: { username: "fixtureplayer", entry_confirmation: "ge1.confirmed", entry_id: "fixture-entry", redirect_url: "https://fixture.test/home", entry_wait: { enabled: true, seconds: 1 } } }); }
+        if (url.pathname === "/api/session/recover") return route.fulfill({ json: { active: true, entry_confirmed: true, entry_id: "fixture-entry" } });
         if (url.pathname === "/home") return route.fulfill({ contentType: "text/html", body: "<p>Session ready</p>" });
         if (url.pathname === "/logo.webp") return route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"/>' });
         return route.fulfill({ contentType: "text/html", body: html });

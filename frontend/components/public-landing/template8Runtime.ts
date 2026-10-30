@@ -31,7 +31,6 @@ export function adaptTemplate8Runtime(source: string, classic: boolean): string 
         window.__PUBLIC_LANDING_ATRIO_PROMISES = window.__PUBLIC_LANDING_ATRIO_PROMISES || {};
         var promises = window.__PUBLIC_LANDING_ATRIO_PROMISES;
         cfg.template8Cards.forEach(function(card) {
-          if (card.targetProvider === 'multi_skin') return;
           var key = cfg.slug + ':' + card.targetProvider;
           if (!promises[key]) promises[key] = template8Destination(card, false).catch(function() { return null; });
         });
@@ -47,15 +46,28 @@ export function adaptTemplate8Runtime(source: string, classic: boolean): string 
           if (!button || button.disabled || clickLocked || window.__T7_ENTRY_STARTED__) return;
           var index = Number(button.getAttribute('data-template8-card-index'));
           var card = cfg.template8Cards[index - 1];
-          if (!card || card.targetProvider === 'multi_skin') return;
+          if (!card) return;
           var selectionVersion = ++template8SelectionVersion;
           notifyTemplate6CardClick(button);
-          cfg.cardIndex = index; cfg.targetProvider = card.targetProvider; cfg.skinCode = '';
+          cfg.cardIndex = index; cfg.targetProvider = card.targetProvider; cfg.skinCode = card.multiSkinCode || '';
           try { var selectedUrl = new URL(window.location.href); selectedUrl.searchParams.set('card_index',String(index)); selectedUrl.searchParams.set('target_provider',card.targetProvider); window.history.replaceState(window.history.state,'',selectedUrl.href); } catch(e) {}
           var login = document.querySelector('[data-template8-login]');
           if (login && card.gatewayOrigin) login.href = card.gatewayOrigin;
           var logo = document.querySelector('[data-entry-logo]');
           if (logo && card.transitionLogo) { logo.removeAttribute('src'); logo.setAttribute('data-src',card.transitionLogo); logo.alt = card.text; }
+          var transitionRoot = document.getElementById('gateway-entry-transition');
+          if (transitionRoot && card.transitionBrand) {
+            var brand = card.transitionBrand;
+            transitionRoot.dataset.palette = brand.background;
+            transitionRoot.style.setProperty('--entry-background',brand.background);
+            transitionRoot.style.setProperty('--entry-accent',brand.accent || '#f6c84b');
+            transitionRoot.style.setProperty('--entry-track',(brand.accent || '#f6c84b') + '33');
+            transitionRoot.style.setProperty('--entry-accent-text',brand.accentText || '#171105');
+            transitionRoot.style.setProperty('--entry-glow',brand.glow);
+            transitionRoot.querySelectorAll('[data-entry-source]').forEach(function(source) {
+              source.removeAttribute('srcset'); source.dataset.srcset = card.transitionLogoAvif || '';
+            });
+          }
           grid.hidden = true; entry.hidden = false;
           var title = document.querySelector('[data-template8-selected-page]');
           if (title) title.textContent = card.text;

@@ -104,7 +104,7 @@ test("batch configuration preserves saved pools and rejects invalid casinos or u
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { configurations: { ganamos_net: saved, rey_de_ases: null }, directory: { advisors: [client] } });
   calls.length = 0;
-  for (const targetProviders of [undefined, null, [], ["ganamos_net", "ganamos_net"], ["multi_skin"], ["unknown"], "ganamos_net"]) {
+  for (const targetProviders of [undefined, null, [], ["ganamos_net", "ganamos_net"], ["unknown"], "ganamos_net"]) {
     assert.equal((await handleManagerDestinations(request({ ...payload, targetProviders }), backend())).status, 400);
   }
   assert.equal((await handleManagerDestinations(request(payload), backend({ authenticate: async () => false }))).status, 401);
@@ -114,8 +114,12 @@ test("batch configuration preserves saved pools and rejects invalid casinos or u
   assert.equal((await handleManagerDestinations(crossOrigin, backend())).status, 403);
   assert.equal(calls.length, 0);
 });
-test("Ganamos+ is not offered the Ganamos NET manager pool", async () => {
-  assert.equal((await handleManagerDestinations(request({ ...configure, targetProvider: "multi_skin" }), backend())).status, 400);
+test("Multi Skin has its own manager pool and never selects the NET provider", async () => {
+  calls.length=0;
+  const response=await handleManagerDestinations(request({ ...configure, targetProvider: "multi_skin" }),
+    backend({landing:async()=>({...landing,config:{...(landing.config as object),targetProvider:"multi_skin"}})}));
+  assert.equal(response.status,200);
+  assert.ok(calls.some(call=>JSON.stringify(call).includes('multi_skin')));
 });
 test("fixed mode cannot silently include multiple managers", async () => {
   assert.equal((await handleManagerDestinations(request({ ...configure, destinations: [...configure.destinations, { connection_id: ids.otherAdvisor, weight: 1 }] }), backend())).status, 400);
@@ -193,7 +197,6 @@ test("consolidated context keeps exact landing, provider and workspace checks be
   const cases = [
     { context: { landing: { ...landing, id: ids.client }, blocked: false, advisors: [client] }, status: 404 },
     { context: { landing: { ...landing, name: "other" }, blocked: false, advisors: [client] }, status: 404 },
-    { context: { landing: { ...landing, config: { ...landing.config, targetProvider: "multi_skin" } }, blocked: false, advisors: [client] }, status: 503 },
     { context: { landing, blocked: false, advisors: [{ ...client, user_id: "foreign" }] }, status: 403 },
     { context: { landing, blocked: false, advisors: [{ ...client, workspace_currency: "PYG" }] }, status: 403 },
     { context: { landing, blocked: false, advisors: [] }, status: 403 },

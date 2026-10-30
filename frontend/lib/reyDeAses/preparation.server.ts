@@ -1,4 +1,5 @@
 import { createCipheriv, createDecipheriv, randomBytes, timingSafeEqual } from "node:crypto";
+import { isMultiSkinCode } from "../multi-skin-catalog";
 import { CLIENT_ID_COOKIE_NAME, isDeviceId } from "./clientIdentity.server";
 import { finalizeTemplate7PreparedStart, handleTemplate7AccountWithIdentity, handleTemplate7StartWithIdentity, productionDependencies, type StartDependencies, type Template7PreparedStart } from "./start.server";
 import { decryptClaims, encryptionKey, gatewayOrigin, json, readJson, requireSecret, TOKEN_TTL_SECONDS, MAX_TOKEN_LENGTH, type PreparationEnvironment } from "./preparation-issue.server";
@@ -33,7 +34,7 @@ function isPreparedStart(value: unknown, env: PreparationEnvironment): value is 
       typeof prepared.account.password !== "string" || prepared.account.password.length > 1024 ||
       typeof prepared.account.created !== "boolean" || Reflect.get(prepared, "testing") === true ||
       typeof prepared.promoCode !== "string" || !prepared.promoCode || prepared.promoCode.length > 128 ||
-      (prepared.provider === "multi_skin" ? prepared.skinCode !== "ganamos_plus" : prepared.skinCode !== null) ||
+      (prepared.provider === "multi_skin" ? !isMultiSkinCode(prepared.skinCode) : prepared.skinCode !== null) ||
       !prepared.account.password || Reflect.get(prepared.account, "testingBypass") === true) {
     return false;
   }
@@ -225,18 +226,24 @@ export async function handleTemplate7PreparationFinalize(
     return json({ error: "unauthorized" }, 401);
   }
   let claims: ContinuationClaims;
+  let renewHandoff = false;
   try {
-    const data = await readJson(request, MAX_TOKEN_LENGTH + 128) as { continuation_token?: unknown };
+    const data = await readJson(request, MAX_TOKEN_LENGTH + 128) as { continuation_token?: unknown; renew_handoff?: unknown };
     if (!data || typeof data !== "object" || typeof data.continuation_token !== "string") {
       return json({ error: "invalid_request" }, 400);
     }
     claims = decryptContinuation(data.continuation_token, env, now);
+    if (data.renew_handoff !== undefined && typeof data.renew_handoff !== "boolean") return json({ error: "invalid_request" }, 400);
+    renewHandoff = data.renew_handoff === true;
   } catch {
     return json({ error: "invalid_or_expired_continuation" }, 410);
   }
   try {
-    const handoff = await finalizeTemplate7PreparedStart(claims.prepared, deps);
-    return json({ handoff_url: handoff.handoff_url }, 200);
+    // Renew only the pass for this authenticated continuation. Do not resolve a
+    // name, provision a player, or return the already consumed/expired pass.
+    const prepared = renewHandoff ? { ...claims.prepared, completedHandoff: undefined } : claims.prepared;
+    const handoff = await finalizeTemplate7PreparedStart(prepared, deps);
+    return json({ handoff_url: handoff.handoff_url, username: prepared.account.username }, 200);
   } catch {
     return json({ error: "service_unavailable" }, 503);
   }

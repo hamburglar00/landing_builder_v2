@@ -3,6 +3,7 @@ import { useEffect, type SetStateAction } from "react";
 import type { AtrioClient } from "@/lib/atrio/atrioDb";
 import type { LandingThemeConfig, TargetProvider } from "@/lib/landing/types";
 import CustomSelect from "@/components/ui/CustomSelect";
+import { MULTI_SKIN_CATALOG, MULTI_SKIN_CODES, type MultiSkinCode } from "@/lib/multi-skin-catalog";
 export function isAtrioUrlValidForSave(config: LandingThemeConfig) {
   return config.ctaDestination === (["template7", "template8"].includes(config.template) ? "atrio" : "whatsapp");
 }
@@ -26,7 +27,7 @@ export function CtaDestinationSection({ config, setConfig }: {
             }))}
             options={[
               { value: "rey_de_ases", label: "Rey de Ases" },
-              { value: "multi_skin", label: "Ganamos+" },
+              { value: "multi_skin", label: "Multi Skin" },
               { value: "ases_del_norte", label: "Ases del Norte" },
               { value: "ganamos_net", label: "Ganamos NET" },
             ]}
@@ -34,6 +35,11 @@ export function CtaDestinationSection({ config, setConfig }: {
             buttonClassName="h-10 bg-zinc-950 px-3 text-sm"
           />
 
-    {config.targetProvider === "multi_skin" && <p className="mt-2 text-xs text-amber-300">Ganamos+ todavía no está integrado con PBAdmin.</p>}
+    {config.targetProvider === "multi_skin" && <div className="mt-3">
+      <label className="text-sm text-zinc-300">Página de Multi Skin</label>
+      <CustomSelect value={config.multiSkinCode} onChange={value => setConfig(prev => ({ ...prev, multiSkinCode: value as MultiSkinCode }))}
+        options={MULTI_SKIN_CODES.map(code => ({ value: code, label: MULTI_SKIN_CATALOG[code].name }))}
+        className="mt-2" buttonClassName="h-10 bg-zinc-950 px-3 text-sm" />
+    </div>}
   </div>;
 }

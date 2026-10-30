@@ -39,10 +39,10 @@ for(const [engine,type] of [['Chromium',chromium],['WebKit',webkit]]){
      if(scenario==='lost-response'&&requests.length===1)return route.abort('failed');
      if(scenario==='truncated-json'&&requests.length===1)return route.fulfill({contentType:'application/json',body:'{"username":'});
      if(scenario==='outage'||(scenario==='transient'&&requests.length<3))return route.fulfill({status:503,json:{error:'service_unavailable'}});
-     return route.fulfill({json:{username:'fixtureplayer',continuation_token:'c1.fixture',handoff_url:'https://fixture.test/start?t=fixture'}});
+     return route.fulfill({json:{username:'fixtureplayer',continuation_token:'c1.fixture',entry_token:'ge1.fixture',handoff_url:'https://fixture.test/start?t=fixture'}});
     }
-    if(pathname==='/start')return route.fulfill({json:{username:'fixtureplayer',password:'fixture-password',redirect_url:'https://fixture.test/home',entry_wait:{enabled:true,seconds:60}}});
-    if(pathname==='/api/session/recover')return route.fulfill({json:{active:true}});
+    if(pathname==='/start')return route.fulfill({json:{username:'fixtureplayer',password:'fixture-password',entry_confirmation:'ge1.confirmed',entry_id:'fixture-entry',redirect_url:'https://fixture.test/home',entry_wait:{enabled:true,seconds:60}}});
+    if(pathname==='/api/session/recover')return route.fulfill({json:{active:true,entry_confirmed:true,entry_id:'fixture-entry'}});
     if(pathname==='/prepare')return route.fulfill({contentType:'text/html',body:asset.html});
     return route.fulfill({body:''});
    });
@@ -96,13 +96,13 @@ for(const [engine,type] of [['Chromium',chromium],['WebKit',webkit]]){
     const pathname=new URL(route.request().url()).pathname;
     if(pathname==='/api/preparations/complete'){
      requests.push(route.request().postData());
-     return route.fulfill({json:{username:'fixtureplayer',continuation_token:'c1.fixture',handoff_url:'https://fixture.test/start?t=fixture'}});
+     return route.fulfill({json:{username:'fixtureplayer',continuation_token:'c1.fixture',entry_token:'ge1.fixture',handoff_url:'https://fixture.test/start?t=fixture'}});
     }
     if(pathname==='/start'){
      starts++;if(starts===1){held=route;return;}
-     return route.fulfill({json:{username:'fixtureplayer',password:'fixture-password',redirect_url:'https://fixture.test/home',entry_wait:{enabled:true,seconds:60}}});
+     return route.fulfill({json:{username:'fixtureplayer',password:'fixture-password',entry_confirmation:'ge1.confirmed',entry_id:'fixture-entry',redirect_url:'https://fixture.test/home',entry_wait:{enabled:true,seconds:60}}});
     }
-    if(pathname==='/api/session/recover')return route.fulfill({json:{active:true}});
+    if(pathname==='/api/session/recover')return route.fulfill({json:{active:true,entry_confirmed:true,entry_id:'fixture-entry'}});
     if(pathname==='/prepare')return route.fulfill({contentType:'text/html',body:asset.html});
     return route.fulfill({body:''});
    });
@@ -112,7 +112,7 @@ for(const [engine,type] of [['Chromium',chromium],['WebKit',webkit]]){
    await page.locator('main[data-view="error"]').waitFor();
    assert.match(await page.locator('section.error').innerText(),/Tu acceso sigue pendiente/);
    assert.ok(held,'Actual login request was held');
-   await held.fulfill({json:{username:'fixtureplayer',password:'fixture-password',redirect_url:'https://fixture.test/home',entry_wait:{enabled:false,seconds:4}}}).catch(()=>{});
+   await held.fulfill({json:{username:'fixtureplayer',password:'fixture-password',entry_confirmation:'ge1.confirmed',entry_id:'fixture-entry',redirect_url:'https://fixture.test/home',entry_wait:{enabled:false,seconds:4}}}).catch(()=>{});
    await page.waitForTimeout(1);
    assert.equal(new URL(page.url()).pathname,'/prepare','Late login must not navigate');
    await page.locator('#retry').click();

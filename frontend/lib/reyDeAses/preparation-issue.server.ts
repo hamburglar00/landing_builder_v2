@@ -5,6 +5,7 @@ import type { StartRequest } from "./contracts";
 import { gatewayOriginFor } from "./gatewayOrigins";
 import { CLIENT_ID_COOKIE_NAME, getOrCreateClientIdentity, isDeviceId, withClientIdentityCookie, type ClientIdentity } from "./clientIdentity.server";
 import { parseTemplate7StartPayload } from "./start-payload.server";
+import { isMultiSkinCode } from "../multi-skin-catalog";
 
 export const TOKEN_VERSION = "p1";
 
@@ -147,6 +148,9 @@ export async function handleTemplate7Prepare(
     }, env);
     const destination = new URL("/prepare", gatewayOrigin(payload, env));
     destination.searchParams.set("t", token);
+    const skin = payload.attribution?.skin_code;
+    if (payload.attribution?.target_provider === "multi_skin" && isMultiSkinCode(skin) && skin !== "ganamos_plus")
+      destination.searchParams.set("skin", skin);
     return withClientIdentityCookie(json({ handoff_url: destination.toString() }, 200), identity);
   } catch {
     return withClientIdentityCookie(json({ error: "service_unavailable" }, 503), identity);

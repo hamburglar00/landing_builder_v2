@@ -9,7 +9,7 @@ export type DestinationBackend = {
   assign(token: string, landingId: string, clientIds: string[]): Promise<void>;
 };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const providers = ["rey_de_ases", "ases_del_norte", "ganamos_net"];
+const providers = ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_skin"];
 const json = (body: object, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 
 export async function handleManagerDestinations(request: Request, backend: DestinationBackend) {
@@ -35,7 +35,7 @@ export async function handleManagerDestinations(request: Request, backend: Desti
     const requestedProviders: string[] = input.action === "configurations" ? input.targetProviders : [input.targetProvider];
     if (!Array.isArray(requestedProviders) || !requestedProviders.length || requestedProviders.length > providers.length ||
         requestedProviders.some(provider => !providers.includes(provider)) || new Set(requestedProviders).size !== requestedProviders.length) {
-      return json({ error: "Destino no válido. Ganamos+ todavía no está integrado con PBAdmin." }, 400);
+      return json({ error: "Destino no válido." }, 400);
     }
     const landing = await backend.landing(token, input.landingId);
     if (!landing) return json({ error: "No tenés acceso a esta landing." }, 403);

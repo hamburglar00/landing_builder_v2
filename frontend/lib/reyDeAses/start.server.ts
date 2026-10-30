@@ -1,7 +1,8 @@
 import { confirmTemplate8Destination } from "../atrio/template7Destination.server";
-import { template8Provider } from "../landing/template8";
+import { template8Provider, template8SkinCode } from "../landing/template8";
 import { createClient } from "@supabase/supabase-js";
 import type { MultiSkinCode, TargetProvider } from "../landing/types";
+import { isMultiSkinCode } from "../multi-skin-catalog";
 import type { AssignedAdvisor, Api2ResolveAccountRequest, HandoffResult, LinkedProviderAccount, TargetAccount, ResolvedPlayer, StartRequest, PlayerResolveRequest } from "./contracts";
 import { getOrCreateClientIdentity, withClientIdentityCookie, type ClientIdentity } from "./clientIdentity.server";
 import { logServerFlowTotal, timedServerStage, template7ServerTiming, type Template7StageTimings } from "./performance.server";
@@ -80,13 +81,14 @@ export function configuredTargetProvider(landing: LandingRow): TargetProvider | 
   return null;
 }
 
-function configuredSkinCode(landing: LandingRow, provider: TargetProvider): MultiSkinCode | null {
+export function configuredSkinCode(landing: LandingRow, provider: TargetProvider, cardIndex?: unknown): MultiSkinCode | null {
   if (provider !== "multi_skin") return null;
   const raw = landing.config && typeof landing.config === "object" ? landing.config as Record<string, unknown> : {};
+  if (raw.template === "template8") return template8SkinCode(landing.config, cardIndex);
   // Antes del selector solo existia Ganamos+, por lo que esa configuracion
   // historica puede migrarse sin cambiar el destino del jugador.
   if (raw.multiSkinCode === undefined || raw.multiSkinCode === null) return "ganamos_plus";
-  return raw.multiSkinCode === "ganamos_plus" ? "ganamos_plus" : null;
+  return isMultiSkinCode(raw.multiSkinCode) ? raw.multiSkinCode : null;
 }
 
 async function bounded<T>(promise: Promise<T>): Promise<T> {
@@ -189,7 +191,7 @@ async function handleTemplate7StartInner(
       if (!candidateProvider) return json({ error: "integration_pending" }, 503);
       provider = candidateProvider;
     }
-    const skinCode = configuredSkinCode(landing, provider);
+    const skinCode = configuredSkinCode(landing, provider, payload.card_index);
     if (provider === "multi_skin" && !skinCode) return json({ error: "integration_pending" }, 503);
     // La atribucion puede venir del navegador; esta dimension se fija desde la landing guardada.
     payload.attribution = {

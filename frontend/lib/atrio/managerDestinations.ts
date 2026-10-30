@@ -3,7 +3,7 @@ import type { TargetProvider } from "@/lib/landing/types";
 
 export const CASINO_NAMES: Record<TargetProvider, string> = {
   rey_de_ases: "Rey de Ases", ases_del_norte: "Ases del Norte",
-  ganamos_net: "Ganamos NET", multi_skin: "Ganamos+",
+  ganamos_net: "Ganamos NET", multi_skin: "Multi Skin",
 };
 export type ManagerDestination = {
   connection_id: string; advisor_id: string; advisor_slug: string; advisor_name: string | null;
@@ -39,7 +39,6 @@ export async function requestManagerDestinations<T>(payload: object, signal?: Ab
 }
 
 export async function copyTemplate7ManagerDestinations(sourceLandingId: string, targetLandingId: string, provider: TargetProvider) {
-  if (provider === "multi_skin") return;
   const { configuration } = await requestManagerDestinations<{ configuration: DestinationConfiguration | null }>({
     action: "configuration", landingId: sourceLandingId, targetProvider: provider,
   });
