@@ -1,5 +1,12 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Misma cuenta e historial independiente por skin (30/10/2026)
+
+- El usuario autorizó crear Template 7 reales en Goldencajeros para corroborar Bet30 → Ganamos+ → Bet30 y confirmó que cada skin debe mostrar su propia conversación/avatar/bienvenida, conservando por detrás la misma cuenta/saldo. Volver a una skin recupera su historial y no repite automáticamente su bienvenida/tarjeta. No separar bonos ni deduplicación financiera por skin.
+- La base y el inbox ya separan conversaciones por cuenta y skin. Se reforzó únicamente la preparación privada de `{{clave}}` de la primera bienvenida en una segunda skin mediante `20261030204822_multi_skin_welcome_context.sql`, aplicada en Atrio/Supabase con RLS/grants conservados. Pasaron 17 pruebas, incluida concurrencia e historiales separados en Postgres aislado.
+- Creadas y publicadas `golden-e2e-bet30` y `golden-e2e-ganamosplus` en Goldencajeros/ARS, con Gera, logos propios y sin píxel de prueba. El navegador real recibió 503 al seleccionar destino en ambas: falta un bot Multi Skin conectado para ese recorrido. No se alcanzó alta/gateway y no se certifica todavía el E2E completo. Se pidió al usuario el bot/gerencia a utilizar; no se configuró una conexión ficticia ni se modificaron bots anteriores.
+- Evidencia y estado: `internal-chat/docs/validation/multi-skin-chat-scope-20261030.md`. No hay migraciones nuevas de API2/Panel3 en esta revisión; su activación/configuración siguen siendo requisitos del E2E real.
+
 ### Fluidez del widget en escritorio (30/10/2026, después de la publicación completa)
 
 - El usuario confirmó que Ganamos NET sigue abriendo/cerrando a saltos en Chrome de escritorio después de Ctrl+F5; en móvil funciona bien. La observación de negrita quedó descartada por el propio usuario: ese mensaje no llevaba formato.
