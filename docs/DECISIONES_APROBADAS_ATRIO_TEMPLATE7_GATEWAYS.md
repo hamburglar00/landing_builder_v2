@@ -1,5 +1,12 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Fluidez del widget en escritorio (30/10/2026, después de la publicación completa)
+
+- El usuario confirmó que Ganamos NET sigue abriendo/cerrando a saltos en Chrome de escritorio después de Ctrl+F5; en móvil funciona bien. La observación de negrita quedó descartada por el propio usuario: ese mensaje no llevaba formato.
+- Ajuste de rendimiento compartido en los cuatro gateways: conservar el tamaño interno del iframe cerrado en escritorio, oculto/inert y sin capturar clics; evitar el desenfoque de pantalla completa en dispositivos con puntero fino y hover, conservando el oscurecimiento. Touch y pantallas compactas mantienen su superficie cerrada de tamaño cero y el desenfoque original.
+- Conservar tiempos, curva, escala hacia el botón, maximización/restauración, iframe montado, movimiento reducido y contratos de identidad. No requiere cambios de API2, Atrio ni migraciones. Medir con burbujas reales de Atrio además del fixture simple; no equiparar una medición sintética a los FPS del equipo físico del usuario.
+- Implementado, comiteado/pusheado y publicado en los cuatro gateways, incluido el Worker Multi Skin. Pasaron 56 escenarios de navegador y 47 pruebas de assets; salud y hashes públicos verificados. Evidencia, commits y despliegues: [fluidez en escritorio](validation/desktop-chat-motion-20261030.md).
+
 ### Entrega completa y publicación autorizadas (30/10/2026)
 
 - El usuario autorizó comitear/pushear todo el lote implementado y publicar lo que podemos completar desde nuestro lado. Reemplaza las restricciones de preparación local de los apartados históricos para esta entrega. API2 y Panel3 quedan comiteados/pusheados para el despliegue del programador; el resto se publica desde los proyectos existentes, sin comprar dominios ni cambiar cuentas de proveedor.

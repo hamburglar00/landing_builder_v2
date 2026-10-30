@@ -61,7 +61,7 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
         await page.close();
       }
       for (const viewport of [{ width: 390, height: 844 }, { width: 844, height: 390 }, { width: 1366, height: 768 }]) {
-        const page = await browser.newPage({ viewport });
+        const page = await browser.newPage({ viewport, hasTouch: viewport.width <= 844 });
         const errors = []; page.on("pageerror", error => errors.push(String(error)));
         let frameNavigations = 0, sdkRequests = 0;
         const palette = { "landing-autologuin": "#141414", "ases-gateway": "#071b2c", "ganamos-gateway": "#11001f", "multi-skin-gateway": "#121212" }[asset.repo];
@@ -199,7 +199,24 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
           await page.mouse.click(20, viewport.height - 40);
           await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "closed");
           await stableMotionLayout("closing");
-          assert.equal(await shell.evaluate(el => el.offsetWidth), 0);
+          const closedLayout = await shell.evaluate(el => ({
+            width: el.offsetWidth,
+            height: el.querySelector("iframe").offsetHeight,
+            desktop: matchMedia("(min-width: 641px) and (hover: hover) and (pointer: fine)").matches,
+            hidden: getComputedStyle(el).visibility === "hidden",
+            hitTarget: document.elementFromPoint(innerWidth / 2, innerHeight / 2)?.id,
+            backdropFilter: getComputedStyle(document.querySelector("#gateway-chat-backdrop")).backdropFilter,
+          }));
+          assert.equal(closedLayout.hidden, true, "Closed chat remains invisible");
+          assert.notEqual(closedLayout.hitTarget, "gateway-chat-shell", "Closed desktop chat never captures provider clicks");
+          if (closedLayout.desktop) {
+            assert.ok(Math.abs(closedLayout.width-normalBox.width)<1,"Desktop keeps the hidden iframe width stable");
+            assert.ok(Math.abs(closedLayout.height-(normalBox.height-2))<1,"Desktop keeps the hidden iframe height stable");
+            assert.equal(closedLayout.backdropFilter,"none","Desktop overlay avoids a fullscreen backdrop filter");
+          } else {
+            assert.equal(closedLayout.width,0,"Touch and compact viewports retain the zero-size closed surface");
+            assert.ok(closedLayout.backdropFilter.includes("blur(4px)"),"Touch viewports retain their existing blur");
+          }
         }
         assert.equal(frameNavigations, 1); assert.equal(sdkRequests, 0); assert.equal(await page.evaluate(() => window.providerClicks), 2); assert.deepEqual(errors, []);
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
@@ -218,7 +235,15 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
           parent.postMessage({source:"atrio-widget",type:"atrio.widget.close"},"https://fixture.test");
         });
         await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "closed");
-        assert.equal(await shell.evaluate(el=>el.offsetHeight),0,"Closing during resize reaches the launcher");
+        const closedAfterResize = await shell.evaluate(el => {
+          const box=el.getBoundingClientRect(),button=document.querySelector("#gateway-chat-button").getBoundingClientRect();
+          return {desktop:matchMedia("(min-width: 641px) and (hover: hover) and (pointer: fine)").matches,
+            height:el.offsetHeight,visible:getComputedStyle(el).visibility,widthDelta:Math.abs(box.width-button.width),heightDelta:Math.abs(box.height-button.height)};
+        });
+        assert.equal(closedAfterResize.visible,"hidden","Closing during resize hides the chat");
+        if (closedAfterResize.desktop) {
+          assert.ok(closedAfterResize.widthDelta<=1&&closedAfterResize.heightDelta<=1,"Desktop contraction reaches the launcher without collapsing its iframe");
+        } else assert.equal(closedAfterResize.height,0,"Touch contraction still collapses its iframe");
         await launcher.click(); await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "open");
         await resizeChat(false);
         // A viewport change must not retain the scale for an obsolete geometry.

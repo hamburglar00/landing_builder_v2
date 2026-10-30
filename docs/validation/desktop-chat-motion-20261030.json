@@ -1,0 +1,1225 @@
+{
+  "recorded_at_utc": "2026-10-30T20:21:41.450830+00:00",
+  "release": "chat-desktop-20261030",
+  "application_scope": "public/gateway-client.css only in each of the four gateways",
+  "repositories": [
+    {
+      "repo": "rey",
+      "domain": "www.reydeases.fun",
+      "before_deployment": {
+        "id": "dpl_B6ByNk75ZKLrhjbWDwXDtg6aDN3d",
+        "url": "reydeases-gateway-qd386wddf-juanclouds-projects.vercel.app",
+        "state": "READY"
+      },
+      "before_commit": "8abc68e4a1cd71e6e613d9c8257a23f2f9676897",
+      "commit": "4aaf6bf436df4ad92c807fd7301528f7caeed743",
+      "pushed": true,
+      "deployment": {
+        "id": "dpl_9EwAz8TcCrL1EDyJoA4CfbT9qNDn",
+        "url": "https://reydeases-gateway-cru18qc8l-juanclouds-projects.vercel.app",
+        "readyState": "INITIALIZING",
+        "target": "production",
+        "state": "READY",
+        "source_verified": true,
+        "release": "chat-desktop-20261030",
+        "errorCode": null,
+        "promoted": true
+      },
+      "production_alias_verified": true
+    },
+    {
+      "repo": "ases",
+      "domain": "www.asesdelnorte.online",
+      "before_deployment": {
+        "id": "dpl_7s52KnVdhCPrLCVxvW7gU2EEvY4u",
+        "url": "ases-del-norte-gateway-il1bw1l59-juanclouds-projects.vercel.app",
+        "state": "READY"
+      },
+      "before_commit": "b3e7bf39da091e9e48c85b7b4d357ca71463687a",
+      "commit": "a6c2ee09e25b1b7f88cee52cc02807d606293287",
+      "pushed": true,
+      "deployment": {
+        "id": "dpl_2KBpgf8nTiMDMQsVvpZq8wAxXHRi",
+        "url": "https://ases-del-norte-gateway-d05mla0nz-juanclouds-projects.vercel.app",
+        "readyState": "INITIALIZING",
+        "target": "production",
+        "state": "READY",
+        "source_verified": true,
+        "release": "chat-desktop-20261030",
+        "errorCode": null,
+        "promoted": true
+      },
+      "production_alias_verified": true
+    },
+    {
+      "repo": "net",
+      "domain": "www.ganamosnet.icu",
+      "before_deployment": {
+        "id": "dpl_FYFErc7K6N9PKQm4DrLahEYzMcKV",
+        "url": "ganamos-net-gateway-5z5c0vhhf-juanclouds-projects.vercel.app",
+        "state": "READY"
+      },
+      "before_commit": "980fc68d3acd214eb6971c6af04bb1b2aeb54df4",
+      "commit": "9d5a0d3f2c046fee21103b495fab03b94e503479",
+      "pushed": true,
+      "deployment": {
+        "id": "dpl_33PM7xhKF3fw8nDZsffo6HyyUJVp",
+        "url": "https://ganamos-net-gateway-kwng3wy53-juanclouds-projects.vercel.app",
+        "readyState": "INITIALIZING",
+        "target": "production",
+        "state": "READY",
+        "source_verified": true,
+        "release": "chat-desktop-20261030",
+        "errorCode": null,
+        "promoted": true
+      },
+      "production_alias_verified": true
+    },
+    {
+      "repo": "multi",
+      "domain": "multi-skin-gateway-8kppwl20a-juanclouds-projects.vercel.app",
+      "before_deployment": {
+        "id": "dpl_HDhR8Y95SeqNvtWHUCx5urF4tUPC",
+        "url": "multi-skin-gateway-8kppwl20a-juanclouds-projects.vercel.app",
+        "state": "READY"
+      },
+      "before_commit": "9992f1610409fe9263b868ac8b26e1bf01a0f4e3",
+      "commit": "0452e69eb80a4a4a51131381e1e2d363b859730b",
+      "pushed": true,
+      "deployment": {
+        "id": "dpl_AxpZMDG4sCRB78wn19wmqJFdTDaw",
+        "url": "https://multi-skin-gateway-fv9mfol77-juanclouds-projects.vercel.app",
+        "readyState": "INITIALIZING",
+        "target": "production",
+        "state": "READY",
+        "source_verified": true,
+        "release": "chat-desktop-20261030",
+        "errorCode": null,
+        "promoted": true
+      }
+    }
+  ],
+  "cloudflare": {
+    "previous_public_version": "e8c25ad7-e32c-4bd2-bcb5-6a3c18ffc3c3",
+    "current": {
+      "id": "b184430b-6a28-4505-a418-1d0f3924698a",
+      "created_on": "2026-10-30T20:20:09.667936Z",
+      "versions": [
+        {
+          "version_id": "76a4e446-5ad7-4547-94b4-897e1959e97f",
+          "percentage": 100
+        }
+      ]
+    },
+    "keep_vars": true,
+    "relay_changed": false
+  },
+  "measurements": {
+    "engine": "Chromium headless",
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "cpu_throttling": 4,
+    "real_atrio_bubbles": 100,
+    "baseline_ganamos_net_commit": "980fc68d3acd214eb6971c6af04bb1b2aeb54df4",
+    "fixed_ganamos_net_commit": "9d5a0d3f2c046fee21103b495fab03b94e503479",
+    "data": {
+      "results": [
+        {
+          "mode": "production-before",
+          "cycle": 0,
+          "frameCount": 8,
+          "maxGapMs": 183,
+          "over33ms": 4,
+          "layoutCount": 4,
+          "layoutMs": 40,
+          "recalcCount": 10,
+          "taskMs": 122,
+          "iframeResizes": [
+            {
+              "width": 388,
+              "height": 738
+            },
+            {
+              "width": 388,
+              "height": 738
+            }
+          ]
+        },
+        {
+          "mode": "production-before",
+          "cycle": 1,
+          "frameCount": 5,
+          "maxGapMs": 217,
+          "over33ms": 4,
+          "layoutCount": 4,
+          "layoutMs": 89,
+          "recalcCount": 8,
+          "taskMs": 283,
+          "iframeResizes": [
+            {
+              "width": 0,
+              "height": 0
+            },
+            {
+              "width": 388,
+              "height": 738
+            }
+          ]
+        },
+        {
+          "mode": "production-before",
+          "cycle": 2,
+          "frameCount": 5,
+          "maxGapMs": 233,
+          "over33ms": 4,
+          "layoutCount": 4,
+          "layoutMs": 46,
+          "recalcCount": 8,
+          "taskMs": 335,
+          "iframeResizes": [
+            {
+              "width": 0,
+              "height": 0
+            },
+            {
+              "width": 388,
+              "height": 738
+            }
+          ]
+        },
+        {
+          "mode": "desktop-fix",
+          "cycle": 0,
+          "frameCount": 24,
+          "maxGapMs": 50,
+          "over33ms": 2,
+          "layoutCount": 1,
+          "layoutMs": 1,
+          "recalcCount": 26,
+          "taskMs": 139,
+          "iframeResizes": []
+        },
+        {
+          "mode": "desktop-fix",
+          "cycle": 1,
+          "frameCount": 25,
+          "maxGapMs": 50,
+          "over33ms": 1,
+          "layoutCount": 1,
+          "layoutMs": 0,
+          "recalcCount": 27,
+          "taskMs": 165,
+          "iframeResizes": []
+        },
+        {
+          "mode": "desktop-fix",
+          "cycle": 2,
+          "frameCount": 24,
+          "maxGapMs": 67,
+          "over33ms": 2,
+          "layoutCount": 1,
+          "layoutMs": 1,
+          "recalcCount": 26,
+          "taskMs": 188,
+          "iframeResizes": []
+        }
+      ],
+      "syntheticFixture": true,
+      "cpuThrottling": 4
+    },
+    "physical_user_device_verified": false
+  },
+  "layout_regression": {
+    "results": [
+      {
+        "engine": "Chromium",
+        "repo": "landing-autologuin",
+        "touch": false,
+        "messages": 100,
+        "cycles": 2,
+        "stableDesktopViewport": true,
+        "touchLayoutPreserved": false,
+        "hiddenChatPassesClicks": true,
+        "iframeReused": true
+      },
+      {
+        "engine": "Chromium",
+        "repo": "landing-autologuin",
+        "touch": true,
+        "messages": 100,
+        "cycles": 2,
+        "stableDesktopViewport": false,
+        "touchLayoutPreserved": true,
+        "hiddenChatPassesClicks": true,
+        "iframeReused": true
+      },
+      {
+        "engine": "Chromium",
+        "repo": "ases-gateway",
+        "touch": false,
+        "messages": 100,
+        "cycles": 2,
+        "stableDesktopViewport": true,
+        "touchLayoutPreserved": false,
+        "hiddenChatPassesClicks": true,
+        "iframeReused": true
+      },
+      {
+        "engine": "Chromium",
+        "repo": "ases-gateway",
+        "touch": true,
+        "messages": 100,
+        "cycles": 2,
+        "stableDesktopViewport": false,
+        "touchLayoutPreserved": true,
+        "hiddenChatPassesClicks": true,
+        "iframeReused": true
+      },
+      {
+        "engine": "Chromium",
+        "repo": "ganamos-gateway",
+        "touch": false,
+        "messages": 100,
+        "cycles": 2,
+        "stableDesktopViewport": true,
+        "touchLayoutPreserved": false,
+        "hiddenChatPassesClicks": true,
+        "iframeReused": true
+      },
+      {
+        "engine": "Chromium",
+        "repo": "ganamos-gateway",
+        "touch": true,
+        "messages": 100,
+        "cycles": 2,
+        "stableDesktopViewport": false,
+        "touchLayoutPreserved": true,
+        "hiddenChatPassesClicks": true,
+        "iframeReused": true
+      },
+      {
+        "engine": "Chromium",
+        "repo": "multi-skin-gateway",
+        "touch": false,
+        "messages": 100,
+        "cycles": 2,
+        "stableDesktopViewport": true,
+        "touchLayoutPreserved": false,
+        "hiddenChatPassesClicks": true,
+        "iframeReused": true
+      },
+      {
+        "engine": "Chromium",
+        "repo": "multi-skin-gateway",
+        "touch": true,
+        "messages": 100,
+        "cycles": 2,
+        "stableDesktopViewport": false,
+        "touchLayoutPreserved": true,
+        "hiddenChatPassesClicks": true,
+        "iframeReused": true
+      },
+      {
+        "engine": "WebKit",
+        "repo": "landing-autologuin",
+        "touch": false,
+        "messages": 100,
+        "cycles": 2,
+        "stableDesktopViewport": true,
+        "touchLayoutPreserved": false,
+        "hiddenChatPassesClicks": true,
+        "iframeReused": true
+      },
+      {
+        "engine": "WebKit",
+        "repo": "landing-autologuin",
+        "touch": true,
+        "messages": 100,
+        "cycles": 2,
+        "stableDesktopViewport": false,
+        "touchLayoutPreserved": true,
+        "hiddenChatPassesClicks": true,
+        "iframeReused": true
+      },
+      {
+        "engine": "WebKit",
+        "repo": "ases-gateway",
+        "touch": false,
+        "messages": 100,
+        "cycles": 2,
+        "stableDesktopViewport": true,
+        "touchLayoutPreserved": false,
+        "hiddenChatPassesClicks": true,
+        "iframeReused": true
+      },
+      {
+        "engine": "WebKit",
+        "repo": "ases-gateway",
+        "touch": true,
+        "messages": 100,
+        "cycles": 2,
+        "stableDesktopViewport": false,
+        "touchLayoutPreserved": true,
+        "hiddenChatPassesClicks": true,
+        "iframeReused": true
+      },
+      {
+        "engine": "WebKit",
+        "repo": "ganamos-gateway",
+        "touch": false,
+        "messages": 100,
+        "cycles": 2,
+        "stableDesktopViewport": true,
+        "touchLayoutPreserved": false,
+        "hiddenChatPassesClicks": true,
+        "iframeReused": true
+      },
+      {
+        "engine": "WebKit",
+        "repo": "ganamos-gateway",
+        "touch": true,
+        "messages": 100,
+        "cycles": 2,
+        "stableDesktopViewport": false,
+        "touchLayoutPreserved": true,
+        "hiddenChatPassesClicks": true,
+        "iframeReused": true
+      },
+      {
+        "engine": "WebKit",
+        "repo": "multi-skin-gateway",
+        "touch": false,
+        "messages": 100,
+        "cycles": 2,
+        "stableDesktopViewport": true,
+        "touchLayoutPreserved": false,
+        "hiddenChatPassesClicks": true,
+        "iframeReused": true
+      },
+      {
+        "engine": "WebKit",
+        "repo": "multi-skin-gateway",
+        "touch": true,
+        "messages": 100,
+        "cycles": 2,
+        "stableDesktopViewport": false,
+        "touchLayoutPreserved": true,
+        "hiddenChatPassesClicks": true,
+        "iframeReused": true
+      }
+    ],
+    "fixtureOnly": true,
+    "productionWrites": 0
+  },
+  "entry_ux_regression": {
+    "fixtureOnly": true,
+    "physicalSafariToolbarVerified": false,
+    "productionWrites": 0,
+    "checks": [
+      {
+        "repo": "landing-autologuin",
+        "engine": "Chromium",
+        "landingEngine": "constructor",
+        "busyFeedbackBeforeConfirmation": true,
+        "duplicateClickIgnored": true,
+        "starts": 1,
+        "confirmations": 1,
+        "fixtureAccountCalls": 1
+      },
+      {
+        "repo": "landing-autologuin",
+        "engine": "Chromium",
+        "landingEngine": "classic",
+        "busyFeedbackBeforeConfirmation": true,
+        "duplicateClickIgnored": true,
+        "starts": 1,
+        "confirmations": 1,
+        "fixtureAccountCalls": 0
+      },
+      {
+        "repo": "landing-autologuin",
+        "engine": "Chromium",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "landing-autologuin",
+        "engine": "Chromium",
+        "viewport": {
+          "width": 844,
+          "height": 390
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "landing-autologuin",
+        "engine": "Chromium",
+        "viewport": {
+          "width": 1366,
+          "height": 768
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "ases-gateway",
+        "engine": "Chromium",
+        "landingEngine": "constructor",
+        "busyFeedbackBeforeConfirmation": true,
+        "duplicateClickIgnored": true,
+        "starts": 1,
+        "confirmations": 1,
+        "fixtureAccountCalls": 1
+      },
+      {
+        "repo": "ases-gateway",
+        "engine": "Chromium",
+        "landingEngine": "classic",
+        "busyFeedbackBeforeConfirmation": true,
+        "duplicateClickIgnored": true,
+        "starts": 1,
+        "confirmations": 1,
+        "fixtureAccountCalls": 0
+      },
+      {
+        "repo": "ases-gateway",
+        "engine": "Chromium",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "ases-gateway",
+        "engine": "Chromium",
+        "viewport": {
+          "width": 844,
+          "height": 390
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "ases-gateway",
+        "engine": "Chromium",
+        "viewport": {
+          "width": 1366,
+          "height": 768
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "ganamos-gateway",
+        "engine": "Chromium",
+        "landingEngine": "constructor",
+        "busyFeedbackBeforeConfirmation": true,
+        "duplicateClickIgnored": true,
+        "starts": 1,
+        "confirmations": 1,
+        "fixtureAccountCalls": 1
+      },
+      {
+        "repo": "ganamos-gateway",
+        "engine": "Chromium",
+        "landingEngine": "classic",
+        "busyFeedbackBeforeConfirmation": true,
+        "duplicateClickIgnored": true,
+        "starts": 1,
+        "confirmations": 1,
+        "fixtureAccountCalls": 0
+      },
+      {
+        "repo": "ganamos-gateway",
+        "engine": "Chromium",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "ganamos-gateway",
+        "engine": "Chromium",
+        "viewport": {
+          "width": 844,
+          "height": 390
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "ganamos-gateway",
+        "engine": "Chromium",
+        "viewport": {
+          "width": 1366,
+          "height": 768
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "engine": "Chromium",
+        "landingEngine": "constructor",
+        "busyFeedbackBeforeConfirmation": true,
+        "duplicateClickIgnored": true,
+        "starts": 1,
+        "confirmations": 1,
+        "fixtureAccountCalls": 1
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "engine": "Chromium",
+        "landingEngine": "classic",
+        "busyFeedbackBeforeConfirmation": true,
+        "duplicateClickIgnored": true,
+        "starts": 1,
+        "confirmations": 1,
+        "fixtureAccountCalls": 0
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "engine": "Chromium",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "engine": "Chromium",
+        "viewport": {
+          "width": 844,
+          "height": 390
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "engine": "Chromium",
+        "viewport": {
+          "width": 1366,
+          "height": 768
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "landing-autologuin",
+        "engine": "WebKit",
+        "landingEngine": "constructor",
+        "busyFeedbackBeforeConfirmation": true,
+        "duplicateClickIgnored": true,
+        "starts": 1,
+        "confirmations": 1,
+        "fixtureAccountCalls": 1
+      },
+      {
+        "repo": "landing-autologuin",
+        "engine": "WebKit",
+        "landingEngine": "classic",
+        "busyFeedbackBeforeConfirmation": true,
+        "duplicateClickIgnored": true,
+        "starts": 1,
+        "confirmations": 1,
+        "fixtureAccountCalls": 0
+      },
+      {
+        "repo": "landing-autologuin",
+        "engine": "WebKit",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "landing-autologuin",
+        "engine": "WebKit",
+        "viewport": {
+          "width": 844,
+          "height": 390
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "landing-autologuin",
+        "engine": "WebKit",
+        "viewport": {
+          "width": 1366,
+          "height": 768
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "ases-gateway",
+        "engine": "WebKit",
+        "landingEngine": "constructor",
+        "busyFeedbackBeforeConfirmation": true,
+        "duplicateClickIgnored": true,
+        "starts": 1,
+        "confirmations": 1,
+        "fixtureAccountCalls": 1
+      },
+      {
+        "repo": "ases-gateway",
+        "engine": "WebKit",
+        "landingEngine": "classic",
+        "busyFeedbackBeforeConfirmation": true,
+        "duplicateClickIgnored": true,
+        "starts": 1,
+        "confirmations": 1,
+        "fixtureAccountCalls": 0
+      },
+      {
+        "repo": "ases-gateway",
+        "engine": "WebKit",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "ases-gateway",
+        "engine": "WebKit",
+        "viewport": {
+          "width": 844,
+          "height": 390
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "ases-gateway",
+        "engine": "WebKit",
+        "viewport": {
+          "width": 1366,
+          "height": 768
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "ganamos-gateway",
+        "engine": "WebKit",
+        "landingEngine": "constructor",
+        "busyFeedbackBeforeConfirmation": true,
+        "duplicateClickIgnored": true,
+        "starts": 1,
+        "confirmations": 1,
+        "fixtureAccountCalls": 1
+      },
+      {
+        "repo": "ganamos-gateway",
+        "engine": "WebKit",
+        "landingEngine": "classic",
+        "busyFeedbackBeforeConfirmation": true,
+        "duplicateClickIgnored": true,
+        "starts": 1,
+        "confirmations": 1,
+        "fixtureAccountCalls": 0
+      },
+      {
+        "repo": "ganamos-gateway",
+        "engine": "WebKit",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "ganamos-gateway",
+        "engine": "WebKit",
+        "viewport": {
+          "width": 844,
+          "height": 390
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "ganamos-gateway",
+        "engine": "WebKit",
+        "viewport": {
+          "width": 1366,
+          "height": 768
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "engine": "WebKit",
+        "landingEngine": "constructor",
+        "busyFeedbackBeforeConfirmation": true,
+        "duplicateClickIgnored": true,
+        "starts": 1,
+        "confirmations": 1,
+        "fixtureAccountCalls": 1
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "engine": "WebKit",
+        "landingEngine": "classic",
+        "busyFeedbackBeforeConfirmation": true,
+        "duplicateClickIgnored": true,
+        "starts": 1,
+        "confirmations": 1,
+        "fixtureAccountCalls": 0
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "engine": "WebKit",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "engine": "WebKit",
+        "viewport": {
+          "width": 844,
+          "height": 390
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "engine": "WebKit",
+        "viewport": {
+          "width": 1366,
+          "height": 768
+        },
+        "opensFromLauncher": true,
+        "contractsBeforeCollapsing": true,
+        "noProviderTouchBlock": true,
+        "rapidReversal": true,
+        "smoothMaximizeRestore": true,
+        "fixedIframeLayoutWith100Messages": true,
+        "resizeReversal": true,
+        "closeDuringResize": true,
+        "viewportDuringResize": true,
+        "reducedMotion": true,
+        "darkEdgeInAllStates": true,
+        "frameNavigations": 1,
+        "sdkRequests": 0
+      }
+    ]
+  },
+  "unit_asset_tests": {
+    "rey": 15,
+    "ases": 11,
+    "net": 11,
+    "multi": 10
+  },
+  "public_verification": {
+    "checked_at_utc": "2026-10-30T20:20:45.519303+00:00",
+    "method": "read-only HTTP GET; no accounts, chat messages or financial requests",
+    "results": [
+      {
+        "repo": "rey",
+        "url": "https://www.reydeases.fun/gateway-client.css?v=chat-motion-520-1",
+        "ua": "desktop",
+        "status": 200,
+        "sha256": "c14b9b4fc91de629a0326ac78a398e2ff40b1d96c9b6adb97c5b0e640e2b9091",
+        "matches_local": true
+      },
+      {
+        "repo": "rey",
+        "url": "https://www.reydeases.fun/gateway-client.css?v=chat-motion-520-1",
+        "ua": "touch",
+        "status": 200,
+        "sha256": "c14b9b4fc91de629a0326ac78a398e2ff40b1d96c9b6adb97c5b0e640e2b9091",
+        "matches_local": true
+      },
+      {
+        "repo": "rey",
+        "url": "https://www.reydeases.fun/gateway-client.js",
+        "ua": "desktop",
+        "status": 200,
+        "sha256": "fdd6637446a738532bcfb7b1ac75fc694e6621a199d556c54d340bb98554ff17",
+        "matches_local": true
+      },
+      {
+        "repo": "rey",
+        "url": "https://www.reydeases.fun/api/health",
+        "ua": "desktop",
+        "status": 200,
+        "healthy": true
+      },
+      {
+        "repo": "ases",
+        "url": "https://www.asesdelnorte.online/gateway-client.css?v=chat-motion-520-1",
+        "ua": "desktop",
+        "status": 200,
+        "sha256": "28065418cc247d9083f5a504ebae2bf154518581e9b6cee06da99ad2e5ac4b1a",
+        "matches_local": true
+      },
+      {
+        "repo": "ases",
+        "url": "https://www.asesdelnorte.online/gateway-client.css?v=chat-motion-520-1",
+        "ua": "touch",
+        "status": 200,
+        "sha256": "28065418cc247d9083f5a504ebae2bf154518581e9b6cee06da99ad2e5ac4b1a",
+        "matches_local": true
+      },
+      {
+        "repo": "ases",
+        "url": "https://www.asesdelnorte.online/gateway-client.js",
+        "ua": "desktop",
+        "status": 200,
+        "sha256": "0758dd5df9ecd5abd6408b3cb2b35436720ac5c73069e403e8d2a3efefc7a929",
+        "matches_local": true
+      },
+      {
+        "repo": "ases",
+        "url": "https://www.asesdelnorte.online/api/health",
+        "ua": "desktop",
+        "status": 200,
+        "healthy": true
+      },
+      {
+        "repo": "net",
+        "url": "https://www.ganamosnet.icu/gateway-client.css?v=chat-motion-520-1",
+        "ua": "desktop",
+        "status": 200,
+        "sha256": "28065418cc247d9083f5a504ebae2bf154518581e9b6cee06da99ad2e5ac4b1a",
+        "matches_local": true
+      },
+      {
+        "repo": "net",
+        "url": "https://www.ganamosnet.icu/gateway-client.css?v=chat-motion-520-1",
+        "ua": "touch",
+        "status": 200,
+        "sha256": "28065418cc247d9083f5a504ebae2bf154518581e9b6cee06da99ad2e5ac4b1a",
+        "matches_local": true
+      },
+      {
+        "repo": "net",
+        "url": "https://www.ganamosnet.icu/gateway-client.js",
+        "ua": "desktop",
+        "status": 200,
+        "sha256": "f2fbd17e7de1cdddac8693e88d47993fd6ea6525f2a46010aeab94631323001e",
+        "matches_local": true
+      },
+      {
+        "repo": "net",
+        "url": "https://www.ganamosnet.icu/api/health",
+        "ua": "desktop",
+        "status": 200,
+        "healthy": true
+      },
+      {
+        "repo": "multi",
+        "url": "https://ganamosnet.global/gateway-client.css?v=chat-motion-520-1",
+        "ua": "desktop",
+        "status": 200,
+        "sha256": "117384a3ccf2e07b41e7987fb4ec543e76284170e0fd64d2fa6ab15cf183e54d",
+        "matches_local": true
+      },
+      {
+        "repo": "multi",
+        "url": "https://ganamosnet.global/gateway-client.css?v=chat-motion-520-1",
+        "ua": "touch",
+        "status": 200,
+        "sha256": "117384a3ccf2e07b41e7987fb4ec543e76284170e0fd64d2fa6ab15cf183e54d",
+        "matches_local": true
+      },
+      {
+        "repo": "multi",
+        "url": "https://ganamosnet.global/gateway-client.js",
+        "ua": "desktop",
+        "status": 200,
+        "sha256": "76dcb116adfc9acc3f2cccec0867087013bfe3197b4fc9fc4a4d4f8edefc2707",
+        "matches_local": true
+      },
+      {
+        "repo": "multi",
+        "url": "https://ganamosnet.global/api/health",
+        "ua": "desktop",
+        "status": 200,
+        "healthy": true
+      }
+    ]
+  },
+  "database_changes": false,
+  "api2_deployment_required": false
+}
