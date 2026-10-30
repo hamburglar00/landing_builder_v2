@@ -1,0 +1,789 @@
+{
+  "release": "full-20261030",
+  "recorded_at_utc": "2026-10-30T19:06:30.396383+00:00",
+  "status": {
+    "git_delivery": "all_nine_repositories_pushed",
+    "our_production_deployments": "complete",
+    "api2": "pending_programmer_deployment",
+    "panel3": "pending_programmer_deployment",
+    "multi_skin_activation": "requires_api2_panel3_deployment_permissions_and_agency_api_key"
+  },
+  "repositories": [
+    {
+      "repo": "builder",
+      "remote": "https://github.com/hamburglar00/landing_builder_v2.git",
+      "branch": "fix/template7-session-reentry",
+      "implementation_commit": "5505004c849a7da42a56d8b5d4ff9e6992f73b9c",
+      "remote_head_verified": true,
+      "deployment_owner": "our_side",
+      "excluded_local_files": []
+    },
+    {
+      "repo": "classic",
+      "remote": "https://github.com/hamburglar00/public_landing_bl.git",
+      "branch": "fix/template7-session-reentry",
+      "implementation_commit": "a69b3ac112720dea51ba50fbf6d03f8decb626da",
+      "remote_head_verified": true,
+      "deployment_owner": "our_side",
+      "excluded_local_files": []
+    },
+    {
+      "repo": "atrio",
+      "remote": "https://github.com/hamburglar00/internal-chat.git",
+      "branch": "fix/atrio-inbox-validation",
+      "implementation_commit": "f4cca6ff0408f32e2c8d55891031da2ebae4a3bf",
+      "remote_head_verified": true,
+      "deployment_owner": "our_side",
+      "excluded_local_files": []
+    },
+    {
+      "repo": "rey",
+      "remote": "https://github.com/hamburglar00/reydeases-gateway.git",
+      "branch": "fix/template7-session-reentry",
+      "implementation_commit": "8abc68e4a1cd71e6e613d9c8257a23f2f9676897",
+      "remote_head_verified": true,
+      "deployment_owner": "our_side",
+      "excluded_local_files": []
+    },
+    {
+      "repo": "ases",
+      "remote": "https://github.com/hamburglar00/ases-del-norte-gateway.git",
+      "branch": "fix/template7-session-reentry",
+      "implementation_commit": "b3e7bf39da091e9e48c85b7b4d357ca71463687a",
+      "remote_head_verified": true,
+      "deployment_owner": "our_side",
+      "excluded_local_files": []
+    },
+    {
+      "repo": "net",
+      "remote": "https://github.com/hamburglar00/ganamos-net-gateway.git",
+      "branch": "fix/template7-session-reentry",
+      "implementation_commit": "980fc68d3acd214eb6971c6af04bb1b2aeb54df4",
+      "remote_head_verified": true,
+      "deployment_owner": "our_side",
+      "excluded_local_files": []
+    },
+    {
+      "repo": "multi",
+      "remote": "https://github.com/hamburglar00/multi-skin-gateway.git",
+      "branch": "fix/template7-session-reentry",
+      "implementation_commit": "9992f1610409fe9263b868ac8b26e1bf01a0f4e3",
+      "remote_head_verified": true,
+      "deployment_owner": "our_side",
+      "excluded_local_files": []
+    },
+    {
+      "repo": "api2",
+      "remote": "https://github.com/johndoe-cloud2/api2.git",
+      "branch": "feature/atrio-integration",
+      "implementation_commit": "2547a2a07a44c220bef3e9fa432b6791c4e263ea",
+      "remote_head_verified": true,
+      "deployment_owner": "programmer",
+      "excluded_local_files": []
+    },
+    {
+      "repo": "panel3",
+      "remote": "https://github.com/johndoe-cloud2/panel3.git",
+      "branch": "fix/atrio-bot-form",
+      "implementation_commit": "68bed4c02ecdcf68850053edf782ff8260b6e440",
+      "remote_head_verified": true,
+      "deployment_owner": "programmer",
+      "excluded_local_files": [
+        ".env",
+        "tsconfig.tsbuildinfo"
+      ]
+    }
+  ],
+  "vercel": [
+    {
+      "repo": "builder",
+      "commit": "5505004c849a7da42a56d8b5d4ff9e6992f73b9c",
+      "id": "dpl_BAFiaYvPtGAMDN8aZndhs7cpX63b",
+      "url": "https://landing-builder-v2-k259-pdusrz983-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "source_verified": true,
+      "release": "full-20261030",
+      "promoted": true
+    },
+    {
+      "repo": "classic",
+      "commit": "a69b3ac112720dea51ba50fbf6d03f8decb626da",
+      "id": "dpl_qacZC1Kxar83jMsVK7LiqYYt1kVK",
+      "url": "https://public-landing-j2kchps8x-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "source_verified": true,
+      "release": "full-20261030",
+      "promoted": true
+    },
+    {
+      "repo": "atrio",
+      "commit": "f4cca6ff0408f32e2c8d55891031da2ebae4a3bf",
+      "id": "dpl_7kEegZ8ndHeygYHqWdEXTKQJApXm",
+      "url": "https://internal-chat-1o4xa566p-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "source_verified": true,
+      "release": "full-20261030",
+      "promoted": true
+    },
+    {
+      "repo": "rey",
+      "commit": "8abc68e4a1cd71e6e613d9c8257a23f2f9676897",
+      "id": "dpl_B6ByNk75ZKLrhjbWDwXDtg6aDN3d",
+      "url": "https://reydeases-gateway-qd386wddf-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "source_verified": true,
+      "release": "full-20261030",
+      "promoted": true
+    },
+    {
+      "repo": "ases",
+      "commit": "b3e7bf39da091e9e48c85b7b4d357ca71463687a",
+      "id": "dpl_7s52KnVdhCPrLCVxvW7gU2EEvY4u",
+      "url": "https://ases-del-norte-gateway-il1bw1l59-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "source_verified": true,
+      "release": "full-20261030",
+      "promoted": true
+    },
+    {
+      "repo": "net",
+      "commit": "980fc68d3acd214eb6971c6af04bb1b2aeb54df4",
+      "id": "dpl_FYFErc7K6N9PKQm4DrLahEYzMcKV",
+      "url": "https://ganamos-net-gateway-5z5c0vhhf-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "source_verified": true,
+      "release": "full-20261030",
+      "promoted": true
+    },
+    {
+      "repo": "multi",
+      "commit": "9992f1610409fe9263b868ac8b26e1bf01a0f4e3",
+      "id": "dpl_HDhR8Y95SeqNvtWHUCx5urF4tUPC",
+      "url": "https://multi-skin-gateway-8kppwl20a-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "source_verified": true,
+      "release": "full-20261030",
+      "promoted": true
+    }
+  ],
+  "production_alias_verification": [
+    {
+      "repo": "builder",
+      "domain": "mkt.panelbotadmin.com",
+      "id": "dpl_BAFiaYvPtGAMDN8aZndhs7cpX63b",
+      "state": "READY",
+      "matches_release": true
+    },
+    {
+      "repo": "classic",
+      "domain": "landing.panelbotadmin.com",
+      "id": "dpl_qacZC1Kxar83jMsVK7LiqYYt1kVK",
+      "state": "READY",
+      "matches_release": true
+    },
+    {
+      "repo": "atrio",
+      "domain": "www.atrio.website",
+      "id": "dpl_7kEegZ8ndHeygYHqWdEXTKQJApXm",
+      "state": "READY",
+      "matches_release": true
+    },
+    {
+      "repo": "rey",
+      "domain": "www.reydeases.fun",
+      "id": "dpl_B6ByNk75ZKLrhjbWDwXDtg6aDN3d",
+      "state": "READY",
+      "matches_release": true
+    },
+    {
+      "repo": "ases",
+      "domain": "www.asesdelnorte.online",
+      "id": "dpl_7s52KnVdhCPrLCVxvW7gU2EEvY4u",
+      "state": "READY",
+      "matches_release": true
+    },
+    {
+      "repo": "net",
+      "domain": "www.ganamosnet.icu",
+      "id": "dpl_FYFErc7K6N9PKQm4DrLahEYzMcKV",
+      "state": "READY",
+      "matches_release": true
+    }
+  ],
+  "previous_vercel_production": [
+    {
+      "repo": "builder",
+      "domain": "mkt.panelbotadmin.com",
+      "id": "dpl_7Now2qGPdciDNg2TNGVQroahScSi",
+      "url": "landing-builder-v2-k259-7744mfiwq-juanclouds-projects.vercel.app",
+      "state": "READY"
+    },
+    {
+      "repo": "classic",
+      "domain": "landing.panelbotadmin.com",
+      "id": "dpl_2FwrHRikfmAFdfJNAdcrpg2y617L",
+      "url": "public-landing-mol4bnhqz-juanclouds-projects.vercel.app",
+      "state": "READY"
+    },
+    {
+      "repo": "atrio",
+      "domain": "www.atrio.website",
+      "id": "dpl_HprcHdJ8qNXfZX7hjquHv52Anp1y",
+      "url": "internal-chat-o48t30jnb-juanclouds-projects.vercel.app",
+      "state": "READY"
+    },
+    {
+      "repo": "rey",
+      "domain": "www.reydeases.fun",
+      "id": "dpl_H2C7CyEhc13TYmuHkJc9b9eg4w7A",
+      "url": "reydeases-gateway-n3sgs8hsi-juanclouds-projects.vercel.app",
+      "state": "READY"
+    },
+    {
+      "repo": "ases",
+      "domain": "www.asesdelnorte.online",
+      "id": "dpl_FvxKCkxnpQJB2ZE2RvpNYzugFPa3",
+      "url": "ases-del-norte-gateway-njzsqq63d-juanclouds-projects.vercel.app",
+      "state": "READY"
+    },
+    {
+      "repo": "net",
+      "domain": "www.ganamosnet.icu",
+      "id": "dpl_EdPU8F3Uy8pRPLjg5NRZQnocoy24",
+      "url": "ganamos-net-gateway-mp280fcej-juanclouds-projects.vercel.app",
+      "state": "READY"
+    }
+  ],
+  "cloudflare": {
+    "current": [
+      {
+        "worker": "public",
+        "deployment_id": "963894a2-8621-44ba-b9ab-7d1511a7768c",
+        "created_on": "2026-10-30T19:04:14.799869Z",
+        "versions": [
+          {
+            "version_id": "e8c25ad7-e32c-4bd2-bcb5-6a3c18ffc3c3",
+            "percentage": 100
+          }
+        ]
+      },
+      {
+        "worker": "relay",
+        "deployment_id": "b5241ff9-ca07-4d65-a15d-99ecff6fa755",
+        "created_on": "2026-10-30T18:55:13.130272Z",
+        "versions": [
+          {
+            "version_id": "04e3be22-43d5-4db2-bcee-d69a768d4711",
+            "percentage": 100
+          }
+        ]
+      }
+    ],
+    "previous_public_version": "aa948630-296e-4cd9-86e5-1c80feb49878",
+    "variables_and_secrets_preserved": true,
+    "public_domain": "ganamosnet.global"
+  },
+  "supabase": {
+    "project_ref": "didrpwkdqizivfbapofx",
+    "migration": "20261030185100_multi_skin_shared_provider.sql",
+    "status": "applied",
+    "rls_and_grants_verified": true,
+    "builder_new_migrations_pending": false
+  },
+  "programmer_handoff": {
+    "api2_commit": "2547a2a07a44c220bef3e9fa432b6791c4e263ea",
+    "panel3_commit": "68bed4c02ecdcf68850053edf782ff8260b6e440",
+    "api2_new_migrations_in_order": [
+      "20261029000001_add_multi_skin_provider.ts",
+      "20261030000001_create_bot_financial_effects.ts"
+    ],
+    "panel3_new_migrations": [],
+    "prior_api2_prerequisites_check_only": [
+      "20261027000001_add_atrio_provision_recovery.ts",
+      "20261028000001_add_atrio_recovery_window.ts",
+      "20261028000002_add_atrio_provision_attempt_history.ts"
+    ],
+    "instructions": "https://github.com/johndoe-cloud2/api2/blob/2547a2a07a44c220bef3e9fa432b6791c4e263ea/docs/validation/deploy-handoff-20261030.md"
+  },
+  "public_verification": {
+    "checked_at_utc": "2026-10-30T19:04:56.888650+00:00",
+    "method": "read-only HTTP GET; no JavaScript executed, accounts created or financial requests sent",
+    "checks": [
+      {
+        "name": "landing-autologuin:gateway-client.js",
+        "url": "https://www.reydeases.fun/gateway-client.js",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 49160,
+        "final_url": "https://www.reydeases.fun/gateway-client.js",
+        "sha256": "fdd6637446a738532bcfb7b1ac75fc694e6621a199d556c54d340bb98554ff17",
+        "matches_local": true
+      },
+      {
+        "name": "landing-autologuin:gateway-client.css",
+        "url": "https://www.reydeases.fun/gateway-client.css",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 14687,
+        "final_url": "https://www.reydeases.fun/gateway-client.css",
+        "sha256": "7f22054c9da80d09c373ee9e05500307aae6c1e8920dec3186a2bfa9e164ea45",
+        "matches_local": true
+      },
+      {
+        "name": "landing-autologuin:gateway-app-sdk.js",
+        "url": "https://www.reydeases.fun/gateway-app-sdk.js",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 5766,
+        "final_url": "https://www.reydeases.fun/gateway-app-sdk.js",
+        "sha256": "a6bc5790f665e785d6c25263a8e4c21fff5d719071e4a536941ce43d7fab41df",
+        "matches_local": true
+      },
+      {
+        "name": "ases-gateway:health",
+        "url": "https://www.asesdelnorte.online/api/health",
+        "kind": "health",
+        "status": 200,
+        "bytes": 70,
+        "final_url": "https://www.asesdelnorte.online/api/health",
+        "healthy": true
+      },
+      {
+        "name": "ases-gateway:gateway-client.js",
+        "url": "https://www.asesdelnorte.online/gateway-client.js",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 51239,
+        "final_url": "https://www.asesdelnorte.online/gateway-client.js",
+        "sha256": "0758dd5df9ecd5abd6408b3cb2b35436720ac5c73069e403e8d2a3efefc7a929",
+        "matches_local": true
+      },
+      {
+        "name": "ases-gateway:gateway-client.css",
+        "url": "https://www.asesdelnorte.online/gateway-client.css",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 14987,
+        "final_url": "https://www.asesdelnorte.online/gateway-client.css",
+        "sha256": "a6a3e2d8c56881d90ad4244dd6aeff44e4330c3a2426212688ddfcf9617192c7",
+        "matches_local": true
+      },
+      {
+        "name": "ases-gateway:gateway-app-sdk.js",
+        "url": "https://www.asesdelnorte.online/gateway-app-sdk.js",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 5766,
+        "final_url": "https://www.asesdelnorte.online/gateway-app-sdk.js",
+        "sha256": "a6bc5790f665e785d6c25263a8e4c21fff5d719071e4a536941ce43d7fab41df",
+        "matches_local": true
+      },
+      {
+        "name": "ganamos-gateway:health",
+        "url": "https://www.ganamosnet.icu/api/health",
+        "kind": "health",
+        "status": 200,
+        "bytes": 64,
+        "final_url": "https://www.ganamosnet.icu/api/health",
+        "healthy": true
+      },
+      {
+        "name": "ganamos-gateway:gateway-client.js",
+        "url": "https://www.ganamosnet.icu/gateway-client.js",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 51618,
+        "final_url": "https://www.ganamosnet.icu/gateway-client.js",
+        "sha256": "f2fbd17e7de1cdddac8693e88d47993fd6ea6525f2a46010aeab94631323001e",
+        "matches_local": true
+      },
+      {
+        "name": "ganamos-gateway:gateway-client.css",
+        "url": "https://www.ganamosnet.icu/gateway-client.css",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 14987,
+        "final_url": "https://www.ganamosnet.icu/gateway-client.css",
+        "sha256": "a6a3e2d8c56881d90ad4244dd6aeff44e4330c3a2426212688ddfcf9617192c7",
+        "matches_local": true
+      },
+      {
+        "name": "ganamos-gateway:gateway-app-sdk.js",
+        "url": "https://www.ganamosnet.icu/gateway-app-sdk.js",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 5766,
+        "final_url": "https://www.ganamosnet.icu/gateway-app-sdk.js",
+        "sha256": "a6bc5790f665e785d6c25263a8e4c21fff5d719071e4a536941ce43d7fab41df",
+        "matches_local": true
+      },
+      {
+        "name": "atrio:bet30.thumbnail.avif",
+        "url": "https://www.atrio.website/brands/multi-skin/bet30.thumbnail.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 996,
+        "final_url": "https://www.atrio.website/brands/multi-skin/bet30.thumbnail.avif",
+        "sha256": "b761c318ff93588fa0033fd0218586aee2cb6dbce097a044052e5e41c8176f5d",
+        "matches_local": true
+      },
+      {
+        "name": "atrio:camel_bet.thumbnail.avif",
+        "url": "https://www.atrio.website/brands/multi-skin/camel_bet.thumbnail.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 1132,
+        "final_url": "https://www.atrio.website/brands/multi-skin/camel_bet.thumbnail.avif",
+        "sha256": "5e8239e9bcb82c80375eefcc9651a531bf935561d8610a4a68fbd5f21f6f7ac5",
+        "matches_local": true
+      },
+      {
+        "name": "atrio:casino_zeta.thumbnail.avif",
+        "url": "https://www.atrio.website/brands/multi-skin/casino_zeta.thumbnail.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 1267,
+        "final_url": "https://www.atrio.website/brands/multi-skin/casino_zeta.thumbnail.avif",
+        "sha256": "a50d82dffeda5f435f419da169d1f446287dc5ad0ac91152f9dd7dc77a2417fb",
+        "matches_local": true
+      },
+      {
+        "name": "atrio:casino_zeus.thumbnail.avif",
+        "url": "https://www.atrio.website/brands/multi-skin/casino_zeus.thumbnail.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 977,
+        "final_url": "https://www.atrio.website/brands/multi-skin/casino_zeus.thumbnail.avif",
+        "sha256": "55d18f4d835461d121ca4c5b81c4025228f3db035a997df280820f8a1b5e2fb3",
+        "matches_local": true
+      },
+      {
+        "name": "atrio:celu_apuestas.thumbnail.avif",
+        "url": "https://www.atrio.website/brands/multi-skin/celu_apuestas.thumbnail.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 954,
+        "final_url": "https://www.atrio.website/brands/multi-skin/celu_apuestas.thumbnail.avif",
+        "sha256": "d024999736d1516b700a59b88af061178f43c777e2ca5fedc02529fd7393072e",
+        "matches_local": true
+      },
+      {
+        "name": "atrio:fortu_bet.thumbnail.avif",
+        "url": "https://www.atrio.website/brands/multi-skin/fortu_bet.thumbnail.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 958,
+        "final_url": "https://www.atrio.website/brands/multi-skin/fortu_bet.thumbnail.avif",
+        "sha256": "f5593c6a00da42e29d8979e69848d1183c361f03c56856b64b5528213f6de7ff",
+        "matches_local": true
+      },
+      {
+        "name": "atrio:gana_en_casa.thumbnail.avif",
+        "url": "https://www.atrio.website/brands/multi-skin/gana_en_casa.thumbnail.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 1347,
+        "final_url": "https://www.atrio.website/brands/multi-skin/gana_en_casa.thumbnail.avif",
+        "sha256": "1d6508f19e5207613579154e189065f9e87ddd4fe74708a96831201edba5dec3",
+        "matches_local": true
+      },
+      {
+        "name": "atrio:gran_poseidon.thumbnail.avif",
+        "url": "https://www.atrio.website/brands/multi-skin/gran_poseidon.thumbnail.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 1102,
+        "final_url": "https://www.atrio.website/brands/multi-skin/gran_poseidon.thumbnail.avif",
+        "sha256": "9745a1ac4e2fe3fa687b1b73f2db181550c5193859c5f1aea75e305fc35d8b03",
+        "matches_local": true
+      },
+      {
+        "name": "atrio:jugamos.thumbnail.avif",
+        "url": "https://www.atrio.website/brands/multi-skin/jugamos.thumbnail.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 1086,
+        "final_url": "https://www.atrio.website/brands/multi-skin/jugamos.thumbnail.avif",
+        "sha256": "5755fe83be8374b8b5ddfbd9ea7ebe938bcaad0fdc3d53cf1b0023b2e4af0b5a",
+        "matches_local": true
+      },
+      {
+        "name": "atrio:kona_bet.thumbnail.avif",
+        "url": "https://www.atrio.website/brands/multi-skin/kona_bet.thumbnail.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 1002,
+        "final_url": "https://www.atrio.website/brands/multi-skin/kona_bet.thumbnail.avif",
+        "sha256": "55dd64e2160cbdf944038b775e51d76c473ee65db2eae64eee40f8ac6b8e03d3",
+        "matches_local": true
+      },
+      {
+        "name": "atrio:mega_faraon.thumbnail.avif",
+        "url": "https://www.atrio.website/brands/multi-skin/mega_faraon.thumbnail.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 1349,
+        "final_url": "https://www.atrio.website/brands/multi-skin/mega_faraon.thumbnail.avif",
+        "sha256": "98c9b7f31139f275ee8ddb4d3bbcd3e81540282dd8e60b85dec61037da92f7a6",
+        "matches_local": true
+      },
+      {
+        "name": "atrio:oro_puro.thumbnail.avif",
+        "url": "https://www.atrio.website/brands/multi-skin/oro_puro.thumbnail.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 1159,
+        "final_url": "https://www.atrio.website/brands/multi-skin/oro_puro.thumbnail.avif",
+        "sha256": "e4b10e07a598550990b02d2040f13270d81c9ea990dab613dcb2e8706068cec8",
+        "matches_local": true
+      },
+      {
+        "name": "atrio:rhino_play.thumbnail.avif",
+        "url": "https://www.atrio.website/brands/multi-skin/rhino_play.thumbnail.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 1320,
+        "final_url": "https://www.atrio.website/brands/multi-skin/rhino_play.thumbnail.avif",
+        "sha256": "93475135e11217547a34cbcca3bc52e4db2f88392cd3e8fb2932bf5e9928682b",
+        "matches_local": true
+      },
+      {
+        "name": "atrio:login",
+        "url": "https://www.atrio.website/login",
+        "kind": "page",
+        "status": 200,
+        "bytes": 17247,
+        "final_url": "https://www.atrio.website/login"
+      },
+      {
+        "name": "builder:login",
+        "url": "https://mkt.panelbotadmin.com/login",
+        "kind": "page",
+        "status": 200,
+        "bytes": 14018,
+        "final_url": "https://mkt.panelbotadmin.com/login"
+      },
+      {
+        "name": "classic:diana",
+        "url": "https://landing.panelbotadmin.com/diana",
+        "kind": "template7",
+        "status": 200,
+        "bytes": 242247,
+        "final_url": "https://landing.panelbotadmin.com/diana",
+        "identity_generation_present": true,
+        "template7_name_present": true
+      },
+      {
+        "name": "classic:override",
+        "url": "https://landing.panelbotadmin.com/gast?landing=diana",
+        "kind": "template7",
+        "status": 200,
+        "bytes": 242247,
+        "final_url": "https://landing.panelbotadmin.com/gast?landing=diana",
+        "identity_generation_present": true,
+        "template7_name_present": true
+      },
+      {
+        "name": "multi:health",
+        "url": "https://ganamosnet.global/api/health",
+        "kind": "health",
+        "status": 200,
+        "bytes": 60,
+        "final_url": "https://ganamosnet.global/api/health",
+        "healthy": true
+      },
+      {
+        "name": "multi:worker-health",
+        "url": "https://multi-skin-gateway.meta-ip-collector.workers.dev/api/health",
+        "kind": "health",
+        "status": 200,
+        "bytes": 60,
+        "final_url": "https://multi-skin-gateway.meta-ip-collector.workers.dev/api/health",
+        "healthy": true
+      },
+      {
+        "name": "rey:health-contract",
+        "url": "https://www.reydeases.fun/api/health",
+        "kind": "health",
+        "status": 200,
+        "bytes": 54,
+        "final_url": "https://www.reydeases.fun/api/health",
+        "healthy": true
+      },
+      {
+        "name": "relay:private",
+        "url": "https://multi-skin-upstream-relay.meta-ip-collector.workers.dev/bet30/",
+        "kind": "private",
+        "status": 401,
+        "access_denied": true
+      },
+      {
+        "name": "multi:gateway-client.js",
+        "url": "https://ganamosnet.global/gateway-client.js",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 49229,
+        "final_url": "https://ganamosnet.global/gateway-client.js",
+        "sha256": "76dcb116adfc9acc3f2cccec0867087013bfe3197b4fc9fc4a4d4f8edefc2707",
+        "matches_local": true
+      },
+      {
+        "name": "multi:gateway-client.css",
+        "url": "https://ganamosnet.global/gateway-client.css",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 14893,
+        "final_url": "https://ganamosnet.global/gateway-client.css",
+        "sha256": "8ae42923ee54c96f06bd582195b9fff7c141563b74017e4c56fb9b0f5a56b09c",
+        "matches_local": true
+      },
+      {
+        "name": "multi:gateway-app-sdk.js",
+        "url": "https://ganamosnet.global/gateway-app-sdk.js",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 5766,
+        "final_url": "https://ganamosnet.global/gateway-app-sdk.js",
+        "sha256": "a6bc5790f665e785d6c25263a8e4c21fff5d719071e4a536941ce43d7fab41df",
+        "matches_local": true
+      },
+      {
+        "name": "multi:skins/bet30/logo.avif",
+        "url": "https://ganamosnet.global/skins/bet30/logo.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 8039,
+        "final_url": "https://ganamosnet.global/skins/bet30/logo.avif",
+        "sha256": "2c24b74980edba3737ca5d938b140fe2c0f8e507032a0b1453686c4ddb9b3001",
+        "matches_local": true
+      },
+      {
+        "name": "multi:skins/camel_bet/logo.avif",
+        "url": "https://ganamosnet.global/skins/camel_bet/logo.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 6203,
+        "final_url": "https://ganamosnet.global/skins/camel_bet/logo.avif",
+        "sha256": "c78529c02bc4c726c184bbff4acab462c9e486ae4f43a1b5edf0194b3a6a57af",
+        "matches_local": true
+      },
+      {
+        "name": "multi:skins/casino_zeta/logo.avif",
+        "url": "https://ganamosnet.global/skins/casino_zeta/logo.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 9231,
+        "final_url": "https://ganamosnet.global/skins/casino_zeta/logo.avif",
+        "sha256": "9d56fbda2025579eef76f487e463af07091dd00e8c920038012ac116cdddab76",
+        "matches_local": true
+      },
+      {
+        "name": "multi:skins/casino_zeus/logo.avif",
+        "url": "https://ganamosnet.global/skins/casino_zeus/logo.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 15905,
+        "final_url": "https://ganamosnet.global/skins/casino_zeus/logo.avif",
+        "sha256": "1e0df2a3bb13d7b64d9e4f82aea78d1b0a5081b95f571aa2ae8c0ff4808376f6",
+        "matches_local": true
+      },
+      {
+        "name": "multi:skins/celu_apuestas/logo.avif",
+        "url": "https://ganamosnet.global/skins/celu_apuestas/logo.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 8072,
+        "final_url": "https://ganamosnet.global/skins/celu_apuestas/logo.avif",
+        "sha256": "b5467db0f113f73311a15c3c71ee789f01a084a87606a3ee49b5cad6a1f8c926",
+        "matches_local": true
+      },
+      {
+        "name": "multi:skins/fortu_bet/logo.avif",
+        "url": "https://ganamosnet.global/skins/fortu_bet/logo.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 5780,
+        "final_url": "https://ganamosnet.global/skins/fortu_bet/logo.avif",
+        "sha256": "1497ab125d6e605ea268daa2c00a086a6af977a4d062456e739585f9779da76c",
+        "matches_local": true
+      },
+      {
+        "name": "multi:skins/gana_en_casa/logo.avif",
+        "url": "https://ganamosnet.global/skins/gana_en_casa/logo.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 16075,
+        "final_url": "https://ganamosnet.global/skins/gana_en_casa/logo.avif",
+        "sha256": "6403fcd133dbb4f095e1d4a1b62c458625e3b836894ebc7d437264631bad66d7",
+        "matches_local": true
+      },
+      {
+        "name": "multi:skins/gran_poseidon/logo.avif",
+        "url": "https://ganamosnet.global/skins/gran_poseidon/logo.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 10602,
+        "final_url": "https://ganamosnet.global/skins/gran_poseidon/logo.avif",
+        "sha256": "7b6d20b50ab28c29a9d397174955963c65bbcd69e35dd689e707b02e55e9aff5",
+        "matches_local": true
+      },
+      {
+        "name": "multi:skins/jugamos/logo.avif",
+        "url": "https://ganamosnet.global/skins/jugamos/logo.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 21740,
+        "final_url": "https://ganamosnet.global/skins/jugamos/logo.avif",
+        "sha256": "2ef9b429247b60095b9535494c4767e3de7dc5121d8ef00662de762e082e8008",
+        "matches_local": true
+      },
+      {
+        "name": "multi:skins/kona_bet/logo.avif",
+        "url": "https://ganamosnet.global/skins/kona_bet/logo.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 6808,
+        "final_url": "https://ganamosnet.global/skins/kona_bet/logo.avif",
+        "sha256": "3f3341a045217705940e4dba0d24b4eada931267cf00375a2aa6a8d76bfcbede",
+        "matches_local": true
+      },
+      {
+        "name": "multi:skins/mega_faraon/logo.avif",
+        "url": "https://ganamosnet.global/skins/mega_faraon/logo.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 11929,
+        "final_url": "https://ganamosnet.global/skins/mega_faraon/logo.avif",
+        "sha256": "68a00f50d4fe55fac6ddb89a90b75ed99355157939fd59460920f2a248d68cd4",
+        "matches_local": true
+      },
+      {
+        "name": "multi:skins/oro_puro/logo.avif",
+        "url": "https://ganamosnet.global/skins/oro_puro/logo.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 4457,
+        "final_url": "https://ganamosnet.global/skins/oro_puro/logo.avif",
+        "sha256": "a0f8c4e864e71a5de0d60c82ae3009654693682d4c00330fb8bf47dca321cf55",
+        "matches_local": true
+      },
+      {
+        "name": "multi:skins/rhino_play/logo.avif",
+        "url": "https://ganamosnet.global/skins/rhino_play/logo.avif",
+        "kind": "asset",
+        "status": 200,
+        "bytes": 30250,
+        "final_url": "https://ganamosnet.global/skins/rhino_play/logo.avif",
+        "sha256": "b030cd00e66deaae42851cf737e0247d8a4e2c89f9ff9aee594b9fe4debcec91",
+        "matches_local": true
+      }
+    ]
+  },
+  "limitations": [
+    "No API2 or Panel3 infrastructure deployment performed by us.",
+    "No financial or player-creation request sent as part of release smoke verification.",
+    "No old operations automatically reconciled, including Kobe.",
+    "New per-skin domains not configured without user-specified addresses.",
+    "The report commit is documentation-only; Builder application release commit remains 5505004c849a7da42a56d8b5d4ff9e6992f73b9c."
+  ]
+}
