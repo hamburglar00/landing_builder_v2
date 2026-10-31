@@ -35,4 +35,20 @@ La cobertura nueva invoca los handlers completos de ambos motores: las 14 skins,
 
 Resultados focales: **36 pruebas Builder** (incluyen los handlers Builder/clásico y las matrices de todas las skins) y **7 de regresión de start clásico**, correctas. El caso de T8 con proveedor/cardCount raíz desfasado conserva el rechazo del contexto SQL actual: no se inventa una asignación alternativa ni se amplía el alcance a reconstruir tarjetas sólo publicadas. No se requiere migración.
 
-Publicación de esta corrección adicional pendiente del coordinador. Dependencias de `builder-config`: los cinco archivos de v35 más `_shared/effective-landing-config.ts`; conservar `verify_jwt=false`. Sin cambios de runtime, assets, configuración productiva o API2. Las pruebas visuales son de escritorio con viewport móvil y servicios simulados: no certifican las aplicaciones nativas de iPhone ni un alta real en las catorce skins.
+La regresión de Builder incluye el adaptador API2 de los cuatro proveedores: Rey de Ases, Ases del Norte, Ganamos NET y Multi Skin, con plataforma y política de creación comprobadas. Una comprobación aislada adicional del helper en ambos motores cubrió los tres proveedores originales y T7/T8: **12 casos, 60 aserciones correctas**. Conserva proveedor, destino y asesor globales de la raíz aunque la variante activa o el payload publicado indiquen otro; no modifica la configuración de origen. Estos casos complementan los handlers completos de Rey/Multi Skin y la matriz de las catorce skins.
+
+## Publicación y rollback
+
+Publicación coordinada completada el 31/10/2026. Los dos deployments Vercel quedaron `READY` y sus destinos de producción se verificaron contra el commit exacto:
+
+| Componente | Commit / versión publicados | Deployment |
+| --- | --- | --- |
+| Builder | `5a774474bbe63d675823768eebf321d070176584` | `dpl_8peJxD8Mh3wxJ4p6yb62w5e3P81B` |
+| Clásico | `3f9c1bf6877936bef8dff9e30ae6934947d73e7f` | `dpl_GwqCGpkn3jHqvMhVbouxTD16VJra` |
+| Edge `builder-config` | v36 `ACTIVE`, `verify_jwt=false` | SHA256 `1ad69cfcfab0b71cbd617a2d0226f0ae3a498fa09eaa7267fb7716ad8cd96e8d` |
+
+El [smoke público posterior](all-skins-source-public-smoke-20261031.json), finalizado a las `18:28:36Z`, pasó **6/6 GET de HTML**: Bet30 (`multi_skin`/`bet30`), Ganamos+ (`multi_skin`/`ganamos_plus`) y Diana (`ganamos_net`, sin skin Multi) respondieron 200 con la misma selección en ambos motores. No ejecutó JavaScript, cuentas, sesiones, conversiones ni solicitudes de negocio; no representa un E2E productivo de las catorce skins.
+
+Rollback: promover Builder `40ff15b`, deployment `dpl_DYdbWnk2TE1pzaj1CuFmZUJ4r5vm`, y clásico `764859c`, deployment `dpl_3niLScEURXMcW4fiFJ9Pi6H47QEG`; volver a publicar el código de Edge v35, SHA256 `a2915618579bee903f8872090fded5cb6f9b7dc889af18b223e1e7e40dffe22d`, conservando `verify_jwt=false`. v36 incluye los cinco archivos de v35 más `_shared/effective-landing-config.ts`. No hay migración para revertir.
+
+Sin cambios de runtime, assets, configuración productiva o API2. Las pruebas visuales son de escritorio con viewport móvil y servicios simulados: no certifican las aplicaciones nativas de iPhone ni un alta real en las catorce skins.

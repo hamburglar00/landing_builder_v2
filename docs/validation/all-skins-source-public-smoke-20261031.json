@@ -1,0 +1,230 @@
+{
+  "startedAt": "2026-10-31T18:28:19.424Z",
+  "checkedAt": "2026-10-31T18:28:36.312Z",
+  "scope": "Six public HTML GET requests for three existing landings across Builder and classic. No JavaScript, new accounts, login, conversions, tracking or business requests executed. This is not an end-to-end or live all-14-skins test.",
+  "deployments": {
+    "builder": {
+      "commit": "5a774474bbe63d675823768eebf321d070176584",
+      "id": "dpl_8peJxD8Mh3wxJ4p6yb62w5e3P81B"
+    },
+    "classic": {
+      "commit": "3f9c1bf6877936bef8dff9e30ae6934947d73e7f",
+      "id": "dpl_GwqCGpkn3jHqvMhVbouxTD16VJra"
+    },
+    "edge": {
+      "name": "builder-config",
+      "version": 36,
+      "verifyJwt": false,
+      "sha256": "1ad69cfcfab0b71cbd617a2d0226f0ae3a498fa09eaa7267fb7716ad8cd96e8d"
+    }
+  },
+  "passed": true,
+  "results": [
+    {
+      "engine": "builder",
+      "slug": "golden-e2e-bet30",
+      "url": "https://mkt.panelbotadmin.com/l/golden-e2e-bet30",
+      "method": "GET",
+      "executedJavaScript": false,
+      "expected": {
+        "provider": "multi_skin",
+        "skin": "bet30"
+      },
+      "status": 200,
+      "timingsSeconds": {
+        "dns": 0.291573,
+        "connect": 0.327323,
+        "tls": 0.685519,
+        "firstByte": 1.889388,
+        "total": 1.90604
+      },
+      "bytes": 34967,
+      "contentType": "text/html; charset=utf-8",
+      "vercelCache": "MISS",
+      "cacheControl": "public, max-age=0",
+      "htmlSha256": "426fe7b896ef0f74188052132157932e40aea62869dd90233d1c1459db963761",
+      "runtime": {
+        "slug": "golden-e2e-bet30",
+        "template": 7,
+        "targetProvider": "multi_skin",
+        "skinCode": "bet30",
+        "atrioSlug": "gera"
+      },
+      "passed": true
+    },
+    {
+      "engine": "classic",
+      "slug": "golden-e2e-bet30",
+      "url": "https://landing.panelbotadmin.com/golden-e2e-bet30",
+      "method": "GET",
+      "executedJavaScript": false,
+      "expected": {
+        "provider": "multi_skin",
+        "skin": "bet30"
+      },
+      "status": 200,
+      "timingsSeconds": {
+        "dns": 0.125649,
+        "connect": 15.107443,
+        "tls": 15.277622,
+        "firstByte": 16.219272,
+        "total": 16.238611
+      },
+      "bytes": 33850,
+      "contentType": "text/html; charset=utf-8",
+      "vercelCache": null,
+      "cacheControl": "public, max-age=0, s-maxage=60, stale-while-revalidate=60",
+      "htmlSha256": "8612328348709c14097b825a1306899233b144f4af1720709aa1fc44ab950f87",
+      "runtime": {
+        "slug": "golden-e2e-bet30",
+        "template": 7,
+        "targetProvider": "multi_skin",
+        "skinCode": "bet30",
+        "atrioSlug": "gera"
+      },
+      "passed": true
+    },
+    {
+      "engine": "builder",
+      "slug": "golden-e2e-ganamosplus",
+      "url": "https://mkt.panelbotadmin.com/l/golden-e2e-ganamosplus",
+      "method": "GET",
+      "executedJavaScript": false,
+      "expected": {
+        "provider": "multi_skin",
+        "skin": "ganamos_plus"
+      },
+      "status": 200,
+      "timingsSeconds": {
+        "dns": 0.259863,
+        "connect": 0.30191,
+        "tls": 0.676197,
+        "firstByte": 2.458013,
+        "total": 2.461247
+      },
+      "bytes": 35024,
+      "contentType": "text/html; charset=utf-8",
+      "vercelCache": "MISS",
+      "cacheControl": "public, max-age=0",
+      "htmlSha256": "85b640c51f7230cdaca83924a7f32a9bd70fd50bf9ed3e7d03cf49be9ec8fe98",
+      "runtime": {
+        "slug": "golden-e2e-ganamosplus",
+        "template": 7,
+        "targetProvider": "multi_skin",
+        "skinCode": "ganamos_plus",
+        "atrioSlug": "gera"
+      },
+      "passed": true
+    },
+    {
+      "engine": "classic",
+      "slug": "golden-e2e-ganamosplus",
+      "url": "https://landing.panelbotadmin.com/golden-e2e-ganamosplus",
+      "method": "GET",
+      "executedJavaScript": false,
+      "expected": {
+        "provider": "multi_skin",
+        "skin": "ganamos_plus"
+      },
+      "status": 200,
+      "timingsSeconds": {
+        "dns": 0.093841,
+        "connect": 15.106151,
+        "tls": 15.307939,
+        "firstByte": 16.621527,
+        "total": 16.639266
+      },
+      "bytes": 33963,
+      "contentType": "text/html; charset=utf-8",
+      "vercelCache": null,
+      "cacheControl": "public, max-age=0, s-maxage=60, stale-while-revalidate=60",
+      "htmlSha256": "6c4e17e96e35f67e26278c14f4c067d2f1c6d94889bb6139ad0cc1536631f7e6",
+      "runtime": {
+        "slug": "golden-e2e-ganamosplus",
+        "template": 7,
+        "targetProvider": "multi_skin",
+        "skinCode": "ganamos_plus",
+        "atrioSlug": "gera"
+      },
+      "passed": true
+    },
+    {
+      "engine": "builder",
+      "slug": "diana",
+      "url": "https://mkt.panelbotadmin.com/l/diana",
+      "method": "GET",
+      "executedJavaScript": false,
+      "expected": {
+        "provider": "ganamos_net",
+        "skin": ""
+      },
+      "status": 200,
+      "timingsSeconds": {
+        "dns": 0.217233,
+        "connect": 0.252891,
+        "tls": 0.585381,
+        "firstByte": 2.363535,
+        "total": 2.414906
+      },
+      "bytes": 45393,
+      "contentType": "text/html; charset=utf-8",
+      "vercelCache": "MISS",
+      "cacheControl": "public, max-age=0",
+      "htmlSha256": "644c3d258125a38865a88e419e4d32f94b783d053b30284e373ba083c6f638ee",
+      "runtime": {
+        "slug": "diana",
+        "template": 7,
+        "targetProvider": "ganamos_net",
+        "skinCode": "",
+        "atrioSlug": "gera"
+      },
+      "passed": true
+    },
+    {
+      "engine": "classic",
+      "slug": "diana",
+      "url": "https://landing.panelbotadmin.com/diana",
+      "method": "GET",
+      "executedJavaScript": false,
+      "expected": {
+        "provider": "ganamos_net",
+        "skin": ""
+      },
+      "status": 200,
+      "timingsSeconds": {
+        "dns": 0.049643,
+        "connect": 15.064626,
+        "tls": 15.266835,
+        "firstByte": 16.319626,
+        "total": 16.377215
+      },
+      "bytes": 44195,
+      "contentType": "text/html; charset=utf-8",
+      "vercelCache": null,
+      "cacheControl": "public, max-age=0, s-maxage=60, stale-while-revalidate=60",
+      "htmlSha256": "762aa828a9b76b5cbe939d9862794781e0257af5cf8837856c53de6a0218204b",
+      "runtime": {
+        "slug": "diana",
+        "template": 7,
+        "targetProvider": "ganamos_net",
+        "skinCode": "",
+        "atrioSlug": "gera"
+      },
+      "passed": true
+    }
+  ],
+  "parity": [
+    {
+      "slug": "golden-e2e-bet30",
+      "passed": true
+    },
+    {
+      "slug": "golden-e2e-ganamosplus",
+      "passed": true
+    },
+    {
+      "slug": "diana",
+      "passed": true
+    }
+  ]
+}
