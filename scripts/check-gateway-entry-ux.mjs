@@ -32,7 +32,7 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
         await page.route("https://fixture.test/**", async route => {
           const url = new URL(route.request().url());
           if (url.pathname === "/api/preparations/complete") { accounts++; return route.fulfill({ json: { username: "fixtureplayer", continuation_token: "c1.fixture", entry_token: "ge1.fixture", handoff_url: "https://fixture.test/start?t=fixture" } }); }
-          if (url.pathname === "/start") { starts++; assert.equal(route.request().headers().accept, "application/json"); return route.fulfill({ json: { username: "fixtureplayer", password: "fixture-password", entry_confirmation: "ge1.confirmed", entry_id: "fixture-entry", redirect_url: "https://fixture.test/home", entry_wait: { enabled: true, seconds: 60 } } }); }
+          if (url.pathname === "/start") { starts++; assert.equal(route.request().headers().accept, "application/json"); return route.fulfill({ json: { username: "fixtureplayer", password: "fixture-password", entry_confirmation: "ge1.confirmed", entry_id: "fixture-entry", redirect_url: "https://fixture.test/home", entry_wait: { enabled: true, seconds: 60, continueButtonEnabled: true } } }); }
           if (url.pathname === "/api/session/recover") { confirmations++; cookieRequested = true; await cookieGate; return route.fulfill({ json: { active: true, entry_confirmed: true, entry_id: "fixture-entry" } }); }
           if (url.pathname === "/api/session/credentials") throw Error("Entry must reuse /start credentials");
           if (url.pathname === "/home") return route.fulfill({ contentType: "text/html", body: "<p>Ingreso confirmado</p>" });
