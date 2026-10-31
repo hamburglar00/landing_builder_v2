@@ -8,4 +8,14 @@ La [comparación antes/después](builder-config-skin-regression-20261031.json) e
 
 Validación local: 11 pruebas Node (handler real con DB simulada, 14 skins, renderers Builder/clásico, tarjetas T8, legado y valores inválidos), 5 pruebas Deno existentes, `deno check` de la función, TypeScript de ambos motores, ESLint focal y sincronización del catálogo correctos. No equivale a una prueba dentro de Instagram/Facebook en iPhone.
 
-Publicación pendiente a cargo del coordinador: Edge Function `builder-config` del proyecto `fdkjkzpjqfbaavylapun`, conservando `verify_jwt=false` (confirmado en producción v34 y en ambos TOML locales), seguida por los dos motores y su revalidación. Dependencias de la función: `builder-config/index.ts`, `builder-config/market.ts`, `builder-config/provider.ts`, `builder-config/skin.ts` y `_shared/multi-skin-catalog.ts`. No requiere migración SQL ni regenerar runtimes. Verificar después que el HTML real de `golden-e2e-bet30` serialice `skinCode:"bet30"` en ambos dominios.
+Publicación completada por el coordinador: Builder `40ff15b`, despliegue `dpl_DYdbWnk2TE1pzaj1CuFmZUJ4r5vm`; clásico `764859c`, despliegue `dpl_3niLScEURXMcW4fiFJ9Pi6H47QEG`; Edge Function `builder-config` v35 del proyecto `fdkjkzpjqfbaavylapun`, conservando `verify_jwt=false`, SHA-256 `a2915618579bee903f8872090fded5cb6f9b7dc889af18b223e1e7e40dffe22d`. Dependencias de la función: `builder-config/index.ts`, `builder-config/market.ts`, `builder-config/provider.ts`, `builder-config/skin.ts` y `_shared/multi-skin-catalog.ts`. No requirió migración SQL ni regenerar runtimes.
+
+Smoke público finalizado el 31/10/2026 a las 17:52 UTC: seis GET de HTML, con `curl` y límite de 45 segundos, correctos. No se ejecutó JavaScript de página, no se crearon cuentas ni se iniciaron logins u operaciones de negocio. Los dos dominios respondieron 200 y serializaron el proveedor y la skin esperados:
+
+| Landing | Builder `/l/{slug}` | Clásico `/{slug}` | Configuración observada en ambos |
+| --- | --- | --- | --- |
+| `golden-e2e-bet30` | 200 | 200 | `targetProvider:"multi_skin"`, `skinCode:"bet30"` |
+| `golden-e2e-ganamosplus` | 200 | 200 | `targetProvider:"multi_skin"`, `skinCode:"ganamos_plus"` |
+| `diana` | 200 | 200 | `targetProvider:"ganamos_net"`, `skinCode:""` |
+
+Los títulos propios de Bet30 y Ganamos+ se conservaron. La [evidencia pública](builder-config-skin-public-smoke-20261031.json) incluye URLs, configuración observada, hashes del HTML y tiempos individuales de transporte. Esos tiempos incluyen la conectividad de esta red y no miden el recorrido del cliente ni certifican su rendimiento. El smoke confirma la publicación del arreglo; el E2E con cuenta real y las aplicaciones nativas de iPhone sigue fuera del alcance de esta comprobación.

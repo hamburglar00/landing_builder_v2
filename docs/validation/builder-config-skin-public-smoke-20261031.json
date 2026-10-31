@@ -1,0 +1,160 @@
+{
+  "checkedAt": "2026-10-31T17:52:13.945Z",
+  "scope": "Public HTML GET only; no page JavaScript, account creation, login or business requests executed.",
+  "deployments": {
+    "builder": {
+      "commit": "40ff15b",
+      "id": "dpl_DYdbWnk2TE1pzaj1CuFmZUJ4r5vm"
+    },
+    "classic": {
+      "commit": "764859c",
+      "id": "dpl_3niLScEURXMcW4fiFJ9Pi6H47QEG"
+    },
+    "edge": {
+      "name": "builder-config",
+      "version": 35,
+      "verifyJwt": false,
+      "sha256": "a2915618579bee903f8872090fded5cb6f9b7dc889af18b223e1e7e40dffe22d"
+    }
+  },
+  "results": [
+    {
+      "engine": "builder",
+      "slug": "golden-e2e-bet30",
+      "url": "https://mkt.panelbotadmin.com/l/golden-e2e-bet30",
+      "method": "GET",
+      "executedJavaScript": false,
+      "status": 200,
+      "seconds": 23.416149,
+      "remoteIp": "64.29.17.65",
+      "contentType": "text/html; charset=utf-8",
+      "vercelCache": "MISS",
+      "cacheControl": "public, max-age=0",
+      "htmlSha256": "426fe7b896ef0f74188052132157932e40aea62869dd90233d1c1459db963761",
+      "title": "CREA TU CUENTA EN BET30",
+      "runtime": {
+        "slug": "golden-e2e-bet30",
+        "template": 7,
+        "targetProvider": "multi_skin",
+        "skinCode": "bet30",
+        "atrioSlug": "gera"
+      },
+      "passed": true
+    },
+    {
+      "engine": "classic",
+      "slug": "golden-e2e-bet30",
+      "url": "https://landing.panelbotadmin.com/golden-e2e-bet30",
+      "method": "GET",
+      "executedJavaScript": false,
+      "status": 200,
+      "seconds": 1.959272,
+      "remoteIp": "64.29.17.65",
+      "contentType": "text/html; charset=utf-8",
+      "vercelCache": null,
+      "cacheControl": "public, max-age=0, s-maxage=60, stale-while-revalidate=60",
+      "htmlSha256": "8612328348709c14097b825a1306899233b144f4af1720709aa1fc44ab950f87",
+      "title": "CREA TU CUENTA EN BET30",
+      "runtime": {
+        "slug": "golden-e2e-bet30",
+        "template": 7,
+        "targetProvider": "multi_skin",
+        "skinCode": "bet30",
+        "atrioSlug": "gera"
+      },
+      "passed": true
+    },
+    {
+      "engine": "builder",
+      "slug": "golden-e2e-ganamosplus",
+      "url": "https://mkt.panelbotadmin.com/l/golden-e2e-ganamosplus",
+      "method": "GET",
+      "executedJavaScript": false,
+      "status": 200,
+      "seconds": 23.313562,
+      "remoteIp": "64.29.17.65",
+      "contentType": "text/html; charset=utf-8",
+      "vercelCache": "MISS",
+      "cacheControl": "public, max-age=0",
+      "htmlSha256": "85b640c51f7230cdaca83924a7f32a9bd70fd50bf9ed3e7d03cf49be9ec8fe98",
+      "title": "CREA TU CUENTA EN GANAMOS+",
+      "runtime": {
+        "slug": "golden-e2e-ganamosplus",
+        "template": 7,
+        "targetProvider": "multi_skin",
+        "skinCode": "ganamos_plus",
+        "atrioSlug": "gera"
+      },
+      "passed": true
+    },
+    {
+      "engine": "classic",
+      "slug": "golden-e2e-ganamosplus",
+      "url": "https://landing.panelbotadmin.com/golden-e2e-ganamosplus",
+      "method": "GET",
+      "executedJavaScript": false,
+      "status": 200,
+      "seconds": 1.619229,
+      "remoteIp": "64.29.17.65",
+      "contentType": "text/html; charset=utf-8",
+      "vercelCache": null,
+      "cacheControl": "public, max-age=0, s-maxage=60, stale-while-revalidate=60",
+      "htmlSha256": "6c4e17e96e35f67e26278c14f4c067d2f1c6d94889bb6139ad0cc1536631f7e6",
+      "title": "CREA TU CUENTA EN GANAMOS+",
+      "runtime": {
+        "slug": "golden-e2e-ganamosplus",
+        "template": 7,
+        "targetProvider": "multi_skin",
+        "skinCode": "ganamos_plus",
+        "atrioSlug": "gera"
+      },
+      "passed": true
+    },
+    {
+      "engine": "builder",
+      "slug": "diana",
+      "url": "https://mkt.panelbotadmin.com/l/diana",
+      "method": "GET",
+      "executedJavaScript": false,
+      "status": 200,
+      "seconds": 24.260451,
+      "remoteIp": "64.29.17.65",
+      "contentType": "text/html; charset=utf-8",
+      "vercelCache": "MISS",
+      "cacheControl": "public, max-age=0",
+      "htmlSha256": "644c3d258125a38865a88e419e4d32f94b783d053b30284e373ba083c6f638ee",
+      "title": "CREÁ TU CUENTA",
+      "runtime": {
+        "slug": "diana",
+        "template": 7,
+        "targetProvider": "ganamos_net",
+        "skinCode": "",
+        "atrioSlug": "gera"
+      },
+      "passed": true
+    },
+    {
+      "engine": "classic",
+      "slug": "diana",
+      "url": "https://landing.panelbotadmin.com/diana",
+      "method": "GET",
+      "executedJavaScript": false,
+      "status": 200,
+      "seconds": 1.111128,
+      "remoteIp": "64.29.17.65",
+      "contentType": "text/html; charset=utf-8",
+      "vercelCache": null,
+      "cacheControl": "public, max-age=0, s-maxage=60, stale-while-revalidate=60",
+      "htmlSha256": "762aa828a9b76b5cbe939d9862794781e0257af5cf8837856c53de6a0218204b",
+      "title": "CREÁ TU CUENTA",
+      "runtime": {
+        "slug": "diana",
+        "template": 7,
+        "targetProvider": "ganamos_net",
+        "skinCode": "",
+        "atrioSlug": "gera"
+      },
+      "passed": true
+    }
+  ]
+}
