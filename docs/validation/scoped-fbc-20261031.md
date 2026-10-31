@@ -28,4 +28,4 @@ La prueba independiente del runtime entero comprobó CONTACT con EBP nuevo y sco
 | T8 Builder | `t8-builder-ec6ffe3251af6d5177833db6.js` | `ec6ffe3251af6d5177833db6bb0ed8cb93d814b0f3294d0ac612f8b90784d6e3` |
 | T8 clásico | `t8-classic-891b40bb2fbd3fa637743a16.js` | `891b40bb2fbd3fa637743a16e64b6a08da7c48cbe4205ce8ce433b8b3732a8a4` |
 
-Estado de esta evidencia: implementación local validada, sin commit ni despliegue realizados por este agente.
+Publicación completada por el coordinador: Builder `ec71dae`, clásico `f689bbe` y Edge conversions v171. El smoke posterior pasó 12/12 GET y confirmó los hashes públicos. [Versiones, verificación y rollback](scoped-fbc-release-20261031.md).

@@ -4,6 +4,7 @@
 
 - La tarjeta de Meta del Admin muestra «Configurada» en verde sólo cuando tiene guardada una `eventUrl` propia válida; escribir un borrador no activa ese estado. Los asesores heredan la configuración del Admin y no requieren URL propia. Conservar permisos, configuración global y tarjetas de Super Admin.
 - Validación: `internal-chat/docs/validation/meta-integration-status-20261031.md`.
+- Publicado en Atrio `b425cad`, con guardado, borrador, permisos y herencia verificados en Chromium/WebKit.
 
 ### Procedencia de FBC por landing y píxel (31/10/2026)
 
@@ -12,6 +13,7 @@
 - Priorizar un `fbclid` válido de la entrada actual, validar formato y antigüedad del FBC y conservar el timestamp original durante reingresos y reintentos. Un regreso directo mantiene una atribución válida de su mismo contexto; la llegada actual y la procedencia histórica se registran por separado.
 - Mantener el SDK oficial para sus funciones existentes y aceptar sólo una señal nueva cuya recolección pueda observarse en el contexto actual. No rescatar el FBC global desconocido mediante un merge o fallback. Para conservar EBP aunque exista una cookie ajena, usar `collectParams` del SDK oficial mediante un helper acotado que consulta el bridge sin leer ni escribir cookies. Cargarlo en paralelo sin demorar el CTA.
 - Conservar los disparadores, deduplicación y políticas de Contact, LEAD y Purchase. Revisar también ingreso del dato y herencia en servidor; no modificar por este diagnóstico las conversiones históricas ni reemitir eventos. Implementación y pruebas aisladas antes de publicar.
+- Publicación completada: Builder `ec71dae`, clásico `f689bbe` y conversions v171; smoke público 12/12. El guard Contact V2 compara scope con la landing real de DB y descarta FBC inconsistente sin rechazar el contacto. [Evidencia y límites](validation/scoped-fbc-release-20261031.md).
 
 ### Todas las skins y fuente efectiva de Template 7/8 (31/10/2026)
 
