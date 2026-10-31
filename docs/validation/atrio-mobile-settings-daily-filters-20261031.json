@@ -1,0 +1,173 @@
+{
+  "completedAt": "2026-10-31T16:08:08.997Z",
+  "scope": "Shared Atrio advisor/admin panel for all four gateways",
+  "changes": {
+    "withdrawalPreview": "Explicit one-column grid constrains the quick-starter preview to the mobile card; description and edit controls remain visible. Shared chat card unchanged.",
+    "dateOptions": [
+      "Hoy",
+      "Ayer",
+      "?ltimos 7 d?as",
+      "Este mes",
+      "Mes pasado",
+      "M?ximo"
+    ],
+    "defaultDateMode": "7d",
+    "timezone": "America/Argentina/Buenos_Aires",
+    "dailyComparison": "The immediately preceding calendar day; existing casino filtering and metrics retained.",
+    "dailyChart": "Single daily point remains visible within mobile viewport; empty advisor sets use requested period."
+  },
+  "verification": {
+    "unitTestsPassed": 22,
+    "focusedDailyTestsPassed": 12,
+    "typecheck": "passed",
+    "eslint": "passed",
+    "productionBuild": "READY",
+    "settingsBrowser": [
+      {
+        "engine": "Chromium",
+        "width": 320,
+        "cardClientWidth": 290,
+        "cardScrollWidth": 290,
+        "previewWidth": 218,
+        "overflow": false,
+        "editSaveAndChatCopyPassed": true
+      },
+      {
+        "engine": "Chromium",
+        "width": 375,
+        "cardClientWidth": 345,
+        "cardScrollWidth": 345,
+        "previewWidth": 273,
+        "overflow": false,
+        "editSaveAndChatCopyPassed": true
+      },
+      {
+        "engine": "Chromium",
+        "width": 390,
+        "cardClientWidth": 360,
+        "cardScrollWidth": 360,
+        "previewWidth": 288,
+        "overflow": false,
+        "editSaveAndChatCopyPassed": true
+      },
+      {
+        "engine": "Chromium",
+        "width": 430,
+        "cardClientWidth": 400,
+        "cardScrollWidth": 400,
+        "previewWidth": 328,
+        "overflow": false,
+        "editSaveAndChatCopyPassed": true
+      },
+      {
+        "engine": "Chromium",
+        "width": 1366,
+        "cardClientWidth": 530,
+        "cardScrollWidth": 530,
+        "previewWidth": 340,
+        "overflow": false,
+        "editSaveAndChatCopyPassed": true
+      },
+      {
+        "engine": "WebKit",
+        "width": 320,
+        "cardClientWidth": 290,
+        "cardScrollWidth": 290,
+        "previewWidth": 218,
+        "overflow": false,
+        "editSaveAndChatCopyPassed": true
+      },
+      {
+        "engine": "WebKit",
+        "width": 375,
+        "cardClientWidth": 345,
+        "cardScrollWidth": 345,
+        "previewWidth": 273,
+        "overflow": false,
+        "editSaveAndChatCopyPassed": true
+      },
+      {
+        "engine": "WebKit",
+        "width": 390,
+        "cardClientWidth": 360,
+        "cardScrollWidth": 360,
+        "previewWidth": 288,
+        "overflow": false,
+        "editSaveAndChatCopyPassed": true
+      },
+      {
+        "engine": "WebKit",
+        "width": 430,
+        "cardClientWidth": 400,
+        "cardScrollWidth": 400,
+        "previewWidth": 328,
+        "overflow": false,
+        "editSaveAndChatCopyPassed": true
+      },
+      {
+        "engine": "WebKit",
+        "width": 1366,
+        "cardClientWidth": 530,
+        "cardScrollWidth": 530,
+        "previewWidth": 340,
+        "overflow": false,
+        "editSaveAndChatCopyPassed": true
+      }
+    ],
+    "analyticsBrowser": {
+      "passed": 12,
+      "roles": [
+        "advisor",
+        "admin",
+        "super_admin"
+      ],
+      "engines": [
+        "Chromium",
+        "WebKit"
+      ],
+      "widths": [
+        390,
+        1365
+      ],
+      "browserTimezone": "Asia/Tokyo",
+      "optionOrderPassed": true,
+      "serverActionFiltersPassed": true,
+      "singleDayAndComparisonPassed": true,
+      "globalDailyMarkerVisible": true
+    },
+    "public": {
+      "checkedAt": "2026-10-31T16:07:33.840Z",
+      "origin": "https://www.atrio.website",
+      "checks": [
+        {
+          "path": "/login",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/api/gateway/chat",
+          "status": 401,
+          "passed": true
+        }
+      ],
+      "passed": true
+    }
+  },
+  "deployment": {
+    "project": "internal-chat",
+    "commit": "d629f8d0fef4b42ad2d50c1b83ac302ba040094b",
+    "deploymentId": "dpl_CsZuWcKhAjZH6j4REyCst5P1rYAH",
+    "url": "https://internal-chat-y9schyyak-juanclouds-projects.vercel.app",
+    "domain": "https://www.atrio.website",
+    "state": "READY",
+    "promoted": true,
+    "aliasVerified": true,
+    "previousDeployment": "dpl_4WnAFuMje9Gy5pc5u3mdmXjdyqWg",
+    "previousCommit": "2692837327521a0f91e4ca6a3c9ef431efeddbb2"
+  },
+  "databaseMigrations": [],
+  "limitations": [
+    "Browser checks use actual components and CSS with isolated fixtures and no live business requests.",
+    "Public checks confirm deployment mapping, login availability and rejection without a session; no real withdrawal or financial action was performed."
+  ]
+}

@@ -1,5 +1,11 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Configuración móvil y períodos de Datos (31/10/2026)
+
+- Corregir el desborde de la vista previa de Retirar en Configuración móvil: la descripción, tarjeta y controles deben quedar dentro de su contenedor, con el contenido completo legible. Conservar la presentación de la solicitud real y las operaciones de retiro existentes.
+- En Datos agregar Hoy y Ayer y ordenar las opciones: Hoy, Ayer, Últimos 7 días, Este mes, Mes pasado y Máximo. Conservar el filtro de casino y los cálculos/comparaciones en servidor. La implementación única del panel de Atrio sirve a los cuatro gateways.
+- Implementado y publicado en Atrio (`d629f8d`), sin migración. Hoy/Ayer usan el calendario argentino; el valor inicial sigue en siete días. Pasaron 22 pruebas focales, TypeScript, lint y 22 casos de navegador en Chromium/WebKit. Tarjeta, edición y solicitud real sin desbordes desde 320 px; filtros probados en los tres roles y gráfico diario visible en móvil. Evidencia y deployment: [Configuración móvil y Datos](validation/atrio-mobile-settings-daily-filters-20261031.json).
+
 ### Inicio automático al llegar al chat visible (31/10/2026)
 
 - Publicación completada: migración `20261031154810_gateway_visible_entry` aplicada en Atrio; siete proyectos Vercel promovidos y Worker Multi Skin al 100%. Padres publicados y verificados antes de activar Atrio. Evidencia, pruebas, hashes públicos, commits y rollback: [inicio visible](validation/gateway-visible-entry-20261031.md).
