@@ -1,3 +1,4 @@
+import { buildTemplate7BoundedRequestScript } from './template7BoundedRequest';
 type Destination = { landingId: string; slug: string };
 
 /** Se ejecuta solo en Template 7, antes del Pixel y del runtime principal.
@@ -9,33 +10,28 @@ export function buildClientIdentityBootstrapScript(destination?: Destination): s
       `\\u${value.charCodeAt(0).toString(16).padStart(4, "0")}`)
     : "null";
   return `<script>
+    ${buildTemplate7BoundedRequestScript()}
     window.__LB_BOOTSTRAP_IDENTITY__ = function () {
+      if (window.__LB_IDENTITY_INFLIGHT__) return window.__LB_IDENTITY_INFLIGHT__;
       var destination = ${destinationConfig};
-      var controller = typeof AbortController === "function" ? new AbortController() : null;
-      var timer;
-      var timeout = new Promise(function (resolve) {
-        timer = window.setTimeout(function () { if (controller) controller.abort(); resolve(false); }, 5000);
-      });
       var saved = ""; try { saved = localStorage.getItem("template7:identity-recovery:v1") || ""; } catch (e) {}
-      var request = fetch("/api/client-identity/bootstrap", {
+      var request = window.__T7_FETCH_JSON__("/api/client-identity/bootstrap", {
         method: "POST", credentials: "same-origin", cache: "no-store",
-        headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recovery_token: saved || null }),
-        signal: controller ? controller.signal : undefined
-      }).then(function (response) { return response && response.ok ? response.json() : null; })
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recovery_token: saved || null })
+      }, 5000)
         .then(function (data) {
           if (!data || !data.ok) return false;
           if (typeof data.recovery_token === "string") {
             try { localStorage.setItem("template7:identity-recovery:v1", data.recovery_token); } catch(e) {}
           }
           if (destination) {
-            return fetch("/api/template7/destination", {
-              method: "POST", credentials: "same-origin", cache: "no-store", keepalive: true,
+            return window.__T7_FETCH_JSON__("/api/template7/destination", {
+              method: "POST", credentials: "same-origin", cache: "no-store",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ landing_id: destination.landingId, landing_slug: destination.slug }),
-              signal: controller ? controller.signal : undefined
-            }).then(function (response) { return response.ok ? response.json() : null; });
+              body: JSON.stringify({ landing_id: destination.landingId, landing_slug: destination.slug })
+            }, 12000);
           }
-          return fetch("/api/client-identity/bootstrap",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({verify:true}),signal:controller?controller.signal:undefined}).then(function(r){return r.ok});
+          return window.__T7_FETCH_JSON__("/api/client-identity/bootstrap",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({verify:true})},5000).then(function(data){return !!(data && data.ok)});
         })
         .catch(function () { return false; });
       if (destination) {
@@ -46,8 +42,10 @@ export function buildClientIdentityBootstrapScript(destination?: Destination): s
         });
         request = window.__PUBLIC_LANDING_ATRIO_PROMISES[destination.slug].then(function (data) { return !!data; });
       }
-      return Promise.race([request, timeout])
-        .finally(function () { window.clearTimeout(timer); });
+      var ready = request.finally(function () { if (window.__LB_IDENTITY_INFLIGHT__ === ready) window.__LB_IDENTITY_INFLIGHT__ = null; });
+      window.__LB_IDENTITY_INFLIGHT__ = ready;
+      window.__LB_IDENTITY_READY__ = ready;
+      return ready;
     };
     window.__LB_IDENTITY_READY__ = window.__LB_BOOTSTRAP_IDENTITY__();
   </script>`;

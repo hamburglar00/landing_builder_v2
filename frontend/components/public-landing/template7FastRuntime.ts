@@ -5,6 +5,7 @@ import { gatewayOriginFor } from "../../lib/reyDeAses/gatewayOrigins";
 import { adaptTemplate8Runtime } from "./template8Runtime";
 import { getMultiSkinBrand } from "../../lib/skin-branding";
 import { MULTI_SKIN_CODES } from "../../lib/multi-skin-catalog";
+import { buildTemplate7BoundedRequestScript } from './template7BoundedRequest';
 
 function replaceOnce(source: string, from: string, to: string): string {
   if (source.split(from).length !== 2) throw new Error("Template 7 runtime contract changed");
@@ -45,6 +46,7 @@ export function buildTemplate7FastRuntime(
   let source = buildPublicLandingRuntimeSource(true);
   source = replaceOnce(source, "    (function () {\n      var cfg", "    (function () {\n      if(window.__TEMPLATE7_REENTRY_PENDING__||window.__T7_RUNTIME_BOOTING__||window.__T7_RUNTIME_READY__)return;\n      window.__T7_RUNTIME_BOOTING__=true;\n      var cfg");
   source = replaceOnce(source, "      function failTemplate7(button) {", `${GATEWAY_ENTRY_TRANSITION_RUNTIME}
+      ${buildTemplate7BoundedRequestScript()}
       var template7Transition = createGatewayEntryTransition(document.getElementById("gateway-entry-transition"));
       var template7EntryGeneration = 0;
       function template7TransitionUrl(raw) {
@@ -76,20 +78,49 @@ export function buildTemplate7FastRuntime(
   const selectionEnd = source.indexOf("      function clearPrewarmedAtrioPromise() {", selectionStart);
   if (selectionStart < 0 || selectionEnd < 0) throw new Error("Template 7 destination selection changed");
   source = source.slice(0, selectionStart) + `
+      function template7DestinationKey() { return cfg.slug; }
+      function template7ReadyIdentity(retry) {
+        return Promise.resolve(window.__LB_IDENTITY_READY__ || true).then(function(ready) {
+          if (ready === true || !retry || !window.__LB_BOOTSTRAP_IDENTITY__) return ready;
+          return window.__LB_BOOTSTRAP_IDENTITY__();
+        }).then(function(ready) {
+          if (typeof releaseTemplate7Identity === 'function') releaseTemplate7Identity(ready);
+          return ready;
+        });
+      }
+      function template7RequestDestination(body, retryIdentity) {
+        var active = null, cancelled = false;
+        var promise = template7ReadyIdentity(retryIdentity).then(function(ready) {
+          if (cancelled || ready !== true) return null;
+          active = window.__T7_FETCH_JSON__('/api/template7/destination', {
+            method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
+          }, 12000);
+          return active;
+        }).catch(function(error) {
+          if (!cancelled && window.__entryFunnel) window.__entryFunnel.emit('entry_error', {
+            error_stage:'destination',error_code:error && error.code === 'request_timeout' ? 'request_timeout' : 'destination_unavailable',status:error && error.status
+          });
+          return null;
+        });
+        promise.cancel = function() { cancelled = true; if(active && active.cancel)active.cancel(); };
+        return promise;
+      }
       function ensureAtrioPromise() {
         window.__PUBLIC_LANDING_ATRIO_PROMISES = window.__PUBLIC_LANDING_ATRIO_PROMISES || {};
+        clearPrewarmedAtrioPromise();
         var existing = window.__PUBLIC_LANDING_ATRIO_PROMISES[cfg.slug];
         if (existing) return observeTemplate7Destination(existing);
-        var promise = Promise.resolve(window.__LB_IDENTITY_READY__ || true).then(function (ready) {
-          if (ready !== true) return null;
-          return fetch("/api/template7/destination", {
-            method: "POST", credentials: "same-origin", cache: "no-store", keepalive: true,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ landing_id: cfg.landingId, landing_slug: cfg.slug${classicDeviceIdScript ? ", device_id: getOrCreateDeviceId()" : ""} })
-          }).then(function (response) { return response.ok ? response.json() : null; });
-        }).catch(function () { return null; });
+        var promise = template7RequestDestination({ landing_id: cfg.landingId, landing_slug: cfg.slug${classicDeviceIdScript ? ", device_id: getOrCreateDeviceId()" : ""} }, false);
         window.__PUBLIC_LANDING_ATRIO_PROMISES[cfg.slug] = promise;
         return observeTemplate7Destination(promise);
+      }
+
+      function cancelTemplate7Destination() {
+        var map = window.__PUBLIC_LANDING_ATRIO_PROMISES || {};
+        var promise = map[cfg.slug];
+        if (promise && promise.cancel) promise.cancel();
+        delete map[cfg.slug];
+        if(window.__T7_DESTINATION_STATES__)delete window.__T7_DESTINATION_STATES__[cfg.slug];
       }
 
       function observeTemplate7Destination(promise) {
@@ -105,9 +136,15 @@ export function buildTemplate7FastRuntime(
 
 ` + source.slice(selectionEnd);
   source = replaceOnce(source, "      function clearPrewarmedAtrioPromise() {", `      function clearPrewarmedAtrioPromise() {
+        var existing = window.__PUBLIC_LANDING_ATRIO_PROMISES && window.__PUBLIC_LANDING_ATRIO_PROMISES[cfg.slug];
+        if(existing)observeTemplate7Destination(existing);
         var state = window.__T7_DESTINATION_STATES__ && window.__T7_DESTINATION_STATES__[cfg.slug];
         if (state && (!state.settled || (state.value && (state.value.atrioClientId || state.value.atrio_client_id) &&
             (state.value.atrioId || state.value.atrio_id) && (state.value.atrioSlug || state.value.atrio_slug)))) return;`);
+  // One bounded destination attempt replaces the old four-second soft timeout.
+  source = replaceOnce(source, '? waitWithTimeout(ensureAtrioPromise(), 1500)', '? ensureAtrioPromise()');
+  source = replaceOnce(source, '                return waitWithTimeout(ensureAtrioPromise(), 2500);', '                return null;');
+  source = replaceOnce(source, '                failTemplate7(button);', '                window.__T7_ENTRY_STARTED__ = false;\n                failTemplate7(button, entryAttempt);');
   {
     source = replaceOnce(source, '      function init() {', `
       function template7RecoveryAttribution() {
@@ -119,10 +156,13 @@ export function buildTemplate7FastRuntime(
         return result;
       }
       function warmTemplate7Entry() {
+        var destinationKey = template7DestinationKey();
+        var warmGeneration = template7EntryGeneration;
+        function isCurrent() { return destinationKey === template7DestinationKey() && warmGeneration === template7EntryGeneration; }
         function resume(advisor, name, promo) {
           // The server still reuses this identity on submit. A late background
           // response must never pull an actively typing visitor off the form.
-          if (window.__T7_ENTRY_STARTED__ || window.__T7_FORM_INTERACTED__) return;
+          if (!isCurrent() || window.__T7_ENTRY_STARTED__ || window.__T7_FORM_INTERACTED__) return;
           var entryAttempt = ++template7EntryGeneration;
           window.__T7_ENTRY_STARTED__ = true; clickLocked = true;
           if (template7Transition) template7Transition.start('preparing');
@@ -132,12 +172,13 @@ export function buildTemplate7FastRuntime(
               entry_funnel:window.__entryFunnel?window.__entryFunnel.context():undefined,
               atrio_client_id:advisor.atrioClientId || advisor.atrio_client_id,advisor_id:advisor.atrioId || advisor.atrio_id,
               advisor_slug:advisor.atrioSlug || advisor.atrio_slug,name:name,promo_code:promo,attribution:template7RecoveryAttribution()})
-          }).then(function(response){if(!response.ok)throw new Error('entry pending');return response.json()}).then(function(result){
+          }).then(function(response){if(!response.ok){var error=new Error('entry pending');error.status=response.status;throw error;}return response.json()}).then(function(result){
             if (entryAttempt !== template7EntryGeneration) return;
             if(!result || typeof result.handoff_url !== 'string')throw new Error('entry pending');
             navigateTemplate7Handoff(template7TransitionUrl(result.handoff_url));
-          }).catch(function(){
+          }).catch(function(error){
             if (entryAttempt !== template7EntryGeneration) return;
+            if(window.__entryFunnel)window.__entryFunnel.emit('entry_error',{error_stage:'account',error_code:error&&error.status===429?'rate_limited':error&&error.name==='AbortError'?'request_timeout':error&&error.status?'account_unavailable':'network_error',status:error&&error.status});
             window.__T7_ENTRY_STARTED__ = false; clickLocked = false;
             if(template7Transition)template7Transition.finish();
             var nameField=document.querySelector('[data-template7-name]');if(nameField)nameField.value=name;
@@ -146,7 +187,7 @@ export function buildTemplate7FastRuntime(
         }
         Promise.all([window.__LB_IDENTITY_READY__ || Promise.resolve(), ensureAtrioPromise()]).then(function (values) {
           var advisor = values[1];
-          if (!advisor || window.__T7_ENTRY_STARTED__ || (window.__LB_IDENTITY_READY__ && values[0] !== true)) return;
+          if (!isCurrent() || !advisor || window.__T7_ENTRY_STARTED__ || (window.__LB_IDENTITY_READY__ && values[0] !== true)) return;
           if (advisor.preparationReady) {
             if (!advisor.existingName || !advisor.promoCode || window.__T7_ENTRY_STARTED__) return;
             return resume(advisor,advisor.existingName,advisor.promoCode);
@@ -159,6 +200,7 @@ export function buildTemplate7FastRuntime(
               advisor_id: advisor.atrioId || advisor.atrio_id,
               advisor_slug: advisor.atrioSlug || advisor.atrio_slug })
           }).then(function (response) { return response.ok ? response.json() : null; }).then(function (result) {
+            if(!isCurrent())return;
             if(result && typeof result.existing_name === 'string' && typeof result.promo_code === 'string') {
               advisor.preparationReady=true;advisor.existingName=result.existing_name;advisor.promoCode=result.promo_code;
               return resume(advisor,result.existing_name,result.promo_code);
@@ -183,6 +225,21 @@ export function buildTemplate7FastRuntime(
         }).catch(function () {});
       }
       function init() {
+        window.addEventListener('pageshow',function(event) {
+          if(!event.persisted)return;
+          template7EntryGeneration++;
+          window.__T7_ENTRY_STARTED__=false;clickLocked=false;
+          if(typeof template7PendingIdentityClick!=='undefined')template7PendingIdentityClick=null;
+          if(template7Transition)template7Transition.finish();
+          var state=window.__T7_DESTINATION_STATES__&&window.__T7_DESTINATION_STATES__[cfg.slug];
+          if(state&&!state.settled)cancelTemplate7Destination();
+          var name=document.querySelector('[data-template7-name]');
+          document.querySelectorAll('[data-public-landing-cta]').forEach(function(button) {
+            button.disabled=!name||!String(name.value||'').trim();
+            setButtonText(button,getRestButtonText(button));
+          });
+          setTemplate7Error('');
+        });
         function markFormIntent(event) {
           var target=event.target;
           if(!window.__T7_PROGRAMMATIC_FOCUS__&&target&&target.closest&&target.closest('[data-template7-form]'))window.__T7_FORM_INTERACTED__=true;
@@ -207,7 +264,7 @@ export function buildTemplate7FastRuntime(
           template7PendingIdentityClick = null;
           pending.disabled = false;
           if (template7IdentityReady) handleCtaClick(pending);
-          else { if (template7Transition) template7Transition.finish(); setTemplate7Error("No pudimos recuperar tu acceso. Intentá nuevamente."); }
+          else { window.__T7_ENTRY_STARTED__ = false; clickLocked = false; if (template7Transition) template7Transition.finish(); setTemplate7Error("No pudimos recuperar tu acceso. Intentá nuevamente."); }
         }
       }
       if (!template7IdentityReady) window.__LB_IDENTITY_READY__.then(releaseTemplate7Identity, function () { releaseTemplate7Identity(false); });

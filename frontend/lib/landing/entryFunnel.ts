@@ -2,8 +2,10 @@
 export const ENTRY_FUNNEL_EVENTS = [
   "page_visible", "form_visible", "name_focus", "name_started", "name_valid", "skin_selected",
   "cta_clicked", "destination_ready", "account_ready", "login_confirmed", "gateway_loaded",
+  "iframe_loaded", "chat_bootstrap_ready", "welcome_ready", "wallet_ready",
   "chat_ready", "entry_error", "visibility_hidden", "resumed",
 ] as const;
+export const ENTRY_FUNNEL_ERROR_STAGES = ["runtime", "destination", "account", "login", "session", "chat_iframe", "chat_bootstrap", "welcome", "wallet", "chat"] as const;
 export const ENTRY_FUNNEL_ERRORS = [
   "destination_unavailable", "account_unavailable", "prepare_rejected", "prepare_unavailable",
   "login_unavailable", "session_unavailable", "chat_unavailable", "request_timeout",
@@ -17,6 +19,7 @@ export type EntryFunnelContext = {
 export type EntryFunnelEvent = {
   id: string; name: typeof ENTRY_FUNNEL_EVENTS[number]; elapsed_ms: number;
   provider?: string; skin?: string; error_code?: typeof ENTRY_FUNNEL_ERRORS[number]; status?: number;
+  error_stage?: typeof ENTRY_FUNNEL_ERROR_STAGES[number]; duration_ms?: number;
 };
 export type EntryFunnelBatch = { landing_id: string; flow_id: string; template: 7 | 8; events: EntryFunnelEvent[] };
 const providers = ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_skin"];
@@ -39,16 +42,20 @@ export function validateEntryFunnelBatch(value: unknown): EntryFunnelBatch | nul
     typeof value.template !== "number" || !Array.isArray(value.events) || value.events.length < 1 || value.events.length > 20) return null;
   const events: EntryFunnelEvent[] = [];
   for (const row of value.events) {
-    if (!record(row) || Object.keys(row).some(key => !["id", "name", "elapsed_ms", "provider", "skin", "error_code", "status"].includes(key)) ||
+    if (!record(row) || Object.keys(row).some(key => !["id", "name", "elapsed_ms", "provider", "skin", "error_code", "status", "error_stage", "duration_ms"].includes(key)) ||
       !uuid.test(String(row.id)) || !ENTRY_FUNNEL_EVENTS.includes(row.name as never) ||
       typeof row.elapsed_ms !== "number" || !Number.isSafeInteger(row.elapsed_ms) || row.elapsed_ms < 0 || row.elapsed_ms > 86_400_000 ||
       row.provider !== undefined && !providers.includes(String(row.provider)) ||
       row.skin !== undefined && !skins.includes(String(row.skin)) ||
       row.error_code !== undefined && !ENTRY_FUNNEL_ERRORS.includes(row.error_code as never) ||
+      row.error_stage !== undefined && !ENTRY_FUNNEL_ERROR_STAGES.includes(row.error_stage as never) ||
+      row.duration_ms !== undefined && (typeof row.duration_ms !== "number" || !Number.isSafeInteger(row.duration_ms) || row.duration_ms < 0 || row.duration_ms > 86_400_000) ||
       row.status !== undefined && (typeof row.status !== "number" || !Number.isInteger(row.status) || row.status < 100 || row.status > 599)) return null;
     events.push({ id: String(row.id), name: row.name as EntryFunnelEvent["name"], elapsed_ms: row.elapsed_ms,
       ...(row.provider ? { provider: String(row.provider) } : {}), ...(row.skin ? { skin: String(row.skin) } : {}),
       ...(row.error_code ? { error_code: row.error_code as EntryFunnelEvent["error_code"] } : {}),
+      ...(row.error_stage ? { error_stage: row.error_stage as EntryFunnelEvent["error_stage"] } : {}),
+      ...(row.duration_ms !== undefined ? { duration_ms: row.duration_ms as number } : {}),
       ...(row.status ? { status: row.status as number } : {}) });
   }
   return { landing_id: String(value.landing_id), flow_id: String(value.flow_id), template: value.template as 7 | 8, events };

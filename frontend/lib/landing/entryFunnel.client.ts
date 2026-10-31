@@ -14,7 +14,8 @@ export function installEntryFunnel(config: {
   const template = suppliedContext?.template || (config.template8 || config.template === 8 ? 8 : config.template);
   const landing = suppliedContext?.landing_id || config.landingId;
   if (![7, 8].includes(Number(template)) || !uuid.test(String(landing))) return;
-  const allowed = ["page_visible", "form_visible", "name_focus", "name_started", "name_valid", "skin_selected", "cta_clicked", "destination_ready", "account_ready", "login_confirmed", "gateway_loaded", "chat_ready", "entry_error", "visibility_hidden", "resumed"];
+  const allowed = ["page_visible", "form_visible", "name_focus", "name_started", "name_valid", "skin_selected", "cta_clicked", "destination_ready", "account_ready", "login_confirmed", "gateway_loaded", "iframe_loaded", "chat_bootstrap_ready", "welcome_ready", "wallet_ready", "chat_ready", "entry_error", "visibility_hidden", "resumed"];
+  const stages = ["runtime", "destination", "account", "login", "session", "chat_iframe", "chat_bootstrap", "welcome", "wallet", "chat"];
   const errors = ["destination_unavailable", "account_unavailable", "prepare_rejected", "prepare_unavailable", "login_unavailable", "session_unavailable", "chat_unavailable", "request_timeout", "network_error", "rate_limited", "invalid_entry", "unknown"];
   const providers = ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_skin"];
   const skins = ["jugamos", "ganamos_plus", "casino_zeus", "bet30", "gana_en_casa", "celu_apuestas", "casino_zeta", "oro_puro", "fortu_bet", "gran_poseidon", "kona_bet", "mega_faraon", "camel_bet", "rhino_play"];
@@ -96,6 +97,8 @@ export function installEntryFunnel(config: {
     if (providers.includes(String(provider))) event.provider = provider;
     if (skins.includes(String(skin))) event.skin = skin;
     if (name === "entry_error") event.error_code = errors.includes(String(details.error_code)) ? details.error_code : "unknown";
+    if (name === "entry_error" && stages.includes(String(details.error_stage))) event.error_stage = details.error_stage;
+    if (Number.isSafeInteger(details.duration_ms) && Number(details.duration_ms) >= 0 && Number(details.duration_ms) <= 86400000) event.duration_ms = details.duration_ms;
     if (Number.isInteger(details.status) && Number(details.status) >= 100 && Number(details.status) <= 599) event.status = details.status;
     queue.push(event); if (queue.length > 40) queue = queue.slice(-40); saveQueue();
     if (!timer) timer = setTimeout(() => flush(), 500);

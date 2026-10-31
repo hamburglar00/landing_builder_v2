@@ -1,3 +1,4 @@
+import { buildTemplate7BoundedRequestScript } from './template7BoundedRequest';
 type Props = {
   slug: string;
   landingId: string;
@@ -21,23 +22,23 @@ export default function AtrioPrewarmScript({ slug, landingId, deviceIdScript = "
     (function () {
       try {
         ${deviceIdScript}
+        ${deviceIdScript ? buildTemplate7BoundedRequestScript() : ''}
         var slug = ${escapeScriptJson(slug)};
         window.__PUBLIC_LANDING_ATRIO_PROMISES = window.__PUBLIC_LANDING_ATRIO_PROMISES || {};
         if (!window.__PUBLIC_LANDING_ATRIO_PROMISES[slug]) {
-          window.__PUBLIC_LANDING_ATRIO_PROMISES[slug] = Promise.resolve(window.__LB_IDENTITY_READY__ || true).then(function (ready) {
-            if (ready !== true) return null;
-            return fetch("/api/template7/destination", {
+          var active = null, cancelled = false;
+          var pending = Promise.resolve(window.__LB_IDENTITY_READY__ || true).then(function (ready) {
+            if (cancelled || ready !== true) return null;
+            active = window.__T7_FETCH_JSON__("/api/template7/destination", {
             method: "POST", credentials: "same-origin",
             headers: {
               "Content-Type": "application/json"
             },
             body: JSON.stringify({ landing_id: ${escapeScriptJson(landingId)}, landing_slug: slug${deviceIdScript ? ", device_id: getOrCreateDeviceId()" : ""} }),
-            cache: "no-store",
-            keepalive: true
-          }).then(function (response) {
-            if (!response.ok) return null;
-            return response.json();
-          }); }).catch(function () { return null; });
+            cache: "no-store"
+          },12000); return active; }).catch(function () { return null; });
+          pending.cancel=function(){cancelled=true;if(active&&active.cancel)active.cancel();};
+          window.__PUBLIC_LANDING_ATRIO_PROMISES[slug] = pending;
         }
       } catch (e) {}
     })();

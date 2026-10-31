@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { Script } from "node:vm";
 import { buildTemplate7FastRuntime } from "../components/public-landing/template7FastRuntime";
 import { buildTemplate7HandoffRuntimeScript } from "../components/public-landing/template7HandoffScript";
+import { buildTemplate7BoundedRequestScript } from '../components/public-landing/template7BoundedRequest';
 
 const advisor = { atrioClientId: "client", atrioId: "advisor", atrioSlug: "gera" };
 async function runWarm(value: object, classic = false, warmResult: object = {ready: true}, supersede = false) {
@@ -24,6 +25,7 @@ async function runWarm(value: object, classic = false, warmResult: object = {rea
     Promise, URL, cfg: { landingId: "landing", slug: "test", targetProvider: "ganamos_net" },
     window: { location: { assign: (url: string) => redirects.push(url) } },
     ensureAtrioPromise: async () => ({...value}), getOrCreateDeviceId: () => "device",
+    template7DestinationKey: () => 'test',
     fetch, fetchWithEntryRecovery: fetch, template7Transition: null, clickLocked: false,
     get template7EntryGeneration() { return state.template7EntryGeneration; },
     set template7EntryGeneration(value: number) { state.template7EntryGeneration = value; },
@@ -75,7 +77,7 @@ test("a pending or completed valid destination survives soft timeouts without an
   let release!: (value: object | null) => void;
   const pending = new Promise<object | null>(resolve => { release = resolve; });
   const source = buildTemplate7FastRuntime("test", { id: "landing", name: "test", layout: { template: 7 } } as never);
-  const start = source.indexOf("      function ensureAtrioPromise() {");
+  const start = source.indexOf("      function template7DestinationKey()");
   const end = source.indexOf("      function sendTrackBestEffort(", start);
   let requests = 0;
   const window = { __PUBLIC_LANDING_ATRIO_PROMISES: { test: pending } };
@@ -91,11 +93,11 @@ test("a pending or completed valid destination survives soft timeouts without an
 
 test("only a settled invalid destination is replaced and the replacement is shared", async () => {
   const source = buildTemplate7FastRuntime("test", { id: "landing", name: "test", layout: { template: 7 } } as never);
-  const start = source.indexOf("      function ensureAtrioPromise() {");
+  const start = source.indexOf("      function template7DestinationKey()");
   const end = source.indexOf("      function sendTrackBestEffort(", start);
   let requests = 0;
-  const api = new Script(source.slice(start, end) + "\n({ ensure: ensureAtrioPromise, clear: clearPrewarmedAtrioPromise })").runInNewContext({
-    window: { __PUBLIC_LANDING_ATRIO_PROMISES: { test: Promise.resolve(null) } }, cfg: { slug: "test", landingId: "landing" }, Promise,
+  const api = new Script(buildTemplate7BoundedRequestScript() + source.slice(start, end) + "\n({ ensure: ensureAtrioPromise, clear: clearPrewarmedAtrioPromise })").runInNewContext({
+    window: { setTimeout, clearTimeout, __PUBLIC_LANDING_ATRIO_PROMISES: { test: Promise.resolve(null) } }, cfg: { slug: "test", landingId: "landing" }, Promise, AbortController,
     fetch: async () => { requests++; return { ok: true, json: async () => advisor }; },
   });
   await api.ensure(); api.clear(); const retry = api.ensure(); assert.equal(api.ensure(), retry);

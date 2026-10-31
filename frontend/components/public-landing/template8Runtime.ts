@@ -1,6 +1,8 @@
 /** Selection adapter around the shared Template 7 runtime, identity and tracking. */
 export function adaptTemplate8Runtime(source: string, classic: boolean): string {
   source = source.replaceAll("[cfg.slug]", "[template8DestinationKey()]");
+  source = source.replace("function template7DestinationKey() { return cfg.slug; }", "function template7DestinationKey() { return template8DestinationKey(); }");
+  source = source.replace('template7RequestDestination({ landing_id:', 'template7RequestDestination({ commit: true, landing_id:');
   source = source.replace("      function ensureAtrioPromise() {", "      function ensureAtrioPromise() {\n        if (!cfg.cardIndex) return Promise.resolve(null);");
   source = source.replace("      function warmTemplate7Entry() {", "      function warmTemplate7Entry() {\n        if (!cfg.cardIndex) return;");
   source = source.replace("if (cfg.template !== 6 ||", "if ((cfg.template !== 6 && !cfg.template8) ||");
@@ -11,13 +13,7 @@ export function adaptTemplate8Runtime(source: string, classic: boolean): string 
       var template8SelectionVersion = 0;
       function template8DestinationKey() { return cfg.slug + ':' + (cfg.cardIndex || 'unselected'); }
       function template8Destination(card, commit) {
-        return Promise.resolve(window.__LB_IDENTITY_READY__ || true).then(function(ready) {
-          if (ready !== true) throw new Error('identity_pending');
-          return fetch('/api/template7/destination', {
-            method:'POST', credentials:'same-origin', cache:'no-store', headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({landing_id:cfg.landingId, landing_slug:cfg.slug, card_index:card.index, commit:commit${classic ? ", device_id:getOrCreateDeviceId()" : ""}})
-          }).then(function(response) { if (!response.ok) throw new Error('page_unavailable'); return response.json(); });
-        });
+        return template7RequestDestination({landing_id:cfg.landingId, landing_slug:cfg.slug, card_index:card.index, commit:commit${classic ? ", device_id:getOrCreateDeviceId()" : ""}}, true);
       }
       function initTemplate8Selection() {
         var grid = document.querySelector('[data-template8-grid]');
@@ -25,13 +21,16 @@ export function adaptTemplate8Runtime(source: string, classic: boolean): string 
         var status = document.querySelector('[data-template8-status]');
         window.addEventListener('click', function(event) {
           var back = event.target && event.target.closest && event.target.closest('[data-template8-back]');
-          if (back && !clickLocked && !window.__T7_ENTRY_STARTED__) { template8SelectionVersion++; entry.hidden = true; grid.hidden = false; cfg.cardIndex = null; return; }
+          if (back && !clickLocked && !window.__T7_ENTRY_STARTED__) { template8SelectionVersion++; template7EntryGeneration++; cancelTemplate7Destination(); entry.hidden = true; grid.hidden = false; cfg.cardIndex = null; return; }
           var button = event.target && event.target.closest && event.target.closest('[data-template8-card-index]');
           if (!button || button.disabled || clickLocked || window.__T7_ENTRY_STARTED__) return;
           var index = Number(button.getAttribute('data-template8-card-index'));
           var card = cfg.template8Cards[index - 1];
           if (!card) return;
           var selectionVersion = ++template8SelectionVersion;
+          template7EntryGeneration++;
+          cancelTemplate7Destination();
+          setTemplate7Error(''); if(status)status.textContent='';
           notifyTemplate6CardClick(button);
           cfg.cardIndex = index; cfg.targetProvider = card.targetProvider; cfg.skinCode = card.multiSkinCode || '';
           if(window.__entryFunnel)window.__entryFunnel.emit('skin_selected',{provider:cfg.targetProvider,skin:cfg.skinCode});
@@ -69,14 +68,12 @@ export function adaptTemplate8Runtime(source: string, classic: boolean): string 
           window.__PUBLIC_LANDING_ATRIO_PROMISES=window.__PUBLIC_LANDING_ATRIO_PROMISES||{};
           // Selection owns its own request. Never wait for another card's warmup.
           var selected = template8Destination(card, true);
-          window.__PUBLIC_LANDING_ATRIO_PROMISES[key] = selected.catch(function() { return null; });
+          window.__PUBLIC_LANDING_ATRIO_PROMISES[key] = selected;
+          observeTemplate7Destination(selected);
           selected.then(function(advisor) {
             if (selectionVersion !== template8SelectionVersion) return;
+            if(!advisor && !window.__T7_ENTRY_STARTED__)setTemplate7Error('No pudimos preparar el acceso. Tocá Crear usuario para volver a intentar.');
             if (advisor && advisor.preparationReady) warmTemplate7Entry();
-          }).catch(function() {
-            if (selectionVersion !== template8SelectionVersion) return;
-            entry.hidden = true; grid.hidden = false; cfg.cardIndex = null;
-            status.textContent = 'Esta página no está disponible ahora. Elegí otra o volvé a intentar.';
           });
         }, true);
       }

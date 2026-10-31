@@ -42,6 +42,7 @@ for (const [name, engine] of [["Chromium", chromium], ["WebKit", webkit]]) {
     }, { landing, factory });
     await page.locator("[data-template7-name]").fill("Nombre Privado Parcial");
     await page.locator("[data-template7-name]").fill("Nombre Privado Completo");
+    await page.evaluate(() => window.__entryFunnel.emit("entry_error", {error_stage:"wallet",error_code:"request_timeout",status:504,duration_ms:3000,message:"private-message",token:"private-token"}));
     await page.evaluate(() => window.__entryFunnel.flush());
     await page.waitForFunction(() => performance.getEntriesByType("resource").some(e=>e.name.includes("entry-funnel")));
     const events = batches.flatMap(b=>b.events);
@@ -50,6 +51,7 @@ for (const [name, engine] of [["Chromium", chromium], ["WebKit", webkit]]) {
     assert.equal(events.find(e=>e.name==="cta_clicked").id,"f0000000-0000-4000-8000-000000000001");
     assert.equal(events.find(e=>e.name==="entry_error").id,"f0000000-0000-4000-8000-000000000002");
     assert.equal(events.find(e=>e.name==="entry_error").error_code,"network_error");
+    assert.deepEqual(events.filter(e=>e.error_stage==="wallet").map(({error_stage,error_code,status,duration_ms})=>({error_stage,error_code,status,duration_ms})),[{error_stage:"wallet",error_code:"request_timeout",status:504,duration_ms:3000}]);
     assert.doesNotMatch(JSON.stringify(batches),/Nombre|Privado|Parcial|Completo|password|fbclid|token/);
     const flow = await page.evaluate(() => window.__entryFunnel.flowId);
     checks++;
@@ -61,7 +63,7 @@ for (const [name, engine] of [["Chromium", chromium], ["WebKit", webkit]]) {
     await page.evaluate(() => {window.__entryFunnel.emit("cta_clicked");window.__entryFunnel.flush();});
     await page.waitForTimeout(2600);
     assert.ok(batches.length>=2,"retry after failed telemetry delivery");
-    assert.deepEqual(batches[0].events.map(e=>e.id),batches[1].events.map(e=>e.id),"replay has stable event IDs");
+    assert.deepEqual(batches[0].events.map(e=>e.id),batches[1].events.slice(0,batches[0].events.length).map(e=>e.id),"replay preserves original IDs even when new visibility events join the queue");
     checks++;
 
     // Gateway cookie is HttpOnly. Diagnostics must include it using same-origin credentials.
