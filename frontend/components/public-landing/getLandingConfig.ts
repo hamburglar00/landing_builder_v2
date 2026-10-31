@@ -2,7 +2,7 @@ import type { PublicLandingConfig } from "./types";
 
 // Bump whenever the Edge Function changes the public payload semantics so a
 // deployment cannot keep serving an older force-cached normalization.
-const BUILDER_CONFIG_CACHE_VERSION = "3";
+const BUILDER_CONFIG_CACHE_VERSION = "4";
 
 export async function getPublicLandingConfig(
   name: string,

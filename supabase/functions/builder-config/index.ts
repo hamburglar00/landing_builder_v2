@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { phoneCountryCodeForWorkspace } from "./market.ts";
 import { targetProviderForTemplate7 } from "./provider.ts";
+import { publicSkinCode } from "./skin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -103,7 +104,7 @@ function compileTemplate8Cover(value: unknown) {
   const cards = Array.isArray(cover.cards) ? cover.cards : [];
   return { cardCount, backgroundImageUrl: typeof cover.backgroundImageUrl === "string" ? buildOptimizedImageUrl(cover.backgroundImageUrl,960,65) : "",
     headerText: String(cover.headerText ?? "Elegí tu página"),footerText: String(cover.footerText ?? "Te acompañamos en tu chat"),
-    cards: Array.from({length:cardCount},(_,i)=>{const card=isRecord(cards[i])?cards[i]:{};return {imageUrl:typeof card.imageUrl==="string"?buildOptimizedImageUrl(card.imageUrl,480,65):"",text:String(card.text||""),ctaText:String(card.ctaText||""),targetProvider:String(card.targetProvider||"")};}) };
+    cards: Array.from({length:cardCount},(_,i)=>{const card=isRecord(cards[i])?cards[i]:{};return {imageUrl:typeof card.imageUrl==="string"?buildOptimizedImageUrl(card.imageUrl,480,65):"",text:String(card.text||""),ctaText:String(card.ctaText||""),targetProvider:String(card.targetProvider||""),...(card.targetProvider === "multi_skin" ? { multiSkinCode: publicSkinCode(card.multiSkinCode) } : {})};}) };
 }
 
 const GLOBAL_CONFIG_KEYS = [
@@ -310,7 +311,7 @@ Deno.serve(async (req) => {
           ctaDestination: (publishedTemplate === 7 || publishedTemplate === 8) ? "atrio" : tracking.ctaDestination,
           ...((publishedTemplate === 7 || publishedTemplate === 8) ? { target_provider: targetProviderForTemplate7(rawConfig) } : {}),
           ...((publishedTemplate === 7 || publishedTemplate === 8) && targetProviderForTemplate7(rawConfig) === "multi_skin"
-            ? { skin_code: "ganamos_plus" }
+            ? { skin_code: publicSkinCode(rawConfig.multiSkinCode, tracking.skin_code) }
             : {}),
           postUrl: effectivePostUrl,
           phoneCountryCode,
@@ -341,6 +342,14 @@ Deno.serve(async (req) => {
             buildResponsiveImageSet(url)
           ),
         },
+        ...(publishedTemplate === 8 ? {
+          content: {
+            ...((cfg.content as Record<string, unknown> | undefined) ?? {}),
+            template8: compileTemplate8Cover(
+              rawConfig.template8Cover ?? (cfg.content as Record<string, unknown> | undefined)?.template8,
+            ),
+          },
+        } : {}),
         interactions: {
           ...rawInteractions,
           enabled: (publishedTemplate === 7 || publishedTemplate === 8) ? false : typeof rawConfig.interactionsEnabled === "boolean"
@@ -433,7 +442,7 @@ Deno.serve(async (req) => {
         ctaDestination: (templateNumber === 7 || templateNumber === 8) ? "atrio" : (themeWithHex.ctaDestination === "atrio" ? "atrio" : "whatsapp"),
         ...((templateNumber === 7 || templateNumber === 8) ? { target_provider: targetProviderForTemplate7(rawConfig) } : {}),
         ...((templateNumber === 7 || templateNumber === 8) && targetProviderForTemplate7(rawConfig) === "multi_skin"
-          ? { skin_code: "ganamos_plus" }
+          ? { skin_code: publicSkinCode(rawConfig.multiSkinCode) }
           : {}),
         atrioRedirectUrl: (themeWithHex.atrioRedirectUrl as string) ?? "",
         atrioClientId: (themeWithHex.atrioClientId as string) ?? "",

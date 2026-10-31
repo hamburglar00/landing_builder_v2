@@ -1,0 +1,101 @@
+{
+  "source": "Supabase deployed builder-config v34 compared with local patch; mock DB, no accounts created",
+  "scenarios": [
+    {
+      "version": "before",
+      "persisted": true,
+      "status": 200,
+      "inputSkin": "bet30",
+      "publishedSkin": "ganamos_plus",
+      "title": [
+        "Bet30"
+      ],
+      "logoUrl": "https://example.invalid/bet30.webp",
+      "renderers": [
+        {
+          "engine": "builder",
+          "targetProvider": "multi_skin",
+          "skinCode": "ganamos_plus"
+        },
+        {
+          "engine": "classic",
+          "targetProvider": "multi_skin",
+          "skinCode": "ganamos_plus"
+        }
+      ]
+    },
+    {
+      "version": "before",
+      "persisted": false,
+      "status": 200,
+      "inputSkin": "bet30",
+      "publishedSkin": "ganamos_plus",
+      "title": [
+        "Bet30",
+        "",
+        ""
+      ],
+      "logoUrl": "https://example.invalid/bet30.webp",
+      "renderers": [
+        {
+          "engine": "builder",
+          "targetProvider": "multi_skin",
+          "skinCode": "ganamos_plus"
+        },
+        {
+          "engine": "classic",
+          "targetProvider": "multi_skin",
+          "skinCode": "ganamos_plus"
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "persisted": true,
+      "status": 200,
+      "inputSkin": "bet30",
+      "publishedSkin": "bet30",
+      "title": [
+        "Bet30"
+      ],
+      "logoUrl": "https://example.invalid/bet30.webp",
+      "renderers": [
+        {
+          "engine": "builder",
+          "targetProvider": "multi_skin",
+          "skinCode": "bet30"
+        },
+        {
+          "engine": "classic",
+          "targetProvider": "multi_skin",
+          "skinCode": "bet30"
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "persisted": false,
+      "status": 200,
+      "inputSkin": "bet30",
+      "publishedSkin": "bet30",
+      "title": [
+        "Bet30",
+        "",
+        ""
+      ],
+      "logoUrl": "https://example.invalid/bet30.webp",
+      "renderers": [
+        {
+          "engine": "builder",
+          "targetProvider": "multi_skin",
+          "skinCode": "bet30"
+        },
+        {
+          "engine": "classic",
+          "targetProvider": "multi_skin",
+          "skinCode": "bet30"
+        }
+      ]
+    }
+  ]
+}

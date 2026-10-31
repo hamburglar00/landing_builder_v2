@@ -1,5 +1,13 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Acceso directo por bot y prueba Multi Skin 1045 (31/10/2026)
+
+- Achicar el selector Usuario/Soporte de «Acceso rápido del cliente», conservando la superficie táctil y el comportamiento de guardado. No cambiar las dimensiones de los demás selectores.
+- Agregar «Abrir chat» en cada tarjeta activa de Bots de PBAdmin. El enlace público identifica asesor y bot; abre Atrio sin pasar por el gateway. La primera entrada pide el nombre y resuelve la cuenta de ese bot. El regreso y los reintentos conservan la misma identidad y vínculo; ningún bot inactivo, parámetro del cliente o ruta predeterminada puede sustituir el destino.
+- Las credenciales permanecen en servidor. El acceso directo usa identidad privada de navegador y sesión de chat firmada; MKT conserva Usuario/Soporte y sus operaciones, Full Carga conserva su gestión automática. La implementación única de Atrio sirve a los cuatro proveedores.
+- El usuario confirmó el despliegue de API2 por el programador y creó el bot 1045, Multi Skin (Test), para verificar el recorrido y las operaciones. Verificar su configuración real, el alta y el chat con una identidad de prueba explícita. Distinguir pruebas aisladas, consultas reales y movimientos efectivos; una prueba del proveedor no certifica una transferencia bancaria automática. API2 continúa bajo despliegue del programador.
+- La auditoría encontró que `builder-config` reemplazaba Bet30 por Ganamos+ y omitía las skins de las tarjetas T8. Corregir la fuente compartida y los lectores de ambos motores para conservar la skin guardada y rechazar selecciones explícitamente inválidas, sin cambiar cuenta, proveedor ni gerencia.
+
 ### Configuración móvil y períodos de Datos (31/10/2026)
 
 - Corregir el desborde de la vista previa de Retirar en Configuración móvil: la descripción, tarjeta y controles deben quedar dentro de su contenedor, con el contenido completo legible. Conservar la presentación de la solicitud real y las operaciones de retiro existentes.
