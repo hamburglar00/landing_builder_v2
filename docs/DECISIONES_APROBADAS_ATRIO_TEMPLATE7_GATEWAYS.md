@@ -2,6 +2,7 @@
 
 ### Inicio automático al llegar al chat visible (31/10/2026)
 
+- Publicación completada: migración `20261031154810_gateway_visible_entry` aplicada en Atrio; siete proyectos Vercel promovidos y Worker Multi Skin al 100%. Padres publicados y verificados antes de activar Atrio. Evidencia, pruebas, hashes públicos, commits y rollback: [inicio visible](validation/gateway-visible-entry-20261031.md).
 - Publicación autorizada posteriormente por el usuario: aplicar la migración y desplegar el lote completo. Publicar primero los cuatro padres gateway, incluido Worker Multi Skin, y después Atrio para que el inicio requiera visibilidad comprobada. Constructor y clásico incorporan los recursos compartidos del lote.
 - El usuario aprobó enviar una solicitud inicial automática al llegar al chat visible y utilizable, seguida de la bienvenida existente y los datos bancarios. Usar variantes argentinas sin signos de apertura, por ejemplo «Hola! Me pasás mi usuario y los datos para cargar?». Conservar la cuenta, asesor y conversación de la skin autorizada.
 - CONTACT conserva su disparador actual al tocar el CTA; LEAD corresponde a la llegada al chat visible y utilizable. Una precarga oculta, redirección iniciada o iframe todavía cubierto por la transición no cuentan. Conservar la deduplicación por jugador y `promo_code`, el tracking habilitado y la atribución existente.

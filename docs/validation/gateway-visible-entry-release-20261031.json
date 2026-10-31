@@ -1,0 +1,666 @@
+{
+  "release": "gateway-visible-entry-20261031",
+  "completedAt": "2026-10-31T15:58:12.211Z",
+  "database": {
+    "project": "didrpwkdqizivfbapofx",
+    "applied": true,
+    "verification": {
+      "rls": true,
+      "rpcs": [
+        {
+          "anon": false,
+          "service": true,
+          "signature": "activate_gateway_visible_entry(uuid,uuid,uuid,uuid,text,boolean,text,boolean,text)",
+          "authenticated": false,
+          "security_definer": false
+        },
+        {
+          "anon": false,
+          "service": true,
+          "signature": "bootstrap_gateway_chat(text,uuid,uuid,text,text)",
+          "authenticated": false,
+          "security_definer": false
+        },
+        {
+          "anon": false,
+          "service": true,
+          "signature": "ensure_gateway_entry_wallet(uuid,uuid,uuid,uuid,jsonb)",
+          "authenticated": false,
+          "security_definer": false
+        },
+        {
+          "anon": false,
+          "service": true,
+          "signature": "prepare_gateway_chat(text,uuid,uuid,text,text,boolean)",
+          "authenticated": false,
+          "security_definer": false
+        }
+      ],
+      "columns": [
+        {
+          "name": "gateway_entry_pending",
+          "default": "false",
+          "nullable": "NO"
+        },
+        {
+          "name": "gateway_visible_entry_at",
+          "default": null,
+          "nullable": "YES"
+        }
+      ],
+      "migration": {
+        "name": "gateway_visible_entry",
+        "version": "20261031154810"
+      },
+      "intro_index": "CREATE UNIQUE INDEX messages_gateway_visible_entry_once_idx ON public.messages USING btree (conversation_id) WHERE ((metadata ->> 'source'::text) = 'gateway_visible_entry'::text)",
+      "metric_filters": [
+        {
+          "name": "builder_manager_directory",
+          "excludes_intro": true
+        },
+        {
+          "name": "select_builder_page_destination",
+          "excludes_intro": true
+        }
+      ],
+      "invalid_prepare_rejected": true,
+      "invalid_visible_rejected": true
+    },
+    "securityAdvisories": {
+      "before": [
+        {
+          "name": "anon_security_definer_function_executable",
+          "level": "WARN"
+        },
+        {
+          "name": "auth_leaked_password_protection",
+          "level": "WARN"
+        },
+        {
+          "name": "authenticated_security_definer_function_executable",
+          "level": "WARN"
+        },
+        {
+          "name": "rls_enabled_no_policy",
+          "level": "INFO"
+        }
+      ],
+      "after": [
+        {
+          "name": "anon_security_definer_function_executable",
+          "level": "WARN"
+        },
+        {
+          "name": "auth_leaked_password_protection",
+          "level": "WARN"
+        },
+        {
+          "name": "authenticated_security_definer_function_executable",
+          "level": "WARN"
+        },
+        {
+          "name": "rls_enabled_no_policy",
+          "level": "INFO"
+        }
+      ],
+      "newFindings": 0
+    },
+    "historicalMessagesBackfilled": false
+  },
+  "vercel": [
+    {
+      "component": "Atrio",
+      "origin": "https://www.atrio.website",
+      "commit": "2692837327521a0f91e4ca6a3c9ef431efeddbb2",
+      "deployment": "dpl_4WnAFuMje9Gy5pc5u3mdmXjdyqWg",
+      "deploymentUrl": "https://internal-chat-ha1zy6o9z-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "promoted": true,
+      "productionTargetVerified": true,
+      "previousDeployment": "dpl_HVcJjArhPJpuXZC4G1jgFtCc6YdG",
+      "previousCommit": "8c7f72414d279ecc8b4ad96db8dc93bd834132d5"
+    },
+    {
+      "component": "builder",
+      "domain": "mkt.panelbotadmin.com",
+      "projectId": "prj_Mwgk26w4BkZ1hhv2TBsSLlJShka8",
+      "commit": "65ccee69681d6b01d8eb1a609ab9bf0b5d17edd1",
+      "deployment": "dpl_7PfWqHygAURBe4eTbbGiAzwgqDXu",
+      "deploymentUrl": "https://landing-builder-v2-k259-l3n809325-juanclouds-projects.vercel.app",
+      "previousCommit": "26d64ecd23596c4c643899c17c719cc16d0e36aa",
+      "previousDeployment": "dpl_7rPQTWkHn89kJrgWLNCBuaFMLEf8",
+      "ready": true,
+      "promoted": true,
+      "productionTargetVerified": true
+    },
+    {
+      "component": "classic",
+      "domain": "landing.panelbotadmin.com",
+      "projectId": "prj_3U8gxeIt5zwVa7YPfPhiwtuUw6U2",
+      "commit": "2eeef163643f3dc5ad7a284baaa21f1bf09f24f7",
+      "deployment": "dpl_BFCrHisruyB8b5rM1vFbHXHAYCBh",
+      "deploymentUrl": "https://public-landing-clhfo17lg-juanclouds-projects.vercel.app",
+      "previousCommit": "2ccf16924e28a8a2e731af892ebe8bab15e47b2e",
+      "previousDeployment": "dpl_63a7JvEoEqTJf6Cd1jQzg6fDCJ9x",
+      "ready": true,
+      "promoted": true,
+      "productionTargetVerified": true,
+      "replacedPackagingDeployment": "dpl_CvzaEfJ9FxuMeknyuVYQxiKj8MFT",
+      "packagingCorrection": "Rebuilt identical commit with git -c core.autocrlf=false -c core.eol=lf archive; all public current and previous assets now match canonical bytes."
+    },
+    {
+      "repo": "landing-autologuin",
+      "origin": "https://www.reydeases.fun",
+      "deployment": "dpl_6DuipzypQsV9vQWfBa9y2raC7zf9",
+      "url": "https://reydeases-gateway-nzcffvrvp-juanclouds-projects.vercel.app",
+      "commit": "c21811d6010a4d25da13af405063aac0d4c29972",
+      "state": "READY",
+      "promoted": true,
+      "domainDeploymentVerified": true,
+      "previousDeployment": "dpl_HzBii4DFMB5gWgUSicxHud6CATz3"
+    },
+    {
+      "repo": "ases-gateway",
+      "origin": "https://www.asesdelnorte.online",
+      "deployment": "dpl_HG3qznBqM5bhhhLsRNxC2646xYju",
+      "url": "https://ases-del-norte-gateway-5x206tqjo-juanclouds-projects.vercel.app",
+      "commit": "581c139acebfd7d263daadce1a374ea4adab1476",
+      "state": "READY",
+      "promoted": true,
+      "domainDeploymentVerified": true,
+      "previousDeployment": "dpl_FCP7buuJW7BP2dRzdkqMDodfgzTw"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "origin": "https://www.ganamosnet.icu",
+      "deployment": "dpl_HDWEQiNeDBisyQd5yPNWDSqYd4ST",
+      "url": "https://ganamos-net-gateway-r20j3aqnq-juanclouds-projects.vercel.app",
+      "commit": "fa0788fc9b2fbf314742dd7007db88d2fed15614",
+      "state": "READY",
+      "promoted": true,
+      "domainDeploymentVerified": true,
+      "previousDeployment": "dpl_GYg1VPj1AXrN2t8prgpQLj5yGCgm"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "origin": "https://multi-skin-gateway.vercel.app",
+      "deployment": "dpl_BBK67i7u64sZ7sYnFkY7oBJsfRSP",
+      "url": "https://multi-skin-gateway-m11utn478-juanclouds-projects.vercel.app",
+      "commit": "35a33f5f8eb2f52301693a563e6bd509d335956e",
+      "state": "READY",
+      "promoted": true,
+      "domainDeploymentVerified": true,
+      "previousDeployment": "dpl_3o8z8jdCsvgnDaTtfs5j8AMwLXwi"
+    }
+  ],
+  "worker": {
+    "repo": "multi-skin-gateway",
+    "version": "7addcd00-4b51-4140-8c1a-003ebdcd6a3c",
+    "deployment": "3119329b-524a-437f-9a7b-f3718c9f4d8a",
+    "percentage": 100,
+    "keepVars": true,
+    "relayChanged": false,
+    "origins": [
+      "https://ganamosnet.global",
+      "https://multi-skin-gateway.meta-ip-collector.workers.dev"
+    ],
+    "previousVersion": "455e14be-5cff-465e-8074-096f16d20d23"
+  },
+  "checks": {
+    "gateways": [
+      {
+        "repo": "landing-autologuin",
+        "origin": "https://www.reydeases.fun",
+        "assets": [
+          {
+            "file": "gateway-client.js",
+            "status": 200,
+            "sha256": "56ed2bf8b1af03e22d23341e1e2b5abf2522af2e1c67adebcf69400d6001d04f",
+            "expectedSha256": "56ed2bf8b1af03e22d23341e1e2b5abf2522af2e1c67adebcf69400d6001d04f",
+            "matches": true
+          },
+          {
+            "file": "gateway-client.css",
+            "status": 200,
+            "sha256": "c14b9b4fc91de629a0326ac78a398e2ff40b1d96c9b6adb97c5b0e640e2b9091",
+            "expectedSha256": "c14b9b4fc91de629a0326ac78a398e2ff40b1d96c9b6adb97c5b0e640e2b9091",
+            "matches": true
+          }
+        ],
+        "healthStatus": 200,
+        "passed": true
+      },
+      {
+        "repo": "ases-gateway",
+        "origin": "https://www.asesdelnorte.online",
+        "assets": [
+          {
+            "file": "gateway-client.js",
+            "status": 200,
+            "sha256": "005de7dd02bd4870c63a377f4db9ad718839e7262c3d0ec5c0d3e488f2dc191f",
+            "expectedSha256": "005de7dd02bd4870c63a377f4db9ad718839e7262c3d0ec5c0d3e488f2dc191f",
+            "matches": true
+          },
+          {
+            "file": "gateway-client.css",
+            "status": 200,
+            "sha256": "28065418cc247d9083f5a504ebae2bf154518581e9b6cee06da99ad2e5ac4b1a",
+            "expectedSha256": "28065418cc247d9083f5a504ebae2bf154518581e9b6cee06da99ad2e5ac4b1a",
+            "matches": true
+          }
+        ],
+        "healthStatus": 200,
+        "passed": true
+      },
+      {
+        "repo": "ganamos-gateway",
+        "origin": "https://www.ganamosnet.icu",
+        "assets": [
+          {
+            "file": "gateway-client.js",
+            "status": 200,
+            "sha256": "d8900eeec19a410e957d61772fe7c3595c5348b739512c446473b746162d1ee3",
+            "expectedSha256": "d8900eeec19a410e957d61772fe7c3595c5348b739512c446473b746162d1ee3",
+            "matches": true
+          },
+          {
+            "file": "gateway-client.css",
+            "status": 200,
+            "sha256": "28065418cc247d9083f5a504ebae2bf154518581e9b6cee06da99ad2e5ac4b1a",
+            "expectedSha256": "28065418cc247d9083f5a504ebae2bf154518581e9b6cee06da99ad2e5ac4b1a",
+            "matches": true
+          }
+        ],
+        "healthStatus": 200,
+        "passed": true
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "origin": "https://multi-skin-gateway.vercel.app",
+        "assets": [
+          {
+            "file": "gateway-client.js",
+            "status": 200,
+            "sha256": "b561c3cf2f1c07ecc633baf61e582e5e045f5a2d18be00d8358e3442a89ad82f",
+            "expectedSha256": "b561c3cf2f1c07ecc633baf61e582e5e045f5a2d18be00d8358e3442a89ad82f",
+            "matches": true
+          },
+          {
+            "file": "gateway-client.css",
+            "status": 200,
+            "sha256": "117384a3ccf2e07b41e7987fb4ec543e76284170e0fd64d2fa6ab15cf183e54d",
+            "expectedSha256": "117384a3ccf2e07b41e7987fb4ec543e76284170e0fd64d2fa6ab15cf183e54d",
+            "matches": true
+          }
+        ],
+        "healthStatus": 200,
+        "passed": true
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "origin": "https://ganamosnet.global",
+        "assets": [
+          {
+            "file": "gateway-client.js",
+            "status": 200,
+            "sha256": "b561c3cf2f1c07ecc633baf61e582e5e045f5a2d18be00d8358e3442a89ad82f",
+            "expectedSha256": "b561c3cf2f1c07ecc633baf61e582e5e045f5a2d18be00d8358e3442a89ad82f",
+            "matches": true
+          },
+          {
+            "file": "gateway-client.css",
+            "status": 200,
+            "sha256": "117384a3ccf2e07b41e7987fb4ec543e76284170e0fd64d2fa6ab15cf183e54d",
+            "expectedSha256": "117384a3ccf2e07b41e7987fb4ec543e76284170e0fd64d2fa6ab15cf183e54d",
+            "matches": true
+          }
+        ],
+        "healthStatus": 200,
+        "passed": true
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "origin": "https://multi-skin-gateway.meta-ip-collector.workers.dev",
+        "assets": [
+          {
+            "file": "gateway-client.js",
+            "status": 200,
+            "sha256": "b561c3cf2f1c07ecc633baf61e582e5e045f5a2d18be00d8358e3442a89ad82f",
+            "expectedSha256": "b561c3cf2f1c07ecc633baf61e582e5e045f5a2d18be00d8358e3442a89ad82f",
+            "matches": true
+          },
+          {
+            "file": "gateway-client.css",
+            "status": 200,
+            "sha256": "117384a3ccf2e07b41e7987fb4ec543e76284170e0fd64d2fa6ab15cf183e54d",
+            "expectedSha256": "117384a3ccf2e07b41e7987fb4ec543e76284170e0fd64d2fa6ab15cf183e54d",
+            "matches": true
+          }
+        ],
+        "healthStatus": 200,
+        "passed": true
+      }
+    ],
+    "landings": {
+      "checkedAt": "2026-10-31T15:55:15.558Z",
+      "assets": [
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "key": "t7-builder",
+          "version": "current",
+          "path": "/public-assets/template-entry/t7-builder-ee737a99293d3d99e2353609.js",
+          "status": 200,
+          "bytes": 109535,
+          "sha256": "ee737a99293d3d99e23536096092bc27b8fa478a4cf3565f72a86bf978d956e5",
+          "localSha256": "ee737a99293d3d99e23536096092bc27b8fa478a4cf3565f72a86bf978d956e5",
+          "matches": true,
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "key": "t7-classic",
+          "version": "current",
+          "path": "/public-assets/template-entry/t7-classic-fc0fc9f9ff308aa15c480fc7.js",
+          "status": 200,
+          "bytes": 108372,
+          "sha256": "fc0fc9f9ff308aa15c480fc77aaa4d1e1edeb01da2735dbea67cbf48ccb9eee7",
+          "localSha256": "fc0fc9f9ff308aa15c480fc77aaa4d1e1edeb01da2735dbea67cbf48ccb9eee7",
+          "matches": true,
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "key": "t8-builder",
+          "version": "current",
+          "path": "/public-assets/template-entry/t8-builder-3223a1086494ac5872e7efa2.js",
+          "status": 200,
+          "bytes": 115259,
+          "sha256": "3223a1086494ac5872e7efa284128f1789034ed3eea7a47bdfbb7c1e15c027e9",
+          "localSha256": "3223a1086494ac5872e7efa284128f1789034ed3eea7a47bdfbb7c1e15c027e9",
+          "matches": true,
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "key": "t8-classic",
+          "version": "current",
+          "path": "/public-assets/template-entry/t8-classic-872c66969c03449493392f04.js",
+          "status": 200,
+          "bytes": 114129,
+          "sha256": "872c66969c03449493392f047cf0f4291b81e3653716fecbffd1c65ae5e22d28",
+          "localSha256": "872c66969c03449493392f047cf0f4291b81e3653716fecbffd1c65ae5e22d28",
+          "matches": true,
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "key": "t7-builder",
+          "version": "previous",
+          "path": "/public-assets/template-entry/t7-builder-6ce7c1a62c4dbc91d2f47b2d.js",
+          "status": 200,
+          "bytes": 109165,
+          "sha256": "6ce7c1a62c4dbc91d2f47b2d11bfc9eaf95590d95bd51c0adf4796b089ae9947",
+          "localSha256": "6ce7c1a62c4dbc91d2f47b2d11bfc9eaf95590d95bd51c0adf4796b089ae9947",
+          "matches": true,
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "key": "t7-classic",
+          "version": "previous",
+          "path": "/public-assets/template-entry/t7-classic-8f56e9b1dbcdae447d8b2919.js",
+          "status": 200,
+          "bytes": 108002,
+          "sha256": "8f56e9b1dbcdae447d8b2919b5261e7f515f91325b95117b503e316dbe7d4844",
+          "localSha256": "8f56e9b1dbcdae447d8b2919b5261e7f515f91325b95117b503e316dbe7d4844",
+          "matches": true,
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "key": "t8-builder",
+          "version": "previous",
+          "path": "/public-assets/template-entry/t8-builder-5f276c466e16bba6ad8a51c6.js",
+          "status": 200,
+          "bytes": 114889,
+          "sha256": "5f276c466e16bba6ad8a51c688534e401a574a874d3c30308e4096908ebfb85d",
+          "localSha256": "5f276c466e16bba6ad8a51c688534e401a574a874d3c30308e4096908ebfb85d",
+          "matches": true,
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "key": "t8-classic",
+          "version": "previous",
+          "path": "/public-assets/template-entry/t8-classic-d2f04c0c3594f80938ec9e9f.js",
+          "status": 200,
+          "bytes": 113759,
+          "sha256": "d2f04c0c3594f80938ec9e9fa8873571c828a032663c57b8d0be7b123444038e",
+          "localSha256": "d2f04c0c3594f80938ec9e9fa8873571c828a032663c57b8d0be7b123444038e",
+          "matches": true,
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "key": "t7-builder",
+          "version": "current",
+          "path": "/public-assets/template-entry/t7-builder-ee737a99293d3d99e2353609.js",
+          "status": 200,
+          "bytes": 109535,
+          "sha256": "ee737a99293d3d99e23536096092bc27b8fa478a4cf3565f72a86bf978d956e5",
+          "localSha256": "ee737a99293d3d99e23536096092bc27b8fa478a4cf3565f72a86bf978d956e5",
+          "matches": true,
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "key": "t7-classic",
+          "version": "current",
+          "path": "/public-assets/template-entry/t7-classic-fc0fc9f9ff308aa15c480fc7.js",
+          "status": 200,
+          "bytes": 108372,
+          "sha256": "fc0fc9f9ff308aa15c480fc77aaa4d1e1edeb01da2735dbea67cbf48ccb9eee7",
+          "localSha256": "fc0fc9f9ff308aa15c480fc77aaa4d1e1edeb01da2735dbea67cbf48ccb9eee7",
+          "matches": true,
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "key": "t8-builder",
+          "version": "current",
+          "path": "/public-assets/template-entry/t8-builder-3223a1086494ac5872e7efa2.js",
+          "status": 200,
+          "bytes": 115259,
+          "sha256": "3223a1086494ac5872e7efa284128f1789034ed3eea7a47bdfbb7c1e15c027e9",
+          "localSha256": "3223a1086494ac5872e7efa284128f1789034ed3eea7a47bdfbb7c1e15c027e9",
+          "matches": true,
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "key": "t8-classic",
+          "version": "current",
+          "path": "/public-assets/template-entry/t8-classic-872c66969c03449493392f04.js",
+          "status": 200,
+          "bytes": 114129,
+          "sha256": "872c66969c03449493392f047cf0f4291b81e3653716fecbffd1c65ae5e22d28",
+          "localSha256": "872c66969c03449493392f047cf0f4291b81e3653716fecbffd1c65ae5e22d28",
+          "matches": true,
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "key": "t7-builder",
+          "version": "previous",
+          "path": "/public-assets/template-entry/t7-builder-6ce7c1a62c4dbc91d2f47b2d.js",
+          "status": 200,
+          "bytes": 109165,
+          "sha256": "6ce7c1a62c4dbc91d2f47b2d11bfc9eaf95590d95bd51c0adf4796b089ae9947",
+          "localSha256": "6ce7c1a62c4dbc91d2f47b2d11bfc9eaf95590d95bd51c0adf4796b089ae9947",
+          "matches": true,
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "key": "t7-classic",
+          "version": "previous",
+          "path": "/public-assets/template-entry/t7-classic-8f56e9b1dbcdae447d8b2919.js",
+          "status": 200,
+          "bytes": 108002,
+          "sha256": "8f56e9b1dbcdae447d8b2919b5261e7f515f91325b95117b503e316dbe7d4844",
+          "localSha256": "8f56e9b1dbcdae447d8b2919b5261e7f515f91325b95117b503e316dbe7d4844",
+          "matches": true,
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "key": "t8-builder",
+          "version": "previous",
+          "path": "/public-assets/template-entry/t8-builder-5f276c466e16bba6ad8a51c6.js",
+          "status": 200,
+          "bytes": 114889,
+          "sha256": "5f276c466e16bba6ad8a51c688534e401a574a874d3c30308e4096908ebfb85d",
+          "localSha256": "5f276c466e16bba6ad8a51c688534e401a574a874d3c30308e4096908ebfb85d",
+          "matches": true,
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "key": "t8-classic",
+          "version": "previous",
+          "path": "/public-assets/template-entry/t8-classic-d2f04c0c3594f80938ec9e9f.js",
+          "status": 200,
+          "bytes": 113759,
+          "sha256": "d2f04c0c3594f80938ec9e9fa8873571c828a032663c57b8d0be7b123444038e",
+          "localSha256": "d2f04c0c3594f80938ec9e9fa8873571c828a032663c57b8d0be7b123444038e",
+          "matches": true,
+          "cacheControl": "public, max-age=31536000, immutable"
+        }
+      ],
+      "pages": [
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "path": "/l/diana",
+          "status": 200,
+          "expectedAsset": "t7-builder-ee737a99293d3d99e2353609.js",
+          "assetPresent": true
+        },
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "path": "/l/gast?landing=diana&unrelated=one&unrelated=two",
+          "status": 200,
+          "expectedAsset": "t7-builder-ee737a99293d3d99e2353609.js",
+          "assetPresent": true
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "path": "/diana",
+          "status": 200,
+          "expectedAsset": "t7-classic-fc0fc9f9ff308aa15c480fc7.js",
+          "assetPresent": true
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "path": "/gast?landing=diana&unrelated=one&unrelated=two",
+          "status": 200,
+          "expectedAsset": "t7-classic-fc0fc9f9ff308aa15c480fc7.js",
+          "assetPresent": true
+        }
+      ]
+    },
+    "atrio": {
+      "checkedAt": "2026-10-31T15:56:42.190Z",
+      "origin": "https://www.atrio.website",
+      "expectedDeploymentId": "dpl_4WnAFuMje9Gy5pc5u3mdmXjdyqWg",
+      "expectedCommit": "2692837327521a0f91e4ca6a3c9ef431efeddbb2",
+      "credentialsSent": false,
+      "businessActionsPerformed": false,
+      "checks": [
+        {
+          "method": "GET",
+          "path": "/login",
+          "expectedStatus": 200,
+          "status": 200,
+          "contentOk": true,
+          "headers": {
+            "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "referrerPolicy": null,
+            "contentType": "text/html; charset=utf-8",
+            "contentTypeOptions": null,
+            "setsCookie": false
+          },
+          "headersOk": true,
+          "durationMs": 1757,
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/api/gateway/chat",
+          "expectedStatus": 401,
+          "status": 401,
+          "contentOk": true,
+          "headers": {
+            "cacheControl": "no-store",
+            "referrerPolicy": "no-referrer",
+            "contentType": "application/json",
+            "contentTypeOptions": "nosniff",
+            "setsCookie": false
+          },
+          "headersOk": true,
+          "durationMs": 1123,
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/api/gateway/chat",
+          "expectedStatus": 401,
+          "status": 401,
+          "contentOk": true,
+          "headers": {
+            "cacheControl": "no-store",
+            "referrerPolicy": "no-referrer",
+            "contentType": "application/json",
+            "contentTypeOptions": "nosniff",
+            "setsCookie": false
+          },
+          "headersOk": true,
+          "durationMs": 1347,
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/api/cron/confirmed-purchases",
+          "expectedStatus": 401,
+          "status": 401,
+          "contentOk": true,
+          "headers": {
+            "cacheControl": "private, no-store",
+            "referrerPolicy": null,
+            "contentType": "application/json",
+            "contentTypeOptions": null,
+            "setsCookie": false
+          },
+          "headersOk": true,
+          "durationMs": 1625,
+          "ok": true
+        }
+      ],
+      "allPassed": true,
+      "limitation": "Public health and unauthenticated rejection only; no authenticated entry or real client was exercised.",
+      "aliasVerification": {
+        "checkedAt": "2026-10-31T15:57:17.2932171Z",
+        "alias": "www.atrio.website",
+        "deploymentId": "dpl_4WnAFuMje9Gy5pc5u3mdmXjdyqWg",
+        "deploymentUrl": "internal-chat-ha1zy6o9z-juanclouds-projects.vercel.app",
+        "matchesExpected": true
+      }
+    }
+  },
+  "limitations": [
+    "Public verification used HTTP without executing a signed customer entry.",
+    "No live customer messages, financial actions or test Meta conversions were generated.",
+    "Browser fixtures do not certify physical Facebook/Instagram in-app browsers.",
+    "PGlite SQL tests do not prove independent-connection concurrency."
+  ],
+  "rollback": "Restore previous Atrio deployment before older gateway parents; retain the compatible migration and historical messages."
+}
