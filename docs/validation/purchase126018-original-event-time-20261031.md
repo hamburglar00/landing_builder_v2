@@ -2,6 +2,8 @@
 
 Builder recibió el 31/10 dos confirmaciones de cargas del 21/10. Al no recibir `event_time`, asignó la hora de recepción e ignoró `confirmed_at`, `timestamp` y `dateTime`. La segunda carga quedó como recompra por existir la primera, con otra identidad de acción y transacción. **Ninguna se envió a Meta:** ambas se omitieron por origen no publicitario, antes de una solicitud HTTP.
 
+Corrección publicada en Atrio `a7f7920` y Edge `conversions` v172. [Versiones, verificación y rollback del lote](purchase-runtime-release-20261031.md).
+
 ## Cronología comprobada, en UTC
 
 | Registro | Confirmación original | Recepción en inbox | Resultado Builder |

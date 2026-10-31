@@ -1,0 +1,44 @@
+{
+  "checkedAt": "2026-10-31T19:19:53.485Z",
+  "scope": "Public GET only; JavaScript not executed, no accounts, conversions, transfers or historical writes.",
+  "passed": 5,
+  "results": [
+    {
+      "url": "https://mkt.panelbotadmin.com/l/asesgc",
+      "kind": "Builder T5 HTML",
+      "status": 200,
+      "bytes": 18210,
+      "cacheControl": "public, max-age=0"
+    },
+    {
+      "url": "https://mkt.panelbotadmin.com/l/diana",
+      "kind": "Builder T7 HTML",
+      "status": 200,
+      "bytes": 45490,
+      "cacheControl": "public, max-age=0"
+    },
+    {
+      "url": "https://mkt.panelbotadmin.com/public-assets/template-entry/landing-e23f9f604b65ec406f69bca9.js",
+      "kind": "Content-addressed T1-6 runtime",
+      "status": 200,
+      "bytes": 89286,
+      "cacheControl": "public, max-age=31536000, immutable",
+      "sha256": "e23f9f604b65ec406f69bca9223f09d95d19aecb59095a67c46c868de605fdec",
+      "localSourceMatches": true
+    },
+    {
+      "url": "https://mkt.panelbotadmin.com/public-assets/landing-runtime-v6.js",
+      "kind": "Legacy URL retained",
+      "status": 200,
+      "bytes": 84399,
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "url": "https://www.atrio.website/",
+      "kind": "Atrio public entry",
+      "status": 200,
+      "bytes": 21388,
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    }
+  ]
+}

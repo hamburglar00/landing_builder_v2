@@ -1,6 +1,6 @@
 # Caché y alcance de FBC en todas las plantillas — 31/10/2026
 
-Estado: implementado y verificado localmente; publicación de Builder pendiente.
+Estado: publicado en Builder `0bb42f5`, deployment `dpl_F9zRGrght255UTLB6LaLjt3zGaeo`, promovido y verificado. [Publicación del lote](purchase-runtime-release-20261031.md).
 
 ## Corrección
 
