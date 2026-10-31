@@ -90,3 +90,26 @@ Post-publication verification:
 Evidence files are in the local temporary directory: `gateway-production-entry-vercel-report-20261030.json`, `gateway-production-entry-cloudflare-report-20261030.json`, `entry-funnel-prod-landing-panelbotadmin-com.json`, and `entry-funnel-prod-mkt-panelbotadmin-com.json`. They contain no access tokens, cookies or player credentials.
 
 The browser regression matrices cover 64 gateway, 36 landing and 8 telemetry scenarios using controlled services. Four real PostgreSQL retry/concurrency checks passed. A subsequently added real lock-timeout case could not run because the local Docker daemon became read-only; the bounded transaction/rollback behavior passed its route/unit checks. Production builds passed. Real Meta in-app rendering, provider latency and campaign conversion cost must be evaluated from subsequent traffic; these checks do not establish those outcomes or guarantee delivery under every upstream failure.
+
+## Follow-up: tolerate unknown advertising parameters
+
+The user clarified that new advertising query fields must never require an allowlist update, and that `/gast?landing=diana` must keep selecting Diana. The first rollout's closed marketing list has been replaced in both engines and all four gateways. Only route-declared protocol fields are validated; unrelated fields, including repeated or long values, cannot reject an otherwise valid pass or select an account/redirect. Authentication URLs are rebuilt with protocol fields only. Landing routing and attribution retain their existing parameters; automatic T7/T8 account recovery now also carries fbc/fbp and the current campaign attribution. Functional duplicates, token checks, authorized origins and return nonces remain enforced. Diagnostics contain counts and fixed reasons, not arbitrary parameter names or values.
+
+| Component | Commit | Published deployment |
+|---|---|---|
+| Builder | `ffe17916795b93cece8d193cad22c768da4078a1` | `dpl_DRcSQTVR5n12tPocCTSxSYznMyge` |
+| Classic | `68be137d17616b04364568d61f3ce03858b20211` | `dpl_EFU6dngn1TTpfP3M5uXEFKV9hYjN` |
+| Rey de Ases | `8909f50fccb5d750841abf756b4ed0aa3dc91936` | `dpl_6wjUCywiVgTmFSrhzJ6XxZx3snEu` |
+| Ases del Norte | `3a5d34d975cd0d24a4b8b57811b8337a00f9953e` | `dpl_Gwgu2AYHtE34GHD5ZPRn5aymVNLe` |
+| Ganamos NET | `28f2a21adefeaff00612891861565d40fd2d3451` | `dpl_CVShjYx1frz4kH8dTWE3Eyh58ZHA` |
+| Multi Skin Vercel | `8bd9308a2274c29a47a270ad621081d149100ae4` | `dpl_4PrCziQPvhd8xvkFhTktCc5rqrhj` |
+
+The public checks exposed a separate OpenNext Cloudflare adapter defect: it rebuilt `req.url` from decoded query values without re-encoding them. Nested `return_to` parameters were split, losing `landing` or the required nonce; an encoded extra containing `&t=` could become a separate protocol parameter. Commit `d894d84a9665a63f6fb55d66ee1f49cc78eaac6f` corrects only that generated Worker call site with `URLSearchParams.append`. It preserves real duplicate values and does not relax validation. Build/deploy hooks apply the idempotent patch and reject adapter drift; direct Wrangler deploy also runs the guard. No node_modules edits are required. This compatibility change is specific to Cloudflare and does not change Vercel application behavior.
+
+The final Worker version is **`d4ba60ce-0f77-4904-a015-0b08e1425f7e`** on both public Cloudflare origins, built from `d894d84` and deployed with `--keep-vars`. No new database migrations or API2/Panel3 changes were needed.
+
+Validation: 353 focused gateway tests, 87 Builder tests, 36 classic tests, six TypeScript checks, 64 gateway browser cases and 44 landing browser cases passed. The adapter has five passing tests against installed code/generated output, eight HTTP checks on a real local Worker and a successful Wrangler dry-run showing the guard executed. Remote Vercel builds and the final OpenNext build passed.
+
+Final production verification passed **42/42** read-only HTTP checks across the four Vercel and two Cloudflare origins: new/repeated parameters, ignored authority-like extras, encoded values that must not inject a pass, invalid/duplicate passes, full nested landing return and rejection of foreign return origins. Both public landing engines render Diana from `/gast?landing=diana&new_meta_field=x&new_meta_field=y`, retain the query, and serve the correct new immutable runtime. All four previously published runtime assets remain available in each engine. No JavaScript, provider login, account creation or Meta/CAPI events were executed by these production checks.
+
+Additional evidence in TEMP: `entry-query-open-production-20261030.json`, `gateway-entry-query-open-browser-report-20261030.json`, `multi-worker-query-compatibility-local-20261030.json`, and `multi-worker-query-patch-dryrun-20261030.log`.
