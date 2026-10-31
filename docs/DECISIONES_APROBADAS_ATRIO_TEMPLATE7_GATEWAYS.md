@@ -1,5 +1,11 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Caché del runtime público de todas las landings (31/10/2026)
+
+- El pedido de atribución FBC comprende todas las landings y templates de ambos motores. La auditoría encontró que Builder 1–6 seguía publicando el mismo nombre `landing-runtime-v6.js` con caché inmutable anual: un visitante anterior podía conservar el programa previo aunque recibiera HTML nuevo.
+- Generar también ese programa compartido con hash de contenido en cada prebuild, sin incorporar configuración de una landing al archivo. Conservar URLs anteriores para HTML ya emitido y los cuatro programas T7/T8 sin cambios. La clásica 1–6 continúa usando sus componentes React en chunks de Next con hash.
+- Verificación: HTML de los seis templates, hash/programa sin configuración, 29 pruebas focales, TSC y caché HTTP real en Chromium/WebKit. Contact y journey descartan FBC ajeno y conservan el `fbclid` actual. No se emiten eventos reales ni se crean cuentas. Publicación pendiente en Builder; una pestaña ya abierta requiere recibir el HTML nuevo. [Evidencia](validation/public-runtime-cache-20261031.md).
+
 ### Estado guardado de Meta en Atrio (31/10/2026)
 
 - La tarjeta de Meta del Admin muestra «Configurada» en verde sólo cuando tiene guardada una `eventUrl` propia válida; escribir un borrador no activa ese estado. Los asesores heredan la configuración del Admin y no requieren URL propia. Conservar permisos, configuración global y tarjetas de Super Admin.
@@ -811,3 +817,11 @@ Versiones publicadas, evidencia y referencias de rollback: [publicación de recu
 - El editor optimiza las imágenes estáticas al subirlas y guarda un derivado liviano para el consumo público. Conservar el original por separado, proporción, transparencia y apariencia; admitir formatos habituales sin exigir una conversión manual previa. Validar autenticación, formato y límites antes de procesar; no convertir SVG o animaciones a ciegas. Los archivos originales ya publicados no se sobrescriben.
 - Reservar el espacio del logo de T7 y evitar recursos de Next innecesarios en la clásica, conservando diseño, parámetros publicitarios y comportamiento de los demás templates. Aplicar las mejoras compartidas a ambos motores y los cuatro gateways, incluido el Worker.
 - El usuario dispone únicamente de iPhone y probará las aplicaciones nativas cuando reciba la publicidad. Esa prueba queda pendiente y no bloquea la implementación, las simulaciones ni la publicación autorizada. No presentar emulación de escritorio como certificación de Instagram/Facebook en iPhone.
+
+### Fecha original de PURCHASE y entregas tardías (31/10/2026)
+
+- El usuario autorizó corregir el caso 126018: una entrega tardía de una carga confirmada no constituye una nueva operación monetaria. Conservar la identidad de la carga, transacción, acción y reservas de deduplicación; no generar otro evento por el cambio de fecha ni reactivar envíos históricos.
+- Atrio debe emitir `event_time` en segundos desde el timestamp original. Para entregas pendientes o preparadas anteriormente, derivarlo primero de `confirmed_at` autoritativo y después de `timestamp`/`dateTime` originales válidos. Si ninguna fecha original es válida, fallar sin fabricar la fecha con `Date.now()`. Conservar los demás campos persistidos, IDs y fechas originales.
+- Builder conserva `event_time` explícito válido y normaliza segundos, milisegundos e ISO. Si un alias válido de la acción discrepa, lo alinea con ese instante explícito para mantener coherencia con los handlers que leen primero el alias. Si falta `event_time` válido, usa la fecha específica de la acción; en PURCHASE prioriza después `confirmed_at` antes de los campos genéricos originales. La recepción es únicamente el último fallback cuando no existe ninguna fecha original válida. Una fecha antigua permanece antigua y se somete a la política CAPI existente de siete días; no modificar filtros de origen, montos, atribución, lineage ni deduplicación.
+- `created_at` conserva su significado de creación/recepción de la fila. La columna Fecha y los filtros que ya usan ese campo no se reinterpretan como fecha de la carga; `purchase_event_time` identifica cuándo ocurrió el hecho. No reescribir filas históricas, reenviar los casos investigados ni crear nuevas operaciones para verificar este arreglo.
+- Alcance del lote: normalización de fechas en Atrio y Builder, pruebas aisladas sin Meta ni transferencias y documentación del incidente. Sin migraciones, cambios de API2 ni operaciones financieras.

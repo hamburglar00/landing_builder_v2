@@ -1,6 +1,7 @@
 import { buildTemplate7ResourceWarmup } from "./template7ResourceWarmup";
 import PhonePrewarmScript from "./PhonePrewarmScript";
 import PublicLandingRuntimeScript from "./PublicLandingRuntimeScript";
+import publicLandingRuntimeAsset from "./publicLandingRuntimeAsset.generated.json";
 import { buildClientIdentityBootstrapScript } from "./clientIdentityBootstrapScript";
 import { TEMPLATE7_CRITICAL_CSS, TEMPLATE8_CRITICAL_CSS } from "./publicLandingCss";
 import { renderTemplate7RuntimeAsset } from "./template7RuntimeAsset";
@@ -743,7 +744,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
   const runtimeAsset = isTemplate7 ? renderTemplate7RuntimeAsset(slug, config) : null;
   const runtimeScript = runtimeAsset
       ? runtimeAsset.script
-      : `${renderScriptElement(PublicLandingRuntimeScript({ slug, config }))}<script src="/public-assets/landing-runtime-v6.js" defer></script>`;
+    : `${renderScriptElement(PublicLandingRuntimeScript({ slug, config }))}<script src="/public-assets/template-entry/${publicLandingRuntimeAsset.name}" defer></script>`;
   const template7PlaceholderScript = isTemplate7
     ? `<script>(()=>{const input=document.querySelector('[data-template7-name]');if(!input)return;const names=${JSON.stringify(TEMPLATE7_EXAMPLE_NAMES)};input.placeholder='Ej.: '+names[Math.floor(Math.random()*names.length)];})();</script>`
     : "";

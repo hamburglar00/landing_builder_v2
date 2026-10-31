@@ -26,4 +26,23 @@ for(const template of [7,8])for(const classic of [false,true]){
 const manifest=JSON.stringify(registry,null,2)+'\n';
 const file=path.join(root,'frontend/components/public-landing/template7RuntimeAssets.generated.json');
 if(write)await writeFile(file,manifest);else if(await readFile(file,'utf8')!==manifest)throw Error('Stale runtime registry; regenerate before release');
-console.log(`${write?'Generated':'Verified'} four content-addressed entry runtimes; previous public assets retained.`);
+
+// Templates 1-6 also need a new URL whenever their program changes. A fixed
+// immutable /landing-runtime-v6.js can otherwise survive many deployments.
+// Keep this bundle separate so its exports cannot alter the T7/T8 programs.
+const publicBundle=await build({absWorkingDir:path.join(root,'frontend'),entryPoints:['components/public-landing/PublicLandingRuntimeScript.tsx'],bundle:true,write:false,platform:'node',format:'cjs',target:'es2020',jsx:'automatic',external:['react','react/jsx-runtime']});
+const publicLoaded={exports:{}};
+new Function('module','exports','require',publicBundle.outputFiles[0].text)(publicLoaded,publicLoaded.exports,require);
+const publicSource=publicLoaded.exports.buildPublicLandingRuntimeSource();
+const publicName=`landing-${createHash('sha256').update(publicSource).digest('hex').slice(0,24)}.js`;
+const publicFile=path.join(output,publicName);
+const publicManifest=JSON.stringify({name:publicName},null,2)+'\n';
+const publicManifestFile=path.join(root,'frontend/components/public-landing/publicLandingRuntimeAsset.generated.json');
+if(write){
+  await writeFile(publicFile,publicSource);
+  await writeFile(publicManifestFile,publicManifest);
+}else{
+  if(await readFile(publicFile,'utf8')!==publicSource)throw Error('Stale public landing runtime asset: '+publicName);
+  if(await readFile(publicManifestFile,'utf8')!==publicManifest)throw Error('Stale public landing runtime registry; regenerate before release');
+}
+console.log(`${write?'Generated':'Verified'} five content-addressed landing runtimes; previous public assets retained.`);

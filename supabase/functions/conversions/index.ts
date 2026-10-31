@@ -45,6 +45,7 @@ import {
 } from "./event_attribution.ts";
 
 import { urlAttribution } from "./url_attribution.ts";
+import { withOriginalEventTime } from "./event_time.ts";
 import {
   guardNewContactLandingAttribution,
   hasLandingAttributionV2,
@@ -1596,12 +1597,12 @@ function ensurePayloadEventTime(
   payload: Params,
   receivedEventTime: number,
 ): Params {
-  const next = { ...payload };
-  const currentEventTime = Number(next.event_time);
-  if (!Number.isFinite(currentEventTime) || currentEventTime <= 0) {
-    next.event_time = receivedEventTime;
-  }
-  return next;
+  return withOriginalEventTime(
+    payload,
+    receivedEventTime,
+    canonicalInboundAction(payload.action) ||
+      canonicalInboundAction(payload.event_name) || "CONTACT",
+  );
 }
 
 function sanitizePhone(v: unknown): string {
@@ -8097,7 +8098,7 @@ async function handleConversions(
       (pixelConfigsData ?? []) as PixelConfigRow[];
 
     let params: Params = await req.json().catch(() => ({}));
-    // Preserve emitter data; when event_time is missing, freeze it at receive time for deferred replays.
+    // Freeze original occurrence time before persistence; receipt time is only the last fallback.
     params = ensurePayloadEventTime(params, Math.floor(Date.now() / 1000));
     params = canonicalizeInboundTrackingPayload(params, {
       clientIpAddress: payloadClientIp(params),

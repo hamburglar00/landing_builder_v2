@@ -6,6 +6,21 @@ import {template7RuntimeAsset,template7RuntimeAssetResponse} from '../components
 import {renderPublicLandingHtml,renderClassicTemplate7InlineHtml} from '../components/public-landing/renderPublicLandingHtml';
 import {optimizeTemplate7Images,template8Image} from '../lib/landing/template7Images';
 import type {PublicLandingConfig} from '../components/public-landing/types';
+import publicAsset from '../components/public-landing/publicLandingRuntimeAsset.generated.json';
+
+test('T1-6 use a content-addressed, config-free runtime while previously emitted URLs remain available',()=>{
+  const source=readFileSync(new URL('../public/public-assets/template-entry/'+publicAsset.name,import.meta.url),'utf8');
+  assert.equal(publicAsset.name,'landing-'+createHash('sha256').update(source).digest('hex').slice(0,24)+'.js');
+  assert.doesNotMatch(source,/__PUBLIC_LANDING_RUNTIME_CONFIG__\s*=/);
+  for(const template of [1,2,3,4,5,6]){
+    const config:PublicLandingConfig={id:'a0000000-0000-4000-8000-000000000001',schemaVersion:1,updatedAt:'',comment:'',name:'Private Tenant Marker',layout:{template,ctaPosition:'bottom'},tracking:{pixelId:'987654321',postUrl:'',landingTag:'TEST'},content:{logoUrl:'',title:['Cuenta'],subtitle:[],ctaText:'Crear'}};
+    const html=renderPublicLandingHtml({slug:'tenant-specific-marker',config});
+    assert.ok(html.includes('/public-assets/template-entry/'+publicAsset.name));
+    assert.doesNotMatch(html,/landing-runtime-v[3-6]\.js/);
+    assert.doesNotMatch(source,/tenant-specific-marker|987654321|Private Tenant Marker/);
+  }
+  for(const version of [3,4,5,6])assert.ok(readFileSync(new URL('../app/public-assets/landing-runtime-v'+version+'.js/route.ts',import.meta.url),'utf8').includes('buildPublicLandingRuntimeSource'));
+});
 
 for(const template of [7,8] as const)for(const classic of [false,true])test(`T${template} ${classic?'classic':'builder'} reusable runtime is immutable, config-free and matches its content hash`,async()=>{
   const asset=template7RuntimeAsset(template,classic);

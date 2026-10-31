@@ -1,0 +1,27 @@
+{
+  "scope": "Real HTTP cache on loopback, actual rendered T1/T6 HTML and generated runtime; isolated dependencies, no external events",
+  "results": [
+    {
+      "browser": "Chromium",
+      "template": 1,
+      "oldV6Cached": true,
+      "oldV6ReusedByNewHtml": false,
+      "asset": "landing-e23f9f604b65ec406f69bca9.js",
+      "contactFbcSource": "none",
+      "contactScoped": true,
+      "journeyScoped": true,
+      "externalEvents": 0
+    },
+    {
+      "browser": "WebKit",
+      "template": 6,
+      "oldV6Cached": true,
+      "oldV6ReusedByNewHtml": false,
+      "asset": "landing-e23f9f604b65ec406f69bca9.js",
+      "contactFbcSource": "url",
+      "contactScoped": true,
+      "journeyScoped": true,
+      "externalEvents": 0
+    }
+  ]
+}
