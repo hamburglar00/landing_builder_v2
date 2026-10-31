@@ -5,6 +5,8 @@ import { buildArgentinaWhatsappNormalizerScript } from "@/lib/landing/argentinaW
 import { captureLandingResolution } from "@/lib/landing/resolution";
 import { ENTRY_REQUEST_RECOVERY_SCRIPT } from "@/lib/reyDeAses/request-recovery";
 import { buildEntryFunnelRuntimeScript } from "@/lib/landing/entryFunnel.client";
+import { buildLandingFbcFactoryScript } from "@/lib/tracking/landingFbc";
+import { META_EBP_COLLECTOR_URL } from "@/lib/meta/ebpAssetManifest";
 
 type Props = {
   slug: string;
@@ -98,6 +100,7 @@ export function buildRuntimeConfig({ slug, config }: Props) {
     backgroundMode: config.background?.mode || "",
     metaIpCollectorUrl: process.env.NEXT_PUBLIC_META_IP_COLLECTOR_URL || "",
     metaParamBuilderSrc: META_PARAM_BUILDER_PUBLIC_PATH,
+    metaEbpCollectorSrc: META_EBP_COLLECTOR_URL,
     whatsappPrefillText:
       config.interactions?.enabled && config.interactions.whatsappPrefillText
         ? config.interactions.whatsappPrefillText
@@ -137,6 +140,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
       var template7ContactSent = false;
       var template7AttemptContext = null;
       var noPhoneTimer = null;
+      var scopedFbc = (${buildLandingFbcFactoryScript()})({landingId:cfg.landingId,slug:cfg.slug,workspaceCurrency:cfg.workspaceCurrency,pixelId:cfg.pixelId});
       var metaTracking = {
         fbp: "",
         fbc: "",
@@ -441,14 +445,11 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
 
       function collectMetaTrackingParams(params) {
         var fbp = cookieValue("_fbp");
-        var fbc = cookieValue("_fbc");
-        var fbclid = params.get("fbclid") || "";
-        if (!fbc && fbclid) {
-          fbc = "fb.1." + Date.now() + "." + fbclid;
-        }
+        var attribution = scopedFbc.collect();
         metaTracking = {
           fbp: fbp || "",
-          fbc: fbc || "",
+          fbc: attribution.fbc,
+          landing_attribution: attribution.landing_attribution,
           clientIpAddress: metaTracking.clientIpAddress || "",
           clientIpIssuedAt: metaTracking.clientIpIssuedAt || null,
           clientIpProof: metaTracking.clientIpProof || ""
@@ -483,9 +484,11 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
 
       function mergeMetaTracking(base, incoming) {
         var next = incoming && typeof incoming === "object" ? incoming : {};
+        var attribution = scopedFbc.collect();
         return {
           fbp: String(next.fbp || base.fbp || ""),
-          fbc: String(next.fbc || base.fbc || ""),
+          fbc: attribution.fbc,
+          landing_attribution: attribution.landing_attribution,
           clientIpAddress: String(next.clientIpAddress || base.clientIpAddress || ""),
           clientIpIssuedAt: Number(next.clientIpIssuedAt || base.clientIpIssuedAt) || null,
           clientIpProof: String(next.clientIpProof || base.clientIpProof || "")
@@ -579,7 +582,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
           .then(function () {
             officialMetaTracking = {
               fbp: readOfficialMetaParam(sdk, "getFbp"),
-              fbc: readOfficialMetaParam(sdk, "getFbc"),
+              fbc: scopedFbc.collect().fbc,
               clientIpAddress: trustedIp,
               clientIpIssuedAt: trustedIp ? metaTracking.clientIpIssuedAt : null,
               clientIpProof: trustedIp ? metaTracking.clientIpProof : ""
@@ -662,6 +665,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
 
       function scheduleOfficialMetaParamBuilder() {
         var run = function () {
+          void scopedFbc.collectNative(String(cfg.metaEbpCollectorSrc || ""));
           Promise.all([
             loadOfficialMetaParamBuilder(),
             collectMetaClientIpProof()
@@ -930,6 +934,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
           utm_campaign: params.get("utm_campaign") || "",
           fbp: tracking.fbp,
           fbc: tracking.fbc,
+          landing_attribution: tracking.landing_attribution,
           from_meta_ads: !!tracking.fbc,
           meta_pixel_id: String(cfg.pixelId || "").trim() || undefined,
           telefono_asignado: assignedPhone || undefined,
@@ -1435,6 +1440,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
                 test_event_code: testEventCode || undefined,
                 fbp: tracking.fbp,
                 fbc: tracking.fbc,
+                landing_attribution: tracking.landing_attribution,
                 client_ip_address: tracking.clientIpAddress || undefined,
                 client_ip_issued_at: tracking.clientIpIssuedAt || undefined,
                 client_ip_proof: tracking.clientIpProof || undefined,

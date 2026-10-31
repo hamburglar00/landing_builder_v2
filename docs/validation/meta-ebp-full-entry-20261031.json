@@ -1,0 +1,81 @@
+{
+  "scope": "Whole T7 Builder / T8 classic runtime and real EBP asset; SDK/main services mocked, no real conversion or account",
+  "results": [
+    {
+      "browser": "Chromium",
+      "engine": "builder",
+      "template": 7,
+      "contactFbcSource": "sdk_fresh",
+      "contactScoped": true,
+      "entryScoped": true,
+      "journey": [
+        {
+          "fbcPresent": true,
+          "entrySource": "sdk_fresh",
+          "fbcSource": "sdk_fresh"
+        }
+      ],
+      "ctaToEntryMs": 132,
+      "globalCookieUntouched": true,
+      "allRequestsIntercepted": true,
+      "initialJourneyCapturedFreshClick": true
+    },
+    {
+      "browser": "Chromium",
+      "engine": "classic",
+      "template": 8,
+      "contactFbcSource": "sdk_fresh",
+      "contactScoped": true,
+      "entryScoped": true,
+      "journey": [
+        {
+          "fbcPresent": false,
+          "entrySource": "direct",
+          "fbcSource": "none"
+        }
+      ],
+      "ctaToEntryMs": 75,
+      "globalCookieUntouched": true,
+      "allRequestsIntercepted": true,
+      "initialJourneyCapturedFreshClick": false
+    },
+    {
+      "browser": "WebKit",
+      "engine": "builder",
+      "template": 7,
+      "contactFbcSource": "sdk_fresh",
+      "contactScoped": true,
+      "entryScoped": true,
+      "journey": [
+        {
+          "fbcPresent": false,
+          "entrySource": "direct",
+          "fbcSource": "none"
+        }
+      ],
+      "ctaToEntryMs": 196,
+      "globalCookieUntouched": true,
+      "allRequestsIntercepted": true,
+      "initialJourneyCapturedFreshClick": false
+    },
+    {
+      "browser": "WebKit",
+      "engine": "classic",
+      "template": 8,
+      "contactFbcSource": "sdk_fresh",
+      "contactScoped": true,
+      "entryScoped": true,
+      "journey": [
+        {
+          "fbcPresent": false,
+          "entrySource": "direct",
+          "fbcSource": "none"
+        }
+      ],
+      "ctaToEntryMs": 174,
+      "globalCookieUntouched": true,
+      "allRequestsIntercepted": true,
+      "initialJourneyCapturedFreshClick": false
+    }
+  ]
+}

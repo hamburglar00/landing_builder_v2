@@ -37,6 +37,7 @@ if (packageJson.version !== EXPECTED_VERSION) {
 
 await mkdir(destinationDirectory, { recursive: true });
 await copyFile(sourcePath, destinationPath);
+await copyFile(path.join(packageDirectory, "LICENSE"), path.join(destinationDirectory, "LICENSE"));
 
 console.log(
   `Meta Parameter Builder ${EXPECTED_VERSION} synced to public/vendor.`,

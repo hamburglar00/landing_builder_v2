@@ -46,6 +46,10 @@ import {
 
 import { urlAttribution } from "./url_attribution.ts";
 import {
+  guardNewContactLandingAttribution,
+  hasLandingAttributionV2,
+} from "./landing_attribution.ts";
+import {
   describeTrackingException,
   observeTrackingRequest,
   type TrackingDiagnostics,
@@ -133,6 +137,9 @@ interface LandingRow {
   name: string;
   user_id: string;
   workspace_currency?: string;
+  pixel_id?: string | null;
+  landing_config?: unknown;
+  attribution_scope_resolved?: boolean;
 }
 
 interface ConversionRow {
@@ -2998,7 +3005,11 @@ async function resolveLandingForInbound(
   landingName: string,
 ): Promise<LandingRow> {
   const landingId = norm(params.landing_id || params.landingId);
-  const select = "id, name, user_id, workspace_currency";
+  const action = canonicalInboundAction(params.action) ||
+    canonicalInboundAction(params.event_name) || "CONTACT";
+  const loadAttributionScope = action === "CONTACT" && hasLandingAttributionV2(params);
+  const select = "id, name, user_id, workspace_currency" +
+    (loadAttributionScope ? ", pixel_id, landing_config" : "");
 
   if (landingId) {
     const { data } = await db
@@ -3007,7 +3018,7 @@ async function resolveLandingForInbound(
       .eq("user_id", userId)
       .eq("id", landingId)
       .maybeSingle();
-    if (data) return data as LandingRow;
+    if (data) return { ...(data as unknown as LandingRow), attribution_scope_resolved: true };
   }
 
   if (landingName) {
@@ -3017,7 +3028,7 @@ async function resolveLandingForInbound(
       .eq("user_id", userId)
       .eq("name", landingName)
       .maybeSingle();
-    if (data) return data as LandingRow;
+    if (data) return { ...(data as unknown as LandingRow), attribution_scope_resolved: true };
   }
 
   return { id: landingId, name: landingName, user_id: userId };
@@ -4507,7 +4518,7 @@ async function handleContact(
   const inboundAtrioPlayersId = atrioPlayersIdFromPayload(p);
   const inboundContactEventId = norm(p.contact_event_id || p.event_id);
   const inboundPromoCode = derivePromoCodeFromPayload(p);
-  const payloadRaw = safePayloadRaw(p);
+  let payloadRaw = safePayloadRaw(p);
   const hasLeadCaptureForm = toBool(p.lead_capture_form);
   const formFn = hasLeadCaptureForm ? norm(p.form_fn ?? p.fn) : "";
   const formLn = hasLeadCaptureForm ? norm(p.form_ln ?? p.ln) : "";
@@ -4538,6 +4549,9 @@ async function handleContact(
       },
     );
   }
+
+  p = guardNewContactLandingAttribution(p, landing);
+  payloadRaw = safePayloadRaw(p);
 
   const contactEventId = inboundContactEventId || generateEventId();
   const contactEventTime = toValidEventTime(

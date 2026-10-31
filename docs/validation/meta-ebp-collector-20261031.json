@@ -1,0 +1,387 @@
+{
+  "assetUrl": "/vendor/atrio-meta-click/v1/collect-click-id.313adead513e2b9aab4f3efb.js",
+  "cases": 38,
+  "passed": true,
+  "results": [
+    {
+      "engine": "chromium",
+      "mode": "ios-success",
+      "passed": true,
+      "elapsedMs": 2,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "ios-reject",
+      "passed": true,
+      "elapsedMs": 4,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "ios-throw",
+      "passed": true,
+      "elapsedMs": 3,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "ios-timeout",
+      "passed": true,
+      "elapsedMs": 800,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "ios-late",
+      "passed": true,
+      "elapsedMs": 800,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "ios-invalid",
+      "passed": true,
+      "elapsedMs": 1,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "ios-number",
+      "passed": true,
+      "elapsedMs": 0,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "android-success",
+      "passed": true,
+      "elapsedMs": 2,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "android-facebook",
+      "passed": true,
+      "elapsedMs": 1,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "android-error",
+      "passed": true,
+      "elapsedMs": 11,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "android-timeout",
+      "passed": true,
+      "elapsedMs": 800,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "android-http-error",
+      "passed": true,
+      "elapsedMs": 2,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "android-empty",
+      "passed": true,
+      "elapsedMs": 2,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "android-open-throw",
+      "passed": true,
+      "elapsedMs": 2,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "android-send-throw",
+      "passed": true,
+      "elapsedMs": 2,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "android-constructor-throw",
+      "passed": true,
+      "elapsedMs": 2,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "android-old-instagram",
+      "passed": true,
+      "elapsedMs": 1,
+      "calls": 0,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "android-old-facebook",
+      "passed": true,
+      "elapsedMs": 1,
+      "calls": 0,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "chromium",
+      "mode": "unsupported",
+      "passed": true,
+      "elapsedMs": 1,
+      "calls": 0,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "ios-success",
+      "passed": true,
+      "elapsedMs": 4,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "ios-reject",
+      "passed": true,
+      "elapsedMs": 12,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "ios-throw",
+      "passed": true,
+      "elapsedMs": 2,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "ios-timeout",
+      "passed": true,
+      "elapsedMs": 800,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "ios-late",
+      "passed": true,
+      "elapsedMs": 800,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "ios-invalid",
+      "passed": true,
+      "elapsedMs": 3,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "ios-number",
+      "passed": true,
+      "elapsedMs": 3,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "android-success",
+      "passed": true,
+      "elapsedMs": 4,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "android-facebook",
+      "passed": true,
+      "elapsedMs": 3,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "android-error",
+      "passed": true,
+      "elapsedMs": 3,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "android-timeout",
+      "passed": true,
+      "elapsedMs": 800,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "android-http-error",
+      "passed": true,
+      "elapsedMs": 3,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "android-empty",
+      "passed": true,
+      "elapsedMs": 3,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "android-open-throw",
+      "passed": true,
+      "elapsedMs": 4,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "android-send-throw",
+      "passed": true,
+      "elapsedMs": 3,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "android-constructor-throw",
+      "passed": true,
+      "elapsedMs": 4,
+      "calls": 1,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "android-old-instagram",
+      "passed": true,
+      "elapsedMs": 3,
+      "calls": 0,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "android-old-facebook",
+      "passed": true,
+      "elapsedMs": 2,
+      "calls": 0,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    },
+    {
+      "engine": "webkit",
+      "mode": "unsupported",
+      "passed": true,
+      "elapsedMs": 2,
+      "calls": 0,
+      "cookiesUntouched": true,
+      "globalsUntouched": true,
+      "noBusinessRequests": true
+    }
+  ]
+}
