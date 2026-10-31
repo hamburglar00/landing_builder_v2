@@ -7,6 +7,7 @@
 - Sólo si no existe una URL original utilizable y se conoce una landing resuelta o matched confiable, construir el fallback con `settings.url_base` y su nombre validado. Respetar los prefijos configurados, incluido `/l/`, sin deducir el motor por host ni fabricar una URL raíz cuando falta la landing. Una raíz solicitada explícitamente por el emisor mantiene su precedencia.
 - Preservar la URL capturada de Contact: `/gast` continúa siendo `/gast` aunque un override haya resuelto Diana. Este lote no cambia el contrato de captura que excluye queries, no inventa parámetros descartados y conserva los marcadores propios de WhatsApp Business Messaging y su routing.
 - No modificar montos, fechas, identidad, píxeles, FBC, atribución first/repeat, deduplicación ni políticas CAPI. No hacer backfill de filas históricas ni reenviar eventos para verificarlo. Probar con los handlers y reintentos reales, DB/HTTP aislados, antes de publicar las funciones Edge afectadas; sin migraciones ni cambios de los gateways, Worker o API2.
+- Publicado y verificado: fuente `1c4387d`, `conversions` v173 y `retry-failed-conversions` v48 activas, con sus 11 y 5 archivos idénticos al commit y autenticación conservada. Pasaron 68 casos Deno del lote, 21 verificaciones de handlers reales con IO aislado y ambos OPTIONS públicos. La implementación única cubre todas las landings y los cuatro proveedores. [Evidencia, límites y rollback](validation/purchase-source-url-20261031.md).
 
 ### Caché del runtime público de todas las landings (31/10/2026)
 

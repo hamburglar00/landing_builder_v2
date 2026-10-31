@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-31T19:47:36.105Z",
+  "scope": "Public CORS OPTIONS only; no POST, no conversions, no cron invocation or historical writes.",
+  "passed": 2,
+  "results": [
+    {
+      "function": "conversions",
+      "method": "OPTIONS",
+      "status": 200,
+      "corsOrigin": "*",
+      "responseBytes": 2
+    },
+    {
+      "function": "retry-failed-conversions",
+      "method": "OPTIONS",
+      "status": 200,
+      "corsOrigin": "*",
+      "responseBytes": 2
+    }
+  ]
+}

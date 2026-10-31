@@ -1,6 +1,6 @@
 # URL de origen de Purchase
 
-Estado: implementación y revisión independiente completadas; publicación pendiente. La corrección vive en las funciones Edge centrales `conversions` y `retry-failed-conversions`.
+Estado: publicado y verificado el 31/10/2026 a las 16:47 ART. La corrección vive en las funciones Edge centrales `conversions` v173 y `retry-failed-conversions` v48, ambas activas.
 
 ## Problema confirmado
 
@@ -30,6 +30,19 @@ La corrección se limita a la URL del evento; conserva identidad, píxel, FBC, m
 Comandos: `deno test supabase/functions/conversions/purchase_source_url_test.ts supabase/functions/conversions/shared_test.ts supabase/functions/conversions/origin_test.ts supabase/functions/conversions/url_attribution_test.ts supabase/functions/conversions/event_time_test.ts`; `deno check` de ambas funciones; `node scripts/check-purchase-source-url.mjs --write-report` y `node --check scripts/check-purchase-source-url.mjs`.
 
 [Resultado del fixture de handlers](purchase-source-url-handler-20261031.json): cero requests externos y cero escrituras productivas. Los requests Meta son simulados. Las consultas de producción realizadas durante la revisión fueron sólo lectura.
+
+## Publicación verificada
+
+Fuente comprometida: `1c4387d091d413ac77f19dc5ab21f4fca2a4cf8c`, rama `fix/template7-session-reentry`.
+
+| Función | Versión | Archivos verificados | SHA256 del paquete |
+| --- | --- | --- | --- |
+| `conversions` | 173 ACTIVE | 11 | `8316491ef1f3ffe626dfcf9750a2b34b977b3a79e6458ffe2ce288633b1d2101` |
+| `retry-failed-conversions` | 48 ACTIVE | 5 | `914f1161c511022166e23647b5772bb890adb73ab1ccbc170cf88375da04b22a` |
+
+Todos los archivos recuperados después del despliegue coinciden exactamente con el commit. Se conservaron `verify_jwt=false`, las credenciales existentes y la autenticación propia de cada función. [Smoke público](purchase-source-url-public-20261031.json): ambas responden OPTIONS 200, sin invocar POST, cron, conversiones ni operaciones de proveedores.
+
+La publicación se aplica a los nuevos procesamientos y a los reintentos legítimos de la cola existente. No se alteraron retrospectivamente los eventos aceptados por Meta ni se invocaron reenvíos manuales. La prueba aislada valida el request saliente; no prueba una nueva adjudicación de compras en Ads Manager, cuyo acceso no está conectado para ese Facebook.
 
 ## Base y rollback
 
