@@ -79,7 +79,30 @@ function createGatewayEntryTransition(root) {
   root.querySelector("[data-entry-continue]").addEventListener("click",function(){finish();if(frame)frame.focus()});
   root.addEventListener("keydown",function(event){if(event.key!=="Tab")return;var buttons=actions.hidden?[]:Array.from(actions.querySelectorAll("button"));if(!buttons.length){event.preventDefault();root.focus();return}if(event.shiftKey&&(document.activeElement===buttons[0]||document.activeElement===root)){event.preventDefault();buttons[buttons.length-1].focus()}else if(!event.shiftKey&&(document.activeElement===buttons[buttons.length-1]||document.activeElement===root)){event.preventDefault();buttons[0].focus()}});
   window.addEventListener("focusin",function(event){if(!root.hidden&&!root.contains(event.target))root.focus({preventScroll:true})});
-  window.addEventListener("message",function(event){var data=event.data;if(!frame||event.source!==frame.contentWindow||event.origin!==origin||!data||data.source!=="atrio-widget")return;if(data.type==="atrio.widget.entry-diagnostic"){if(entryReady)return;var details={};if(Number.isSafeInteger(data.duration_ms)&&data.duration_ms>=0&&data.duration_ms<=86400000)details.duration_ms=data.duration_ms;else return;if(["chat_bootstrap_ready","welcome_ready","wallet_ready"].includes(data.name)){milestone(data.name,details);return}if(data.name==="entry_error"&&["chat_bootstrap","welcome","wallet"].includes(data.error_stage)&&["chat_unavailable","request_timeout","network_error","rate_limited","session_unavailable","unknown"].includes(data.error_code)){details.error_stage=data.error_stage;details.error_code=data.error_code;if(Number.isInteger(data.status)&&data.status>=100&&data.status<=599)details.status=data.status;milestone("entry_error",details)}return}if(data.type!=="atrio.widget.entry-ready")return;if(!wallet||(data.walletReady===true&&data.walletRequestCompleted===true)||data.walletAvailable===false){milestone("chat_ready",{duration_ms:Math.max(0,Date.now()-frameBoundAt)});entryReady=true;finish();return}if(data.walletRequestCompleted===true&&data.walletAvailable===true&&data.walletReady===false)reconnect("El chat está disponible, pero no pudimos obtener los datos para cargar. Podés reintentar o continuar al chat.")});
+  window.addEventListener("message",function(event){
+    var data=event.data;
+    if(!frame||event.source!==frame.contentWindow||event.origin!==origin||!data||data.source!=="atrio-widget")return;
+    // The usable chat must become visible before its deferred welcome/wallet
+    // work starts. Final entry readiness still owns diagnostics and app startup.
+    if(data.type==="atrio.widget.ready"&&data.visibleEntry===true){finish();return}
+    if(data.type==="atrio.widget.entry-diagnostic"){
+      if(entryReady)return;
+      var details={};
+      if(Number.isSafeInteger(data.duration_ms)&&data.duration_ms>=0&&data.duration_ms<=86400000)details.duration_ms=data.duration_ms;else return;
+      if(["chat_bootstrap_ready","welcome_ready","wallet_ready"].includes(data.name)){milestone(data.name,details);return}
+      if(data.name==="entry_error"&&["chat_bootstrap","welcome","wallet"].includes(data.error_stage)&&["chat_unavailable","request_timeout","network_error","rate_limited","session_unavailable","unknown"].includes(data.error_code)){
+        details.error_stage=data.error_stage;details.error_code=data.error_code;
+        if(Number.isInteger(data.status)&&data.status>=100&&data.status<=599)details.status=data.status;
+        milestone("entry_error",details)
+      }
+      return
+    }
+    if(data.type!=="atrio.widget.entry-ready")return;
+    if(!wallet||(data.walletReady===true&&data.walletRequestCompleted===true)||data.walletAvailable===false){
+      milestone("chat_ready",{duration_ms:Math.max(0,Date.now()-frameBoundAt)});entryReady=true;finish();return
+    }
+    if(data.walletRequestCompleted===true&&data.walletAvailable===true&&data.walletReady===false)reconnect("El chat está disponible, pero no pudimos obtener los datos para cargar. Podés reintentar o continuar al chat.")
+  });
   return {start:start,finish:finish,fail:fail,bind:function(value,allowedOrigin,needsWallet){if(frame&&frameLoadHandler&&frame.removeEventListener)frame.removeEventListener("load",frameLoadHandler);frame=value;origin=allowedOrigin;wallet=needsWallet;entryReady=false;frameBoundAt=Date.now();var boundFrame=frame;frameLoadHandler=function(){if(frame===boundFrame)milestone("iframe_loaded",{duration_ms:Math.max(0,Date.now()-frameBoundAt)})};if(frame&&frame.addEventListener)frame.addEventListener("load",frameLoadHandler);milestone("gateway_loaded")}};
 }
 `;

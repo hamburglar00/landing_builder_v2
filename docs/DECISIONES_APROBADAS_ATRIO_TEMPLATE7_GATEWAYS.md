@@ -1,5 +1,15 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Inicio automático al llegar al chat visible (31/10/2026)
+
+- Publicación autorizada posteriormente por el usuario: aplicar la migración y desplegar el lote completo. Publicar primero los cuatro padres gateway, incluido Worker Multi Skin, y después Atrio para que el inicio requiera visibilidad comprobada. Constructor y clásico incorporan los recursos compartidos del lote.
+- El usuario aprobó enviar una solicitud inicial automática al llegar al chat visible y utilizable, seguida de la bienvenida existente y los datos bancarios. Usar variantes argentinas sin signos de apertura, por ejemplo «Hola! Me pasás mi usuario y los datos para cargar?». Conservar la cuenta, asesor y conversación de la skin autorizada.
+- CONTACT conserva su disparador actual al tocar el CTA; LEAD corresponde a la llegada al chat visible y utilizable. Una precarga oculta, redirección iniciada o iframe todavía cubierto por la transición no cuentan. Conservar la deduplicación por jugador y `promo_code`, el tracking habilitado y la atribución existente.
+- Identificar el inicio automático en metadatos y mostrar un ícono de bot sutil en su burbuja del asesor. Extender el indicador a automatizaciones reconocidas por sus metadatos. No tratar el inicio automático como escritura real del cliente en analíticas, recordatorios o sugerencias de instalación; no enviarlo al bot como otro pedido ni duplicar sus respuestas.
+- Guardar el inicio una sola vez por conversación/skin, seguido de bienvenida y datos de carga, con reintentos idempotentes. Recargar, minimizar o volver conserva el historial. Las conversaciones anteriores no reciben una introducción retroactiva; si el cliente ya escribió durante la preparación, se conserva ese intercambio real.
+- Aplicar el contrato de visibilidad a los cuatro gateways y la implementación de mensajes/analíticas a Atrio compartido. Ganamos+ incluye su Worker. El acceso directo de Atrio mantiene su comportamiento previo. No modificar API2, Panel3 ni operaciones financieras.
+
+
 ### Misma cuenta e historial independiente por skin (30/10/2026)
 
 - El usuario autorizó crear Template 7 reales en Goldencajeros para corroborar Bet30 → Ganamos+ → Bet30 y confirmó que cada skin debe mostrar su propia conversación/avatar/bienvenida, conservando por detrás la misma cuenta/saldo. Volver a una skin recupera su historial y no repite automáticamente su bienvenida/tarjeta. No separar bonos ni deduplicación financiera por skin.
