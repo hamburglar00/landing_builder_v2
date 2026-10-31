@@ -25,6 +25,7 @@ import {
   resolvePurchasePixelAttribution,
 } from "../conversions/pixel_attribution.ts";
 import { workspaceCapiEnabled, WORKSPACE_CAPI_DISABLED_STATUS } from "../conversions/workspace_capi.ts";
+import { resolvePurchaseEventSourceUrl, sourceUrlFromPayload } from "../conversions/purchase_source_url.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -158,7 +159,7 @@ Deno.serve(async (req) => {
     const { data: rows, error } = await db
       .from("conversions")
       .select(
-        "id, created_at, landing_id, user_id, phone, source_platform, ctwa_clid, pixel_id, dataset_id, meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id, contact_event_id, contact_payload_raw, lead_payload_raw, purchase_payload_raw, promo_code, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, currency, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, from_meta_ads, client_ip, agent_user, external_id, observaciones",
+        "id, created_at, landing_id, landing_name, user_id, phone, source_platform, ctwa_clid, pixel_id, dataset_id, meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id, purchase_attribution_conversion_id, contact_event_id, contact_payload_raw, lead_payload_raw, purchase_payload_raw, promo_code, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, currency, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, from_meta_ads, client_ip, agent_user, external_id, observaciones",
       )
       .eq("estado", "purchase")
       .in("purchase_status_capi", PURCHASE_CAPI_RETRYABLE_STATUSES)
@@ -843,7 +844,14 @@ Deno.serve(async (req) => {
         client_ip: row.client_ip ?? "",
         agent_user: row.agent_user ?? "",
         device_type: "",
-        event_source_url: row.event_source_url ?? "",
+        // Recover only for this already-selected, legitimate retry. No backfill
+        // or change to the persisted event identity, time, route or policy.
+        event_source_url: useBusinessMessaging ? row.event_source_url ?? ""
+          : await resolvePurchaseEventSourceUrl(db, {
+            userId: row.user_id,
+            explicitUrl: sourceUrlFromPayload(row.purchase_payload_raw),
+            matchedRow: row,
+          }),
         estado: "purchase",
         valor: amount,
         currency,

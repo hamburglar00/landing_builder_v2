@@ -46,6 +46,7 @@ import {
 
 import { urlAttribution } from "./url_attribution.ts";
 import { withOriginalEventTime } from "./event_time.ts";
+import { resolvePurchaseEventSourceUrl } from "./purchase_source_url.ts";
 import {
   guardNewContactLandingAttribution,
   hasLandingAttributionV2,
@@ -6349,11 +6350,6 @@ async function handlePurchase(
   const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
   const payloadEmail = sanitizeEmail(p.email);
   const payloadCuitCuil = deriveCuitCuilFromPayload(p);
-  const eventSourceUrl = await deriveEventSourceUrl(
-    db,
-    landing.name,
-    norm(p.event_source_url),
-  );
   const geo = resolveGeoForPayload(p);
   const payloadGeoSource: GeoSource = hasPayloadGeo(geo) ? "payload" : "none";
   const purchaseEventId = purchaseClaim.eventId;
@@ -6767,7 +6763,12 @@ async function handlePurchase(
       valor: amount,
       currency: purchaseCurrency,
       workspace_resolution_source: targetWorkspaceResolution.source,
-      event_source_url: eventSourceUrl || existingRow?.event_source_url || "",
+      event_source_url: await resolvePurchaseEventSourceUrl(db, {
+        userId: landing.user_id,
+        explicitUrl: p.event_source_url,
+        matchedRow: existingRow,
+        landingName: landing.attribution_scope_resolved ? landing.name : "",
+      }),
       purchase_event_id: purchaseEventId,
       purchase_event_time: purchaseEventTime,
       purchase_payload_raw: purchasePayloadRaw,
@@ -7121,7 +7122,12 @@ async function handlePurchase(
       client_ip: firstSource?.client_ip || "",
       agent_user: firstSource?.agent_user || "",
       device_type: firstSource?.device_type || "",
-      event_source_url: eventSourceUrl || firstSource?.event_source_url || "",
+      event_source_url: await resolvePurchaseEventSourceUrl(db, {
+        userId: landing.user_id,
+        explicitUrl: p.event_source_url,
+        matchedRow: firstSource,
+        landingName: landing.attribution_scope_resolved ? landing.name : "",
+      }),
       estado: "purchase",
       valor: amount,
       currency: resolveConversionRowCurrency(
@@ -7420,7 +7426,12 @@ async function handlePurchase(
     client_ip: repeatSourceRow?.client_ip ?? "",
     agent_user: repeatSourceRow?.agent_user ?? "",
     device_type: repeatSourceRow?.device_type ?? "",
-    event_source_url: eventSourceUrl || repeatSourceRow?.event_source_url || "",
+    event_source_url: await resolvePurchaseEventSourceUrl(db, {
+      userId: landing.user_id,
+      explicitUrl: p.event_source_url,
+      matchedRow: repeatSourceRow,
+      landingName: landing.attribution_scope_resolved ? landing.name : "",
+    }),
     estado: "purchase",
     valor: amount,
     currency: resolveConversionRowCurrency(
@@ -7690,11 +7701,6 @@ async function handleSimplePurchase(
   const payloadEmail = sanitizeEmail(p.email);
   const payloadCuitCuil = deriveCuitCuilFromPayload(p);
   const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
-  const eventSourceUrl = await deriveEventSourceUrl(
-    db,
-    landing.name,
-    norm(p.event_source_url),
-  );
   const eventGerencia = await resolveEventGerenciaSnapshot(
     db,
     landing.user_id,
@@ -7849,7 +7855,12 @@ async function handleSimplePurchase(
     client_ip: srcRow?.client_ip ?? "",
     agent_user: srcRow?.agent_user ?? "",
     device_type: srcRow?.device_type ?? "",
-    event_source_url: eventSourceUrl || srcRow?.event_source_url || "",
+    event_source_url: await resolvePurchaseEventSourceUrl(db, {
+      userId: landing.user_id,
+      explicitUrl: p.event_source_url,
+      matchedRow: srcRow,
+      landingName: landing.attribution_scope_resolved ? landing.name : "",
+    }),
     estado: "purchase",
     valor: amount,
     currency: resolveConversionRowCurrency(

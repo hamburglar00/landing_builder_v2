@@ -1,5 +1,13 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### URL de origen de PURCHASE por recorrido (31/10/2026)
+
+- El usuario autorizó corregir el Purchase que enviaba `event_source_url` como raíz del dominio después de resolver una conversión de una landing concreta. El alcance comprende todas las landings y los cuatro proveedores en el handler central de Builder, incluidas primeras compras, recompras y reintentos legítimos. No depende de conectar Facebook con OpenAI.
+- Conservar la URL HTTP(S) explícita válida del emisor; cuando falta, usar la URL específica del contacto o lineage ya autorizado. Si esa columna fue sobrescrita por una raíz, recuperar el `contact_payload_raw` original del mismo contexto, con JSON válido. Cualquier consulta adicional debe estar acotada a los IDs de lineage persistidos y al mismo `user_id`; no buscar otra persona por teléfono ni recorrer el inbox.
+- Sólo si no existe una URL original utilizable y se conoce una landing resuelta o matched confiable, construir el fallback con `settings.url_base` y su nombre validado. Respetar los prefijos configurados, incluido `/l/`, sin deducir el motor por host ni fabricar una URL raíz cuando falta la landing. Una raíz solicitada explícitamente por el emisor mantiene su precedencia.
+- Preservar la URL capturada de Contact: `/gast` continúa siendo `/gast` aunque un override haya resuelto Diana. Este lote no cambia el contrato de captura que excluye queries, no inventa parámetros descartados y conserva los marcadores propios de WhatsApp Business Messaging y su routing.
+- No modificar montos, fechas, identidad, píxeles, FBC, atribución first/repeat, deduplicación ni políticas CAPI. No hacer backfill de filas históricas ni reenviar eventos para verificarlo. Probar con los handlers y reintentos reales, DB/HTTP aislados, antes de publicar las funciones Edge afectadas; sin migraciones ni cambios de los gateways, Worker o API2.
+
 ### Caché del runtime público de todas las landings (31/10/2026)
 
 - El pedido de atribución FBC comprende todas las landings y templates de ambos motores. La auditoría encontró que Builder 1–6 seguía publicando el mismo nombre `landing-runtime-v6.js` con caché inmutable anual: un visitante anterior podía conservar el programa previo aunque recibiera HTML nuevo.

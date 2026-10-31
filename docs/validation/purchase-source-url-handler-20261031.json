@@ -1,0 +1,68 @@
+{
+  "scope": "Real PURCHASE and simple handlers plus real retry HTTP callback; in-memory DB/claim and all HTTP mocked. Provider labels exercise the shared handler, not provider APIs or SQL concurrency.",
+  "passed": 21,
+  "externalRequests": 0,
+  "productionWrites": 0,
+  "results": [
+    {
+      "provider": "rey_de_ases",
+      "checks": [
+        "first",
+        "repeat",
+        "duplicate",
+        "retry"
+      ],
+      "status": "passed"
+    },
+    {
+      "provider": "ases_del_norte",
+      "checks": [
+        "first",
+        "repeat",
+        "duplicate",
+        "retry"
+      ],
+      "status": "passed"
+    },
+    {
+      "provider": "ganamos_net",
+      "checks": [
+        "first",
+        "repeat",
+        "duplicate",
+        "retry"
+      ],
+      "status": "passed"
+    },
+    {
+      "provider": "multi_skin",
+      "checks": [
+        "first",
+        "repeat",
+        "duplicate",
+        "retry"
+      ],
+      "status": "passed"
+    },
+    {
+      "scenario": "raw-contact",
+      "status": "passed"
+    },
+    {
+      "scenario": "explicit-root",
+      "status": "passed"
+    },
+    {
+      "scenario": "simple",
+      "status": "passed"
+    },
+    {
+      "scenario": "created-first-explicit-url",
+      "status": "passed"
+    },
+    {
+      "scenario": "created-first-no-trusted-url",
+      "status": "passed"
+    }
+  ]
+}
