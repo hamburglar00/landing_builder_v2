@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { phoneCountryCodeForWorkspace } from "./market.ts";
 import { targetProviderForTemplate7 } from "./provider.ts";
 import { publicSkinCode } from "./skin.ts";
+import { resolveEffectiveLandingConfig } from "../_shared/effective-landing-config.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -105,43 +106,6 @@ function compileTemplate8Cover(value: unknown) {
   return { cardCount, backgroundImageUrl: typeof cover.backgroundImageUrl === "string" ? buildOptimizedImageUrl(cover.backgroundImageUrl,960,65) : "",
     headerText: String(cover.headerText ?? "Elegí tu página"),footerText: String(cover.footerText ?? "Te acompañamos en tu chat"),
     cards: Array.from({length:cardCount},(_,i)=>{const card=isRecord(cards[i])?cards[i]:{};return {imageUrl:typeof card.imageUrl==="string"?buildOptimizedImageUrl(card.imageUrl,480,65):"",text:String(card.text||""),ctaText:String(card.ctaText||""),targetProvider:String(card.targetProvider||""),...(card.targetProvider === "multi_skin" ? { multiSkinCode: publicSkinCode(card.multiSkinCode) } : {})};}) };
-}
-
-const GLOBAL_CONFIG_KEYS = [
-  "marketCountry",
-  "sendContactPixel",
-  "ctaDestination",
-  "targetProvider",
-  "atrioRedirectUrl",
-  "atrioClientId",
-  "atrioId",
-  "atrioSlug",
-];
-
-function resolveActiveTemplateRawConfig(
-  rawConfig: Record<string, unknown>,
-): Record<string, unknown> {
-  const template = String(rawConfig.template || "template1").trim();
-  const templateConfigs = isRecord(rawConfig.templateConfigs)
-    ? rawConfig.templateConfigs
-    : null;
-  const activeVariant = templateConfigs && isRecord(templateConfigs[template])
-    ? templateConfigs[template] as Record<string, unknown>
-    : null;
-
-  if (!activeVariant) return rawConfig;
-
-  const merged: Record<string, unknown> = {
-    ...rawConfig,
-    ...activeVariant,
-    template,
-  };
-
-  for (const key of GLOBAL_CONFIG_KEYS) {
-    if (rawConfig[key] !== undefined) merged[key] = rawConfig[key];
-  }
-
-  return merged;
 }
 
 /**
@@ -270,9 +234,7 @@ Deno.serve(async (req) => {
       phone_mode?: "random" | "fair" | null;
     };
 
-    const rawConfig = resolveActiveTemplateRawConfig(
-      (data.config ?? {}) as Record<string, unknown>,
-    );
+    const rawConfig = resolveEffectiveLandingConfig(data.config, asAny.landing_config);
     const workspaceCurrency = String(data.workspace_currency ?? "ARS").trim().toUpperCase() === "PYG"
       ? "PYG"
       : "ARS";

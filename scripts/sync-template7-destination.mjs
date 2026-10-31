@@ -3,14 +3,19 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const source = path.join(root, "frontend/lib/atrio/template7Destination.server.ts");
-const target = path.join(root, "../landing-prueba-1/lib/atrio/template7Destination.server.ts");
-const contents = await readFile(source, "utf8");
-if (process.argv.includes("--check")) {
-  if (await readFile(target, "utf8").catch(() => "") !== contents) throw new Error("El selector de destinos de Template 7 no está sincronizado.");
-  console.log("Selector de destinos sincronizado en constructor y clásico.");
-} else {
-  await mkdir(path.dirname(target), { recursive: true });
-  await writeFile(target, contents);
-  console.log("Selector de destinos sincronizado.");
+for (const [sourcePath, targetPaths] of [
+  ["frontend/lib/atrio/template7Destination.server.ts", ["../landing-prueba-1/lib/atrio/template7Destination.server.ts"]],
+  ["frontend/lib/landing/effectiveLandingConfig.ts", ["../landing-prueba-1/lib/landing/effectiveLandingConfig.ts", "supabase/functions/_shared/effective-landing-config.ts"]],
+]) {
+  const contents = await readFile(path.join(root, sourcePath), "utf8");
+  for (const targetPath of targetPaths) {
+    const target = path.join(root, targetPath);
+    if (process.argv.includes("--check")) {
+      if ((await readFile(target, "utf8").catch(() => "")).replaceAll("\r\n", "\n") !== contents.replaceAll("\r\n", "\n")) throw new Error("Destino/configuración efectiva sin sincronizar: " + targetPath);
+    } else {
+      await mkdir(path.dirname(target), { recursive: true });
+      await writeFile(target, contents);
+    }
+  }
 }
+console.log("Destino y configuración efectiva sincronizados en constructor, clásico y Edge Function.");

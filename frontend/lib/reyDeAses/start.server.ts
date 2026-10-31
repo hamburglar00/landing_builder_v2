@@ -1,5 +1,6 @@
 import { confirmTemplate8Destination } from "../atrio/template7Destination.server";
 import { template8Provider, template8SkinCode } from "../landing/template8";
+import { resolveEffectiveLandingConfig } from "../landing/effectiveLandingConfig";
 import { createClient } from "@supabase/supabase-js";
 import type { MultiSkinCode, TargetProvider } from "../landing/types";
 import { isMultiSkinCode } from "../multi-skin-catalog";
@@ -68,7 +69,7 @@ function json(body: Record<string, unknown>, status: number): Response {
 }
 
 export function isTemplate7Landing(landing: LandingRow): boolean {
-  const raw = landing.config && typeof landing.config === "object" ? landing.config as Record<string, unknown> : {};
+  const raw = resolveEffectiveLandingConfig(landing.config, landing.landing_config);
   const published = landing.landing_config && typeof landing.landing_config === "object"
     ? landing.landing_config as Record<string, unknown> : {};
   const layout = published.layout && typeof published.layout === "object" ? published.layout as Record<string, unknown> : {};
@@ -76,7 +77,7 @@ export function isTemplate7Landing(landing: LandingRow): boolean {
 }
 
 export function configuredTargetProvider(landing: LandingRow): TargetProvider | null {
-  const raw = landing.config && typeof landing.config === "object" ? landing.config as Record<string, unknown> : {};
+  const raw = resolveEffectiveLandingConfig(landing.config, landing.landing_config);
   // Landings 7 antiguas no tenian selector: se conserva Rey de Ases.
   if (raw.targetProvider === undefined || raw.targetProvider === null) return "rey_de_ases";
   if (raw.targetProvider === "rey_de_ases" || raw.targetProvider === "multi_skin" || raw.targetProvider === "ases_del_norte" || raw.targetProvider === "ganamos_net") return raw.targetProvider;
@@ -85,11 +86,11 @@ export function configuredTargetProvider(landing: LandingRow): TargetProvider | 
 
 export function configuredSkinCode(landing: LandingRow, provider: TargetProvider, cardIndex?: unknown): MultiSkinCode | null {
   if (provider !== "multi_skin") return null;
-  const raw = landing.config && typeof landing.config === "object" ? landing.config as Record<string, unknown> : {};
-  if (raw.template === "template8") return template8SkinCode(landing.config, cardIndex);
+  const raw = resolveEffectiveLandingConfig(landing.config, landing.landing_config);
+  if (raw.template === "template8") return template8SkinCode(raw, cardIndex);
   // Antes del selector solo existia Ganamos+, por lo que esa configuracion
   // historica puede migrarse sin cambiar el destino del jugador.
-  if (raw.multiSkinCode === undefined || raw.multiSkinCode === null) return "ganamos_plus";
+  if (raw.multiSkinCode === undefined) return "ganamos_plus";
   return isMultiSkinCode(raw.multiSkinCode) ? raw.multiSkinCode : null;
 }
 
@@ -190,10 +191,14 @@ async function handleTemplate7StartInner(
       const candidate = await bounded(deps.db.landing(payload.landing_id));
       if (!candidate || candidate.name !== payload.landing_slug || !isTemplate7Landing(candidate)) return json({ error: "landing_not_found" }, 404);
       landing = candidate;
-      const candidateProvider = (landing.config as { template?: string })?.template === "template8" ? template8Provider(landing.config, payload.card_index) : configuredTargetProvider(landing);
+      const config = resolveEffectiveLandingConfig(landing.config, landing.landing_config);
+      const candidateProvider = config.template === "template8" ? template8Provider(config, payload.card_index) : configuredTargetProvider(landing);
       if (!candidateProvider) return json({ error: "integration_pending" }, 503);
       provider = candidateProvider;
     }
+    const effectiveConfig = resolveEffectiveLandingConfig(landing.config, landing.landing_config);
+    const effectiveProvider = effectiveConfig.template === "template8" ? template8Provider(effectiveConfig, payload.card_index) : configuredTargetProvider(landing);
+    if (effectiveProvider !== provider) return json({ error: "integration_pending" }, 503);
     const skinCode = configuredSkinCode(landing, provider, payload.card_index);
     if (provider === "multi_skin" && !skinCode) return json({ error: "integration_pending" }, 503);
     // La atribucion puede venir del navegador; esta dimension se fija desde la landing guardada.

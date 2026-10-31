@@ -72,8 +72,10 @@ function runtimeConfig(html: string) {
 
 test("the public Edge Function preserves every saved T7 skin into both renderers", async () => {
   for (const skin of MULTI_SKIN_CODES) {
-    for (const saved of [null, published()]) {
-      const response = await requestConfig({ template: "template7", targetProvider: "multi_skin", multiSkinCode: skin }, saved);
+    const base = { template: "template7", targetProvider: "multi_skin", multiSkinCode: skin };
+    const active = { ...base, multiSkinCode: skin === "ganamos_plus" ? "bet30" : "ganamos_plus", templateConfigs: { template7: { multiSkinCode: skin } } };
+    for (const saved of [null, published()]) for (const raw of [base, active]) {
+      const response = await requestConfig(raw, saved);
       assert.equal(response.status, 200);
       const payload = await response.json() as PublicLandingConfig;
       assert.equal(payload.tracking.skin_code, skin);
@@ -114,6 +116,29 @@ test("both public T8 payload branches keep each card's skin independently of the
   const saved = { ...published(8), content: { ...published(8).content, template8: template8Cover } };
   const response = await requestConfig({ template: "template8", targetProvider: "multi_skin" }, saved);
   assert.equal((await response.json()).content.template8.cards[0].multiSkinCode, "bet30");
+});
+
+test("every T8 skin survives the Edge Function and both renderers without borrowing the global or adjacent skin", async () => {
+  for (const skin of MULTI_SKIN_CODES) {
+    const otherSkin = skin === "ganamos_plus" ? "bet30" : "ganamos_plus";
+    const template8Cover = { cardCount: 2, cards: [
+      { targetProvider: "multi_skin", multiSkinCode: skin, text: skin },
+      { targetProvider: "multi_skin", multiSkinCode: otherSkin, text: otherSkin },
+    ] };
+    const base = { template: "template8", targetProvider: "multi_skin", multiSkinCode: otherSkin, template8Cover };
+    const active = { ...base, template8Cover: { cardCount: 1, cards: [{ targetProvider: "multi_skin", multiSkinCode: otherSkin }] }, templateConfigs: { template8: { template8Cover } } };
+    for (const saved of [null, published(8)]) for (const raw of [base, active]) {
+      const response = await requestConfig(raw, saved);
+      assert.equal(response.status, 200);
+      const payload = await response.json() as PublicLandingConfig;
+      assert.deepEqual(payload.content?.template8?.cards.map(card => card.multiSkinCode), [skin, otherSkin]);
+      for (const html of renderBoth(payload)) {
+        const cards = runtimeConfig(html).template8Cards;
+        assert.deepEqual(cards.map((card: { multiSkinCode: string }) => card.multiSkinCode), [skin, otherSkin]);
+        assert.notEqual(cards[0].transitionLogo, cards[1].transitionLogo);
+      }
+    }
+  }
 });
 
 test("explicit invalid T7 or T8 skins fail closed instead of routing to Ganamos+", async () => {

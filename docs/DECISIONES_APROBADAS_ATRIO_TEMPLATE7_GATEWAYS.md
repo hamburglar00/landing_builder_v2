@@ -1,5 +1,12 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Todas las skins y fuente efectiva de Template 7/8 (31/10/2026)
+
+- La revisión solicitada abarca las catorce skins, sus logos/paletas y el ingreso de ambos motores, no una excepción para Bet30. Continuar activado debe mostrar usuario, clave y botón con la marca de la página elegida; desactivado conserva el ingreso automático. No cambiar el ajuste productivo para verificarlo ni crear cuentas en las pruebas de esta auditoría.
+- La auditoría encontró otra divergencia: el HTML usa el borrador del template activo, mientras los handlers de ingreso todavía podían tomar una skin raíz desfasada. Unificar esa lectura con la misma resolución efectiva pública. Conservar los campos globales de la raíz y no utilizar borradores inactivos, parámetros del navegador ni la skin de una sesión previa como autoridad.
+- Para T7 histórico, cuando falta la skin en la configuración efectiva puede conservarse `landing_config.tracking.skin_code`; si tampoco existe, continúa Ganamos+. Un valor explícito nulo o inválido no autoriza otra skin. T8 conserva su selección por tarjeta y el contrato SQL existente: no se habilitan tarjetas sólo publicadas cuando faltan en la configuración guardada, ni se sustituye un proveedor o gerencia si el contexto autorizado contradice la selección efectiva.
+- Validación y límites: [auditoría de las catorce skins y Continuar](validation/all-skin-entry-presentation-20261031.md). El cambio de fuente efectiva se prepara para publicación coordinada de Builder, clásico y `builder-config`; no requiere migración ni cambios de API2. Las pruebas aisladas no certifican el E2E del proveedor ni Instagram/Facebook en iPhone.
+
 ### Acceso directo por bot y prueba Multi Skin 1045 (31/10/2026)
 
 - Achicar el selector Usuario/Soporte de «Acceso rápido del cliente», conservando la superficie táctil y el comportamiento de guardado. No cambiar las dimensiones de los demás selectores.
