@@ -31,4 +31,24 @@ Builder: `supabase/migrations/20261031131638_entry_funnel_chat_diagnostics.sql`,
 
 Atrio: commit `8c7f72414d279ecc8b4ad96db8dc93bd834132d5`, deployment `dpl_HVcJjArhPJpuXZC4G1jgFtCc6YdG`, promovido y READY.
 
+Publicación completada el 31/10/2026. Commits pusheados y despliegues Vercel READY/promovidos:
+
+| Componente | Commit | Deployment |
+| --- | --- | --- |
+| Builder | `26d64ecd23596c4c643899c17c719cc16d0e36aa` | `dpl_7rPQTWkHn89kJrgWLNCBuaFMLEf8` |
+| Clásico | `2ccf16924e28a8a2e731af892ebe8bab15e47b2e` | `dpl_63a7JvEoEqTJf6Cd1jQzg6fDCJ9x` |
+| Rey | `61ea6414c9f1e27fa07b2922ed8123393f6e4160` | `dpl_HzBii4DFMB5gWgUSicxHud6CATz3` |
+| Ases | `6ca49bb6028ed580ab2b8ce0dfff8be4c04f51c4` | `dpl_FCP7buuJW7BP2dRzdkqMDodfgzTw` |
+| Ganamos NET | `fbcdfce943b7912b26ceb26a523d1b426e98d1eb` | `dpl_GYg1VPj1AXrN2t8prgpQLj5yGCgm` |
+| Multi Skin | `0ca3310476833b93bb241d74c66103e34bb52f17` | `dpl_3o8z8jdCsvgnDaTtfs5j8AMwLXwi` |
+
+Cloudflare Multi Skin: versión activa `455e14be-5cff-465e-8074-096f16d20d23`, publicada con `--keep-vars`; parche de query verificado por el build y por el hook de despliegue. Migración y collectors publicados antes de los nuevos clientes gateway.
+
+Comprobaciones públicas posteriores, sin ejecutar JS ni crear usuarios/contactos:
+
+- 42/42 GET en los seis orígenes gateway: extras desconocidos/repetidos tolerados; duplicación o ausencia del pase rechazada; `return_to` conserva `landing=diana`, atribución y codificación anidada; retorno externo rechazado.
+- 36/36 controles públicos de recuperación en esos seis orígenes: código de preparación y chat actualizado; renovación sin autorización responde 410/409 y origen ajeno 403; rechazos sin cookies nuevas ni datos de acceso.
+- Ambos motores renderizan Diana al acceder por `/gast?landing=diana` con parámetros desconocidos repetidos. Los cuatro assets nuevos y cuatro anteriores responden 200, coinciden byte a byte y tienen caché immutable de un año en ambos dominios.
+- No se encontró una URL T8 vigente documentada para comprobación pública de HTML; sus assets públicos y su runtime en navegador sí se verificaron.
+
 La eliminación de una dependencia temporal aislada de PGlite fue rechazada por revisión automática (`blocked by policy`). Se conservaron los archivos; no se intentó eludir el bloqueo. Las compilaciones web se realizan en Vercel para limitar el uso de disco local.
