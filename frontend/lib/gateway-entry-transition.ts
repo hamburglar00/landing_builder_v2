@@ -85,6 +85,11 @@ function createGatewayEntryTransition(root) {
     // The usable chat must become visible before its deferred welcome/wallet
     // work starts. Final entry readiness still owns diagnostics and app startup.
     if(data.type==="atrio.widget.ready"&&data.visibleEntry===true){finish();return}
+    // Emitted only after the authorized, visible composer has painted. It is
+    // independent of deferred welcome and bank data, unlike legacy chat_ready.
+    if(data.type==="atrio.widget.usable"&&data.visibleEntry===true){
+      milestone("chat_usable",{duration_ms:Math.max(0,Date.now()-frameBoundAt)});return
+    }
     if(data.type==="atrio.widget.entry-diagnostic"){
       if(entryReady)return;
       var details={};

@@ -1,8 +1,7 @@
 "use client";
 
 import { useRef, useCallback, useId, useState } from "react";
-
-const ACCEPT = "image/avif,.avif";
+import { LANDING_IMAGE_ACCEPT, validateLandingImageInput } from "@/lib/landing/imageUploadPolicy";
 
 interface ImageUploaderProps {
   /** URLs de preview (públicas de Supabase o blob/data URLs). */
@@ -17,7 +16,7 @@ interface ImageUploaderProps {
 
 /**
  * Subida de imágenes. Con onUpload sube a Supabase Storage y devuelve URLs públicas.
- * Formato obligatorio .avif.
+ * Optimiza imágenes estáticas y conserva el original al subir.
  */
 export function ImageUploader({
   value,
@@ -43,9 +42,10 @@ export function ImageUploader({
     const files = Array.from(e.target.files ?? []);
     if (files.length === 0) return;
 
-    const valid = files.every((f) => f.name.toLowerCase().endsWith(".avif"));
-    if (!valid) {
-      setUploadError("Solo se permiten imágenes en formato .avif.");
+    try {
+      files.forEach(validateLandingImageInput);
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : "Elegí una imagen válida.");
       e.target.value = "";
       return;
     }
@@ -68,7 +68,8 @@ export function ImageUploader({
     if (onUpload) {
       setUploading(true);
       try {
-        const newUrls = await Promise.all(files.map((f) => onUpload(f)));
+        const newUrls: string[] = [];
+        for (const file of files) newUrls.push(await onUpload(file));
         if (multiple) {
           onChange([...value, ...newUrls]);
         } else {
@@ -116,7 +117,7 @@ export function ImageUploader({
         id={inputId}
         ref={inputRef}
         type="file"
-        accept={ACCEPT}
+        accept={LANDING_IMAGE_ACCEPT}
         multiple={multiple}
         onChange={handleChange}
         className="hidden"
@@ -145,10 +146,10 @@ export function ImageUploader({
           className="cursor-pointer rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-800 disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {uploading
-            ? "Subiendo..."
+            ? "Optimizando y subiendo..."
             : multiple
-              ? "Seleccionar imágenes (.avif)"
-              : "Seleccionar imagen (.avif)"}
+              ? "Seleccionar imágenes"
+              : "Seleccionar imagen"}
         </button>
         {value.length > 0 && (
           <button
@@ -161,6 +162,7 @@ export function ImageUploader({
           </button>
         )}
       </div>
+      {onUpload && <p className="text-[11px] text-zinc-500">JPG, PNG, WebP o AVIF estáticas, hasta 4 MB. Se comprimen automáticamente y se conserva el original.</p>}
       {value.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-2">
           {value.map((url, index) => (

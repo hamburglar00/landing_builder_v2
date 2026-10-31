@@ -30,7 +30,7 @@ export function template7ImageUrl(raw: string, width: number, height?: number): 
     url.searchParams.set("width", String(width));
     if (height) url.searchParams.set("height", String(height));
     url.searchParams.set("resize", "contain");
-    url.searchParams.set("quality", height ? "80" : "65");
+    url.searchParams.set("quality", height ? "75" : "65");
     return url.toString();
   } catch { return raw; }
 }
@@ -44,7 +44,7 @@ function originalUrl(raw: string): string {
 }
 
 export function template7Logo(raw: string) {
-  const variants = [1, 2, 3].map(scale => template7ImageUrl(raw, 170 * scale, 138 * scale));
+  const variants = [1, 2].map(scale => template7ImageUrl(raw, 170 * scale, 138 * scale));
   return {
     src: variants[1],
     srcSet: variants[0] === raw ? "" : variants.map((url, index) => `${url} ${index + 1}x`).join(", "),

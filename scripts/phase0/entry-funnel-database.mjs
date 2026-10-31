@@ -16,6 +16,7 @@ grant select on public.landings to service_role;`);
 const migration = await readFile(new URL("../../supabase/migrations/20261030234129_entry_funnel_observability.sql", import.meta.url), "utf8");
 run(migration);
 run(await readFile(new URL("../../supabase/migrations/20261031131638_entry_funnel_chat_diagnostics.sql", import.meta.url), "utf8"));
+run(await readFile(new URL("../../supabase/migrations/20261031170412_entry_funnel_chat_usable.sql", import.meta.url), "utf8"));
 const id = n => `f0000000-0000-4000-8000-${String(n).padStart(12,"0")}`;
 const landing = id(1), owner = id(2), flow = id(3), foreign = id(4);
 run(`insert into landings values('${landing}','${owner}','{"template":"template7"}'),('${foreign}','${id(5)}','{"template":"template8"}');`);
@@ -26,6 +27,9 @@ assert.equal(run(`select count(*) from entry_funnel_events where owner_id='${own
 assert.equal(run(record()).split("\n").at(-1), "t");
 assert.equal(run("select count(*) from entry_funnel_events;"), "2");
 const diagnostic = {id:id(11),name:"entry_error",elapsed_ms:6000,error_stage:"wallet",error_code:"request_timeout",status:504,duration_ms:3000};
+assert.equal(run(record([{id:id(13),name:"chat_usable",elapsed_ms:1000,duration_ms:200}])).split("\n").at(-1),"t");
+assert.equal(run("select count(*) from entry_funnel_events where event_name='chat_ready';"),"0", "usable does not imply bank readiness");
+run("delete from entry_funnel_events where event_name='chat_usable';");
 run("update entry_funnel_limits set event_count=2;");
 assert.equal(run(record([diagnostic])).split("\n").at(-1),"t");
 assert.equal(run("select error_stage||':'||http_status||':'||duration_ms from entry_funnel_events where event_name='entry_error';"),"wallet:504:3000");

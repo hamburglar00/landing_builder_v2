@@ -2761,6 +2761,8 @@ body.public-lead-capture-open {
 .template7__background-image,
 .template7__veil { position: absolute; inset: 0; width: 100%; height: 100%; }
 .template7__background-image { object-fit: cover; z-index: -2; }
+.template7 > picture { position: absolute; inset: 0; z-index: -2; }
+.template7 > picture .template7__background-image { z-index: 0; }
 .template7__veil { z-index: -1; background: linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.42)), radial-gradient(circle at 50% 30%, rgba(255,215,0,.12), transparent 70%); }
 .template7__card {
   width: min(100%, 490px);
@@ -2775,7 +2777,7 @@ body.public-lead-capture-open {
   backdrop-filter: blur(8px);
   text-align: center;
 }
-.template7__logo { display: block; width: auto; max-width: min(50%, 170px); max-height: clamp(58px, 13svh, 138px); margin: 0 auto clamp(9px, 2svh, 24px); object-fit: contain; }
+.template7__logo { display: block; width: min(50%, 170px); height: clamp(58px, 13svh, 138px); margin: 0 auto clamp(9px, 2svh, 24px); object-fit: contain; }
 .template7__title { margin: 0; font-size: min(var(--template7-title-size, 26px), clamp(20px, 4svh, 32px)); line-height: 1.14; overflow-wrap: anywhere; text-wrap: balance; }
 .template7__subtitle { margin: clamp(8px, 1.8svh, 16px) 0 0; font-size: min(var(--template7-subtitle-size, 16px), clamp(14px, 2.7svh, 22px)); line-height: 1.35; overflow-wrap: anywhere; }
 .template7__form { display: grid; gap: clamp(8px, 1.8svh, 14px); margin-top: clamp(12px, 3svh, 32px); text-align: left; }

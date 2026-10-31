@@ -684,7 +684,7 @@ export function LandingEditorForm({
             </div>
 
             <ImageUploader
-              label="Imagen de fondo (.avif, opcional)"
+              label="Imagen de fondo (opcional)"
               value={template6Cover.backgroundImageUrl ? [template6Cover.backgroundImageUrl] : []}
               onChange={(urls) => updateTemplate6Cover({ backgroundImageUrl: urls[0] ?? "" })}
               onUpload={uploadImage}
@@ -727,7 +727,7 @@ export function LandingEditorForm({
                       </label>
                     )}
                     <ImageUploader
-                      label="Imagen cuadrada (.avif)"
+                      label="Imagen cuadrada"
                       value={card.imageUrl ? [card.imageUrl] : []}
                       onChange={(urls) => updateTemplate6Card(index, { imageUrl: urls[0] ?? "" })}
                       onUpload={uploadImage}
@@ -780,7 +780,7 @@ export function LandingEditorForm({
               onUpload={uploadImage}
             />
             <p className="text-[11px] text-zinc-500">
-              Formato .avif. Se usa en la intro y en el avatar del chat.
+              Se usa en la intro y en el avatar del chat.
             </p>
 
             <div className="space-y-2 border-t border-zinc-800 pt-4">
@@ -794,7 +794,7 @@ export function LandingEditorForm({
                 onUpload={uploadImage}
               />
               <p className="text-[11px] text-zinc-500">
-                Formato .avif. Reemplaza el patrón del área de mensajes.
+                Reemplaza el patrón del área de mensajes.
               </p>
             </div>
 
@@ -925,7 +925,7 @@ export function LandingEditorForm({
                   onUpload={uploadImage}
                 />
                 <p className="text-[11px] text-zinc-500">
-                  Formato .avif. Se usa en la card del asesor.
+                  Se usa en la card del asesor.
                 </p>
               </div>
               <div className="space-y-2">
@@ -939,7 +939,7 @@ export function LandingEditorForm({
                 onUpload={uploadImage}
               />
               <p className="text-[11px] text-zinc-500">
-                Formato .avif. Reemplaza el fondo visual de la plantilla.
+                Reemplaza el fondo visual de la plantilla.
               </p>
               </div>
             </div>

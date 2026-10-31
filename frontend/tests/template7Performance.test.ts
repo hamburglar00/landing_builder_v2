@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { Script } from "node:vm";
+import { Script, runInNewContext } from "node:vm";
 import { optimizeTemplate7Images, template7ImageUrl, template7ImageWarmUrls, template7Logo } from "../lib/landing/template7Images";
 import { imageConfigFromLanding, warmTemplate7Images } from "../lib/landing/warmTemplate7Images.server";
 import { renderPublicLandingHtml, renderClassicTemplate7InlineHtml } from "../components/public-landing/renderPublicLandingHtml";
@@ -8,6 +8,7 @@ import { template7RuntimeAsset } from "../components/public-landing/template7Run
 import { TEMPLATE7_CRITICAL_CSS, PUBLIC_LANDING_CSS } from "../components/public-landing/publicLandingCss";
 import type { PublicLandingConfig } from "../components/public-landing/types";
 import { handlePanelRevalidation, type Actor, type RevalidationBackend } from "../lib/revalidation/service.server";
+import { buildPublicLandingRuntimeSource } from "../components/public-landing/PublicLandingRuntimeScript";
 
 const original = "https://audit.supabase.co/storage/v1/object/public/landing-images/owner/logo.avif";
 const fixture = (provider: PublicLandingConfig["tracking"]["target_provider"] = "rey_de_ases"): PublicLandingConfig => ({
@@ -26,7 +27,7 @@ test("T7 optimizes old and new images without mutating their saved originals", (
   assert.equal(JSON.stringify(config), before);
   assert.equal(optimized.content?.logoOriginalUrl, original);
   assert.equal(new URL(optimized.content!.logoUrl).searchParams.get("width"), "340");
-  assert.match(optimized.content!.logoSrcSet!, /1x, .*2x, .*3x$/);
+  assert.match(optimized.content!.logoSrcSet!, /1x, .*2x$/);
   assert.deepEqual(optimizeTemplate7Images(optimized), optimized);
   assert.deepEqual(optimized.background?.imagesResponsive?.map(item => Object.values(item).map(url => new URL(url).searchParams.get("width"))), [["640", "1024", "1600"]]);
 });
@@ -42,6 +43,36 @@ test("image derivatives preserve proportions/alpha and do not touch foreign/priv
   }
   assert.equal(template7ImageUrl(original, 0), original);
   assert.equal(template7ImageUrl(original, 3000), original);
+});
+
+test("rotating T7 backgrounds change mobile, desktop and fallback URLs together", () => {
+  const source = buildPublicLandingRuntimeSource(true);
+  const code = source.slice(source.indexOf("      function parseImages(value)"), source.indexOf("      function renderSocialProof(section, index)"));
+  assert.ok(code.includes("function initRotatingBackgrounds"));
+  const attributes = new Map([
+    ["data-public-landing-images", JSON.stringify(["mobile-a", "mobile-b"])],
+    ["data-public-landing-rotate-hours", "1"],
+    ["data-template7-background-variants", JSON.stringify([{srcSet:"desktop-a 1600w",original:"original-a"},{srcSet:"desktop-b 1600w",original:"original-b"}])],
+  ]);
+  let mobile = "";
+  let rotate = () => {};
+  const node = {
+    getAttribute: (name: string) => attributes.get(name),
+    setAttribute: (name: string, value: string) => attributes.set(name, value),
+    parentElement: { querySelector: () => ({ setAttribute: (_name: string, value: string) => { mobile = value; } }) },
+  };
+  runInNewContext(code + "\ninitRotatingBackgrounds();", {
+    Date: { now: () => 3600000 },
+    document: { querySelectorAll: (selector: string) => selector.includes("rotating-image") ? [node] : [] },
+    window: { setInterval: (callback: () => void) => { rotate = callback; } },
+  });
+  assert.equal(mobile, "mobile-b");
+  assert.equal(attributes.get("srcset"), "desktop-b 1600w");
+  assert.equal(attributes.get("data-image-fallback"), "original-b");
+  rotate();
+  assert.equal(mobile, "mobile-a");
+  assert.equal(attributes.get("srcset"), "desktop-a 1600w");
+  assert.equal(attributes.get("data-image-fallback"), "original-a");
 });
 
 test("templates 1-6 retain image configuration and CSS, with the current attribution runtime", () => {
@@ -112,7 +143,7 @@ test("destination prewarming starts after identity bootstrap, before image disco
 
 test("publication warms exactly the public variants in parallel without sending credentials", async () => {
   const config = fixture();
-  assert.equal(template7ImageWarmUrls(config).length, 6);
+  assert.equal(template7ImageWarmUrls(config).length, 5);
   const seen: string[] = [];
   const result = await warmTemplate7Images({ landing_config: config }, "https://audit.supabase.co", async (input, init) => {
     seen.push(String(input));
@@ -121,8 +152,8 @@ test("publication warms exactly the public variants in parallel without sending 
     assert.equal(new Headers(init?.headers).has("Authorization"), false);
     return new Response(new Uint8Array([1]), { headers: { "Content-Type": "image/webp" } });
   });
-  assert.deepEqual(result, { total: 6, ready: 6 });
-  assert.equal(new Set(seen).size, 6);
+  assert.deepEqual(result, { total: 5, ready: 5 });
+  assert.equal(new Set(seen).size, 5);
   assert.equal(imageConfigFromLanding({ config: { template: "template7", logoUrl: original } }).layout.template, 7);
 });
 
@@ -131,7 +162,7 @@ test("warming cannot fetch another project, follow redirects or block publicatio
   const denied = await warmTemplate7Images(row, "https://other.supabase.co", async () => { throw new Error("must not fetch"); });
   assert.deepEqual(denied, { total: 0, ready: 0 });
   const failed = await warmTemplate7Images(row, "https://audit.supabase.co", async () => new Response(null, { status: 500 }));
-  assert.deepEqual(failed, { total: 6, ready: 0 });
+  assert.deepEqual(failed, { total: 5, ready: 0 });
 });
 
 test("publication only warms images after authorization, ownership and target checks", async () => {

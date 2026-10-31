@@ -838,7 +838,7 @@ export default function DashboardPromocionesPage() {
               />
             </label>
             <div className="space-y-1">
-              <span className="text-xs text-zinc-400">Imagen de fondo (.avif)</span>
+              <span className="text-xs text-zinc-400">Imagen de fondo</span>
               <ImageUploader
                 value={form.backgroundImageUrl ? [form.backgroundImageUrl] : []}
                 onChange={(urls) =>

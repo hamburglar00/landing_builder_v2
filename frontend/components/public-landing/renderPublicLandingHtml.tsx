@@ -369,17 +369,21 @@ function renderFrameBackgroundTemplate7(config: PublicLandingConfig) {
   const { currentImage, rotationImages, srcSet, rotateEveryHours } = getResponsiveBackgroundData(config);
   if (!currentImage) return "";
 
-  return `<img src="${escapeHtml(currentImage)}"${attr("data-image-fallback", config.background?.imagesOriginal?.[0])} onerror="this.onerror=null;this.removeAttribute('srcset');if(this.dataset.imageFallback)this.src=this.dataset.imageFallback"${attr(
+  const mobile = config.background?.imagesResponsive?.[0]?.mobile;
+  const variants = (config.background?.imagesResponsive || []).map((image, index) => ({
+    srcSet: buildImageSrcSet(image), original: config.background?.imagesOriginal?.[index] || "",
+  }));
+  return `<picture>${mobile ? `<source data-template7-mobile-background media="(max-width: 640px)" srcset="${escapeHtml(mobile)}">` : ""}<img src="${escapeHtml(currentImage)}"${attr("data-image-fallback", config.background?.imagesOriginal?.[0])} onerror="this.onerror=null;this.removeAttribute('srcset');var s=this.parentElement.querySelector('source');if(s)s.remove();if(this.dataset.imageFallback)this.src=this.dataset.imageFallback"${attr(
     "srcset",
     srcSet,
   )} sizes="100vw" alt="" class="template7__background-image"${attr(
     "data-public-landing-rotating-image",
     rotationImages.length > 0 ? "true" : "",
-  )} data-public-landing-images="${escapeHtml(
+  )}${attr("data-template7-background-variants", variants.length ? JSON.stringify(variants) : "")} data-public-landing-images="${escapeHtml(
     JSON.stringify(rotationImages),
   )}" data-public-landing-rotate-hours="${escapeHtml(
     rotateEveryHours,
-  )}" loading="eager" fetchpriority="low" decoding="async" width="1600" height="900">`;
+  )}" loading="eager" fetchpriority="low" decoding="async" width="1600" height="900"></picture>`;
 }
 
 function renderWhatsAppButton(
@@ -552,7 +556,7 @@ function renderTemplate7({ config }: RenderParams) {
 
   return `<main class="public-landing template7">${renderFrameBackgroundTemplate7(config)}<div class="template7__veil"></div><section class="template7__card">${
     hasLogo
-      ? `<img src="${escapeHtml(config.content?.logoUrl)}"${attr("srcset", config.content?.logoSrcSet)}${attr("data-image-fallback", config.content?.logoOriginalUrl)} onerror="this.onerror=null;this.removeAttribute('srcset');if(this.dataset.imageFallback)this.src=this.dataset.imageFallback" alt="${escapeHtml(config.name)}" class="template7__logo" decoding="async" fetchpriority="high">`
+      ? `<img src="${escapeHtml(config.content?.logoUrl)}"${attr("srcset", config.content?.logoSrcSet)}${attr("data-image-fallback", config.content?.logoOriginalUrl)} onerror="this.onerror=null;this.removeAttribute('srcset');if(this.dataset.imageFallback)this.src=this.dataset.imageFallback" alt="${escapeHtml(config.name)}" class="template7__logo" width="170" height="138" decoding="async" fetchpriority="high">`
       : ""
   }<h1 class="template7__title"${styleAttr({
     color: config.colors?.title ?? "#FFFFFF",
@@ -785,4 +789,10 @@ export function renderClassicTemplate7InlineHtml(params: RenderParams, deviceIdS
   if (isTemplate8) return html;
   const reentry = buildTemplate7ReentryScript(template7GatewayOrigin(config), `/${encodeURIComponent(params.slug)}`, config.tracking?.target_provider !== "multi_skin");
   return reentry ? reentry + guardTemplate7ReentryScripts(html) : html;
+}
+
+/** Complete classic document without React hydration, layout CSS or Next chunks. */
+export function renderClassicTemplate7Html(params: RenderParams, deviceIdScript: string) {
+  const metadata = publicMetadata(params.config, params.slug);
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#000000"><title>${escapeHtml(metadata.title)}</title>${buildPublicMetadataTags(params.config, params.slug, params.canonicalUrl)}</head><body>${renderClassicTemplate7InlineHtml(params, deviceIdScript)}</body></html>`;
 }

@@ -29,7 +29,7 @@ test("strict field bounds and finite skin catalog", () => {
 test("stage diagnostics accept bounded timings and closed errors without free-form properties", () => {
   const details = { ...event, name: "entry_error", error_stage: "wallet", error_code: "request_timeout", status: 504, duration_ms: 3000 };
   assert.deepEqual(validateEntryFunnelBatch({ ...batch, events: [details] })?.events, [details]);
-  for (const name of ["iframe_loaded", "chat_bootstrap_ready", "welcome_ready", "wallet_ready"]) assert.ok(validateEntryFunnelBatch({ ...batch, events: [{ ...event, name, duration_ms: 0 }] }));
+  for (const name of ["iframe_loaded", "chat_bootstrap_ready", "welcome_ready", "wallet_ready", "chat_usable", "chat_ready"]) assert.ok(validateEntryFunnelBatch({ ...batch, events: [{ ...event, name, duration_ms: 0 }] }));
   for (const duration_ms of [-1, 0.5, 86400001, "12", null]) assert.equal(validateEntryFunnelBatch({ ...batch, events: [{ ...details, duration_ms }] }), null);
   for (const error_stage of ["url=https://private", "provider-body", null]) assert.equal(validateEntryFunnelBatch({ ...batch, events: [{ ...details, error_stage }] }), null);
 });

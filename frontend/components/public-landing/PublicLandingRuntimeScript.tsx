@@ -1642,12 +1642,22 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
           if (!images.length) return;
           var hours = node.getAttribute("data-public-landing-rotate-hours") || "24";
           var index = initialRotatingIndex(images, hours);
-          node.setAttribute("src", images[index]);
+          var mobileSource = node.parentElement && node.parentElement.querySelector("[data-template7-mobile-background]");
+          var variants = parseImages(node.getAttribute("data-template7-background-variants"));
+          function showImage() {
+            if (mobileSource) mobileSource.setAttribute("srcset", images[index]);
+            if (variants[index]) {
+              node.setAttribute("srcset", variants[index].srcSet || "");
+              node.setAttribute("data-image-fallback", variants[index].original || "");
+            }
+            node.setAttribute("src", images[index]);
+          }
+          showImage();
           if (images.length <= 1) return;
           var everyMs = Math.max(1, Number(hours) || 24) * 60 * 60 * 1000;
           window.setInterval(function () {
             index = (index + 1) % images.length;
-            node.setAttribute("src", images[index]);
+            showImage();
           }, everyMs);
         });
       }

@@ -14,7 +14,7 @@ export function installEntryFunnel(config: {
   const template = suppliedContext?.template || (config.template8 || config.template === 8 ? 8 : config.template);
   const landing = suppliedContext?.landing_id || config.landingId;
   if (![7, 8].includes(Number(template)) || !uuid.test(String(landing))) return;
-  const allowed = ["page_visible", "form_visible", "name_focus", "name_started", "name_valid", "skin_selected", "cta_clicked", "destination_ready", "account_ready", "login_confirmed", "gateway_loaded", "iframe_loaded", "chat_bootstrap_ready", "welcome_ready", "wallet_ready", "chat_ready", "entry_error", "visibility_hidden", "resumed"];
+  const allowed = ["page_visible", "form_visible", "name_focus", "name_started", "name_valid", "skin_selected", "cta_clicked", "destination_ready", "account_ready", "login_confirmed", "gateway_loaded", "iframe_loaded", "chat_bootstrap_ready", "welcome_ready", "wallet_ready", "chat_usable", "chat_ready", "entry_error", "visibility_hidden", "resumed"];
   const stages = ["runtime", "destination", "account", "login", "session", "chat_iframe", "chat_bootstrap", "welcome", "wallet", "chat"];
   const errors = ["destination_unavailable", "account_unavailable", "prepare_rejected", "prepare_unavailable", "login_unavailable", "session_unavailable", "chat_unavailable", "request_timeout", "network_error", "rate_limited", "invalid_entry", "unknown"];
   const providers = ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_skin"];

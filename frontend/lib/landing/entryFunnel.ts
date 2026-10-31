@@ -3,7 +3,7 @@ export const ENTRY_FUNNEL_EVENTS = [
   "page_visible", "form_visible", "name_focus", "name_started", "name_valid", "skin_selected",
   "cta_clicked", "destination_ready", "account_ready", "login_confirmed", "gateway_loaded",
   "iframe_loaded", "chat_bootstrap_ready", "welcome_ready", "wallet_ready",
-  "chat_ready", "entry_error", "visibility_hidden", "resumed",
+  "chat_usable", "chat_ready", "entry_error", "visibility_hidden", "resumed",
 ] as const;
 export const ENTRY_FUNNEL_ERROR_STAGES = ["runtime", "destination", "account", "login", "session", "chat_iframe", "chat_bootstrap", "welcome", "wallet", "chat"] as const;
 export const ENTRY_FUNNEL_ERRORS = [
