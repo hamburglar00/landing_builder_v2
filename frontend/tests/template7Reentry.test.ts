@@ -72,6 +72,22 @@ test("an arbitrary query flag or a previous check for another gateway cannot byp
   assert.equal(new URL(other.navigations[0]).origin, "https://www.ganamosnet.icu");
 });
 
+test('Diana selected over Gast survives the recursive return with unknown Meta parameters',()=>{
+  for(const classic of [false,true]){
+    const origin=classic?'https://landing.panelbotadmin.com':'https://mkt.panelbotadmin.com';
+    const path=classic?'/gast':'/l/gast',selected=classic?'/diana':'/l/diana';
+    const original=origin+path+'?landing=diana&new_meta_field=x&new_meta_field=y&fbclid=original&utm_source=facebook&return_to=https://evil.test';
+    const script=buildTemplate7ReentryScript('https://www.ganamosnet.icu',selected),first=browser(original);
+    execute(script,first);
+    const back=new URL(new URL(first.navigations[0]).searchParams.get('return_to')!);
+    assert.equal(back.origin,origin);assert.equal(back.pathname,selected);assert.equal(back.searchParams.size,1);
+    back.searchParams.set('new_meta_return_field','extra');
+    const returned=browser(back.href,first.storage);execute(script,returned);
+    const expected=new URL(original);expected.searchParams.delete('__t7_resume');
+    assert.deepEqual(returned.navigations,[]);assert.deepEqual(returned.replacements,[expected.pathname+expected.search]);
+  }
+});
+
 test("restricted storage and embedded previews keep the normal landing usable", () => {
   const denied = browser();
   denied.window.sessionStorage.getItem = () => { throw new Error("storage denied"); };

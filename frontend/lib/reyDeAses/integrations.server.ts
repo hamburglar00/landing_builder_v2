@@ -2,6 +2,7 @@ import type { AssignedAdvisor, Api2ResolveAccountRequest, HandoffResult, LinkedP
 import type { MultiSkinCode, TargetProvider } from "../landing/types";
 import { isDeviceId } from "./clientIdentity.server";
 import { gatewayOriginFor } from "./gatewayOrigins";
+import { canonicalStartHandoffUrl } from "./handoff-url";
 
 export class TargetIntegrationError extends Error {
   constructor(public readonly code: "integration_pending" | "upstream_unavailable", public readonly retryable = code === "upstream_unavailable") {
@@ -257,20 +258,14 @@ export async function createProviderHandoff(
     }),
   });
   try {
-    const url = new URL(String(result.handoff_url ?? ""));
-    if (url.origin !== origin.origin || url.pathname !== "/start" || url.username || url.password || url.hash ||
-        [...url.searchParams.keys()].some(key => key !== "t" && key !== "ef") ||
-        url.searchParams.getAll("ef").length > 1 || (url.searchParams.has("ef") && !/^e1\.[A-Za-z0-9_-]{1,2000}$/.test(url.searchParams.get("ef")!)) ||
-        url.searchParams.getAll("t").length !== 1 || !url.searchParams.get("t")) {
-      throw new Error("unexpected handoff");
-    }
+    const handoffUrl = canonicalStartHandoffUrl(String(result.handoff_url ?? ""), origin.origin);
     if (provider === "rey_de_ases") {
       if (typeof result.expires_at !== "string" || typeof result.binding_created !== "boolean") throw new Error("invalid handoff");
     } else {
       if (!Number.isInteger(result.expires_in) || Number(result.expires_in) < 60 || Number(result.expires_in) > 300) throw new Error("invalid handoff");
     }
     return {
-      handoff_url: String(result.handoff_url),
+      handoff_url: handoffUrl,
       expires_at: typeof result.expires_at === "string" ? result.expires_at : "",
       binding_created: result.binding_created === true,
       ...(typeof result.provider_username === "string" ? { provider_username: result.provider_username } : {}),

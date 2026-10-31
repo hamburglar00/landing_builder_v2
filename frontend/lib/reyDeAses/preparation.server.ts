@@ -4,6 +4,7 @@ import { validateEntryFunnelContext, type EntryFunnelContext } from "../landing/
 import { CLIENT_ID_COOKIE_NAME, isDeviceId } from "./clientIdentity.server";
 import { finalizeTemplate7PreparedStart, handleTemplate7AccountWithIdentity, handleTemplate7StartWithIdentity, productionDependencies, type StartDependencies, type Template7PreparedStart } from "./start.server";
 import { decryptClaims, encryptionKey, gatewayOrigin, json, readJson, requireSecret, TOKEN_TTL_SECONDS, MAX_TOKEN_LENGTH, type PreparationEnvironment } from "./preparation-issue.server";
+import { canonicalStartHandoffUrl } from "./handoff-url";
 export { handleTemplate7Prepare } from "./preparation-issue.server";
 
 const CONTINUATION_VERSION = "c1";
@@ -41,7 +42,6 @@ function isPreparedStart(value: unknown, env: PreparationEnvironment): value is 
   }
   if (!prepared.completedHandoff) return true;
   try {
-    const url = new URL(prepared.completedHandoff.handoff_url);
     const expected = gatewayOrigin({
       landing_id: "00000000-0000-4000-8000-000000000000",
       landing_slug: "continuation",
@@ -55,12 +55,8 @@ function isPreparedStart(value: unknown, env: PreparationEnvironment): value is 
         ...(prepared.skinCode ? { skin_code: prepared.skinCode } : {}),
       },
     }, env);
-    return url.origin === expected && url.pathname === "/start" && !url.username && !url.password && !url.hash &&
-      [...url.searchParams.keys()].every(key => key === "t" || key === "ef") &&
-      url.searchParams.getAll("ef").length <= 1 &&
-      (!url.searchParams.has("ef") || /^e1\.[A-Za-z0-9_-]{1,2000}$/.test(url.searchParams.get("ef")!)) &&
-      url.searchParams.getAll("t").length === 1 &&
-      Boolean(url.searchParams.get("t")) && typeof prepared.completedHandoff.binding_created === "boolean" &&
+    canonicalStartHandoffUrl(prepared.completedHandoff.handoff_url, expected);
+    return typeof prepared.completedHandoff.binding_created === "boolean" &&
       typeof prepared.completedHandoff.expires_at === "string";
   } catch {
     return false;
@@ -113,6 +109,10 @@ function decryptContinuation(
       claims.expires_at - claims.issued_at !== TOKEN_TTL_SECONDS || !isPreparedStart(claims.prepared, env)) {
     throw new Error("invalid token");
   }
+  // Origin and signed identity were verified above; extra query data is never
+  // replayed as part of the access URL when resuming this account.
+  const completed = claims.prepared.completedHandoff;
+  if (completed) completed.handoff_url = canonicalStartHandoffUrl(completed.handoff_url, new URL(completed.handoff_url).origin);
   return claims;
 }
 
@@ -259,7 +259,11 @@ export async function handleTemplate7PreparationFinalize(
     // name, provision a player, or return the already consumed/expired pass.
     const prepared = renewHandoff ? { ...claims.prepared, completedHandoff: undefined } : claims.prepared;
     const handoff = await finalizeTemplate7PreparedStart(prepared, deps);
-    return json({ handoff_url: handoff.handoff_url, username: prepared.account.username }, 200);
+    // Real integrations already canonicalize; apply it again to a renewed
+    // handoff so continuation output cannot reintroduce unrelated parameters.
+    if (!isPreparedStart({ ...prepared, completedHandoff: handoff }, env)) throw new Error("invalid handoff");
+    const handoffUrl = canonicalStartHandoffUrl(handoff.handoff_url, new URL(handoff.handoff_url).origin);
+    return json({ handoff_url: handoffUrl, username: prepared.account.username }, 200);
   } catch {
     return json({ error: "service_unavailable" }, 503);
   }

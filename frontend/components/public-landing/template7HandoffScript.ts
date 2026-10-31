@@ -15,21 +15,20 @@ export function buildTemplate7HandoffRuntimeScript(): string {
       var url = new URL(String(raw || ""));
       if (url.protocol !== "https:" || url.username || url.password || url.hash ||
           (url.pathname !== "/prepare" && url.pathname !== "/start") ||
-          url.searchParams.getAll("t").length !== 1 || !url.searchParams.get("t") ||
+          url.searchParams.getAll("t").length !== 1 || !url.searchParams.get("t") || url.searchParams.get("t").length > 12000 ||
           url.searchParams.getAll("ef").length > 1 || (url.searchParams.has("ef") &&
           (!url.searchParams.get("ef") || url.searchParams.get("ef").length > 2003))) {
         throw new Error("invalid handoff");
       }
-      if(url.searchParams.has("skin")&&(url.pathname!=="/prepare"||url.searchParams.getAll("skin").length!==1||
+      if(url.pathname==="/prepare"&&url.searchParams.has("skin")&&(url.searchParams.getAll("skin").length!==1||
           ${JSON.stringify(MULTI_SKIN_CODES)}.indexOf(url.searchParams.get("skin"))===-1||
           (typeof cfg!=="undefined"&&cfg.targetProvider&&cfg.targetProvider!=="multi_skin")))throw new Error("invalid handoff skin");
-      // Marketing parameters belong to attribution, never to the access proof.
-      // Keep them on the URL for the gateway to capture before canonicalizing.
-      url.searchParams.forEach(function(value, key) {
-        if (key !== "t" && key !== "ef" && key !== "skin" && !/^(?:fbclid|gclid|dclid|msclkid|ttclid|fb_action_ids|fb_action_types|fb_source|_gl|campaign_id|campaign_name|adset_id|adset_name|ad_id|ad_name|placement|site_source_name|utm_[a-z0-9_]+)$/i.test(key)) {
-          throw new Error("invalid handoff parameter");
-        }
-      });
+      // Attribution is captured on the landing before this navigation. Future
+      // advertising parameters must neither reject nor authorize an entry.
+      var token=url.searchParams.get("t"),funnel=url.searchParams.get("ef"),skin=url.pathname==="/prepare"?url.searchParams.get("skin"):null;
+      url.search="";url.searchParams.set("t",token);
+      if(funnel)url.searchParams.set("ef",funnel);
+      if(skin)url.searchParams.set("skin",skin);
       return url;
     }
 

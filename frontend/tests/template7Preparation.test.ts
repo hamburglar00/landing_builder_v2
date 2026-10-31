@@ -219,9 +219,10 @@ test("renewing an expired pass preserves the account and never resolves or provi
   assert.deepEqual(trace,{links:2,handoffs:2});
 });
 
-test("finalize and renewal accept the encrypted diagnostic carrier but reject extra or duplicated parameters", async () => {
+test("finalize and renewal ignore unrelated parameters while preserving the signed account and strict access fields", async () => {
   const token = await prepareToken();
-  for (const suffix of ["&ef=e1.diagnostic", "&ef=e1.one&ef=e1.two", "&fbclid=foreign", "#unexpected"]) {
+  for (const suffix of ["&ef=e1.diagnostic", "&ef=e1.one&ef=e1.two", "&fbclid=foreign", "&new_meta_field=x&new_meta_field=y&provider=evil&advisor_id=foreign&return_to=https://evil.test", "#unexpected"]) {
+    const valid = !suffix.includes('ef=e1.two') && !suffix.startsWith('#');
     const dependencies = deps();
     let handoffs = 0;
     dependencies.createHandoff = async () => {
@@ -241,12 +242,12 @@ test("finalize and renewal accept the encrypted diagnostic carrier but reject ex
         method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}` },
         body: JSON.stringify({ continuation_token, renew_handoff }),
       }), env, dependencies, now + 2000);
-      if (suffix === "&ef=e1.diagnostic") {
+      if (valid) {
         assert.equal(response.status, 200);
-        assert.deepEqual(await response.json(), { handoff_url: `https://gateway.example.com/start?t=pass-${renew_handoff ? 2 : 1}${suffix}`, username: "player" });
+        assert.deepEqual(await response.json(), { handoff_url: `https://gateway.example.com/start?t=pass-${renew_handoff ? 2 : 1}${suffix === '&ef=e1.diagnostic' ? suffix : ''}`, username: "player" });
       } else assert.equal(response.status, 410);
     }
-    assert.equal(handoffs, suffix === "&ef=e1.diagnostic" ? 2 : 1);
+    assert.equal(handoffs, valid ? 2 : 1);
   }
 });
 

@@ -7,15 +7,8 @@ export function adaptTemplate8Runtime(source: string, classic: boolean): string 
   source = source.replace("          notifyTemplate6CardClick(button);", "          if (!cfg.template8) notifyTemplate6CardClick(button);");
   source = source.replace("target_provider: cfg.targetProvider,", "card_index: String(cfg.cardIndex), target_provider: cfg.targetProvider,");
   source = source.replace("target_provider: gatewayMode ? cfg.targetProvider : undefined,", "card_index: cfg.cardIndex, target_provider: gatewayMode ? cfg.targetProvider : undefined,");
-  source = source.replace(/attribution:\s*\{\s*target_provider:\s*cfg\.targetProvider\s*\}/g, "attribution: template8RecoveryAttribution()");
   source = source.replace("      function init() {", `
       var template8SelectionVersion = 0;
-      function template8RecoveryAttribution() {
-        var params = new URLSearchParams(window.location.search);
-        var result = { landing:cfg.slug, landing_resolution:landingResolution || '', target_provider:cfg.targetProvider, card_index:String(cfg.cardIndex) };
-        ['facebook','portofolio','cp','campana','conjunto','anuncio','utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(function(key){var value=params.get(key);if(value)result[key]=value;});
-        return result;
-      }
       function template8DestinationKey() { return cfg.slug + ':' + (cfg.cardIndex || 'unselected'); }
       function template8Destination(card, commit) {
         return Promise.resolve(window.__LB_IDENTITY_READY__ || true).then(function(ready) {

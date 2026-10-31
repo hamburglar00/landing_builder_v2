@@ -110,6 +110,14 @@ export function buildTemplate7FastRuntime(
             (state.value.atrioId || state.value.atrio_id) && (state.value.atrioSlug || state.value.atrio_slug)))) return;`);
   {
     source = replaceOnce(source, '      function init() {', `
+      function template7RecoveryAttribution() {
+        var params=queryParams(),tracking=collectMetaTrackingParams(params);
+        var result={landing:cfg.slug,landing_resolution:landingResolution||'',target_provider:cfg.targetProvider,
+          skin_code:cfg.targetProvider==='multi_skin'?cfg.skinCode:'',fbp:tracking.fbp||'',fbc:tracking.fbc||''};
+        ['facebook','portofolio','cp','campana','conjunto','anuncio','utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(function(key){var value=params.get(key);if(value)result[key]=value;});
+        if(cfg.template8&&cfg.cardIndex)result.card_index=String(cfg.cardIndex);
+        return result;
+      }
       function warmTemplate7Entry() {
         function resume(advisor, name, promo) {
           // The server still reuses this identity on submit. A late background
@@ -123,7 +131,7 @@ export function buildTemplate7FastRuntime(
             body:JSON.stringify({${classicDeviceIdScript ? "device_id:getOrCreateDeviceId()," : ""}landing_id:cfg.landingId,landing_slug:cfg.slug,
               entry_funnel:window.__entryFunnel?window.__entryFunnel.context():undefined,
               atrio_client_id:advisor.atrioClientId || advisor.atrio_client_id,advisor_id:advisor.atrioId || advisor.atrio_id,
-              advisor_slug:advisor.atrioSlug || advisor.atrio_slug,name:name,promo_code:promo,attribution:{target_provider:cfg.targetProvider}})
+              advisor_slug:advisor.atrioSlug || advisor.atrio_slug,name:name,promo_code:promo,attribution:template7RecoveryAttribution()})
           }).then(function(response){if(!response.ok)throw new Error('entry pending');return response.json()}).then(function(result){
             if (entryAttempt !== template7EntryGeneration) return;
             if(!result || typeof result.handoff_url !== 'string')throw new Error('entry pending');
@@ -218,7 +226,7 @@ export function buildTemplate7FastRuntime(
   // These functions only decorate templates 2/4/5. Leave attribution, identity,
   // phone normalization, retry and deduplication byte-for-byte unchanged.
   const decorationStart = source.indexOf("      function initSocialProof() {");
-  const warmStart = source.indexOf("      function warmTemplate7Entry() {", decorationStart);
+  const warmStart = source.indexOf("      function template7RecoveryAttribution() {", decorationStart);
   const decorationEnd = warmStart >= 0 ? warmStart : source.indexOf("      function init() {", decorationStart);
   if (decorationStart < 0 || decorationEnd < 0) throw new Error("Template 7 decorations changed");
   source = source.slice(0, decorationStart) + source.slice(decorationEnd);

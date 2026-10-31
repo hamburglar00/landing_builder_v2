@@ -8,7 +8,7 @@ const advisor = { atrioClientId: "client", atrioId: "advisor", atrioSlug: "gera"
 async function runWarm(value: object, classic = false, warmResult: object = {ready: true}, supersede = false) {
   const source = buildTemplate7FastRuntime("test", { id: "landing", name: "test", layout: { template: 7 } } as never,
     classic ? "function getOrCreateDeviceId(){return 'device';}" : "");
-  const start = source.indexOf("      function warmTemplate7Entry()");
+  const start = source.indexOf("      function template7RecoveryAttribution()");
   const end = source.indexOf("      function init() {", start);
   assert.ok(start > 0 && end > start);
   const requests: { url: string; payload: object }[] = [], redirects: string[] = [];
@@ -28,6 +28,8 @@ async function runWarm(value: object, classic = false, warmResult: object = {rea
     get template7EntryGeneration() { return state.template7EntryGeneration; },
     set template7EntryGeneration(value: number) { state.template7EntryGeneration = value; },
     document: {querySelector: () => null}, setTemplate7Error: () => {},
+    queryParams: () => new URLSearchParams('landing=diana&fbclid=original-click&utm_source=facebook&new_meta_field=x&target_provider=evil&advisor_id=foreign'),
+    collectMetaTrackingParams: () => ({fbc:'fb.1.123.original-click',fbp:'fb.1.123.original-browser'}), landingResolution:'url_parameter',
   });
   await new Promise(resolve => setImmediate(resolve));
   return { requests, redirects };
@@ -42,6 +44,7 @@ test("returning pool visitor uses existing identity/name and promo without anoth
   assert.equal(Reflect.get(requests[0].payload, "name"), "Existing");
   assert.equal(Reflect.get(requests[0].payload, "promo_code"), "PROMO");
   assert.equal(Reflect.has(requests[0].payload, "device_id"), false);
+  assert.deepEqual(Reflect.get(requests[0].payload,"attribution"),{landing:'test',landing_resolution:'url_parameter',target_provider:'ganamos_net',skin_code:'',fbp:'fb.1.123.original-browser',fbc:'fb.1.123.original-click',utm_source:'facebook'});
   assert.deepEqual(redirects, ["https://casino.test/prepare?t=opaque"]);
 });
 test("classic pool recovery preserves its stable device identifier and start endpoint", async () => {

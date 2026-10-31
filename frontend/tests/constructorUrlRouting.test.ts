@@ -27,6 +27,13 @@ test("missing and blank selection preserve existing entry routes", async () => {
   }
 });
 
+test('Diana overrides Gast with future Meta fields without changing their attribution',async()=>{
+  const input=request('/l/gast?landing=diana&new_meta_field=x&new_meta_field=y&fbclid=original&utm_source=facebook&return_to=https://evil.test');
+  const rewritten=new URL((await proxy(input)).headers.get('x-middleware-rewrite')!);
+  assert.equal(rewritten.origin,input.nextUrl.origin);assert.equal(rewritten.pathname,'/l/diana');
+  assert.equal(rewritten.search,input.nextUrl.search);
+});
+
 test("selection cannot rewrite panel, API, assets, promotions or nested public routes", async () => {
   for (const path of ["/login", "/admin", "/dashboard", "/api/track", "/public-assets/landing-runtime-v3.js", "/_next/static/app.js", "/favicon.ico", "/promo/example", "/w/token", "/l/old/extra", "/privacy-policy"]) {
     const response = await proxy(request(`${path}?landing=bianca2`));

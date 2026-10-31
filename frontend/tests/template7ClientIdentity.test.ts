@@ -26,8 +26,9 @@ test("bootstrap inicial fija cookie segura y responde solo ok", async () => {
 test("Multi Skin preparation keeps its signed flow and closed skin while duplicate/foreign skins fail",()=>{
   const script=buildTemplate7HandoffRuntimeScript(),context={URL,cfg:{targetProvider:'multi_skin'}};
   const url='https://gateway.example.com/prepare?t=p1.valid&skin=bet30&ef=e1.signed&fbclid=click';
-  assert.equal(runInNewContext(script+`;template7CheckedHandoff(${JSON.stringify(url)}).href`,context),url);
-  for(const bad of [url+'&skin=ganamos_plus',url.replace('skin=bet30','skin=unknown'),url.replace('/prepare','/start')])assert.throws(()=>runInNewContext(script+`;template7CheckedHandoff(${JSON.stringify(bad)})`,context));
+  assert.equal(runInNewContext(script+`;template7CheckedHandoff(${JSON.stringify(url)}).href`,context),'https://gateway.example.com/prepare?t=p1.valid&ef=e1.signed&skin=bet30');
+  for(const bad of [url+'&skin=ganamos_plus',url.replace('skin=bet30','skin=unknown')])assert.throws(()=>runInNewContext(script+`;template7CheckedHandoff(${JSON.stringify(bad)})`,context));
+  assert.equal(runInNewContext(script+`;template7CheckedHandoff(${JSON.stringify(url.replace('/prepare','/start')+'&provider=evil&return_to=https://evil.test')}).href`,context),'https://gateway.example.com/start?t=p1.valid&ef=e1.signed');
 });
 
 test("segunda visita conserva exactamente el UUID y no lo expone al navegador", async () => {
@@ -134,16 +135,16 @@ test("handoff no se precarga, valida token y crea intent Android con fallback", 
   assert.equal(runInNewContext(`${script}; template7WebviewKind("Mozilla/5.0 (iPhone) Instagram")`, context), "ios");
   assert.match(script, /catch \(error\) \{ showTemplate7HandoffFallback/);
   assert.doesNotMatch(script, /fetch\(|preload|prefetch|lb_cid/);
-  assert.throws(() => runInNewContext(`${script}; template7HandoffIntent("https://gateway.example.com/start?t=one&extra=1")`, context));
+  assert.equal(runInNewContext(`${script}; template7HandoffIntent("https://gateway.example.com/start?t=one&extra=1")`, context),runInNewContext(`${script}; template7HandoffIntent("https://gateway.example.com/start?t=one")`, context));
 });
 
-test("Facebook and Instagram handoffs stay in the current browser and retain marketing attribution", () => {
+test("Facebook and Instagram handoffs stay in the current browser and exclude marketing from access URLs", () => {
   for(const ua of ['Mozilla/5.0 Android FBAN/FB4A','Mozilla/5.0 iPhone Instagram','Mozilla/5.0 Chrome']) {
     const navigations:string[]=[];
     const context={URL,Date,navigator:{userAgent:ua},window:{location:{assign:(url:string)=>navigations.push(url)},localStorage:{setItem:()=>{}}}};
-    const destination='https://gateway.example.com/prepare?t=once&ef=e1.signed-fixture&fbclid=meta-click&utm_source=facebook';
+    const destination='https://gateway.example.com/prepare?t=once&ef=e1.signed-fixture&fbclid=meta-click&utm_source=facebook&new_meta_field=x&new_meta_field=y&return_to=https://evil.test&provider=evil';
     runInNewContext(buildTemplate7HandoffRuntimeScript()+`;navigateTemplate7Handoff(${JSON.stringify(destination)})`,context);
-    assert.deepEqual(navigations,[destination]);
+    assert.deepEqual(navigations,['https://gateway.example.com/prepare?t=once&ef=e1.signed-fixture']);
   }
   const context={URL};
   for(const suffix of ['&ef=','&ef=one&ef=two','&ef='+ 'a'.repeat(2004)]) {

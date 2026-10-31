@@ -34,7 +34,7 @@ test("Ganamos+ sends the handoff to its domain and rejects a response on the sha
       assert.equal(String(input), origins.GANAMOS_PLUS_GATEWAY_ORIGIN + "/api/handoffs");
       assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer testing-key");
       assert.equal(JSON.parse(String(init?.body)).skin_code, "ganamos_plus");
-      return Response.json({ handoff_url: returnedOrigin + "/start?t=sealed", expires_in: 120, provider_username: "demo-user" });
+      return Response.json({ handoff_url: returnedOrigin + "/start?t=sealed&new_meta_field=x&fbclid=click&return_to=https://evil.test&provider=evil", expires_in: 120, provider_username: "demo-user" });
     };
     const run = () => createProviderHandoff("multi_skin", advisor, deviceId, player,
       { username: "fixture-user", password: "fixture-password", platform: "multi_skin", created: false }, "ganamos_plus");
