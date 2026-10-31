@@ -1,5 +1,18 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Estado guardado de Meta en Atrio (31/10/2026)
+
+- La tarjeta de Meta del Admin muestra «Configurada» en verde sólo cuando tiene guardada una `eventUrl` propia válida; escribir un borrador no activa ese estado. Los asesores heredan la configuración del Admin y no requieren URL propia. Conservar permisos, configuración global y tarjetas de Super Admin.
+- Validación: `internal-chat/docs/validation/meta-integration-status-20261031.md`.
+
+### Procedencia de FBC por landing y píxel (31/10/2026)
+
+- El usuario aclara que sus accesos fueron orgánicos y que la publicidad de Diana comenzó el día anterior. La investigación encontró el mismo FBC anterior en otras landings, monedas y píxeles: su persistencia no acredita un anuncio de Diana ni el origen publicitario de ese identificador. Corregir esa atribución compartida en constructor y clásico.
+- Guardar una procedencia nueva y versionada por UUID de landing, workspace/moneda y píxel desde la configuración efectiva. Una cookie global histórica sin esa procedencia queda fuera de la atribución de la nueva landing; no borrar la cookie común ni reasignarle un origen que no conocemos.
+- Priorizar un `fbclid` válido de la entrada actual, validar formato y antigüedad del FBC y conservar el timestamp original durante reingresos y reintentos. Un regreso directo mantiene una atribución válida de su mismo contexto; la llegada actual y la procedencia histórica se registran por separado.
+- Mantener el SDK oficial para sus funciones existentes y aceptar sólo una señal nueva cuya recolección pueda observarse en el contexto actual. No rescatar el FBC global desconocido mediante un merge o fallback. Para conservar EBP aunque exista una cookie ajena, usar `collectParams` del SDK oficial mediante un helper acotado que consulta el bridge sin leer ni escribir cookies. Cargarlo en paralelo sin demorar el CTA.
+- Conservar los disparadores, deduplicación y políticas de Contact, LEAD y Purchase. Revisar también ingreso del dato y herencia en servidor; no modificar por este diagnóstico las conversiones históricas ni reemitir eventos. Implementación y pruebas aisladas antes de publicar.
+
 ### Todas las skins y fuente efectiva de Template 7/8 (31/10/2026)
 
 - La revisión solicitada abarca las catorce skins, sus logos/paletas y el ingreso de ambos motores, no una excepción para Bet30. Continuar activado debe mostrar usuario, clave y botón con la marca de la página elegida; desactivado conserva el ingreso automático. No cambiar el ajuste productivo para verificarlo ni crear cuentas en las pruebas de esta auditoría.
