@@ -56,3 +56,37 @@ node scripts/sync-gateway-entry-funnel.mjs --check
 ```
 
 These validations cover local browser/runtime behavior, actual PostgreSQL concurrency/permissions and mocked orchestration. They do not claim a completed real new-account E2E through API2 or Meta's physical in-app browsers.
+
+## Production rollout — 30 October 2026 (Argentina)
+
+All six repositories were committed, pushed and published. Gateways were promoted before the landing engines. Every Vercel deployment reached READY with the exact implementation commit below; Multi Skin was also rebuilt with OpenNext and published to Cloudflare with existing variables preserved.
+
+| Component | Implementation commit | Published deployment |
+|---|---|---|
+| Builder | `e317f2865adb8ec74a6b515fde64c9b2dfb9ff8e` | `dpl_D9Y5rzJvg4nnEEKYs1rwYLCGPjm8` |
+| Classic | `fa47cc4d68296acb3a7ed8f9040115c4b81e083f` | `dpl_GQpxtRf9k8g6wmU2WLEijTs1zKYo` |
+| Rey de Ases | `b35ef0ba32af8feb0c7297a0cefdf26221735da6` | `dpl_2kFw9GxozqCLMNq4f29T7w6myXym` |
+| Ases del Norte | `e35c20eb2692b522a68b0b64e9f47817bbbeb0ea` | `dpl_44jyPzr7iELWcynyC4rFrhqVLssX` |
+| Ganamos NET | `15ef1e22d792a62e82a21d22d6640b69a536b6a3` | `dpl_556DLoxnnN63jSoeuieg7whoXyJX` |
+| Multi Skin | `fd0c04c395fee5d927b76a92a9a542522ec7d7e6` | `dpl_GpqQTJTa9rZPPTY4mJXcMEEZLjzD` |
+
+Cloudflare Worker version: `33ace3a7-fe93-46e5-9f7e-63a83caad5a5`, serving `ganamosnet.global` and its workers.dev origin. The upstream relay was unchanged.
+
+Database changes already applied by this release:
+
+- Builder: `20261030234129_entry_funnel_observability.sql`.
+- Rey de Ases: `20261030234520_handoff_retry_capability.sql`. Existing consumed passes without a retry capability remain consumed. Verified RLS/forced RLS and no anonymous/authenticated table access.
+- Atrio: `gateway_entry_settings.redirect_wait_enabled=false`. The configurable `redirect_wait_seconds=20` is retained but disabled.
+
+This release introduces no API2 or Panel3 code changes or migrations. The separately pending real Multi Skin account/skin E2E still requires that integration and its bot configuration to be deployed.
+
+Post-publication verification:
+
+- 48/48 read-only gateway checks across four Vercel public origins and two Cloudflare origins: marketing parameters and diagnostic context accepted by `/prepare`; duplicate/missing access tokens and unexpected authority parameters rejected; diagnostic GET without a cookie returns 204; public gateway asset hashes match the implementation commits.
+- Classic `/diana` and Builder `/l/diana` return 200 and reference the new content-hashed runtime. Both assets return 200 with one-year immutable caching and match the local manifest exactly.
+- Both first-party collectors return 405 for unsupported GET, 400 for an invalid payload and 429 for a valid payload referencing a deliberately nonexistent landing. SQL checks before/after confirm zero inserted test events and rate-limit rows. These checks do not emit Contact, PageView or CAPI events.
+- Migration presence and disabled artificial wait were rechecked after publication. Git working trees were clean and synchronized with upstream before this documentation-only update.
+
+Evidence files are in the local temporary directory: `gateway-production-entry-vercel-report-20261030.json`, `gateway-production-entry-cloudflare-report-20261030.json`, `entry-funnel-prod-landing-panelbotadmin-com.json`, and `entry-funnel-prod-mkt-panelbotadmin-com.json`. They contain no access tokens, cookies or player credentials.
+
+The browser regression matrices cover 64 gateway, 36 landing and 8 telemetry scenarios using controlled services. Four real PostgreSQL retry/concurrency checks passed. A subsequently added real lock-timeout case could not run because the local Docker daemon became read-only; the bounded transaction/rollback behavior passed its route/unit checks. Production builds passed. Real Meta in-app rendering, provider latency and campaign conversion cost must be evaluated from subsequent traffic; these checks do not establish those outcomes or guarantee delivery under every upstream failure.
