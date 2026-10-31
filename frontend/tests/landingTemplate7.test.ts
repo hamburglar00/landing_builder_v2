@@ -177,7 +177,7 @@ test("Template 7 inicia bootstrap antes del Pixel y conserva Contact sin duplica
   const html = renderPublicLandingHtml({ slug: "prueba-7", config: built as PublicLandingConfig });
   const bootstrapAt = html.indexOf('fetch("/api/client-identity/bootstrap"');
   const pixelAt = html.indexOf("fbq('track', 'PageView')");
-  const runtimeAt = html.indexOf('window.__PUBLIC_LANDING_RUNTIME_CONFIG__=');
+  const runtimeAt = html.indexOf('data-template7-runtime defer');
   assert.ok(bootstrapAt > 0 && bootstrapAt < pixelAt && pixelAt < runtimeAt);
   assert.match(publicRuntime, /recordLandingJourneyStart\(\);/);
   assert.equal(html.match(/fbq\('track', 'PageView'\)/g)?.length, 1);

@@ -1,6 +1,8 @@
 import type { MultiSkinCode, TargetProvider } from "../landing/types";
+import type { EntryFunnelContext } from "../landing/entryFunnel";
 
 export type StartRequest = {
+  entry_funnel?: EntryFunnelContext;
   landing_id: string;
   card_index?: number;
   landing_slug: string;

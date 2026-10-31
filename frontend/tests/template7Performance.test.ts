@@ -4,6 +4,7 @@ import { Script } from "node:vm";
 import { optimizeTemplate7Images, template7ImageUrl, template7ImageWarmUrls, template7Logo } from "../lib/landing/template7Images";
 import { imageConfigFromLanding, warmTemplate7Images } from "../lib/landing/warmTemplate7Images.server";
 import { renderPublicLandingHtml, renderClassicTemplate7InlineHtml } from "../components/public-landing/renderPublicLandingHtml";
+import { template7RuntimeAsset } from "../components/public-landing/template7RuntimeAsset";
 import { TEMPLATE7_CRITICAL_CSS, PUBLIC_LANDING_CSS } from "../components/public-landing/publicLandingCss";
 import type { PublicLandingConfig } from "../components/public-landing/types";
 import { handlePanelRevalidation, type Actor, type RevalidationBackend } from "../lib/revalidation/service.server";
@@ -57,7 +58,7 @@ test("templates 1-6 retain image configuration and CSS, with the current attribu
 for (const provider of ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_skin"] as const) {
   test(`${provider}: both engines ship a usable inline form and one tracking implementation`, () => {
     const config = fixture(provider);
-    const pages = [renderPublicLandingHtml({ slug: "test", config }), renderClassicTemplate7InlineHtml({ slug: "test", config }, "function getOrCreateDeviceId(){return crypto.randomUUID();}")];
+    const pages = [renderPublicLandingHtml({ slug: "test", config }) + `<script>${template7RuntimeAsset(7,false).source}</script>`, renderClassicTemplate7InlineHtml({ slug: "test", config }, "function getOrCreateDeviceId(){return crypto.randomUUID();}") + `<script>${template7RuntimeAsset(7,true).source}</script>`];
     for (const html of pages) {
       assert.match(html, /data-template7-critical/);
       assert.doesNotMatch(html, /<script[^>]+src="\/public-assets\/landing-runtime/);
@@ -74,7 +75,7 @@ for (const provider of ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_s
       assert.match(html, /shouldSkipContact = context.shouldSkipContact/);
       for (const match of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) new Script(match[1]);
       const runtime = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].at(-1)![1];
-      assert.doesNotMatch(runtime, /addEventListener\("DOMContentLoaded"/);
+      assert.doesNotMatch(runtime, /addEventListener\("DOMContentLoaded", init/);
       assert.doesNotMatch(runtime, /function initTemplate4LiveDetails/);
     }
     assert.match(pages[0], /fetchWithEntryRecovery\("\/api\/template7\/prepare"/);

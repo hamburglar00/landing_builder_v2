@@ -103,6 +103,56 @@ async function prepareToken(): Promise<string> {
   return token;
 }
 
+test("failed account preparation preserves only validated diagnostics and Retry-After", async () => {
+  const at = Date.now();
+  const context = { flow_id: "99999999-9999-4999-8999-999999999999", landing_id: landingId, template: 7,
+    telemetry_origin: "https://landing.panelbotadmin.com", started_at: at };
+  const issued = await handleTemplate7Prepare(new Request("https://mkt.example.com/api/template7/prepare", {
+    method: "POST", headers: { "Content-Type": "application/json", Cookie: `lb_cid=${deviceId}` },
+    body: JSON.stringify({ ...payload, entry_funnel: context }),
+  }), env, at);
+  assert.equal(issued.status, 200);
+  const token = new URL((await issued.json()).handoff_url).searchParams.get("t");
+  const dependencies = deps(); dependencies.allowStart = async () => false;
+  const incoming = () => new Request("https://mkt.example.com/api/template7/preparations/account", {
+    method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}` },
+    body: JSON.stringify({ token }),
+  });
+  const failed = await handleTemplate7PreparationAccount(incoming(), env, dependencies, at + 1000);
+  assert.equal(failed.status, 429);
+  assert.match(failed.headers.get("retry-after") || "", /^\d+$/);
+  const text = await failed.text();
+  assert.deepEqual(JSON.parse(text).entry_funnel, context);
+  assert.doesNotMatch(text, /Martin|secret|password|p1\./);
+});
+
+test("diagnostic context follows the confirmed account handoff; invalid context never blocks entry", async () => {
+  const at = Date.now();
+  const context = { flow_id: "99999999-9999-4999-8999-999999999999", landing_id: landingId, template: 7,
+    telemetry_origin: "https://landing.panelbotadmin.com", started_at: at };
+  for (const candidate of [context, { ...context, landing_id: ownerId }, { ...context, telemetry_origin: "https://evil.test" }]) {
+    const issued = await handleTemplate7Prepare(new Request("https://mkt.example.com/api/template7/prepare", {
+      method: "POST", headers: { "Content-Type": "application/json", Cookie: `lb_cid=${deviceId}` },
+      body: JSON.stringify({ ...payload, entry_funnel: candidate }),
+    }), env, at);
+    assert.equal(issued.status, 200);
+    const token = new URL((await issued.json()).handoff_url).searchParams.get("t");
+    const dependencies = deps(); let captured: unknown;
+    dependencies.createHandoff = async (_provider,_advisor,_device, _player, account,_skin,_promo,entryFunnel) => {
+      assert.equal(account.username,"player"); captured = entryFunnel;
+      return { handoff_url:"https://gateway.example.com/start?t=handoff",expires_at:"2026-10-30T23:59:59Z",binding_created:false };
+    };
+    const response = await handleTemplate7PreparationAccount(new Request("https://mkt.example.com/api/template7/preparations/account", {
+      method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}`},body:JSON.stringify({token}),
+    }),env,dependencies,at+1000);
+    assert.equal(response.status,200);
+    const body=await response.json();
+    assert.equal(body.username,"player");
+    assert.deepEqual(captured,candidate===context?context:undefined);
+    assert.deepEqual(body.entry_funnel,candidate===context?context:undefined);
+  }
+});
+
 test("prepare responde de inmediato con un pase opaco y complete conserva identidad", async () => {
   const token = await prepareToken();
   const response = await handleTemplate7PreparationComplete(new Request("https://mkt.example.com/api/template7/preparations/complete", {
@@ -167,6 +217,37 @@ test("renewing an expired pass preserves the account and never resolves or provi
   assert.equal(renewed.status,200);
   assert.deepEqual(await renewed.json(),{handoff_url:"https://gateway.example.com/start?t=fresh-pass",username:"player"});
   assert.deepEqual(trace,{links:2,handoffs:2});
+});
+
+test("finalize and renewal accept the encrypted diagnostic carrier but reject extra or duplicated parameters", async () => {
+  const token = await prepareToken();
+  for (const suffix of ["&ef=e1.diagnostic", "&ef=e1.one&ef=e1.two", "&fbclid=foreign", "#unexpected"]) {
+    const dependencies = deps();
+    let handoffs = 0;
+    dependencies.createHandoff = async () => {
+      handoffs++;
+      return { handoff_url: `https://gateway.example.com/start?t=pass-${handoffs}${suffix}`, expires_at: "2026-10-30T23:59:59Z", binding_created: false };
+    };
+    const account = await handleTemplate7PreparationAccount(new Request("https://mkt.example.com/api/template7/preparations/account", {
+      method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}` },
+      body: JSON.stringify({ token }),
+    }), env, dependencies, now + 1000);
+    assert.equal(account.status, 200);
+    const { continuation_token } = await account.json();
+    dependencies.resolvePlayer = async () => { throw Error("must preserve player"); };
+    dependencies.resolveAccount = async () => { throw Error("must preserve account"); };
+    for (const renew_handoff of [false, true]) {
+      const response = await handleTemplate7PreparationFinalize(new Request("https://mkt.example.com/api/template7/preparations/finalize", {
+        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}` },
+        body: JSON.stringify({ continuation_token, renew_handoff }),
+      }), env, dependencies, now + 2000);
+      if (suffix === "&ef=e1.diagnostic") {
+        assert.equal(response.status, 200);
+        assert.deepEqual(await response.json(), { handoff_url: `https://gateway.example.com/start?t=pass-${renew_handoff ? 2 : 1}${suffix}`, username: "player" });
+      } else assert.equal(response.status, 410);
+    }
+    assert.equal(handoffs, suffix === "&ef=e1.diagnostic" ? 2 : 1);
+  }
 });
 
 test("stage timings preserve parallel link and handoff work and never expose identity or credentials", { timeout: 1000 }, async () => {

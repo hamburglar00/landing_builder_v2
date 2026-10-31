@@ -22,8 +22,8 @@ async function runWarm(value: object, classic = false, warmResult: object = {rea
   };
   new Script(buildTemplate7HandoffRuntimeScript() + source.slice(transitionStart, transitionEnd) + source.slice(start, end) + "\nwarmTemplate7Entry();").runInNewContext({
     Promise, URL, cfg: { landingId: "landing", slug: "test", targetProvider: "ganamos_net" },
-    window: { location: { replace: (url: string) => redirects.push(url) } },
-    ensureAtrioPromise: async () => value, getOrCreateDeviceId: () => "device",
+    window: { location: { assign: (url: string) => redirects.push(url) } },
+    ensureAtrioPromise: async () => ({...value}), getOrCreateDeviceId: () => "device",
     fetch, fetchWithEntryRecovery: fetch, template7Transition: null, clickLocked: false,
     get template7EntryGeneration() { return state.template7EntryGeneration; },
     set template7EntryGeneration(value: number) { state.template7EntryGeneration = value; },

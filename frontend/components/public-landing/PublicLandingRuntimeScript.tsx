@@ -4,6 +4,7 @@ import { buildTemplate7HandoffRuntimeScript } from "./template7HandoffScript";
 import { buildArgentinaWhatsappNormalizerScript } from "@/lib/landing/argentinaWhatsapp";
 import { captureLandingResolution } from "@/lib/landing/resolution";
 import { ENTRY_REQUEST_RECOVERY_SCRIPT } from "@/lib/reyDeAses/request-recovery";
+import { buildEntryFunnelRuntimeScript } from "@/lib/landing/entryFunnel.client";
 
 type Props = {
   slug: string;
@@ -125,11 +126,12 @@ export function buildRuntimeConfig({ slug, config }: Props) {
   return runtimeConfig;
 }
 
-export function buildPublicLandingRuntimeSource() {
+export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
   const script = `
     (function () {
       var cfg = window.__PUBLIC_LANDING_RUNTIME_CONFIG__ || {};
       try { delete window.__PUBLIC_LANDING_RUNTIME_CONFIG__; } catch (e) {}
+      ${includeEntryFunnel ? buildEntryFunnelRuntimeScript() : ""}
       var clickLocked = false;
       var landingResolution = (${captureLandingResolution.toString()})(cfg.slug, cfg.automaticLandingSelection === true);
       var template7ContactSent = false;
@@ -177,6 +179,7 @@ export function buildPublicLandingRuntimeSource() {
       }
 
       function failTemplate7(button) {
+        if (window.__entryFunnel) window.__entryFunnel.emit("entry_error", { error_code: "account_unavailable" });
         clickLocked = false;
         button.disabled = false;
         setButtonText(button, getRestButtonText(button));
@@ -196,6 +199,7 @@ export function buildPublicLandingRuntimeSource() {
           body: JSON.stringify({
             landing_id: cfg.landingId,
             landing_slug: cfg.slug,
+            entry_funnel: window.__entryFunnel ? window.__entryFunnel.context() : undefined,
             name: name,
             phone: phone || undefined,
             atrio_client_id: atrioClientId,
@@ -1288,6 +1292,10 @@ export function buildPublicLandingRuntimeSource() {
       function processCtaClick(button, leadCaptureValues) {
         if (clickLocked || button.disabled) return;
         if (cfg.template === 7 && !String(leadCaptureValues && leadCaptureValues.firstName || "").trim()) return;
+        if (cfg.template === 7 && window.__entryFunnel) {
+          if (!window.__T7_EARLY_CTA_RECORDED__) window.__entryFunnel.emit("cta_clicked");
+          window.__T7_EARLY_CTA_RECORDED__ = false;
+        }
         if (cfg.template === 7) setTemplate7Error("");
         clickLocked = true;
         button.disabled = true;
@@ -1369,9 +1377,11 @@ export function buildPublicLandingRuntimeSource() {
                 ? buildAtrioRedirectUrl(promoCode, atrioData)
                 : "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
               if (gatewayMode && (!firstNonEmpty([atrioData.atrioClientId, atrioData.atrio_client_id]) || !firstNonEmpty([atrioData.atrioId, atrioData.atrio_id]) || !firstNonEmpty([atrioData.atrioSlug, atrioData.atrio_slug]))) {
+                if (window.__entryFunnel) window.__entryFunnel.emit("entry_error", { error_code: "destination_unavailable" });
                 failTemplate7(button);
                 return;
               }
+              if (gatewayMode && window.__entryFunnel) window.__entryFunnel.emit("destination_ready");
               if ((!atrioMode && !phone) || (atrioMode && !gatewayMode && !redirectUrl)) {
                 setNoPhoneState(button);
                 return;

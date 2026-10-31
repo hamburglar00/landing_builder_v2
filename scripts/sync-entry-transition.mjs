@@ -1,9 +1,12 @@
 import { createRequire } from "node:module";
 import { readFile, writeFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 const canonical = new URL("../../landing-autologuin/", import.meta.url);
 const source = await readFile(new URL("src/lib/gateway-entry-transition.ts", canonical), "utf8");
-const ts = createRequire(new URL("../frontend/package.json", import.meta.url))("typescript");
-const compiled = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
+const { build } = createRequire(new URL("../frontend/package.json", import.meta.url))("esbuild");
+const bundled = await build({ absWorkingDir: fileURLToPath(canonical), entryPoints: ["src/lib/gateway-entry-transition.ts"],
+  bundle: true, write: false, platform: "node", format: "esm", target: "es2022" });
+const compiled = bundled.outputFiles[0].text;
 const { GATEWAY_ENTRY_TRANSITION_RUNTIME } = await import("data:text/javascript;base64," + Buffer.from(compiled).toString("base64"));
 const fragment = `  // BEGIN shared entry transition\n${GATEWAY_ENTRY_TRANSITION_RUNTIME}\n  // END shared entry transition\n`;
 const check = process.argv.includes("--check");
@@ -24,6 +27,9 @@ for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "mu
   await sync(target, without.replace("  function initializeChat() {", fragment + "\n  function initializeChat() {"));
 }
 // Template 8 also reads the brand registry to prewarm the selected page.
-const builderSource = source.replace("} as const;", "} as const;\nexport { brands as GATEWAY_ENTRY_BRANDS };");
+// The landing runtime already installs its funnel. Avoid embedding that factory twice.
+const builderSource = source.replace('import { GATEWAY_ENTRY_FUNNEL_SCRIPT } from "@/lib/entry-funnel-client";\n', '')
+  .replace('GATEWAY_ENTRY_TRANSITION_RUNTIME = GATEWAY_ENTRY_FUNNEL_SCRIPT + ', 'GATEWAY_ENTRY_TRANSITION_RUNTIME = ')
+  .replace("} as const;", "} as const;\nexport { brands as GATEWAY_ENTRY_BRANDS };");
 await sync(new URL("../frontend/lib/gateway-entry-transition.ts", import.meta.url), builderSource);
 console.log("Transición compartida verificada: constructor, clásico y cuatro gateways.");

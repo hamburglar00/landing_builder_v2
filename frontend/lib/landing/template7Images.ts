@@ -1,7 +1,10 @@
 /** Public derivatives only. The editor's original URL is never overwritten. */
 type ImageConfig = {
   layout?: { template?: number };
-  content?: { logoUrl?: string; logoSrcSet?: string; logoOriginalUrl?: string };
+  content?: {
+    logoUrl?: string; logoSrcSet?: string; logoOriginalUrl?: string;
+    template8?: { backgroundImageUrl?: string; cards?: Array<{ imageUrl: string }> };
+  };
   background?: {
     images?: string[];
     imagesResponsive?: Array<{ mobile: string; tablet: string; desktop: string }>;
@@ -49,8 +52,26 @@ export function template7Logo(raw: string) {
   };
 }
 
+export function template8Image(raw: string, background = false) {
+  const widths = background ? [640, 1024, 1600] : [240, 480, 720];
+  const variants = widths.map(width => template7ImageUrl(raw, width));
+  return {
+    src: variants[background ? 0 : 1],
+    srcSet: variants.every(url => url === raw) ? "" : variants.map((url, index) => `${url} ${widths[index]}w`).join(", "),
+    sizes: background ? "100vw" : "(max-width: 540px) calc((100vw - 42px) / 2), 240px",
+  };
+}
+
 /** Also covers already-published landings without rewriting their saved config. */
 export function optimizeTemplate7Images<T extends ImageConfig>(config: T): T {
+  if (config.layout?.template === 8 && config.content?.template8) {
+    const cover = config.content.template8;
+    return { ...config, content: { ...config.content, template8: {
+      ...cover,
+      backgroundImageUrl: template8Image(cover.backgroundImageUrl || "", true).src,
+      cards: (cover.cards || []).map(card => ({ ...card, imageUrl: template8Image(card.imageUrl).src })),
+    } } };
+  }
   if (config.layout?.template !== 7) return config;
   const logo = template7Logo(config.content?.logoUrl || "");
   const images = config.background?.images || [];

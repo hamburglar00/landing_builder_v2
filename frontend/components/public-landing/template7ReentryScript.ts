@@ -1,6 +1,7 @@
-/** The gateway checks its own HttpOnly cookie during a top-level navigation.
- * Cross-site fetch/iframes cannot reliably read a SameSite=Lax session. */
-export function buildTemplate7ReentryScript(gatewayOrigin: string, landingPath?: string): string {
+/** Only a returning visitor with a non-secret prior navigation hint needs the
+ * gateway's top-level HttpOnly cookie check. A fresh visitor sees the form at
+ * once; destination/start still resolve an existing account server-side. */
+export function buildTemplate7ReentryScript(gatewayOrigin: string, landingPath?: string, checkGatewaySession = true): string {
   let origin: string;
   try {
     const url = new URL(gatewayOrigin);
@@ -29,10 +30,19 @@ export function buildTemplate7ReentryScript(gatewayOrigin: string, landingPath?:
           var original = new URL(stored.url);
           if (original.origin === url.origin && (stored.returnPath || original.pathname) === url.pathname && url.pathname === landingPath) {
             window.sessionStorage.removeItem(key);
+            // A missing gateway session should not bounce on every refresh.
+            try { window.localStorage.removeItem("template7:gateway-visited:" + gateway); } catch(e) {}
             window.history.replaceState(window.history.state, "", original.pathname + original.search + original.hash);
             return;
           }
         }
+        // Shared accounts can carry another skin's gateway cookie. Resolve that
+        // account through this landing's saved skin instead of reopening it.
+        if (!${JSON.stringify(checkGatewaySession)}) return;
+        // This hint never authorizes access or identifies an account. The
+        // gateway must validate its own cookie; start validates local identity.
+        var visited = Number(window.localStorage.getItem("template7:gateway-visited:" + gateway) || 0);
+        if (!visited || visited > Date.now() || Date.now() - visited > 31536000000) return;
         // Keep attribution and form-prefill parameters on the landing's origin.
         // Return to the rendered landing, even when ?landing selected it from
         // the root or another route. The gateway sees no attribution/prefill.

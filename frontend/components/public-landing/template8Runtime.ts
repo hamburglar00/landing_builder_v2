@@ -2,13 +2,12 @@
 export function adaptTemplate8Runtime(source: string, classic: boolean): string {
   source = source.replaceAll("[cfg.slug]", "[template8DestinationKey()]");
   source = source.replace("      function ensureAtrioPromise() {", "      function ensureAtrioPromise() {\n        if (!cfg.cardIndex) return Promise.resolve(null);");
-  source = source.replace("      function warmTemplate7Entry() {", "      function warmTemplate7Entry() {\n        if (!cfg.cardIndex) { prewarmTemplate8Pages(); return; }");
-  source = source.replace("landing_slug: cfg.slug,\n            name:", "landing_slug: cfg.slug,\n            card_index: cfg.cardIndex,\n            name:");
+  source = source.replace("      function warmTemplate7Entry() {", "      function warmTemplate7Entry() {\n        if (!cfg.cardIndex) return;");
   source = source.replace("if (cfg.template !== 6 ||", "if ((cfg.template !== 6 && !cfg.template8) ||");
   source = source.replace("          notifyTemplate6CardClick(button);", "          if (!cfg.template8) notifyTemplate6CardClick(button);");
   source = source.replace("target_provider: cfg.targetProvider,", "card_index: String(cfg.cardIndex), target_provider: cfg.targetProvider,");
   source = source.replace("target_provider: gatewayMode ? cfg.targetProvider : undefined,", "card_index: cfg.cardIndex, target_provider: gatewayMode ? cfg.targetProvider : undefined,");
-  source = source.replace("attribution: { target_provider: cfg.targetProvider }", "attribution: template8RecoveryAttribution()");
+  source = source.replace(/attribution:\s*\{\s*target_provider:\s*cfg\.targetProvider\s*\}/g, "attribution: template8RecoveryAttribution()");
   source = source.replace("      function init() {", `
       var template8SelectionVersion = 0;
       function template8RecoveryAttribution() {
@@ -17,7 +16,7 @@ export function adaptTemplate8Runtime(source: string, classic: boolean): string 
         ['facebook','portofolio','cp','campana','conjunto','anuncio','utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(function(key){var value=params.get(key);if(value)result[key]=value;});
         return result;
       }
-      function template8DestinationKey() { return cfg.slug + ':' + (cfg.targetProvider || 'unselected'); }
+      function template8DestinationKey() { return cfg.slug + ':' + (cfg.cardIndex || 'unselected'); }
       function template8Destination(card, commit) {
         return Promise.resolve(window.__LB_IDENTITY_READY__ || true).then(function(ready) {
           if (ready !== true) throw new Error('identity_pending');
@@ -25,14 +24,6 @@ export function adaptTemplate8Runtime(source: string, classic: boolean): string 
             method:'POST', credentials:'same-origin', cache:'no-store', headers:{'Content-Type':'application/json'},
             body:JSON.stringify({landing_id:cfg.landingId, landing_slug:cfg.slug, card_index:card.index, commit:commit${classic ? ", device_id:getOrCreateDeviceId()" : ""}})
           }).then(function(response) { if (!response.ok) throw new Error('page_unavailable'); return response.json(); });
-        });
-      }
-      function prewarmTemplate8Pages() {
-        window.__PUBLIC_LANDING_ATRIO_PROMISES = window.__PUBLIC_LANDING_ATRIO_PROMISES || {};
-        var promises = window.__PUBLIC_LANDING_ATRIO_PROMISES;
-        cfg.template8Cards.forEach(function(card) {
-          var key = cfg.slug + ':' + card.targetProvider;
-          if (!promises[key]) promises[key] = template8Destination(card, false).catch(function() { return null; });
         });
       }
       function initTemplate8Selection() {
@@ -50,6 +41,9 @@ export function adaptTemplate8Runtime(source: string, classic: boolean): string 
           var selectionVersion = ++template8SelectionVersion;
           notifyTemplate6CardClick(button);
           cfg.cardIndex = index; cfg.targetProvider = card.targetProvider; cfg.skinCode = card.multiSkinCode || '';
+          if(window.__entryFunnel)window.__entryFunnel.emit('skin_selected',{provider:cfg.targetProvider,skin:cfg.skinCode});
+          window.__T7_SELECTED_GATEWAY__=card.gatewayOrigin;
+          if(window.__T7_WARM_RESOURCES__)window.__T7_WARM_RESOURCES__(card.gatewayOrigin);
           try { var selectedUrl = new URL(window.location.href); selectedUrl.searchParams.set('card_index',String(index)); selectedUrl.searchParams.set('target_provider',card.targetProvider); window.history.replaceState(window.history.state,'',selectedUrl.href); } catch(e) {}
           var login = document.querySelector('[data-template8-login]');
           if (login && card.gatewayOrigin) login.href = card.gatewayOrigin;
@@ -74,10 +68,14 @@ export function adaptTemplate8Runtime(source: string, classic: boolean): string 
           var pageLogo = document.querySelector('.template7__logo');
           if (!pageLogo && title && card.imageUrl) { pageLogo=document.createElement('img'); pageLogo.className='template7__logo'; title.parentNode.insertBefore(pageLogo,title); }
           if (pageLogo) { pageLogo.hidden=!card.imageUrl; if(card.imageUrl){pageLogo.src=card.imageUrl;pageLogo.alt=card.text;} }
-          var input = document.querySelector('[data-template7-name]'); if (input) input.focus();
+          var input = document.querySelector('[data-template7-name]');
+          window.__T7_PROGRAMMATIC_FOCUS__=true;
+          if (input) input.focus();
+          window.__T7_PROGRAMMATIC_FOCUS__=false;
           var key = template8DestinationKey();
-          var previous = window.__PUBLIC_LANDING_ATRIO_PROMISES[key];
-          var selected = Promise.resolve(previous).then(function() { return template8Destination(card, true); });
+          window.__PUBLIC_LANDING_ATRIO_PROMISES=window.__PUBLIC_LANDING_ATRIO_PROMISES||{};
+          // Selection owns its own request. Never wait for another card's warmup.
+          var selected = template8Destination(card, true);
           window.__PUBLIC_LANDING_ATRIO_PROMISES[key] = selected.catch(function() { return null; });
           selected.then(function(advisor) {
             if (selectionVersion !== template8SelectionVersion) return;
@@ -92,6 +90,6 @@ export function adaptTemplate8Runtime(source: string, classic: boolean): string 
       function init() {
         initTemplate8Selection();`);
   // Recovery must carry the same saved card and original attribution as a new entry.
-  source = source.replaceAll("landing_id: cfg.landingId, landing_slug: cfg.slug", "landing_id: cfg.landingId, landing_slug: cfg.slug, card_index: cfg.cardIndex");
+  source = source.replace(/(landing_slug:\s*cfg\.slug)(?=\s*[,}])(?!\s*,\s*card_index\s*:)/g, "$1, card_index: cfg.cardIndex");
   return source;
 }

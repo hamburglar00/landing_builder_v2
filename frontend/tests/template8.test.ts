@@ -9,6 +9,7 @@ import { switchLandingTemplate } from "../lib/landing/templateVariants";
 import { handleTemplate7Destination, type DestinationResolutionBackend } from "../lib/atrio/template7Destination.server";
 import { parseTemplate7StartPayload } from "../lib/reyDeAses/start-payload.server";
 import { renderPublicLandingHtml, renderClassicTemplate7InlineHtml } from "../components/public-landing/renderPublicLandingHtml";
+import { template7RuntimeAsset } from "../components/public-landing/template7RuntimeAsset";
 const id = (n: number) => `a0000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const cover = normalizeTemplate8Cover();
 const config = { ...DEFAULT_CONFIG, template: "template8" as const, ctaDestination: "atrio" as const, template8Cover: cover };
@@ -83,7 +84,7 @@ test("each Multi Skin card preserves its own skin through editor drafts and both
     for (const classic of [false, true]) {
       const html = classic ? renderClassicTemplate7InlineHtml({ slug:"test8",config:payload as never }, `function getOrCreateDeviceId(){return '${id(8)}';}`) : renderPublicLandingHtml({ slug:"test8",config:payload as never });
       assert.ok(html.includes(`"multiSkinCode":"${skin}"`));
-      assert.ok(html.includes("cfg.skinCode = card.multiSkinCode"));
+      assert.ok(template7RuntimeAsset(8,classic).source.includes("cfg.skinCode = card.multiSkinCode"));
     }
   }
 });

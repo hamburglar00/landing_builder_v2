@@ -1,4 +1,5 @@
 import type { StartRequest } from "./contracts";
+import { validateEntryFunnelContext } from "../landing/entryFunnel";
 import { normalizeArgentinaWhatsapp } from "../landing/argentinaWhatsapp";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -12,6 +13,7 @@ const ATTRIBUTION_KEYS = ["landing", "landing_resolution", "facebook", "portofol
 export function parseTemplate7StartPayload(value: unknown): StartRequest | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const data = value as Record<string, unknown>;
+  const funnel = validateEntryFunnelContext(data.entry_funnel);
   if (data.card_index !== undefined && (!Number.isInteger(data.card_index) || Number(data.card_index) < 1 || Number(data.card_index) > 6)) return null;
   const name = typeof data.name === "string" ? data.name.trim().replace(/\s+/g, " ") : "";
   if (!UUID_PATTERN.test(String(data.landing_id ?? "")) || !SLUG_PATTERN.test(String(data.landing_slug ?? "")) ||
@@ -32,6 +34,7 @@ export function parseTemplate7StartPayload(value: unknown): StartRequest | null 
     if (field) attribution[key] = field;
   }
   return {
+    ...(funnel && funnel.landing_id === data.landing_id ? { entry_funnel: funnel } : {}),
     ...(data.card_index !== undefined ? { card_index: Number(data.card_index) } : {}),
     landing_id: String(data.landing_id), landing_slug: String(data.landing_slug), name,
     atrio_client_id: String(data.atrio_client_id),

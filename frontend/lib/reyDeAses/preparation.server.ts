@@ -1,5 +1,6 @@
 import { createCipheriv, createDecipheriv, randomBytes, timingSafeEqual } from "node:crypto";
 import { isMultiSkinCode } from "../multi-skin-catalog";
+import { validateEntryFunnelContext, type EntryFunnelContext } from "../landing/entryFunnel";
 import { CLIENT_ID_COOKIE_NAME, isDeviceId } from "./clientIdentity.server";
 import { finalizeTemplate7PreparedStart, handleTemplate7AccountWithIdentity, handleTemplate7StartWithIdentity, productionDependencies, type StartDependencies, type Template7PreparedStart } from "./start.server";
 import { decryptClaims, encryptionKey, gatewayOrigin, json, readJson, requireSecret, TOKEN_TTL_SECONDS, MAX_TOKEN_LENGTH, type PreparationEnvironment } from "./preparation-issue.server";
@@ -54,8 +55,11 @@ function isPreparedStart(value: unknown, env: PreparationEnvironment): value is 
         ...(prepared.skinCode ? { skin_code: prepared.skinCode } : {}),
       },
     }, env);
-    return url.origin === expected && url.pathname === "/start" &&
-      url.searchParams.size === 1 && url.searchParams.getAll("t").length === 1 &&
+    return url.origin === expected && url.pathname === "/start" && !url.username && !url.password && !url.hash &&
+      [...url.searchParams.keys()].every(key => key === "t" || key === "ef") &&
+      url.searchParams.getAll("ef").length <= 1 &&
+      (!url.searchParams.has("ef") || /^e1\.[A-Za-z0-9_-]{1,2000}$/.test(url.searchParams.get("ef")!)) &&
+      url.searchParams.getAll("t").length === 1 &&
       Boolean(url.searchParams.get("t")) && typeof prepared.completedHandoff.binding_created === "boolean" &&
       typeof prepared.completedHandoff.expires_at === "string";
   } catch {
@@ -160,6 +164,7 @@ export async function handleTemplate7PreparationAccount(
   if (request.method !== "POST" || !/^application\/json(?:\s*;|$)/i.test(request.headers.get("content-type") || "")) {
     return json({ error: "invalid_request" }, 400);
   }
+  let diagnosticContext: EntryFunnelContext | null = null;
   try {
     const expected = requireSecret("TEMPLATE7_PREPARATION_API_KEY", env);
     const authorization = request.headers.get("authorization") || "";
@@ -171,6 +176,7 @@ export async function handleTemplate7PreparationAccount(
       return json({ error: "invalid_request" }, 400);
     }
     const claims = decryptClaims(data.token, env, now);
+    diagnosticContext = validateEntryFunnelContext(claims.payload.entry_funnel, now);
     const headers = new Headers({ "Content-Type": "application/json", Origin: "https://template7.internal" });
     const cookies = [`${CLIENT_ID_COOKIE_NAME}=${claims.identity.deviceId}`];
     headers.set("Cookie", cookies.join("; "));
@@ -180,7 +186,7 @@ export async function handleTemplate7PreparationAccount(
       headers,
       body: JSON.stringify(claims.payload),
     });
-    return await handleTemplate7AccountWithIdentity(
+    const result = await handleTemplate7AccountWithIdentity(
       internalRequest,
       deps,
       claims.identity,
@@ -191,6 +197,7 @@ export async function handleTemplate7PreparationAccount(
         const continuationToken = encryptContinuation({ ...prepared, completedHandoff: handoff }, env, now);
         const response = json({
           username: prepared.account.username,
+          ...(prepared.entryFunnel ? { entry_funnel: prepared.entryFunnel } : {}),
           continuation_token: continuationToken,
           handoff_url: handoff.handoff_url,
         }, 200);
@@ -200,8 +207,17 @@ export async function handleTemplate7PreparationAccount(
         return response;
       },
     );
+    if (!result.ok && diagnosticContext) {
+      // Diagnostics originate in the authenticated, decrypted preparation. No token/name is returned.
+      const body = await result.json();
+      const failure = json({ ...body, entry_funnel: diagnosticContext }, result.status);
+      const retryAfter = result.headers.get("retry-after");
+      if (retryAfter && /^\d{1,4}$/.test(retryAfter)) failure.headers.set("retry-after", retryAfter);
+      return failure;
+    }
+    return result;
   } catch {
-    return json({ error: "invalid_or_expired_preparation" }, 410);
+    return json({ error: "invalid_or_expired_preparation", ...(diagnosticContext ? { entry_funnel: diagnosticContext } : {}) }, 410);
   }
 }
 

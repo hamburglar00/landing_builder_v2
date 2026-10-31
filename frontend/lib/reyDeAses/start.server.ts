@@ -9,6 +9,7 @@ import { logServerFlowTotal, timedServerStage, template7ServerTiming, type Templ
 import { allowTemplate7Start, template7StartRateLimitKeys } from "./rateLimit.server";
 import { api2Readiness, createProviderHandoff, gatewayReadiness, linkInternalChatProviderAccount, resolveInternalChatPlayer, resolveTargetAccount, TargetIntegrationError, validateResolvedPlayer } from "./integrations.server";
 import { parseTemplate7StartPayload } from "./start-payload.server";
+import type { EntryFunnelContext } from "../landing/entryFunnel";
 export { parseTemplate7StartPayload } from "./start-payload.server";
 
 type LandingRow = { id: string; name: string; user_id: string; workspace_currency: string; config: unknown; landing_config: unknown };
@@ -38,10 +39,11 @@ export type StartDependencies = {
   resolvePlayer(input: PlayerResolveRequest): Promise<ResolvedPlayer>;
   resolveAccount(request: Api2ResolveAccountRequest): Promise<TargetAccount>;
   linkProviderAccount(advisor: AssignedAdvisor, player: ResolvedPlayer, account: TargetAccount): Promise<LinkedProviderAccount>;
-  createHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount, skinCode: MultiSkinCode | null, promoCode?: string): Promise<HandoffResult>;
+  createHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount, skinCode: MultiSkinCode | null, promoCode?: string, entryFunnel?: EntryFunnelContext): Promise<HandoffResult>;
 };
 
 export type Template7PreparedStart = {
+  entryFunnel?: EntryFunnelContext;
   provider: TargetProvider;
   advisor: AssignedAdvisor;
   deviceId: string;
@@ -125,6 +127,7 @@ export async function finalizeTemplate7PreparedStart(
         prepared.account,
         prepared.skinCode,
         prepared.promoCode,
+        prepared.entryFunnel,
       ),
       ms => { timings.handoff = ms; },
     ),
@@ -242,6 +245,7 @@ async function handleTemplate7StartInner(
       throw new TargetIntegrationError("upstream_unavailable");
     }
     const prepared: Template7PreparedStart = {
+      ...(payload.entry_funnel ? { entryFunnel: payload.entry_funnel } : {}),
       provider,
       advisor: resolvedAdvisor,
       deviceId: effectiveDeviceId,

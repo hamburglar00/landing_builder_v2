@@ -23,6 +23,13 @@ test("bootstrap inicial fija cookie segura y responde solo ok", async () => {
   assert.match(withClientIdentityCookie(new Response(), { deviceId: uuid, needsCookie: true }, true).headers.get("Set-Cookie") || "", /; Secure;/);
 });
 
+test("Multi Skin preparation keeps its signed flow and closed skin while duplicate/foreign skins fail",()=>{
+  const script=buildTemplate7HandoffRuntimeScript(),context={URL,cfg:{targetProvider:'multi_skin'}};
+  const url='https://gateway.example.com/prepare?t=p1.valid&skin=bet30&ef=e1.signed&fbclid=click';
+  assert.equal(runInNewContext(script+`;template7CheckedHandoff(${JSON.stringify(url)}).href`,context),url);
+  for(const bad of [url+'&skin=ganamos_plus',url.replace('skin=bet30','skin=unknown'),url.replace('/prepare','/start')])assert.throws(()=>runInNewContext(script+`;template7CheckedHandoff(${JSON.stringify(bad)})`,context));
+});
+
 test("segunda visita conserva exactamente el UUID y no lo expone al navegador", async () => {
   const identity = getOrCreateClientIdentity(new Request(url, { headers: { Cookie: `lb_cid=${uuid}` } }));
   assert.deepEqual(identity, { deviceId: uuid, needsCookie: false });
@@ -125,7 +132,21 @@ test("handoff no se precarga, valida token y crea intent Android con fallback", 
   assert.match(intent, /S\.browser_fallback_url=https%3A%2F%2Fgateway\.example\.com%2Fstart%3Ft%3Donce;end$/);
   assert.equal(runInNewContext(`${script}; template7WebviewKind(navigator.userAgent)`, context), "android");
   assert.equal(runInNewContext(`${script}; template7WebviewKind("Mozilla/5.0 (iPhone) Instagram")`, context), "ios");
-  assert.match(script, /copialo y pegalo en Safari/);
+  assert.match(script, /catch \(error\) \{ showTemplate7HandoffFallback/);
   assert.doesNotMatch(script, /fetch\(|preload|prefetch|lb_cid/);
   assert.throws(() => runInNewContext(`${script}; template7HandoffIntent("https://gateway.example.com/start?t=one&extra=1")`, context));
+});
+
+test("Facebook and Instagram handoffs stay in the current browser and retain marketing attribution", () => {
+  for(const ua of ['Mozilla/5.0 Android FBAN/FB4A','Mozilla/5.0 iPhone Instagram','Mozilla/5.0 Chrome']) {
+    const navigations:string[]=[];
+    const context={URL,Date,navigator:{userAgent:ua},window:{location:{assign:(url:string)=>navigations.push(url)},localStorage:{setItem:()=>{}}}};
+    const destination='https://gateway.example.com/prepare?t=once&ef=e1.signed-fixture&fbclid=meta-click&utm_source=facebook';
+    runInNewContext(buildTemplate7HandoffRuntimeScript()+`;navigateTemplate7Handoff(${JSON.stringify(destination)})`,context);
+    assert.deepEqual(navigations,[destination]);
+  }
+  const context={URL};
+  for(const suffix of ['&ef=','&ef=one&ef=two','&ef='+ 'a'.repeat(2004)]) {
+    assert.throws(()=>runInNewContext(buildTemplate7HandoffRuntimeScript()+`;template7CheckedHandoff(${JSON.stringify('https://gateway.example.com/prepare?t=once'+suffix)})`,context));
+  }
 });

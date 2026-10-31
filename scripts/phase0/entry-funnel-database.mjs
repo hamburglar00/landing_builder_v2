@@ -1,0 +1,50 @@
+import assert from "node:assert/strict";
+import { execFileSync, spawn } from "node:child_process";
+import { readFile } from "node:fs/promises";
+const container = process.env.ENTRY_FUNNEL_TEST_CONTAINER;
+if (!container || !/^atrio-skin-validation-[a-z0-9-]+$/.test(container)) throw new Error("Set dedicated offline ENTRY_FUNNEL_TEST_CONTAINER");
+const db = "entry_funnel_validation";
+const baseArgs = ["exec", "-i", container, "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1", "-At"];
+const run = (sql, args = [...baseArgs, "-d", db]) => execFileSync("docker", args, { input: sql, encoding: "utf8", windowsHide: true, stdio: ["pipe", "pipe", "pipe"] }).trim();
+run("select 'create database entry_funnel_validation' where not exists(select from pg_database where datname='entry_funnel_validation')\\gexec", baseArgs);
+run(`drop schema public cascade; create schema public;
+do $$declare r text;begin foreach r in array array['anon','authenticated','service_role'] loop
+if not exists(select from pg_roles where rolname=r) then execute format('create role %I',r);end if;end loop;end$$;
+alter role service_role bypassrls;grant usage on schema public to anon,authenticated,service_role;
+create table public.landings(id uuid primary key,user_id uuid not null,config jsonb not null);
+grant select on public.landings to service_role;`);
+const migration = await readFile(new URL("../../supabase/migrations/20261030234129_entry_funnel_observability.sql", import.meta.url), "utf8");
+run(migration);
+const id = n => `f0000000-0000-4000-8000-${String(n).padStart(12,"0")}`;
+const landing = id(1), owner = id(2), flow = id(3), foreign = id(4);
+run(`insert into landings values('${landing}','${owner}','{"template":"template7"}'),('${foreign}','${id(5)}','{"template":"template8"}');`);
+const events = [{ id: id(6), name: "name_started", elapsed_ms: 300 }, { id: id(7), name: "cta_clicked", elapsed_ms: 600 }];
+const record = (rows = events, args = {}) => `set role service_role;select public.record_entry_funnel_events('${args.landing || landing}','${args.flow || flow}',${args.template || 7},'${JSON.stringify(rows)}'::jsonb);`;
+assert.equal(run(record()).split("\n").at(-1), "t");
+assert.equal(run(`select count(*) from entry_funnel_events where owner_id='${owner}';`), "2");
+assert.equal(run(record()).split("\n").at(-1), "t");
+assert.equal(run("select count(*) from entry_funnel_events;"), "2");
+assert.equal(run("select event_count from entry_funnel_limits;"), "2", "replays do not consume rate limit");
+assert.equal(run(record(events, { landing: foreign, template: 8 })).split("\n").at(-1), "f", "cross-tenant reused event IDs rejected");
+assert.equal(run(record(events, { template: 8 })).split("\n").at(-1), "f", "template derives from actual landing");
+assert.equal(run(record([{ ...events[0], id: id(8), password: "do-not-persist" }])).split("\n").at(-1), "f");
+for (const role of ["anon", "authenticated"]) {
+  assert.equal(run(`select has_table_privilege('${role}','public.entry_funnel_events','select');`), "f");
+  assert.equal(run(`select has_function_privilege('${role}','public.record_entry_funnel_events(uuid,uuid,integer,jsonb)','execute');`), "f");
+  assert.throws(() => run(`set role ${role};select * from entry_funnel_events;`));
+}
+const parallel = sql => new Promise((resolve,reject) => {
+  const child = spawn("docker", [...baseArgs, "-d", db], { windowsHide:true }); let out="", err="";
+  child.stdout.on("data",data=>out+=data); child.stderr.on("data",data=>err+=data);
+  child.on("error",reject); child.on("close",code=>code?reject(Error(err)):resolve(out.trim())); child.stdin.end(sql);
+});
+await Promise.all(Array.from({length:6},()=>parallel(record([{ id:id(9),name:"chat_ready",elapsed_ms:2400 }]))));
+assert.equal(run("select count(*) from entry_funnel_events;"), "3");
+assert.equal(run("select event_count from entry_funnel_limits;"), "3");
+run("update entry_funnel_events set received_at=now()-interval '91 days' where event_name='name_started';");
+assert.equal(run("set role service_role; select purge_entry_funnel_events();").split("\n").at(-1),"1");
+assert.equal(run("select count(*) from entry_funnel_events;"), "2");
+run("update entry_funnel_limits set event_count=3000;");
+assert.equal(run(record([{id:id(10),name:"resumed",elapsed_ms:4000}])).split("\n").at(-1),"f");
+assert.equal(run("select count(*) from entry_funnel_events;"), "2");
+console.log("Entry funnel real PostgreSQL: ownership, closed payload, anon denial, idempotency/concurrency, limits, retention passed.");

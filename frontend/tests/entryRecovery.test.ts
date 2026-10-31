@@ -11,7 +11,7 @@ test('a prolonged outage has a total budget and cannot sleep through a long Retr
   try {
     globalThis.fetch = async () => {calls++; now += 16000; return Response.json({}, {status:503});};
     const response = await fetchWithEntryRecovery('/entry', {body:'original-token'});
-    assert.equal(response.status,503); assert.equal(calls,2);
+    assert.equal(response.status,503); assert.equal(calls,3);
     calls = 0; now = 100000;
     globalThis.fetch = async () => {calls++; return Response.json({}, {status:429,headers:{'Retry-After':'45'}});};
     assert.equal((await fetchWithEntryRecovery('/entry', {body:'original-token'})).status,429);
@@ -21,7 +21,7 @@ test('a prolonged outage has a total budget and cannot sleep through a long Retr
 
 test("partial JSON, body errors and body timeouts resume the same entry request", async () => {
   const originalFetch = globalThis.fetch, originalTimer = globalThis.setTimeout;
-  globalThis.setTimeout = ((callback: () => void, ms: number) => originalTimer(callback, ms === 15000 ? 25 : 0)) as typeof setTimeout;
+  globalThis.setTimeout = ((callback: () => void, ms: number) => originalTimer(callback, ms >= 40000 ? 25 : 0)) as typeof setTimeout;
   try {
     for (const scenario of ["truncated", "stream-error", "body-timeout", "always-truncated"]) {
       let calls = 0;
@@ -57,8 +57,8 @@ test("entry recovery keeps the exact request, respects Retry-After and stops on 
   const requests: string[] = [], waits: number[] = [];
   // Abort deadlines stay real; retry delays are recorded and accelerated.
   globalThis.setTimeout = ((callback: () => void, ms: number) => {
-    if (ms !== 15000) waits.push(ms);
-    return originalTimer(callback, ms === 15000 ? ms : 0);
+    if (ms < 40000) waits.push(ms);
+    return originalTimer(callback, ms >= 40000 ? ms : 0);
   }) as typeof setTimeout;
   try {
     const outcomes = [new TypeError("connection lost"), Response.json({}, { status: 429, headers: { "Retry-After": "2" } }), Response.json({}, { status: 503 }), Response.json({ ok: true })];
@@ -103,4 +103,37 @@ test("API2 failure classification crosses the private integration without leakin
     globalThis.fetch = original;
     keys.forEach((key, index) => { if (values[index] === undefined) delete process.env[key]; else process.env[key] = values[index]; });
   }
+});
+
+test("entry cancellation interrupts the active request and never starts another attempt", async () => {
+  const original = globalThis.fetch;
+  const controller = new AbortController();
+  let calls = 0;
+  globalThis.fetch = async (_url, init) => {
+    calls++;
+    return new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => reject(init.signal?.reason), { once: true });
+      controller.abort(new Error('outer entry deadline'));
+    });
+  };
+  try {
+    await assert.rejects(fetchWithEntryRecovery('/entry', { signal: controller.signal }), /outer entry deadline/);
+    assert.equal(calls, 1);
+    await assert.rejects(fetchWithEntryRecovery('/entry', { signal: controller.signal }), /outer entry deadline/);
+    assert.equal(calls, 1, 'Already cancelled entry cannot contact the server');
+  } finally { globalThis.fetch = original; }
+});
+
+test("a legitimate 35 second account response completes without a duplicate request", async () => {
+  const original = globalThis.fetch, originalNow = Date.now, originalTimer = globalThis.setTimeout;
+  let now = 100000, calls = 0;
+  const deadlines: number[] = [];
+  Date.now = () => now;
+  globalThis.setTimeout = ((callback: () => void, ms: number) => { deadlines.push(ms); return originalTimer(callback, ms); }) as typeof setTimeout;
+  globalThis.fetch = async () => { calls++; now += 35000; return Response.json({ username: 'same-account' }); };
+  try {
+    assert.equal((await (await fetchWithEntryRecovery('/entry', {})).json()).username, 'same-account');
+    assert.equal(calls, 1);
+    assert.ok(deadlines.includes(42000));
+  } finally { globalThis.fetch = original; Date.now = originalNow; globalThis.setTimeout = originalTimer; }
 });

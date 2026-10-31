@@ -4,21 +4,21 @@ import { GATEWAY_ENTRY_TRANSITION_RUNTIME, GATEWAY_ENTRY_BRANDS } from "../../li
 import { gatewayOriginFor } from "../../lib/reyDeAses/gatewayOrigins";
 import { adaptTemplate8Runtime } from "./template8Runtime";
 import { getMultiSkinBrand } from "../../lib/skin-branding";
+import { MULTI_SKIN_CODES } from "../../lib/multi-skin-catalog";
 
 function replaceOnce(source: string, from: string, to: string): string {
   if (source.split(from).length !== 2) throw new Error("Template 7 runtime contract changed");
   return source.replace(from, to);
 }
 
-/** Reuses the proven tracking implementation; no second Contact/Pixel pipeline. */
-export function buildTemplate7FastRuntime(
+export function buildTemplate7RuntimeConfig(
   slug: string,
   config: PublicLandingConfig,
   classicDeviceIdScript = "",
-): string {
+) {
   const isTemplate8 = config.layout?.template === 8;
-  const settings = { ...buildRuntimeConfig({ slug, config }), socialProofItems: [], automaticLandingSelection: !!classicDeviceIdScript,
-    ...(isTemplate8 ? { template: 7, template8: true, ctaDestination: "atrio", targetProvider: "", cardIndex: null,
+  return { ...buildRuntimeConfig({ slug, config }), socialProofItems: [], automaticLandingSelection: !!classicDeviceIdScript,
+    ...(isTemplate8 ? { template: 7, entryTemplate: 8, template8: true, ctaDestination: "atrio", targetProvider: "", cardIndex: null,
       template8Cards: (config.content?.template8?.cards || []).map((card, i) => {
         const skinCode = card.targetProvider === "multi_skin" ? card.multiSkinCode ?? "ganamos_plus" : null;
         const gatewayOrigin = gatewayOriginFor(card.targetProvider, skinCode) || "";
@@ -29,15 +29,30 @@ export function buildTemplate7FastRuntime(
         };
       }) } : {}),
   };
+}
+
+/** Reuses the proven tracking implementation; no second Contact/Pixel pipeline. */
+export function buildTemplate7FastRuntime(
+  slug: string,
+  config: PublicLandingConfig,
+  classicDeviceIdScript = "",
+  includeConfig = true,
+): string {
+  const isTemplate8 = config.layout?.template === 8;
+  const settings = buildTemplate7RuntimeConfig(slug, config, classicDeviceIdScript);
   const bootstrap = JSON.stringify(settings).replace(/[<>&\u2028\u2029]/g,
     value => `\\u${value.charCodeAt(0).toString(16).padStart(4, "0")}`);
-  let source = buildPublicLandingRuntimeSource();
+  let source = buildPublicLandingRuntimeSource(true);
+  source = replaceOnce(source, "    (function () {\n      var cfg", "    (function () {\n      if(window.__TEMPLATE7_REENTRY_PENDING__||window.__T7_RUNTIME_BOOTING__||window.__T7_RUNTIME_READY__)return;\n      window.__T7_RUNTIME_BOOTING__=true;\n      var cfg");
   source = replaceOnce(source, "      function failTemplate7(button) {", `${GATEWAY_ENTRY_TRANSITION_RUNTIME}
       var template7Transition = createGatewayEntryTransition(document.getElementById("gateway-entry-transition"));
       var template7EntryGeneration = 0;
       function template7TransitionUrl(raw) {
         var url = template7CheckedHandoff(raw);
-        if (url.pathname === "/start") url.pathname = "/prepare";
+        if (url.pathname === "/start") {
+          url.pathname = "/prepare";
+          if(cfg.targetProvider==="multi_skin"&&${JSON.stringify(MULTI_SKIN_CODES)}.indexOf(cfg.skinCode)!==-1)url.searchParams.set("skin",cfg.skinCode);
+        }
         return url.href;
       }
       function failTemplate7(button, attempt) {
@@ -97,19 +112,22 @@ export function buildTemplate7FastRuntime(
     source = replaceOnce(source, '      function init() {', `
       function warmTemplate7Entry() {
         function resume(advisor, name, promo) {
-          if (window.__T7_ENTRY_STARTED__) return;
+          // The server still reuses this identity on submit. A late background
+          // response must never pull an actively typing visitor off the form.
+          if (window.__T7_ENTRY_STARTED__ || window.__T7_FORM_INTERACTED__) return;
           var entryAttempt = ++template7EntryGeneration;
           window.__T7_ENTRY_STARTED__ = true; clickLocked = true;
           if (template7Transition) template7Transition.start('preparing');
           return fetchWithEntryRecovery('${classicDeviceIdScript ? "/api/template7/start" : "/api/template7/prepare"}', {
             method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},
             body:JSON.stringify({${classicDeviceIdScript ? "device_id:getOrCreateDeviceId()," : ""}landing_id:cfg.landingId,landing_slug:cfg.slug,
+              entry_funnel:window.__entryFunnel?window.__entryFunnel.context():undefined,
               atrio_client_id:advisor.atrioClientId || advisor.atrio_client_id,advisor_id:advisor.atrioId || advisor.atrio_id,
               advisor_slug:advisor.atrioSlug || advisor.atrio_slug,name:name,promo_code:promo,attribution:{target_provider:cfg.targetProvider}})
           }).then(function(response){if(!response.ok)throw new Error('entry pending');return response.json()}).then(function(result){
             if (entryAttempt !== template7EntryGeneration) return;
             if(!result || typeof result.handoff_url !== 'string')throw new Error('entry pending');
-            window.location.replace(template7TransitionUrl(result.handoff_url));
+            navigateTemplate7Handoff(template7TransitionUrl(result.handoff_url));
           }).catch(function(){
             if (entryAttempt !== template7EntryGeneration) return;
             window.__T7_ENTRY_STARTED__ = false; clickLocked = false;
@@ -133,13 +151,15 @@ export function buildTemplate7FastRuntime(
               advisor_id: advisor.atrioId || advisor.atrio_id,
               advisor_slug: advisor.atrioSlug || advisor.atrio_slug })
           }).then(function (response) { return response.ok ? response.json() : null; }).then(function (result) {
-            if(result && typeof result.existing_name === 'string' && typeof result.promo_code === 'string')
+            if(result && typeof result.existing_name === 'string' && typeof result.promo_code === 'string') {
+              advisor.preparationReady=true;advisor.existingName=result.existing_name;advisor.promoCode=result.promo_code;
               return resume(advisor,result.existing_name,result.promo_code);
-            if (result && typeof result.handoff_url === 'string' && !window.__T7_ENTRY_STARTED__) {
+            }
+            if (result && typeof result.handoff_url === 'string' && !window.__T7_ENTRY_STARTED__ && !window.__T7_FORM_INTERACTED__) {
               var restored = new URL(result.handoff_url);
               if (restored.protocol === 'https:' && restored.pathname === '/prepare' && restored.searchParams.has('t')) {
                 window.__T7_ENTRY_STARTED__ = true;
-                window.location.replace(template7TransitionUrl(restored.href));
+                navigateTemplate7Handoff(template7TransitionUrl(restored.href));
                 return;
               }
             }
@@ -155,6 +175,13 @@ export function buildTemplate7FastRuntime(
         }).catch(function () {});
       }
       function init() {
+        function markFormIntent(event) {
+          var target=event.target;
+          if(!window.__T7_PROGRAMMATIC_FOCUS__&&target&&target.closest&&target.closest('[data-template7-form]'))window.__T7_FORM_INTERACTED__=true;
+        }
+        document.addEventListener('focusin',markFormIntent,{passive:true});
+        document.addEventListener('input',markFormIntent,{passive:true});
+        document.addEventListener('pointerdown',markFormIntent,{passive:true});
         warmTemplate7Entry();`);
   }
   if (!classicDeviceIdScript) {
@@ -201,7 +228,12 @@ export function buildTemplate7FastRuntime(
   source = replaceOnce(source,
     '      if (document.readyState === "loading") {\n        document.addEventListener("DOMContentLoaded", init, { once: true });\n      } else {\n        init();\n      }',
     // Placed after the form: do not wait for unrelated deferred scripts/hydration.
-    "      init();",
+    `      init();
+      window.__T7_RUNTIME_READY__=true;
+      if(window.__T7_ASSET_READY__)window.__T7_ASSET_READY__();
+      var early=window.__T7_EARLY_ACTION__;
+      window.__T7_EARLY_ACTION__=null;
+      if(early&&early.isConnected&&!early.disabled)early.click();`,
   );
   if (classicDeviceIdScript) {
     // React's document hydration root can stop early discrete events before
@@ -225,5 +257,5 @@ export function buildTemplate7FastRuntime(
         template7EntryGeneration++;
         window.__T7_ENTRY_STARTED__ = true;`);
   if (isTemplate8) source = adaptTemplate8Runtime(source, !!classicDeviceIdScript);
-  return `window.__PUBLIC_LANDING_RUNTIME_CONFIG__=${bootstrap};${source}`;
+  return includeConfig ? `window.__PUBLIC_LANDING_RUNTIME_CONFIG__=${bootstrap};${source}` : source;
 }

@@ -6,12 +6,13 @@ import { renderPublicLandingHtml, renderClassicTemplate7InlineHtml } from "../co
 import type { PublicLandingConfig } from "../components/public-landing/types";
 
 const nonce = "11111111-1111-4111-8111-111111111111";
-function browser(url = "https://mkt.panelbotadmin.com/l/rey?fbclid=test&utm_campaign=one&phone=123#form", storage = new Map<string, string>()) {
+function browser(url = "https://mkt.panelbotadmin.com/l/rey?fbclid=test&utm_campaign=one&phone=123#form", storage = new Map<string, string>(), returning = true) {
   const navigations: string[] = [];
   const replacements: string[] = [];
   const window = {
     location: { href: url, replace(value: string) { navigations.push(value); } },
     crypto: { randomUUID: () => nonce },
+    localStorage: { getItem: () => returning ? String(Date.now()) : null, removeItem: () => {} },
     sessionStorage: {
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, value),
@@ -23,6 +24,14 @@ function browser(url = "https://mkt.panelbotadmin.com/l/rey?fbclid=test&utm_camp
   Object.assign(window, { self: window, top: window });
   return { window, storage, navigations, replacements };
 }
+
+test("a new visitor sees the form without a gateway round trip or attribution rewrite", () => {
+  const fixture=browser(undefined,undefined,false);
+  execute(buildTemplate7ReentryScript("https://www.reydeases.fun"),fixture);
+  assert.deepEqual(fixture.navigations,[]);
+  assert.deepEqual(fixture.replacements,[]);
+  assert.equal(fixture.window.__TEMPLATE7_REENTRY_PENDING__,false);
+});
 function execute(html: string, fixture: ReturnType<typeof browser>) {
   const sandbox = { window: fixture.window, URL, Date };
   for (const script of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) runInNewContext(script[1], sandbox);
@@ -105,7 +114,8 @@ test("both rendering engines select the configured provider/skin while demos and
         assert.ok(match);
         const fixture = browser();
         execute(match[0], fixture);
-        assert.equal(new URL(fixture.navigations[0]).origin, env[provider === "multi_skin" ? "GANAMOS_PLUS_GATEWAY_ORIGIN" : provider === "rey_de_ases" ? "REY_GATEWAY_ORIGIN" : provider === "ases_del_norte" ? "ASES_DEL_NORTE_GATEWAY_ORIGIN" : "GANAMOS_NET_GATEWAY_ORIGIN"]);
+        if(provider==='multi_skin'){assert.deepEqual(fixture.navigations,[]);continue;}
+        assert.equal(new URL(fixture.navigations[0]).origin, env[provider === "rey_de_ases" ? "REY_GATEWAY_ORIGIN" : provider === "ases_del_norte" ? "ASES_DEL_NORTE_GATEWAY_ORIGIN" : "GANAMOS_NET_GATEWAY_ORIGIN"]);
       }
       assert.doesNotMatch(renderPublicLandingHtml({ slug: "rey", config: { ...config, layout: { ...config.layout, template: 1 } } }), /data-template7-reentry/);
     }
@@ -144,6 +154,7 @@ test("query-selected Template 7 returns to the rendered landing and restores the
         url.hash = "form";
         const first = browser(url.href);
         execute(script, first);
+        if(provider==='multi_skin'){assert.deepEqual(first.navigations,[]);continue;}
         const destination = new URL(first.navigations[0]);
         const back = new URL(destination.searchParams.get("return_to")!);
         assert.equal(back.pathname, selectedPath, `${engine} ${provider}: ${pathname}`);

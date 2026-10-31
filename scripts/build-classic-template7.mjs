@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -18,6 +18,15 @@ const result = await build({
   banner: { js: "// GENERATED from landing-builder. Run scripts/build-classic-template7.mjs --write there.\n// Contains only public rendering/tracking logic; no environment values are embedded." },
 });
 const source = result.outputFiles[0].text;
+const assetSource=path.join(root,'frontend/public/public-assets/template-entry');
+const assetTarget=path.resolve(root,'../landing-prueba-1/public/public-assets/template-entry');
+if(process.argv.includes('--write'))await mkdir(assetTarget,{recursive:true});
+for(const name of await readdir(assetSource)){
+  if(!/^t[78]-(?:classic|builder)-[a-f0-9]{24}\.js$/.test(name))continue;
+  const contents=await readFile(path.join(assetSource,name),'utf8');
+  if(process.argv.includes('--write'))await writeFile(path.join(assetTarget,name),contents);
+  else if(await readFile(path.join(assetTarget,name),'utf8')!==contents)throw Error('Classic entry asset out of sync: '+name);
+}
 if (process.argv.includes("--write")) {
   await writeFile(target, source);
   await writeFile(resolutionTarget, resolutionSource);

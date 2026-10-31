@@ -1,3 +1,5 @@
+import { MULTI_SKIN_CODES } from "../../lib/multi-skin-catalog";
+
 /** Helpers públicos: reciben solo el handoff temporal, nunca lb_cid. */
 export function buildTemplate7HandoffRuntimeScript(): string {
   return `
@@ -12,10 +14,22 @@ export function buildTemplate7HandoffRuntimeScript(): string {
     function template7CheckedHandoff(raw) {
       var url = new URL(String(raw || ""));
       if (url.protocol !== "https:" || url.username || url.password || url.hash ||
-          (url.pathname !== "/prepare" && url.pathname !== "/start") || url.searchParams.size !== 1 ||
-          url.searchParams.getAll("t").length !== 1 || !url.searchParams.get("t")) {
+          (url.pathname !== "/prepare" && url.pathname !== "/start") ||
+          url.searchParams.getAll("t").length !== 1 || !url.searchParams.get("t") ||
+          url.searchParams.getAll("ef").length > 1 || (url.searchParams.has("ef") &&
+          (!url.searchParams.get("ef") || url.searchParams.get("ef").length > 2003))) {
         throw new Error("invalid handoff");
       }
+      if(url.searchParams.has("skin")&&(url.pathname!=="/prepare"||url.searchParams.getAll("skin").length!==1||
+          ${JSON.stringify(MULTI_SKIN_CODES)}.indexOf(url.searchParams.get("skin"))===-1||
+          (typeof cfg!=="undefined"&&cfg.targetProvider&&cfg.targetProvider!=="multi_skin")))throw new Error("invalid handoff skin");
+      // Marketing parameters belong to attribution, never to the access proof.
+      // Keep them on the URL for the gateway to capture before canonicalizing.
+      url.searchParams.forEach(function(value, key) {
+        if (key !== "t" && key !== "ef" && key !== "skin" && !/^(?:fbclid|gclid|dclid|msclkid|ttclid|fb_action_ids|fb_action_types|fb_source|_gl|campaign_id|campaign_name|adset_id|adset_name|ad_id|ad_name|placement|site_source_name|utm_[a-z0-9_]+)$/i.test(key)) {
+          throw new Error("invalid handoff parameter");
+        }
+      });
       return url;
     }
 
@@ -28,8 +42,16 @@ export function buildTemplate7HandoffRuntimeScript(): string {
 
     function navigateTemplate7Handoff(raw) {
       var url = template7CheckedHandoff(raw);
+      try { window.localStorage.setItem("template7:gateway-visited:" + url.origin, String(Date.now())); } catch(e) {}
+      // A Meta in-app browser can complete this same first-party navigation.
+      // User-agent detection alone is not evidence of a failed entry.
+      try { window.location.assign(url.href); return; }
+      catch (error) { showTemplate7HandoffFallback(url.href); }
+    }
+
+    function showTemplate7HandoffFallback(raw) {
+      var url = template7CheckedHandoff(raw);
       var kind = template7WebviewKind(navigator.userAgent);
-      if (kind === "normal") { window.location.assign(url.href); return; }
       var panel = document.querySelector("[data-template7-handoff-panel]");
       if (!panel) {
         panel = document.createElement("div");
@@ -47,11 +69,11 @@ export function buildTemplate7HandoffRuntimeScript(): string {
       var open = panel.querySelector("[data-template7-handoff-open]");
       var copy = panel.querySelector("[data-template7-handoff-copy]");
       if (kind === "android") {
-        help.textContent = "Estás en un navegador interno. Tocá para abrir en Chrome y continuar con tu cuenta.";
+        help.textContent = "No se pudo abrir tu acceso en este navegador. Podés continuar en Chrome con la misma cuenta.";
         open.textContent = "Abrir en Chrome";
         open.href = template7HandoffIntent(url.href);
       } else {
-        help.textContent = "Estás en un navegador interno. Abrí este enlace en Safari desde el menú de la app, o copialo y pegalo en Safari.";
+        help.textContent = "No se pudo abrir tu acceso. Intentá abrir el enlace o copialo para continuar en otro navegador con la misma cuenta.";
         open.textContent = "Abrir enlace";
         open.href = url.href;
         open.target = "_blank";
