@@ -9,7 +9,7 @@ import { pathToFileURL } from 'node:url';
 const modulePath = process.env.PURCHASE_INGEST_PGLITE;
 if (!modulePath) throw new Error('Set PURCHASE_INGEST_PGLITE to the local @electric-sql/pglite/dist/index.js');
 const { PGlite } = await import(pathToFileURL(modulePath).href);
-const migrationUrl = new URL('../migrations/20261031233646_durable_purchase_ingest_queue.sql', import.meta.url);
+const migrationUrl = new URL('../migrations/20261101000753_durable_purchase_ingest_queue.sql', import.meta.url);
 const user = '10000000-0000-4000-8000-000000000001';
 const otherUser = '10000000-0000-4000-8000-000000000002';
 const payload = { action: 'PURCHASE', action_event_id: 'fixture-event', event_time: 1792609153,

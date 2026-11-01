@@ -2,6 +2,8 @@
 
 Validación local del lote iniciado el 31/10/2026. El usuario autorizó posteriormente completar commit, push, migración y despliegue. El estado productivo se registra por separado después de verificar las publicaciones. API2 permanece en `43916e19`; este lote no lo modifica ni cambia el mensaje de error del comprobante.
 
+Publicado y verificado el 01/11; ver [versiones activas, índice adicional y recuperación de un recibo aceptado](purchase-profile-production-20261101.md).
+
 ## Problema y comportamiento
 
 El receptor de Builder esperaba atribución, enriquecimiento y Meta antes de contestar a API2, cuyo plazo es de diez segundos. Un timeout no demostraba que la conversión no se hubiera procesado. El nuevo camino guarda el JSON completo y devuelve 202 antes de ese trabajo. La misma entrega conserva el primer recibo y payload; un error de base de datos produce un 5xx reintentable. Los fetch de admisión comparten un presupuesto de ocho segundos, independiente del cliente del worker. La lectura del cuerpo y la conectividad del emisor no constituyen una garantía de latencia de extremo a extremo.
@@ -46,7 +48,7 @@ node scripts/sync-gateway-app-sdk.mjs --check
 
 ## Publicación pendiente
 
-1. Aplicar `20261031233646_durable_purchase_ingest_queue.sql` antes de activar la nueva admisión. Confirmar que `sync_phones_url` y `sync_phones_cron_secret` existen y que el cron queda programado; no imprimir su secreto. La migración no copia inbox históricos.
+1. Aplicar `20261101000753_durable_purchase_ingest_queue.sql` antes de activar la nueva admisión. El archivo se alinea con la versión registrada por MCP al aplicar exactamente el SQL validado, originalmente creado por CLI como `20261031233646`; no cambia su contenido. Confirmar que `sync_phones_url` y `sync_phones_cron_secret` existen y que el cron queda programado; no imprimir su secreto. La migración no copia inbox históricos.
 2. Publicar `retry-failed-conversions` con `conversions/purchase_ingest.ts` y dependencias, para excluir recibos activos y autenticar replays.
 3. Publicar `conversions` con el mismo módulo. La ruta pública sigue usando `verify_jwt=false`; la ruta del worker exige POST y Bearer del cron antes de reclamar trabajo.
 4. Verificar funciones activas, cron y permisos; observar la siguiente entrega legítima para confirmar 202, estado final del recibo, fecha/ID y envío CAPI. No fabricar una operación monetaria ni reenviar conversiones históricas para ese smoke.
