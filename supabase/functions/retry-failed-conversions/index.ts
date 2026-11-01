@@ -26,6 +26,7 @@ import {
 } from "../conversions/pixel_attribution.ts";
 import { workspaceCapiEnabled, WORKSPACE_CAPI_DISABLED_STATUS } from "../conversions/workspace_capi.ts";
 import { resolvePurchaseEventSourceUrl, sourceUrlFromPayload } from "../conversions/purchase_source_url.ts";
+import { hasActivePurchaseIngestEvent } from "../conversions/purchase_ingest.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -265,6 +266,10 @@ Deno.serve(async (req) => {
     let succeeded = 0;
 
     for (const row of purchaseRows) {
+      // An ingestion worker can have persisted the row before its Meta request
+      // finishes. Its leased job owns this attempt; check failures fail closed.
+      if (await hasActivePurchaseIngestEvent(db, String(row.user_id), String(row.purchase_event_id ?? ""))) continue;
+      if (!await purchaseRetryStillPending(db, row)) continue;
       const cfg = configMap.get(row.user_id);
       if (!cfg) continue;
       if (!workspaceCapiEnabled(cfg, row.currency)) {
@@ -920,6 +925,16 @@ Deno.serve(async (req) => {
           metaCustomData,
         );
 
+      // Selection/config work may overlap the completion of an ingestion worker.
+      // Re-read after the active-job check: a completed job alone does not mean
+      // its stale candidate still needs delivery. Concurrent cron senders still
+      // rely on the existing stable Meta event ID; this is not a send lease.
+      const retrySnapshot = retryIdentity.needsPersistence
+        ? { ...row, purchase_event_id: eventId }
+        : row;
+      if (await hasActivePurchaseIngestEvent(db, String(row.user_id), eventId)) continue;
+      if (!await purchaseRetryStillPending(db, retrySnapshot)) continue;
+
       retried++;
 
       try {
@@ -1069,7 +1084,7 @@ Deno.serve(async (req) => {
         try {
           const replayRes = await fetch(replayUrl, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceRoleKey}` },
             body: JSON.stringify(payload),
           });
 
@@ -1088,21 +1103,23 @@ Deno.serve(async (req) => {
     let deferredPurchasesPicked = 0;
     let deferredPurchasesProcessed = 0;
     let deferredPurchasesFailed = 0;
+    const unavailablePurchaseReceipts = new Set<string>();
 
     for (let pass = 0; pass < 20; pass++) {
       const { data: deferredRows } = await db
         .from("conversion_inbox")
-        .select("id, user_id, landing_name, payload_raw, created_at")
+        .select("id, user_id, landing_name, payload_raw, created_at, purchase_ingest_job_id")
         .eq("status", "deferred")
         .eq("action", "PURCHASE")
         .lte("created_at", cutoffIso)
         .order("created_at", { ascending: true })
         .limit(100);
-      const deferred = (deferredRows ?? []) as DeferredInboxRow[];
+      const deferred = ((deferredRows ?? []) as DeferredInboxRow[])
+        .filter((row) => !unavailablePurchaseReceipts.has(String(row.id)));
       if (deferred.length === 0) break;
       deferredPurchasesPicked += deferred.length;
       const userIdsForDeferred = [...new Set(deferred.map((r) => r.user_id))];
-      const { data: profiles } = await db
+      const { data: profiles, error: profilesError } = await db
         .from("profiles")
         .select("id, nombre")
         .in("id", userIdsForDeferred);
@@ -1113,6 +1130,13 @@ Deno.serve(async (req) => {
 
       for (const row of deferred) {
         const clientName = profileNameByUserId.get(String(row.user_id)) ?? "";
+        if (row.purchase_ingest_job_id && (profilesError || !clientName)) {
+          // Accepted work keeps its receiver when lookup is unavailable or the
+          // profile was removed. Never invent another destination or kill its inbox.
+          unavailablePurchaseReceipts.add(String(row.id));
+          deferredPurchasesFailed++;
+          continue;
+        }
         if (!clientName) {
           await db
             .from("conversion_inbox")
@@ -1129,13 +1153,31 @@ Deno.serve(async (req) => {
         }
 
         let payload: Record<string, unknown> = {};
-        try {
-          payload = JSON.parse(row.payload_raw || "{}") as Record<
-            string,
-            unknown
-          >;
-        } catch {
-          payload = {};
+        if (row.purchase_ingest_job_id) {
+          // Only the server-written FK authorizes this full-payload lookup.
+          // Do not repair historical raw text or fall back to truncated JSON.
+          try {
+            const { data: receipt, error: receiptError } = await db
+              .from("purchase_ingest_jobs")
+              .select("payload")
+              .eq("id", row.purchase_ingest_job_id)
+              .eq("user_id", row.user_id)
+              .maybeSingle();
+            if (receiptError || !receipt?.payload || typeof receipt.payload !== "object" || Array.isArray(receipt.payload)) {
+              throw new Error("purchase_deferred_receipt_unavailable");
+            }
+            payload = receipt.payload as Record<string, unknown>;
+          } catch {
+            unavailablePurchaseReceipts.add(String(row.id));
+            deferredPurchasesFailed++;
+            continue;
+          }
+        } else {
+          try {
+            payload = JSON.parse(row.payload_raw || "{}") as Record<string, unknown>;
+          } catch {
+            payload = {};
+          }
         }
         if (!hasPositiveEpoch(payload.event_time)) {
           const createdAtEpoch = Math.floor(Date.parse(row.created_at) / 1000);
@@ -1153,7 +1195,7 @@ Deno.serve(async (req) => {
         try {
           const replayRes = await fetch(replayUrl, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceRoleKey}` },
             body: JSON.stringify(payload),
           });
 
@@ -1475,6 +1517,21 @@ Deno.serve(async (req) => {
     });
   }
 });
+
+async function purchaseRetryStillPending(
+  db: SupabaseClient,
+  snapshot: Pick<ConversionRow, "id" | "user_id" | "purchase_event_id">,
+): Promise<boolean> {
+  const query = db.from("conversions")
+    .select("id, user_id, purchase_event_id, purchase_status_capi")
+    .eq("id", snapshot.id)
+    .eq("user_id", snapshot.user_id);
+  const { data, error } = await (snapshot.purchase_event_id == null
+    ? query.is("purchase_event_id", null)
+    : query.eq("purchase_event_id", snapshot.purchase_event_id)).maybeSingle();
+  if (error) throw new Error("purchase_retry_state_unavailable");
+  return Boolean(data && PURCHASE_CAPI_RETRYABLE_STATUSES.includes(data.purchase_status_capi));
+}
 
 function appendObs(current: string, token: string): string {
   const clean = token.trim();
@@ -2122,6 +2179,7 @@ type DeferredInboxRow = {
   landing_name: string;
   payload_raw: string;
   created_at: string;
+  purchase_ingest_job_id?: string | null;
 };
 
 type DuplicateLeadLogRow = {

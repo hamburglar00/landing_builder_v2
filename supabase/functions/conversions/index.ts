@@ -56,9 +56,18 @@ import {
   observeTrackingRequest,
   type TrackingDiagnostics,
 } from "./tracking_diagnostics.ts";
+import {
+  enqueuePurchaseIngestJob,
+  handlePurchaseIngestWorker,
+  processPurchaseIngestJobs,
+  PurchaseIngestPayloadTooLargeError,
+  type PurchaseIngestContext,
+  type PurchaseIngestProcessor,
+} from "./purchase_ingest.ts";
 
 // Each handler creates its own client; no request state is shared across tenants.
 const requestDiagnostics = new WeakMap<SupabaseClient, TrackingDiagnostics>();
+const purchaseIngestRequests = new WeakMap<SupabaseClient, PurchaseIngestContext>();
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1294,6 +1303,13 @@ async function claimPurchaseEvent(
   const candidateEventId = generateEventId();
   const protectedBy = purchaseIdempotencyKeysFromPayload(p);
   if (protectedBy.length === 0) {
+    const receipt = purchaseIngestRequests.get(db);
+    // Even a legacy emitter without a payment ID must resume this particular
+    // accepted receipt with one stable claim. Do not fabricate a public ID or
+    // change the original payload to provide this internal recovery identity.
+    if (receipt) protectedBy.push(receipt.idempotencyKey);
+  }
+  if (protectedBy.length === 0) {
     return {
       claimed: true,
       claimId: "",
@@ -1352,6 +1368,32 @@ async function completePurchaseEventClaim(
       status,
     });
   }
+}
+
+async function recoverPersistedPurchaseIngest(
+  db: SupabaseClient,
+  userId: string,
+  claim: PurchaseEventClaim,
+  ctx?: ProcessingContext,
+): Promise<Response | null> {
+  if (!purchaseIngestRequests.has(db) || !claim.eventId) return null;
+  // A worker may stop after the conversion write but before finalizing either
+  // lease. Recover by the original Meta event ID even when there is no Coelsa
+  // or transaction ID. Pending CAPI delivery remains owned by its retry worker.
+  const { data, error } = await db.from("conversions")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("purchase_event_id", claim.eventId)
+    .eq("estado", "purchase")
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error("purchase_ingest_conversion_recovery_unavailable");
+  if (!data?.id) return null;
+  if (ctx) {
+    ctx.conversionId = data.id;
+    ctx.inboxStatus = "deduplicated";
+  }
+  return textResponse("Purchase ya persistido; conserva su entrega CAPI pendiente", 200);
 }
 
 async function traceUnprotectedPurchase(
@@ -1982,9 +2024,12 @@ async function insertInboundEvent(
       payload.action_event_id || payload.contact_event_id || payload.event_id,
     )
     : norm(payload.action_event_id);
-  const { data } = await db
+  const receipt = purchaseIngestRequests.get(db);
+  const { data, error } = await db
     .from("conversion_inbox")
     .insert({
+      ...(receipt ? { id: receipt.jobId } : {}),
+      ...(receipt ? { purchase_ingest_job_id: receipt.jobId } : {}),
       user_id: userId,
       landing_name: landing.name,
       workspace_currency: workspaceResolution.currency || "ARS",
@@ -1994,11 +2039,35 @@ async function insertInboundEvent(
       transaction_id: normalizeTransactionId(payload.transaction_id),
       promo_code: normalizePromoCode(payload.promo_code ?? payload.promoCode),
       phone: sanitizePhone(payload.phone),
-      payload_raw: safePayloadRaw(payload),
+      payload_raw: normalizedAction === "PURCHASE" || purchaseIngestRequests.has(db)
+        ? JSON.stringify(payload)
+        : safePayloadRaw(payload),
       status: "received",
     })
     .select("id")
     .single();
+  if (receipt && (error || !data?.id)) {
+    if (error?.code === "23505") {
+      // Resume this receipt's existing inbox after an interrupted attempt. The
+      // fallback retains the legacy unique action+promo identity when an older
+      // synchronous delivery already created its inbox. Never take a payload ID.
+      const { data: own, error: ownError } = await db.from("conversion_inbox")
+        .select("id").eq("id", receipt.jobId).eq("user_id", userId)
+        .eq("action", normalizedAction).maybeSingle();
+      if (ownError) throw new Error("purchase_ingest_inbox_recovery_unavailable");
+      if (own?.id) return own.id;
+      if (actionEventId) {
+        const { data: previous, error: previousError } = await db.from("conversion_inbox")
+          .select("id").eq("user_id", userId).eq("action", normalizedAction)
+          .eq("action_event_id", actionEventId)
+          .eq("promo_code", normalizePromoCode(payload.promo_code ?? payload.promoCode))
+          .order("created_at", { ascending: false }).limit(1).maybeSingle();
+        if (previousError) throw new Error("purchase_ingest_inbox_recovery_unavailable");
+        if (previous?.id) return previous.id;
+      }
+    }
+    throw new Error("purchase_ingest_inbox_persistence_failed");
+  }
   return data?.id ?? null;
 }
 
@@ -2119,8 +2188,12 @@ async function finalizeInboundEvent(
   responseBody: string,
   conversionId?: string,
   promoCode?: string,
+  strict = false,
 ): Promise<void> {
-  if (!inboxId) return;
+  if (!inboxId) {
+    if (strict) throw new Error("purchase_ingest_inbox_missing");
+    return;
+  }
   let workspaceCurrency = "";
   if (conversionId) {
     const { data } = await db
@@ -2145,7 +2218,20 @@ async function finalizeInboundEvent(
   if (isFullPromoCode(promoCode)) {
     updates.promo_code = promoCode;
   }
-  await db.from("conversion_inbox").update(updates).eq("id", inboxId);
+  if (strict) {
+    // If this is an older unique inbox row, preserve its historic raw payload.
+    // An authenticated deferred replay reads this receipt's complete payload.
+    updates.purchase_ingest_job_id = purchaseIngestRequests.get(db)?.jobId;
+  }
+  const update = db.from("conversion_inbox").update(updates).eq("id", inboxId);
+  if (strict) {
+    const { data, error } = await update
+      .eq("user_id", purchaseIngestRequests.get(db)?.userId ?? "")
+      .select("id").maybeSingle();
+    if (error || !data?.id) throw new Error("purchase_ingest_inbox_finalization_failed");
+  } else {
+    await update;
+  }
 }
 
 async function findDeferredLeadInboundByPhone(
@@ -6312,11 +6398,20 @@ async function handlePurchase(
   }
   const amount = normalizedAmount.value;
   const testEventCode = norm(p.test_event_code);
-  const purchasePayloadRaw = safePayloadRaw(p);
+  const purchasePayloadRaw = JSON.stringify(p);
   const coelsaId = normalizeCoelsaId(p.coelsa_id);
   const transactionId = normalizeTransactionId(p.transaction_id);
   const purchaseClaim = await claimPurchaseEvent(db, landing.user_id, p);
   if (!purchaseClaim.claimed) {
+    if (
+      purchaseIngestRequests.has(db) &&
+      purchaseClaim.status === "processing" && !purchaseClaim.conversionId
+    ) {
+      // Another request has reserved this payment but has not persisted its
+      // conversion yet. Keep our durable receipt recoverable, rather than
+      // acknowledging a completed duplicate which may never be processed.
+      return textResponse("Purchase en procesamiento; reintento pendiente", 503);
+    }
     if (ctx) {
       ctx.conversionId = purchaseClaim.conversionId || undefined;
       ctx.inboxStatus = "deduplicated";
@@ -6346,6 +6441,8 @@ async function handlePurchase(
     );
   }
   if (ctx && purchaseClaim.claimId) ctx.purchaseClaimId = purchaseClaim.claimId;
+  const recoveredPurchase = await recoverPersistedPurchaseIngest(db, landing.user_id, purchaseClaim, ctx);
+  if (recoveredPurchase) return recoveredPurchase;
 
   const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
   const payloadEmail = sanitizeEmail(p.email);
@@ -7663,11 +7760,17 @@ async function handleSimplePurchase(
   }
   const amount = normalizedAmount.value;
   const testEventCode = norm(p.test_event_code);
-  const purchasePayloadRaw = safePayloadRaw(p);
+  const purchasePayloadRaw = JSON.stringify(p);
   const coelsaId = normalizeCoelsaId(p.coelsa_id);
   const transactionId = normalizeTransactionId(p.transaction_id);
   const purchaseClaim = await claimPurchaseEvent(db, landing.user_id, p);
   if (!purchaseClaim.claimed) {
+    if (
+      purchaseIngestRequests.has(db) &&
+      purchaseClaim.status === "processing" && !purchaseClaim.conversionId
+    ) {
+      return textResponse("Purchase en procesamiento; reintento pendiente", 503);
+    }
     if (ctx) {
       ctx.conversionId = purchaseClaim.conversionId || undefined;
       ctx.inboxStatus = "deduplicated";
@@ -7697,6 +7800,8 @@ async function handleSimplePurchase(
     );
   }
   if (ctx && purchaseClaim.claimId) ctx.purchaseClaimId = purchaseClaim.claimId;
+  const recoveredPurchase = await recoverPersistedPurchaseIngest(db, landing.user_id, purchaseClaim, ctx);
+  if (recoveredPurchase) return recoveredPurchase;
 
   const payloadEmail = sanitizeEmail(p.email);
   const payloadCuitCuil = deriveCuitCuilFromPayload(p);
@@ -8028,6 +8133,7 @@ async function handleSimplePurchase(
 async function handleConversions(
   req: Request,
   diagnostics: TrackingDiagnostics,
+  purchaseIngest?: PurchaseIngestContext,
 ): Promise<Response> {
   if (req.method === "OPTIONS") {
     return new Response("ok", { status: 200, headers: corsHeaders });
@@ -8036,6 +8142,8 @@ async function handleConversions(
     return textResponse("Solo se permite POST", 405);
   }
 
+  let publicPurchase = false;
+  const requestStartedAt = performance.now();
   try {
     const url = new URL(req.url);
     const name = url.searchParams.get("name")?.trim();
@@ -8047,75 +8155,62 @@ async function handleConversions(
       return textResponse("Configuracion del servidor incompleta", 500);
     }
 
-    const db = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-    requestDiagnostics.set(db, diagnostics);
-
-    // Lookup client by nombre in profiles.
-    const { data: profile, error: profileError } = await db
-      .from("profiles")
-      .select("id, nombre")
-      .eq("nombre", name)
-      .maybeSingle();
-
-    if (profileError) {
-      console.error("[conversions] profile lookup failed", {
-        name,
-        error: profileError.message,
-      });
-      return textResponse("Error al buscar cliente", 500);
-    }
-
-    if (!profile) return textResponse("Cliente no encontrado", 404);
-
-    const userId: string = profile.id;
-
-    // Load conversions config for this client
-    const { data: configData } = await db
-      .from("conversions_config")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    const cfg: ConversionsConfig = (configData as ConversionsConfig) ?? {
-      user_id: userId,
-      pixel_id: "",
-      meta_access_token: "",
-      meta_currency: "ARS",
-      meta_api_version: "v25.0",
-      send_contact_capi: false,
-      send_lead_capi: true,
-      send_complete_registration_capi: false,
-      meta_ads_only_capi: false,
-      include_purchase_type_capi: true,
-      send_first_purchase_capi: true,
-      send_repeat_purchase_capi: true,
-      send_purchase_capi: true,
-      purchase_capi_min_amount_enabled: false,
-      purchase_capi_min_amounts: {},
-      send_geo_capi: true,
-      geo_use_ipapi: false,
-      geo_fill_only_when_missing: false,
-    };
-
-    const { data: pixelConfigsData } = await db
-      .from("conversions_pixel_configs")
-      .select(
-        "user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, send_complete_registration_capi, meta_ads_only_capi, send_purchase_capi, include_purchase_type_capi, send_first_purchase_capi, send_repeat_purchase_capi, repeat_purchase_capi_window_days, purchase_capi_min_amount_enabled, purchase_capi_min_amount, send_geo_capi, geo_use_ipapi, geo_fill_only_when_missing, is_default",
-      )
-      .eq("user_id", userId);
-    const pixelConfigs: PixelConfigRow[] =
-      (pixelConfigsData ?? []) as PixelConfigRow[];
-
     let params: Params = await req.json().catch(() => ({}));
-    // Freeze original occurrence time before persistence; receipt time is only the last fallback.
+    // Freeze the occurrence time at acceptance, never when cron later resumes.
     params = ensurePayloadEventTime(params, Math.floor(Date.now() / 1000));
     params = canonicalizeInboundTrackingPayload(params, {
       clientIpAddress: payloadClientIp(params),
       userAgent: inboundUserAgent(params),
     });
     diagnostics.setEvent(params);
+    publicPurchase = !purchaseIngest &&
+      (canonicalInboundAction(params.action) === "PURCHASE" ||
+        (!canonicalInboundAction(params.action) && Boolean(params.phone && params.amount))) &&
+      !(toBool(params.__deferred_retry) &&
+        req.headers.get("authorization") === `Bearer ${serviceRoleKey}`);
+
+    const db = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+      ...(publicPurchase ? {
+        global: {
+          fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+            const remaining = Math.ceil(8_000 - (performance.now() - requestStartedAt));
+            if (remaining <= 0) throw new Error("Purchase acceptance deadline exceeded");
+            return fetch(input, {
+              ...init,
+              signal: AbortSignal.any([
+                AbortSignal.timeout(remaining),
+                ...(init?.signal ? [init.signal] : []),
+              ]),
+            });
+          },
+        },
+      } : {}),
+    });
+    requestDiagnostics.set(db, diagnostics);
+    if (purchaseIngest) purchaseIngestRequests.set(db, purchaseIngest);
+
+    // Lookup client by nombre in profiles.
+    const profileQuery = db
+      .from("profiles")
+      .select("id, nombre");
+    // Only an in-process worker receives this context. A renamed profile must
+    // retain its original receiver; neither the payload nor URL can retarget it.
+    const { data: profile, error: profileError } = await (purchaseIngest
+      ? profileQuery.eq("id", purchaseIngest.userId)
+      : profileQuery.eq("nombre", name)).maybeSingle();
+
+    if (profileError) {
+      console.error("[conversions] profile lookup failed", {
+        name,
+        error: profileError.message,
+      });
+      return textResponse("Error al buscar cliente", publicPurchase || purchaseIngest ? 503 : 500);
+    }
+
+    if (!profile) return textResponse("Cliente no encontrado", 404);
+
+    const userId: string = profile.id;
 
     // landing_name can come from the payload (to track which landing sent this)
     const landingName = norm(params.landing_name || params.landingName || "");
@@ -8175,13 +8270,6 @@ async function handleConversions(
       );
     }
 
-    const landing = await resolveLandingForInbound(
-      db,
-      userId,
-      params,
-      landingName,
-    );
-
     const rawAction = canonicalInboundAction(params.action);
     const rawEventName = norm(params.event_name);
     const eventNameAction = canonicalInboundAction(rawEventName);
@@ -8196,7 +8284,145 @@ async function handleConversions(
       )
       : norm(params.action_event_id);
     const inboxAction = inferredAction || "CONTACT";
-    const isDeferredRetry = toBool(params.__deferred_retry);
+    const isPurchase = inferredAction === "PURCHASE" ||
+      (!rawAction && Boolean(params.phone && params.amount));
+    // Deferred PURCHASE replays are made only by our existing cron. Public
+    // payload flags never bypass durable acceptance or choose an inbox row.
+    const trustedDeferredPurchase = !purchaseIngest && isPurchase &&
+      toBool(params.__deferred_retry) &&
+      req.headers.get("authorization") === `Bearer ${serviceRoleKey}`;
+    const isDeferredRetry = trustedDeferredPurchase ||
+      (!isPurchase && toBool(params.__deferred_retry));
+
+    if (purchaseIngest && !isPurchase) {
+      return textResponse("El recibo no corresponde a un Purchase", 422);
+    }
+
+    if (trustedDeferredPurchase) {
+      const { data: deferred, error: deferredError } = await db
+        .from("conversion_inbox")
+        .select("id")
+        .eq("id", norm(params.__inbox_id))
+        .eq("user_id", userId)
+        .eq("action", "PURCHASE")
+        .maybeSingle();
+      if (deferredError) return textResponse("Error al leer Purchase diferido", 503);
+      if (!deferred) return textResponse("Purchase diferido no encontrado", 422);
+    }
+
+    if (isPurchase && !purchaseIngest && !trustedDeferredPurchase) {
+      const amount = normalizePurchaseAmount(params.amount);
+      const allowNoPhonePromoMatch = inferredAction === "PURCHASE" &&
+        normalizedSourcePlatform(params.source_platform) === "atrio" &&
+        isFullPromoCode(derivePromoCodeFromPayload(params));
+      if (!amount.ok || (!sanitizePhone(params.phone) && !allowNoPhonePromoMatch)) {
+        return textResponse("Faltan parametros validos: phone y amount monetario > 0", 400);
+      }
+
+      const idempotencyKeys = purchaseIdempotencyKeysFromPayload(params)
+        .map((key) => key.trim().slice(0, 300));
+      const idempotencyKey = idempotencyKeys.find((key) => key.startsWith("action:")) ||
+        idempotencyKeys[0] || `unprotected:${crypto.randomUUID()}`;
+      let receipt;
+      try {
+        receipt = await enqueuePurchaseIngestJob(db, {
+          userId,
+          idempotencyKey,
+          payload: params,
+          requestContext: {
+            clientName: profile.nombre,
+            requestId: diagnostics.requestId,
+            receivedAt: new Date().toISOString(),
+            idempotencyKeys,
+          },
+        });
+      } catch (error) {
+        if (error instanceof PurchaseIngestPayloadTooLargeError) {
+          return textResponse("Payload Purchase demasiado grande", 413);
+        }
+        diagnostics.failure = {
+          error_code: "purchase_acceptance_unavailable",
+          message: "No se pudo guardar el Purchase; reintente mas tarde",
+          retryable: true,
+        };
+        console.error("[conversions] purchase acceptance failed", {
+          ...diagnostics.reference(),
+          ...describeTrackingException(error),
+        });
+        return textResponse("No se pudo guardar el Purchase; reintente mas tarde", 503);
+      }
+
+      // The queue is already committed. This only reduces latency; cron will
+      // recover the same receipt if this instance stops after returning 202.
+      const runtime = (globalThis as typeof globalThis & {
+        EdgeRuntime?: { waitUntil(task: Promise<unknown>): void };
+      }).EdgeRuntime;
+      if (runtime && (receipt.status === "queued" || receipt.status === "processing")) {
+        const workerDb = createClient(supabaseUrl, serviceRoleKey, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        });
+        runtime.waitUntil(processPurchaseIngestJobs(workerDb, processAcceptedPurchase, {
+          jobId: receipt.id,
+          limit: 1,
+        }).catch((error) => {
+          console.error("[conversions] purchase background worker interrupted", {
+            ...diagnostics.reference(),
+            receipt_id: receipt.id,
+            ...describeTrackingException(error),
+          });
+        }));
+      }
+      return new Response(JSON.stringify({
+        accepted: true,
+        receipt_id: receipt.id,
+        status: receipt.status,
+      }), {
+        status: 202,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Config, attribution resolution, geolocation and Meta work are deliberately
+    // outside the public PURCHASE acknowledgment path.
+    const { data: configData, error: configError } = await db
+      .from("conversions_config")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (purchaseIngest && configError) {
+      return textResponse("Configuracion temporalmente no disponible", 503);
+    }
+    const cfg: ConversionsConfig = (configData as ConversionsConfig) ?? {
+      user_id: userId,
+      pixel_id: "",
+      meta_access_token: "",
+      meta_currency: "ARS",
+      meta_api_version: "v25.0",
+      send_contact_capi: false,
+      send_lead_capi: true,
+      send_complete_registration_capi: false,
+      meta_ads_only_capi: false,
+      include_purchase_type_capi: true,
+      send_first_purchase_capi: true,
+      send_repeat_purchase_capi: true,
+      send_purchase_capi: true,
+      purchase_capi_min_amount_enabled: false,
+      purchase_capi_min_amounts: {},
+      send_geo_capi: true,
+      geo_use_ipapi: false,
+      geo_fill_only_when_missing: false,
+    };
+    const { data: pixelConfigsData, error: pixelConfigsError } = await db
+      .from("conversions_pixel_configs")
+      .select(
+        "user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, send_complete_registration_capi, meta_ads_only_capi, send_purchase_capi, include_purchase_type_capi, send_first_purchase_capi, send_repeat_purchase_capi, repeat_purchase_capi_window_days, purchase_capi_min_amount_enabled, purchase_capi_min_amount, send_geo_capi, geo_use_ipapi, geo_fill_only_when_missing, is_default",
+      )
+      .eq("user_id", userId);
+    if (purchaseIngest && pixelConfigsError) {
+      return textResponse("Configuracion de pixeles temporalmente no disponible", 503);
+    }
+    const pixelConfigs = (pixelConfigsData ?? []) as PixelConfigRow[];
+    const landing = await resolveLandingForInbound(db, userId, params, landingName);
     const deferredInboxId = norm(params.__inbox_id);
     const incomingPromoCodeForDedupe = derivePromoCodeFromPayload(params);
     const purchaseDedupeIdsForRequest = inferredAction === "PURCHASE"
@@ -8204,7 +8430,7 @@ async function handleConversions(
       : [];
 
     if (
-      !isDeferredRetry &&
+      !purchaseIngest && !isDeferredRetry &&
       actionEventId &&
       (inferredAction === "LEAD" || inferredAction === "COMPLETEREGISTRATION" ||
         inferredAction === "PURCHASE")
@@ -8320,6 +8546,8 @@ async function handleConversions(
         response.status,
         bodyText,
         conversionId,
+        undefined,
+        Boolean(purchaseIngest),
       );
       return response;
     };
@@ -8349,13 +8577,14 @@ async function handleConversions(
         bodyText,
         ctx.conversionId,
         ctx.inboxPromoCode,
+        Boolean(purchaseIngest),
       );
       return response;
     };
 
     // Route to the correct handler
     if (!rawAction && params.phone && params.amount) {
-      return runAndFinalize((ctx) =>
+      return await runAndFinalize((ctx) =>
         handleSimplePurchase(db, params, landing, cfg, pixelConfigs, ctx)
       );
     }
@@ -8434,7 +8663,7 @@ async function handleConversions(
             safePayloadRaw(params),
             "duplicado ignorado por coelsa_id/transaction_id",
           );
-          return markDeduplicated(
+          return await markDeduplicated(
             textResponse(
               "Duplicado ignorado (coelsa_id/transaction_id ya procesado)",
               200,
@@ -8452,7 +8681,7 @@ async function handleConversions(
       const hasIsValidReceipt = receiptValue !== undefined && receiptValue !== null && receiptValue !== "";
       const isValidReceipt = toBool(receiptValue);
       if (hasIsValidReceipt && !isValidReceipt) {
-        return runAndFinalize(async (_ctx) => {
+        return await runAndFinalize(async (_ctx) => {
           await writeLog(
             db,
             landing.user_id,
@@ -8481,7 +8710,7 @@ async function handleConversions(
           );
         });
       }
-      return runAndFinalize((ctx) =>
+      return await runAndFinalize((ctx) =>
         handlePurchase(db, params, landing, cfg, pixelConfigs, ctx)
       );
     }
@@ -8560,6 +8789,16 @@ async function handleConversions(
       ...diagnostics.reference(),
       ...exception,
     });
+    if (publicPurchase || purchaseIngest) {
+      // Do not spend another unbounded database round trip logging an admission
+      // failure after the caller's budget. API2 may safely retry the same ID.
+      diagnostics.failure = {
+        error_code: purchaseIngest ? "purchase_processing_unavailable" : "purchase_acceptance_unavailable",
+        message: "Purchase temporalmente no disponible; reintente mas tarde",
+        retryable: true,
+      };
+      return textResponse("Purchase temporalmente no disponible; reintente mas tarde", 503);
+    }
     try {
       const supabaseUrl = Deno.env.get("SUPABASE_URL");
       const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY");
@@ -8585,6 +8824,24 @@ async function handleConversions(
   }
 }
 
-Deno.serve((req) =>
-  observeTrackingRequest(req, (diagnostics) => handleConversions(req, diagnostics))
-);
+const processAcceptedPurchase: PurchaseIngestProcessor = (req, context) =>
+  observeTrackingRequest(req, (diagnostics) => handleConversions(req, diagnostics, context));
+
+Deno.serve((req) => {
+  if (new URL(req.url).searchParams.get("process_purchase_receipts") === "1") {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !serviceRoleKey) {
+      return textResponse("Configuracion del servidor incompleta", 500);
+    }
+    const db = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    return handlePurchaseIngestWorker(req, {
+      db,
+      processor: processAcceptedPurchase,
+      cronSecret: Deno.env.get("CRON_SECRET"),
+    });
+  }
+  return observeTrackingRequest(req, (diagnostics) => handleConversions(req, diagnostics));
+});

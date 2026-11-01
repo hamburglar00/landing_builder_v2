@@ -106,16 +106,35 @@ if (apiPath) {
       throw { response: { status: response.status, data: await response.json(), headers: Object.fromEntries(response.headers) } };
     }, sleep: async () => {}, log: (_level, record) => records.push(record),
   });
-  assert.equal(ok, false); assert.equal(records.length, 3); assert.equal(new Set(attempts).size, 1);
+  // API2 now stops on permanent 422 rejections; only transient failures retry.
+  assert.equal(ok, false); assert.equal(records.length, 1); assert.equal(attempts.length, 1);
   for (const record of records) {
     assert.equal(record.request_id, record.response_request_id);
     assert.equal(record.response_data.request_id, record.request_id);
     assert.equal(record.response_data.error_code, "tenant_identifier_mismatch");
     assert.equal(record.response_data.details.reason, "foreign_owner");
   }
-  for (const row of storedLogs.slice(-3)) assert.equal(JSON.parse(row.detail).request_id, attempts[0]);
+  for (const row of storedLogs.slice(-records.length)) assert.equal(JSON.parse(row.detail).request_id, attempts[0]);
   for (const sensitive of [payload.phone, payload.full_name]) assert.ok(!JSON.stringify(records).includes(sensitive));
-  checks.push("local API2 receives the real handler error with the same trace across all three attempts and database logs");
+  checks.push("local API2 receives the permanent handler rejection with one correlated attempt and no unnecessary retry");
+  scenario = "unavailable";
+  records.length = 0; attempts.length = 0;
+  const transient = await module.exports.postTrackingEvent("https://fixture.invalid/functions/v1/conversions?name=fixture", payload, "PURCHASE (marketing)", {
+    post: async (url, body, config) => {
+      assert.equal(JSON.stringify(body), original);
+      const response = await handler(new Request(url, { method: "POST", headers: { "Content-Type": "application/json", ...config.headers }, body: JSON.stringify(body) }));
+      attempts.push(config.headers["X-Request-ID"]);
+      throw { response: { status: response.status, data: await response.json(), headers: Object.fromEntries(response.headers) } };
+    }, sleep: async () => {}, log: (_level, record) => records.push(record),
+  });
+  assert.equal(transient, false); assert.equal(records.length, 3); assert.equal(new Set(attempts).size, 1);
+  for (const record of records) {
+    assert.equal(record.request_id, record.response_request_id);
+    assert.equal(record.response_data.error_code, "tenant_validation_unavailable");
+    assert.equal(record.response_data.retryable, true);
+  }
+  for (const row of storedLogs.slice(-3)) assert.equal(JSON.parse(row.detail).request_id, attempts[0]);
+  checks.push("local API2 preserves one trace through three retryable 503 attempts and database logs");
 }
 assert.ok(!queries.includes("conversions") && !queries.includes("purchase_event_claims"));
 console.log(JSON.stringify({ passed: checks.length, externalCalls: 0, financialWrites: 0, checks }, null, 2));

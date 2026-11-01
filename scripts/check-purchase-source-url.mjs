@@ -92,6 +92,7 @@ function fixture(provider, { contact = true, rootUrl = false, rawOnly = false } 
     gerencias: [], gerencia_phones: [], landings_gerencias: [], whatsapp_cloud_api_assignments: [], chatrace_client_configs: [], whatsapp_cloud_api_configs: [],
     ar_name_inferred_sex: [], ar_phone_area_codes: [], cron_config: [], conversion_log_lead_backfill_replays: [] };
   const db = { async rpc(name, args) {
+    if (name === 'purchase_ingest_event_pending') return { data: false, error: null };
     if (name === 'claim_purchase_event') {
       const key = args.p_user_id + ':' + args.p_idempotency_keys.join('|');
       const previous = state.claims.get(key);
