@@ -1,5 +1,12 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Flujo de retiro separado de avisos en Full Carga (03/11/2026)
+
+- El usuario separó los pedidos de monto/CBU/CVU y confirmación de la solicitud por chat de los avisos operativos. Incorporar «Flujo de retiro» como switch independiente, apagado por defecto también en bots existentes; el usuario confirmó expresamente este valor. «Avisos de retiro» conserva su preferencia y comprende procesamiento, pendientes, pagos, errores, restricciones y cancelaciones.
+- El formulario del chip sigue enviando monto y destino estructurados. Esta preferencia controla la entrega de respuestas automáticas: no habilita/deshabilita el parser ni cambia la ejecución financiera, el chip, bonos, límites, pagos o reintentos. No introducir un bloqueo financiero para aplicar una preferencia visual.
+- API2 identifica el flujo con `withdrawal_flow`. Atrio reconoce además los eventos explícitos de las versiones anteriores que usaban `withdrawal_status`, sin inferir por palabras del mensaje. Conservar idempotencia, mensajes manuales, MKT, sin clasificar y decisiones históricas de entrega.
+- Implementación única en Atrio para los cuatro gateways, widget y chat completo. El usuario autorizó commit, push y publicación, y aclaró que API2 la despliega el programador. La migración productiva de Atrio `20261103175034` fue aplicada antes de publicar la web. API2 se entrega en Git para su despliegue; no requiere migración propia. No se ejecutan operaciones financieras ni se generan mensajes productivos para probarlo. [Alcance y validación](../../internal-chat/docs/validation/withdrawal-flow-replies-20261103.md).
+
 ### URL de origen de PURCHASE por recorrido (31/10/2026)
 
 - El usuario autorizó corregir el Purchase que enviaba `event_source_url` como raíz del dominio después de resolver una conversión de una landing concreta. El alcance comprende todas las landings y los cuatro proveedores en el handler central de Builder, incluidas primeras compras, recompras y reintentos legítimos. No depende de conectar Facebook con OpenAI.
