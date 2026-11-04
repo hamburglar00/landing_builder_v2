@@ -20,6 +20,7 @@ export function installEntryFunnel(config: {
   const allowed = ["page_visible", "form_visible", "name_focus", "name_started", "name_valid", "skin_selected", "cta_clicked", "destination_ready", "account_ready", "login_confirmed", "gateway_loaded", "iframe_loaded", "chat_bootstrap_ready", "welcome_ready", "wallet_ready", "chat_usable", "chat_ready", "entry_error", "visibility_hidden", "resumed", "stage_timing", "casino_account_ready", "entry_retry", "attempt_started"];
   const phases = ["landing_dns", "landing_connect", "landing_tls", "landing_ttfb", "landing_download", "landing_navigation",
     "gateway_dns", "gateway_connect", "gateway_tls", "gateway_ttfb", "gateway_download", "gateway_navigation",
+    "casino_ttfb", "casino_download", "casino_navigation",
   "preparation_dns", "preparation_connect", "preparation_tls", "preparation_ttfb", "preparation_download", "preparation_navigation",
     "destination_scope", "destination_resolve", "destination_fallback", "destination_total", "identity_bootstrap",
   "builder_context", "atrio_identity", "casino_account", "atrio_link", "gateway_handoff", "entry_finalize", "entry_total",

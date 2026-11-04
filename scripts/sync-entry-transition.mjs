@@ -21,8 +21,10 @@ for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "mu
     for (const file of ["preparation-page.ts", "preparation-page.test.ts", "transition-layout.ts", "gateway-entry-transition.test.ts", "gateway-entry-settings.ts", "gateway-entry-settings.test.ts", "gateway-entry-response.ts", "gateway-entry-response.test.ts"]) await sync(new URL(`src/lib/${file}`, root), await readFile(new URL(`src/lib/${file}`, canonical), "utf8"));
   }
   const target = new URL("public/gateway-client.js", root);
-  const client = await readFile(target, "utf8");
-  const without = client.replace(/  \/\/ BEGIN shared entry transition[\s\S]*?  \/\/ END shared entry transition\n\n?/, "");
+  const client = (await readFile(target, "utf8")).replaceAll("\r\n", "\n");
+  // Git checkouts on Windows can contain CRLF. Remove every generated block
+  // before inserting the canonical one, so repeated syncs cannot duplicate it.
+  const without = client.replace(/  \/\/ BEGIN shared entry transition[\s\S]*?  \/\/ END shared entry transition\n\n?/g, "");
   if (without.split("  function initializeChat() {").length !== 2) throw Error("Gateway client changed");
   await sync(target, without.replace("  function initializeChat() {", fragment + "\n  function initializeChat() {"));
 }

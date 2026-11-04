@@ -11,9 +11,9 @@ for(const name of ['gateway-entry-shell.ts','gateway-session-reuse.ts','parallel
  }
 }
 const shell=await readFile(path.join(root,'landing-autologuin/src/lib/gateway-entry-shell.ts'),'utf8');
-const guard=shell.split('export const GATEWAY_CASINO_FRAME_GUARD = `')[1].split('`;')[0];
+const guard=shell.split('export const GATEWAY_CASINO_FRAME_GUARD = `')[1].split('`;')[0].replaceAll('\r\n','\n');
 for(const repo of repos){
- const file=path.join(root,repo,'public/gateway-client.js');let source=await readFile(file,'utf8');
+ const file=path.join(root,repo,'public/gateway-client.js');let source=(await readFile(file,'utf8')).replaceAll('\r\n','\n');
  if(!source.includes(guard)){
   if(process.argv.includes('--check'))throw Error('Missing casino frame guard: '+repo);
   if(source.includes('gateway-casino-frame'))throw Error('Conflicting casino frame guard: '+repo);

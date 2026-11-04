@@ -30,6 +30,7 @@ for (const engine of [chromium,webkit]) await withTestBrowser(engine,async brows
         api.timings('t7-account;dur=1200;desc="created", t7-context;dur=70, atrio_provider_create;dur=1000, secret;desc="private"');
         api.emit("entry_retry",{error_stage:"login",status:503});
         api.emit("stage_timing",{phase:"provider_login",duration_ms:400});
+        for(const phase of ['casino_ttfb','casino_download','casino_navigation'])api.emit('stage_timing',{phase,duration_ms:80});
         api.emit("chat_usable");api.emit("chat_usable");window.afterRetry=api.context();
         api.emit("cta_clicked");window.second=api.context();
         api.timings('t7-account;dur=15;desc="recovered"');api.emit("chat_usable");
@@ -46,6 +47,7 @@ for (const engine of [chromium,webkit]) await withTestBrowser(engine,async brows
       assert.equal(events.filter(e=>e.name==="entry_retry").length,1);
       assert.equal(events.find(e=>e.phase==="provider_create").account_kind,"new");
       assert.ok(events.find(e=>e.phase==="landing_navigation").duration_ms>=0);
+      for(const phase of ['casino_ttfb','casino_download','casino_navigation'])assert.equal(events.find(e=>e.phase===phase)?.duration_ms,80,'browser accepts '+phase);
       assert.doesNotMatch(JSON.stringify(events),/private|secret-url|password|token/);
       assert.deepEqual(errors,[]);scenarios++;
       const supplied={...state.context,account_kind:"new"};

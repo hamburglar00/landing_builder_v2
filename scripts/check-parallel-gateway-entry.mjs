@@ -26,13 +26,17 @@ let scenarios=0;
 for(const engine of [chromium,webkit])await withTestBrowser(engine,async browser=>{
  for(const fixture of fixtures){
   const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
-  let release,blocked=new Promise(resolve=>release=resolve),casinoRequested=false,casinoDelivered=false;const errors=[],external=[];
+  let release,blocked=new Promise(resolve=>release=resolve),casinoRequested=false,casinoDelivered=false;const errors=[],external=[],batches=[];
   try{
    const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
    await context.route('**/*',async route=>{
     const url=new URL(route.request().url());
     if(url.origin==='https://chat.test')return route.fulfill({contentType:'text/html',body:`<!doctype html><input placeholder="Escribi un mensaje..."><script>parent.postMessage({source:'atrio-widget',type:'atrio.widget.ready',visibleEntry:true,presentation:{template:'atrio',primary:'#fff',primaryHover:'#eee',accent:'#ddd',background:'#111',surface:'#222',text:'#fff',buttonText:'#000',border:'#555'}},'https://gateway.test')</script>`});
     if(url.origin!=='https://gateway.test'){external.push(url.href);return route.abort();}
+    if(url.pathname==='/api/entry-funnel'){
+     if(route.request().method()==='POST'){batches.push(route.request().postDataJSON());return route.fulfill({status:204});}
+     return route.fulfill({json:{landing_id:'11111111-1111-4111-8111-111111111111',flow_id:'22222222-2222-4222-8222-222222222222',template:7,telemetry_origin:'https://landing.panelbotadmin.com',started_at:Date.now()}});
+    }
     if(url.pathname==='/entry')return route.fulfill({contentType:'text/html',body:fixture.html});
     if(url.pathname==='/gateway-client.js')return route.fulfill({contentType:'text/javascript',body:fixture.js});
     if(url.pathname==='/gateway-client.css')return route.fulfill({contentType:'text/css',body:fixture.css});
@@ -50,6 +54,12 @@ for(const engine of [chromium,webkit])await withTestBrowser(engine,async browser
    await page.locator('#gateway-entry-transition[hidden]').waitFor({state:'attached'});
    assert.equal(casinoRequested,true);assert.equal(casinoDelivered,false,'casino response is still held while chat can be used');
    release();await page.frameLocator('#gateway-casino').locator('h1').waitFor();
+   for(let attempts=0;attempts<50;attempts++){
+    await page.evaluate(()=>window.__entryFunnel?.flush());
+    if(batches.flatMap(batch=>batch.events).filter(e=>/^casino_/.test(e.phase||'')).length>=3)break;
+    await page.waitForTimeout(50);
+   }
+   for(const phase of ['casino_ttfb','casino_download','casino_navigation'])assert.ok(batches.flatMap(batch=>batch.events).some(e=>e.phase===phase),'actual parent client emits '+phase);
    assert.equal(await page.frameLocator('#gateway-casino').locator('#gateway-chat-shell').count(),0,'no second chat mounts in casino document');
    await page.frameLocator('#gateway-casino').locator('h1').evaluate(()=>location.assign('/auth/signIn'));
    await page.waitForURL('https://gateway.test/auth/signIn');assert.equal(await page.locator('#gateway-chat-shell').count(),0);
