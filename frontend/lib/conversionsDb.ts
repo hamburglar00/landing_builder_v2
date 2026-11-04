@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
+import { statisticsEventRangeFilter } from "@/lib/conversionJourneyStats";
 import {
   REPORTING_CURRENCIES,
   type ReportingCurrency,
@@ -132,6 +133,9 @@ export interface GerenciaAvailabilitySummary {
 }
 
 export interface ConversionRow {
+  confirmed_registration_event_id?: string | null;
+  confirmed_registration_event_time?: number | null;
+  confirmed_registration_agency_id?: number | null;
   id: string;
   internal_id: number | null;
   landing_id: string | null;
@@ -258,6 +262,7 @@ export interface ConversionRow {
 }
 
 export interface ConversionJourneyStartRow {
+  journey_destination?: "whatsapp" | "atrio" | null;
   id: string;
   user_id: string;
   source_platform: "landing" | "whatsapp_cloud_api" | string;
@@ -377,7 +382,7 @@ export function getConversionGerenciaLabels(
     | "purchase_gerencia_label"
   >,
   gerenciaByPhone: Record<string, string[]>,
-  stage?: "contact" | "lead" | "purchase",
+  stage?: "contact" | "lead" | "registration" | "purchase",
 ): string[] {
   const assignedLabels = (): string[] => {
     const historicalLabel = String(row.assigned_gerencia_label ?? "").trim();
@@ -396,6 +401,11 @@ export function getConversionGerenciaLabels(
 
   if (stage === "contact") return assignedLabels();
   if (stage === "lead") return leadLabels();
+  if (stage === "registration") {
+    const label = String((row as ConversionRow).registration_gerencia_label ?? "").trim();
+    const agency = (row as ConversionRow).confirmed_registration_agency_id || (row as ConversionRow).registration_agency_id;
+    return label ? [label] : agency ? [`Gerencia (ID ${agency})`] : leadLabels();
+  }
   if (stage === "purchase") return purchaseLabels();
 
   const labels = new Set<string>();
@@ -404,6 +414,9 @@ export function getConversionGerenciaLabels(
   }
   if (String(row.lead_event_id ?? "").trim()) {
     for (const label of leadLabels()) labels.add(label);
+  }
+  if (String((row as ConversionRow).registration_event_id || (row as ConversionRow).confirmed_registration_event_id || "").trim()) {
+    for (const label of getConversionGerenciaLabels(row, gerenciaByPhone, "registration")) labels.add(label);
   }
   if (String(row.purchase_event_id ?? "").trim()) {
     for (const label of purchaseLabels()) labels.add(label);
@@ -494,7 +507,9 @@ export function scopeConversionStagesToGerencia(
     matches(getConversionGerenciaLabels(row, gerenciaByPhone, "lead"));
   const hasPurchase = String(row.purchase_event_id ?? "").trim() !== "" &&
     matches(getConversionGerenciaLabels(row, gerenciaByPhone, "purchase"));
-  if (!hasContact && !hasLead && !hasPurchase) return null;
+  const hasRegistration = !!(row.registration_event_id || row.confirmed_registration_event_id) &&
+    matches(getConversionGerenciaLabels(row, gerenciaByPhone, "registration"));
+  if (!hasContact && !hasLead && !hasRegistration && !hasPurchase) return null;
 
   return {
     ...row,
@@ -502,6 +517,10 @@ export function scopeConversionStagesToGerencia(
     contact_event_time: hasContact ? row.contact_event_time : null,
     lead_event_id: hasLead ? row.lead_event_id : "",
     lead_event_time: hasLead ? row.lead_event_time : null,
+    registration_event_id: hasRegistration ? row.registration_event_id : "",
+    registration_event_time: hasRegistration ? row.registration_event_time : null,
+    confirmed_registration_event_id: hasRegistration ? row.confirmed_registration_event_id : null,
+    confirmed_registration_event_time: hasRegistration ? row.confirmed_registration_event_time : null,
     purchase_event_id: hasPurchase ? row.purchase_event_id : "",
     purchase_event_time: hasPurchase ? row.purchase_event_time : null,
     purchase_type: hasPurchase ? row.purchase_type : null,
@@ -915,7 +934,7 @@ const CONVERSIONS_SELECT = `
 `.replace(/\s+/g, " ").trim();
 
 const CONVERSION_JOURNEY_STARTS_SELECT = `
-  id, user_id, source_platform, start_identity_key,
+  id, user_id, source_platform, start_identity_key, journey_destination,
   landing_id, landing_name, workspace_currency,
   external_id, phone, wa_id, email, utm_campaign,
   fbp, fbc, from_meta_ads, meta_pixel_id, dataset_id, ctwa_clid,
@@ -962,8 +981,9 @@ async function fetchConversionRowsInternal({
 }): Promise<ConversionRow[]> {
   const pageSize = 1000;
   const rows: ConversionRow[] = [];
-  const startIso = latestIso(range?.start, visibleFrom);
+  const startIso = toIsoIfValid(range?.start);
   const endIso = toIsoIfValid(range?.end);
+  const visibleIso = toIsoIfValid(visibleFrom);
   let offset = 0;
 
   while (true) {
@@ -972,8 +992,9 @@ async function fetchConversionRowsInternal({
       .select(CONVERSIONS_SELECT);
     if (userId !== undefined) query = query.eq("user_id", userId);
     query = query.order("created_at", { ascending: false });
-    if (startIso) query = query.gte("created_at", startIso);
-    if (endIso) query = query.lte("created_at", endIso);
+    if (visibleIso) query = query.gte("created_at", visibleIso);
+    const eventRange = statisticsEventRangeFilter(startIso, endIso);
+    if (eventRange) query = query.or(eventRange);
 
     const chunkSize = typeof limit === "number"
       ? Math.min(pageSize, Math.max(limit - offset, 0))
@@ -989,7 +1010,30 @@ async function fetchConversionRowsInternal({
     offset += chunkSize;
   }
 
-  return rows;
+  return attachConfirmedRegistrations(rows);
+}
+
+async function attachConfirmedRegistrations(rows: ConversionRow[]): Promise<ConversionRow[]> {
+  const promos = [...new Set(rows.filter(row => row.atrio_id && row.promo_code).map(row => row.promo_code))];
+  if (!promos.length) return rows;
+  const outcomes = new Map<string, { id: string; created_at: string; agency_id: number | null }>();
+  for (let offset = 0; offset < promos.length; offset += 200) {
+    const { data, error } = await supabase.from("conversion_account_registrations")
+      .select("id,user_id,landing_id,promo_code,created_at,agency_id").in("promo_code", promos.slice(offset, offset + 200));
+    if (error) {
+      console.warn("[registration-statistics] measurement unavailable");
+      return rows;
+    }
+    for (const outcome of data ?? []) {
+      outcomes.set(`${outcome.user_id}::${outcome.landing_id}::${outcome.promo_code}`, outcome);
+    }
+  }
+  return rows.map(row => {
+    const outcome = outcomes.get(`${row.user_id}::${row.landing_id}::${row.promo_code}`);
+    return outcome ? { ...row, confirmed_registration_event_id: `internal-account:${outcome.id}`,
+      confirmed_registration_agency_id: outcome.agency_id,
+      confirmed_registration_event_time: Math.floor(Date.parse(outcome.created_at) / 1000) } : row;
+  });
 }
 
 async function fetchConversionJourneyStartRowsInternal({

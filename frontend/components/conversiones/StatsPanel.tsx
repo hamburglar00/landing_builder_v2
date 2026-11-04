@@ -7,12 +7,14 @@ import {
   type ConversionRow,
 } from "@/lib/conversionsDb";
 import { adJourneyKey, computeCoreStats, computeJourneyStartStats, computeStatsTruthMetrics } from "@/lib/conversionStats";
+import { buildFunnelContactsFromConversions } from "@/lib/conversionsDb";
+import { computeChannelFunnel, countStatisticsVisitConversions, scopeStatisticsChannel, scopeStatisticsStages, stageDate, statisticsTemporalRows, statisticsRate, statisticsPlayerKey, type StatisticsChannel } from "@/lib/conversionJourneyStats";
 import { formatCompactCurrency, formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
 import ArgentinaMap from "./ArgentinaMap";
 import { supabase } from "@/lib/supabaseClient";
 import CustomSelect from "@/components/ui/CustomSelect";
 import {
-  ComposedChart, BarChart, Area, Bar, Line,
+  ComposedChart, Area, Bar, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer,
 } from "recharts";
@@ -28,11 +30,6 @@ function WaIcon({ className }: { className?: string }) {
       <path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 00.611.611l4.458-1.495A11.935 11.935 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.94 9.94 0 01-5.39-1.585l-.386-.234-2.647.887.887-2.647-.234-.386A9.94 9.94 0 012 12C2 6.486 6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z" />
     </svg>
   );
-}
-
-function pct(num: number, den: number) {
-  if (den === 0) return "0%";
-  return `${((num / den) * 100).toFixed(1)}%`;
 }
 
 function TrendArrow({ trend, className = "w-3 h-3" }: { trend: "up" | "down"; className?: string }) {
@@ -103,9 +100,9 @@ function KpiCard({
   trendInfo?: { trend: "up" | "down"; pctChange: number; revenueToday: number; revenueYesterday: number; currency: ReportingCurrency };
 }) {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 group relative">
-      <p className="text-[11px] font-semibold text-zinc-400 mb-1 min-h-[2.5rem] leading-snug">{label}</p>
-      <p className={`text-xl font-bold ${color} flex min-h-[2rem] items-baseline flex-wrap`}>
+    <div data-stat-label={label} className="min-w-0 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 group relative">
+      <p className="break-words text-[11px] font-semibold text-zinc-400 mb-1 min-h-[2.5rem] leading-snug">{label}</p>
+      <p className={`break-words text-xl font-bold ${color} flex min-h-[2rem] items-baseline flex-wrap [overflow-wrap:anywhere]`}>
         {value}
         {trendInfo && (
           <RevenueTrendBadge
@@ -117,9 +114,9 @@ function KpiCard({
           />
         )}
       </p>
-      {sub && <p className="text-[10px] font-semibold text-zinc-400 mt-1">{sub}</p>}
+      {sub && <p className="break-words text-[10px] font-semibold text-zinc-400 mt-1">{sub}</p>}
       {tooltip && (
-        <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 rounded-lg border border-zinc-700/60 bg-zinc-900/95 backdrop-blur-sm px-3 py-2 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 [transition-delay:0ms] group-hover:[transition-delay:1000ms] z-50">
+        <div className="pointer-events-none absolute left-0 bottom-full mb-2 w-full break-words rounded-lg border border-zinc-700/60 bg-zinc-900/95 backdrop-blur-sm px-3 py-2 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 [transition-delay:0ms] group-hover:[transition-delay:1000ms] z-50">
           <p className="text-[10px] text-zinc-400 leading-relaxed">{tooltip}</p>
         </div>
       )}
@@ -129,7 +126,7 @@ function KpiCard({
 
 type JourneyPathStep = {
   label: string;
-  value: number;
+  value: number | string;
   color: string;
 };
 
@@ -141,20 +138,20 @@ function JourneyPathCard({
   rates: string[];
 }) {
   return (
-    <div className="mt-3 overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-      <div className="flex min-w-[860px] items-center">
+    <div data-testid="statistics-journey" className="mt-3 min-w-0 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:flex xl:items-start">
         {steps.map((step, index) => (
-          <div key={`${step.label}-${index}`} className="flex flex-1 items-center">
-            <div className="w-32 shrink-0 text-center">
-              <p className="mx-auto min-h-[2rem] max-w-32 text-[11px] font-semibold leading-snug text-zinc-400">
+          <div key={`${step.label}-${index}`} className="flex min-w-0 flex-1 items-center gap-2">
+            <div className="min-w-0 flex-1 text-center">
+              <p className="mx-auto min-h-[2rem] break-words text-[11px] font-semibold leading-snug text-zinc-400">
                 {step.label}
               </p>
-              <p className={`mt-1 text-xl font-bold tabular-nums ${step.color}`}>
+              <p className={`mt-1 break-words text-lg font-bold tabular-nums ${step.color}`}>
                 {step.value}
               </p>
             </div>
             {index < rates.length && (
-              <div className="min-w-24 flex-1 px-2">
+              <div className="w-12 shrink-0">
                 <p className="mb-1 text-center text-[11px] font-bold tabular-nums text-zinc-200">
                   {rates[index]}
                 </p>
@@ -255,9 +252,7 @@ const LOAD_METRIC_LABELS: Record<LoadMetric, string> = {
 const TOP_CONTACT_LIMIT_OPTIONS: TopContactsLimit[] = [10, 25, 50, 100];
 const LEAD_FREQUENCY_BUCKET_CAP = 6;
 
-function fmtInt(value: number): string {
-  return Math.round(value).toLocaleString("es-AR");
-}
+
 
 function normalizeLeadPhone(value: unknown): string {
   return String(value ?? "").replace(/\D/g, "");
@@ -430,18 +425,7 @@ function SortButton({
   );
 }
 
-export default function StatsPanel({
-  funnelContacts,
-  conversions,
-  allConversions,
-  journeyStarts,
-  premiumThreshold,
-  dateRange,
-  sourcePlatformFilter = "__all__",
-  compactTooltips = false,
-  showAssistant = true,
-  currency,
-}: {
+type StatsPanelProps = {
   funnelContacts: FunnelContact[];
   conversions: ConversionRow[];
   allConversions: ConversionRow[];
@@ -452,8 +436,52 @@ export default function StatsPanel({
   compactTooltips?: boolean;
   showAssistant?: boolean;
   currency: ReportingCurrency;
-}) {
-  const [adSpend, setAdSpend] = useState<string>("");
+};
+
+export default function StatsPanel(props: StatsPanelProps) {
+  const [channel, setChannel] = useState<StatisticsChannel>("whatsapp");
+  const [spend, setSpend] = useState<Record<string, string>>({});
+  const spendKey = `${channel}:${props.currency}`;
+  const scoped = useMemo(() => scopeStatisticsChannel(props.allConversions, props.journeyStarts, channel, props.dateRange),
+    [props.allConversions, props.journeyStarts, props.dateRange, channel]);
+  const contacts = useMemo(() => buildFunnelContactsFromConversions(scoped.conversions), [scoped.conversions]);
+  return <div className="min-w-0 space-y-4" data-testid="channel-statistics" data-channel={channel}>
+    <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Canal de las estadísticas">
+      {(["whatsapp", "atrio"] as const).map(value => <button key={value} type="button" aria-pressed={channel === value}
+        onClick={() => setChannel(value)}
+        className={`rounded-full border px-4 py-2 text-xs font-bold transition ${channel === value ? "border-emerald-400/40 bg-emerald-400/15 text-emerald-300" : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-zinc-100"}`}>
+        {value === "whatsapp" ? "WhatsApp" : "Atrio"}
+      </button>)}
+    </div>
+    <p className="text-xs text-zinc-400">Todas las estadísticas corresponden a {channel === "whatsapp" ? "WhatsApp" : "Atrio"} y a los filtros globales seleccionados.</p>
+    {(scoped.unknownConversions > 0 || scoped.unknownStarts > 0) && <p className="break-words text-xs text-zinc-500" role="status">
+      Sin canal histórico confirmado: {scoped.unknownConversions} registros y {scoped.unknownStarts} visitas. No se incluyen en los cálculos por canal.
+    </p>}
+    {scoped.conversions.length === 0 && scoped.journeyStarts.length === 0 && <p className="text-sm text-zinc-400">No hay datos de {channel === "whatsapp" ? "WhatsApp" : "Atrio"} para esta selección.</p>}
+    <ChannelStatsPanel key={`${channel}-${props.currency}`} {...props} funnelContacts={contacts} conversions={scoped.conversions}
+      allConversions={scoped.allConversions} journeyStarts={scoped.journeyStarts} channel={channel} funnel={scoped.funnel}
+      adSpend={spend[spendKey] ?? ""} setAdSpend={value => setSpend(current => ({ ...current, [spendKey]: value }))} />
+  </div>;
+}
+
+function ChannelStatsPanel({
+  funnelContacts,
+  conversions,
+  allConversions,
+  journeyStarts,
+  premiumThreshold,
+  dateRange,
+  sourcePlatformFilter = "__all__",
+  compactTooltips = false,
+  showAssistant = true,
+  currency,
+  channel,
+  funnel,
+  adSpend,
+  setAdSpend,
+}: StatsPanelProps & { channel: StatisticsChannel; funnel: ReturnType<typeof computeChannelFunnel>; adSpend: string; setAdSpend: (value: string) => void }) {
+  const activityLabel = channel === "atrio" ? "Solicitudes de usuario" : "Mensajes recibidos";
+  const activityStage = channel === "atrio" ? "contact" : "lead";
   const [hourlyLoadMetric, setHourlyLoadMetric] = useState<LoadMetric>("total");
   const [dailyLoadMetric, setDailyLoadMetric] = useState<LoadMetric>("total");
   const [hourlyMessagesSmaEnabled, setHourlyMessagesSmaEnabled] = useState(false);
@@ -479,9 +507,7 @@ export default function StatsPanel({
   const [assistantQuota, setAssistantQuota] = useState<AssistantQuota | null>(null);
   const [assistantMessages, setAssistantMessages] = useState<AssistantMsg[]>([]);
 
-  useEffect(() => {
-    setAdSpend("");
-  }, [currency]);
+  const temporalConversions = useMemo(() => statisticsTemporalRows(conversions, channel), [conversions, channel]);
 
   const stats = useMemo(() => {
     const truth = computeStatsTruthMetrics({
@@ -505,13 +531,13 @@ export default function StatsPanel({
       return !(c.observaciones ?? "").includes("REPEAT");
     };
     const uniqueContacts = truth.uniqueContacts;
-    const uniqueLeads = truth.uniqueLeads;
+    const uniqueLeads = channel === "atrio" ? funnel.contacts : truth.uniqueLeads;
     const realLeadsLinkedToContact = truth.realLeadsLinkedToContact;
     const inferredLeadsFromContactPurchase = truth.inferredLeadsFromContactPurchase;
-    const uniqueLeadsLinkedToContact = truth.uniqueLeadsLinkedToContact;
+    const uniqueLeadsLinkedToContact = channel === "atrio" ? funnel.contacts : funnel.messages;
     const firstLoadPurchasers = truth.firstLoadPurchasers;
-    const firstLoadPurchasersLinkedToLead = truth.firstLoadPurchasersLinkedToLead;
-    const firstLoadPlayersAttributed = truth.firstLoadPlayersAttributed;
+    const firstLoadPurchasersLinkedToLead = funnel.firstPurchases;
+    const firstLoadPlayersAttributed = new Set(conversions.filter(isFirstPurchase).map(statisticsPlayerKey)).size;
     const totalPurchases = truth.totalPurchases;
     const primera = truth.primera;
     const recurrente = truth.recurrente;
@@ -520,24 +546,21 @@ export default function StatsPanel({
     const totalPurchaseCount = truth.totalPurchaseCount;
     const firstPurchaseRevenue = truth.firstPurchaseRevenue;
     const reachedRepeat = truth.reachedRepeat;
-    const repeatPlayersReached = truth.repeatPlayersReached;
+    const repeatPlayersReached = new Set(conversions.filter(isRepeatPurchase).map(statisticsPlayerKey)).size;
     const purchaseFirstCount = truth.purchaseFirstCount;
     const purchaseRepeatCount = truth.purchaseRepeatCount;
     const leads = uniqueLeads;
 
     const purchasers = truth.purchasers;
     const avgTicket = truth.avgTicket;
-    const avgLoadsPerPlayer = truth.avgLoadsPerPlayer;
-    const leadRepeatStats = computeLeadRepeatStats(conversions);
-    const dominantLeadFrequencyBucket = leadRepeatStats.buckets.reduce<LeadFrequencyBucket | null>(
-      (best, bucket) => !best || bucket.leads > best.leads ? bucket : best,
-      null,
-    );
+    const purchasePlayers = new Set(conversions.filter(row => row.purchase_event_id).map(statisticsPlayerKey)).size;
+    const avgLoadsPerPlayer = purchasePlayers ? totalPurchaseCount / purchasePlayers : 0;
     type SliceStats = {
       mensajes: number;
       cargas: number;
       revenue: number;
       firstRevenue: number;
+      baseCargas: number | null;
     };
     const getSliceStats = (
       convSlice: ConversionRow[],
@@ -545,11 +568,13 @@ export default function StatsPanel({
       allConvSlice: ConversionRow[],
     ): SliceStats => {
       const slicedCore = computeCoreStats(convSlice, contactsSlice, allConvSlice, premiumThreshold);
+      const milestones = computeChannelFunnel(convSlice, channel);
       return {
-        mensajes: slicedCore.adLeadJourneysLinkedToContact,
-        cargas: slicedCore.adFirstPurchaseEventsAttributed,
+        mensajes: channel === "atrio" ? milestones.contacts : convSlice.filter(row => row.lead_event_id).length,
+        cargas: milestones.firstPurchases,
         revenue: slicedCore.totalRevenue,
         firstRevenue: slicedCore.firstPurchaseEventRevenue,
+        baseCargas: channel === "atrio" ? milestones.contacts : milestones.registered,
       };
     };
 
@@ -636,7 +661,7 @@ export default function StatsPanel({
       cargas_repeat: 0,
       ingresos: 0,
     }));
-    for (const c of conversions) {
+    for (const c of temporalConversions) {
       if ((c.purchase_event_id ?? "") !== "" && c.created_at) {
         const h = new Date(c.created_at).getHours();
         hourlyBuckets[h].cargas++;
@@ -656,7 +681,7 @@ export default function StatsPanel({
       chartStart = new Date(dateRange.start);
       chartEnd = new Date(dateRange.end);
     } else {
-      const dates = conversions
+      const dates = temporalConversions
         .filter((c) => c.created_at)
         .map((c) => new Date(c.created_at).setHours(0, 0, 0, 0));
       if (dates.length === 0) {
@@ -677,7 +702,7 @@ export default function StatsPanel({
     }
 
     const dailyMap = new Map<string, { day: string; leads: number; cargas: number; cargas_first: number; cargas_repeat: number; ingresos: number }>();
-    for (const c of conversions) {
+    for (const c of temporalConversions) {
       if (!c.created_at) continue;
       const d = new Date(c.created_at);
       const dayKey = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
@@ -689,7 +714,7 @@ export default function StatsPanel({
         cargas_repeat: 0,
         ingresos: 0,
       };
-      if (c.estado === "lead" || c.lead_event_id) entry.leads++;
+      if (c[`${activityStage}_event_id`]) entry.leads++;
       if ((c.purchase_event_id ?? "") !== "") {
         entry.cargas++;
         if (isFirstPurchase(c)) entry.cargas_first++;
@@ -723,7 +748,7 @@ export default function StatsPanel({
     let revenueYesterday = 0;
     for (const c of allConversions) {
       if ((c.purchase_event_id ?? "") === "" || !c.created_at) continue;
-      const d = new Date(c.created_at).getTime();
+      const d = stageDate(c, "purchase")?.getTime() ?? NaN;
       if (d >= today.getTime() && d <= todayEnd.getTime()) revenueToday += c.valor;
       if (d >= yesterday.getTime() && d <= yesterdayEnd.getTime()) revenueYesterday += c.valor;
     }
@@ -772,8 +797,6 @@ export default function StatsPanel({
       totalPurchaseCount,
       avgTicket,
       avgLoadsPerPlayer,
-      leadRepeatStats,
-      dominantLeadFrequencyBucket,
       byCampaign,
       byDevice,
       byLanding,
@@ -786,7 +809,7 @@ export default function StatsPanel({
       revenueToday,
       revenueYesterday,
     };
-  }, [funnelContacts, conversions, allConversions, journeyStarts, premiumThreshold, dateRange]);
+  }, [funnelContacts, conversions, allConversions, journeyStarts, premiumThreshold, dateRange, activityStage, temporalConversions, channel, funnel]);
 
   const parsedAdSpend = parseFloat(adSpend.replace(/\D/g, "")) || 0;
   const roasFirstPurchase = parsedAdSpend > 0 ? stats.firstPurchaseRevenue / parsedAdSpend : 0;
@@ -928,10 +951,10 @@ export default function StatsPanel({
       return !(c.observaciones ?? "").includes("REPEAT");
     };
     const byHour = Array.from({ length: 24 }, (_, h) => ({ hour: `${h}`, leads: 0, cargas: 0, cargas_first: 0 }));
-    for (const c of conversions) {
+    for (const c of temporalConversions) {
       if (!c.created_at) continue;
       const h = new Date(c.created_at).getHours();
-      if (c.estado === "lead" || c.lead_event_id) byHour[h].leads += 1;
+      if (c[`${activityStage}_event_id`]) byHour[h].leads += 1;
       if ((c.purchase_event_id ?? "") !== "") {
         byHour[h].cargas += 1;
         if (isFirstPurchase(c)) byHour[h].cargas_first += 1;
@@ -946,7 +969,7 @@ export default function StatsPanel({
         cargas_first: isFutureHour ? null : row.cargas_first,
       };
     });
-  }, [conversions, isTodayRange, currentHour]);
+  }, [temporalConversions, activityStage, isTodayRange, currentHour]);
   const dailyMessagesLoadsData = useMemo(() => {
     const isFirstPurchase = (c: ConversionRow): boolean => {
       if ((c.purchase_event_id ?? "") === "") return false;
@@ -956,10 +979,10 @@ export default function StatsPanel({
     };
     if (isTodayRange) {
       const byHour = Array.from({ length: 24 }, (_, h) => ({ day: `${h}`, leads: 0, cargas: 0, cargas_first: 0 }));
-      for (const c of conversions) {
+      for (const c of temporalConversions) {
         if (!c.created_at) continue;
         const h = new Date(c.created_at).getHours();
-        if (c.estado === "lead" || c.lead_event_id) byHour[h].leads += 1;
+        if (c[`${activityStage}_event_id`]) byHour[h].leads += 1;
         if ((c.purchase_event_id ?? "") !== "") {
           byHour[h].cargas += 1;
           if (isFirstPurchase(c)) byHour[h].cargas_first += 1;
@@ -977,13 +1000,13 @@ export default function StatsPanel({
     }
 
     const byDay = new Map<string, { day: string; leads: number; cargas: number; cargas_first: number }>();
-    for (const c of conversions) {
+    for (const c of temporalConversions) {
       if (!c.created_at) continue;
       const d = new Date(c.created_at);
       const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
       const label = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
       const row = byDay.get(key) ?? { day: label, leads: 0, cargas: 0, cargas_first: 0 };
-      if (c.estado === "lead" || c.lead_event_id) row.leads += 1;
+      if (c[`${activityStage}_event_id`]) row.leads += 1;
       if ((c.purchase_event_id ?? "") !== "") {
         row.cargas += 1;
         if (isFirstPurchase(c)) row.cargas_first += 1;
@@ -998,7 +1021,7 @@ export default function StatsPanel({
       });
       return match ?? { day: d.day, leads: 0, cargas: 0, cargas_first: 0 };
     });
-  }, [isTodayRange, stats.dailyData, conversions, currentHour]);
+  }, [isTodayRange, stats.dailyData, temporalConversions, activityStage, currentHour]);
   const hourlyMessagesChartData = useMemo(() => (
     hourlyMessagesLoadsData.map((row) => ({
       ...row,
@@ -1016,15 +1039,15 @@ export default function StatsPanel({
   const weekdayDistributionBaseData = useMemo(() => {
     const labels = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
     const rows = labels.map((day) => ({ day, mensajes: 0, cargas: 0 }));
-    for (const c of conversions) {
+    for (const c of temporalConversions) {
       if (!c.created_at) continue;
       const d = new Date(c.created_at);
       const idx = (d.getDay() + 6) % 7;
-      if (c.estado === "lead" || c.lead_event_id) rows[idx].mensajes += 1;
+      if (c[`${activityStage}_event_id`]) rows[idx].mensajes += 1;
       if ((c.purchase_event_id ?? "") !== "") rows[idx].cargas += 1;
     }
     return rows;
-  }, [conversions]);
+  }, [temporalConversions, activityStage]);
   const weekdayMessagesChartData = useMemo(() => (
     weekdayDistributionBaseData.map((row) => ({
       ...row,
@@ -1038,65 +1061,21 @@ export default function StatsPanel({
     }))
   ), [weekdayDistributionBaseData]);
   const dailyFunnelPctData = useMemo(() => {
-    if (isTodayRange) {
-      const result: { day: string; pct_inicio: number | null; pct_carga: number | null; pct_recarga: number | null }[] = [];
-      for (let h = 0; h < 24; h++) {
-        const isFutureHour = h > currentHour;
-        const convSlice = conversions.filter((c) => {
-          if (!c.created_at) return false;
-          return new Date(c.created_at).getHours() === h;
-        });
-        const contactsSlice = funnelContacts.filter((c) => {
-          if (!c.first_contact) return false;
-          return new Date(c.first_contact).getHours() === h;
-        });
-        const allConvSlice = allConversions.filter((c) => {
-          if (!c.created_at) return false;
-          return new Date(c.created_at).getHours() === h;
-        });
-        const core = computeCoreStats(convSlice, contactsSlice, allConvSlice, premiumThreshold);
-        const pctInicio = core.adContactJourneys > 0 ? (core.adLeadJourneysLinkedToContact / core.adContactJourneys) * 100 : 0;
-        const pctCarga = core.adLeadJourneysLinkedToContact > 0 ? (core.adFirstPurchaseJourneysAttributed / core.adLeadJourneysLinkedToContact) * 100 : 0;
-        const pctRecarga = core.adFirstPurchaseJourneysAttributed > 0 ? (core.adRepeatJourneysFromAttributedFirstInRange / core.adFirstPurchaseJourneysAttributed) * 100 : 0;
-        result.push({
-          day: `${h}`,
-          pct_inicio: isFutureHour ? null : Number(pctInicio.toFixed(1)),
-          pct_carga: isFutureHour ? null : Number(pctCarga.toFixed(1)),
-          pct_recarga: isFutureHour ? null : Number(pctRecarga.toFixed(1)),
-        });
-      }
-      return result;
-    }
-
-    return stats.dailyData.map((row) => {
-      const dayStart = new Date(`${row.key}T00:00:00`);
-      const dayEnd = new Date(`${row.key}T23:59:59.999`);
-      const isFutureDay = dayStart.getTime() > todayEndTime;
-      const convSlice = conversions.filter((c) => {
-        const t = new Date(c.created_at).getTime();
-        return t >= dayStart.getTime() && t <= dayEnd.getTime();
-      });
-      const contactsSlice = funnelContacts.filter((c) => {
-        const t = new Date(c.first_contact).getTime();
-        return t >= dayStart.getTime() && t <= dayEnd.getTime();
-      });
-      const allConvSlice = allConversions.filter((c) => {
-        const t = new Date(c.created_at).getTime();
-        return t >= dayStart.getTime() && t <= dayEnd.getTime();
-      });
-      const core = computeCoreStats(convSlice, contactsSlice, allConvSlice, premiumThreshold);
-      const pctInicio = core.adContactJourneys > 0 ? (core.adLeadJourneysLinkedToContact / core.adContactJourneys) * 100 : 0;
-      const pctCarga = core.adLeadJourneysLinkedToContact > 0 ? (core.adFirstPurchaseJourneysAttributed / core.adLeadJourneysLinkedToContact) * 100 : 0;
-      const pctRecarga = core.adFirstPurchaseJourneysAttributed > 0 ? (core.adRepeatJourneysFromAttributedFirstInRange / core.adFirstPurchaseJourneysAttributed) * 100 : 0;
-
-      return {
-        day: row.day,
-        pct_inicio: isFutureDay ? null : Number(pctInicio.toFixed(1)),
-        pct_carga: isFutureDay ? null : Number(pctCarga.toFixed(1)),
-        pct_recarga: isFutureDay ? null : Number(pctRecarga.toFixed(1)),
+    const buckets = isTodayRange ? Array.from({ length: 24 }, (_, hour) => {
+      const date = new Date(dateRange!.start);
+      date.setHours(hour, 0, 0, 0);
+      return { label: String(hour), start: date, end: new Date(date.getTime() + 3599999), future: hour > currentHour };
+    }) : stats.dailyData.map(row => ({ label: row.day, start: new Date(`${row.key}T00:00:00`), end: new Date(`${row.key}T23:59:59.999`), future: new Date(`${row.key}T00:00:00`).getTime() > todayEndTime }));
+    return buckets.map(bucket => {
+      const milestones = computeChannelFunnel(scopeStatisticsStages(conversions, { start: bucket.start, end: bucket.end }), channel);
+      const base = channel === "atrio" ? milestones.contacts : milestones.registered;
+      return { day: bucket.label,
+        pct_inicio: bucket.future || channel === "atrio" || !milestones.contacts ? null : 100 * milestones.messages / milestones.contacts,
+        pct_carga: bucket.future || !base ? null : 100 * milestones.firstPurchases / base,
+        pct_recarga: bucket.future || !milestones.firstPurchases ? null : 100 * milestones.repeats / milestones.firstPurchases,
       };
     });
-  }, [conversions, funnelContacts, allConversions, premiumThreshold, isTodayRange, currentHour, stats.dailyData, todayEndTime]);
+  }, [isTodayRange, dateRange, stats.dailyData, currentHour, todayEndTime, conversions, channel]);
 
   const toggleCampaignSort = (key: TableSortKey) => {
     setCampaignSort((prev) => ({
@@ -1141,18 +1120,19 @@ export default function StatsPanel({
       return ((av as number) - (bv as number)) * multiplier;
     });
   };
-  const sortedCampaignRows = useMemo(() => sortRows(stats.byCampaign, campaignSort), [stats.byCampaign, campaignSort, parsedAdSpend]);
-  const sortedLandingRows = useMemo(() => sortRows(stats.byLanding, landingSort), [stats.byLanding, landingSort, parsedAdSpend]);
+  const sortedCampaignRows = sortRows(stats.byCampaign, campaignSort);
+  const sortedLandingRows = sortRows(stats.byLanding, landingSort);
   const sourceContext = sourcePlatformFilter === "landing"
     ? "landing"
     : sourcePlatformFilter === "whatsapp_cloud_api"
       ? "whatsapp_cloud_api"
       : "all";
-  const showJourneyStartMetrics = sourceContext !== "all";
-  const startSummaryLabel = sourceContext === "landing"
+  const showJourneyStartMetrics = true;
+  const startSummaryLabel = sourceContext === "all" ? "Inicios del recorrido" : sourceContext === "landing"
     ? "Visitas unicas"
     : "Chats iniciados";
-  const startSummaryTooltip = sourceContext === "landing"
+  const startSummaryTooltip = sourceContext === "all" ? "Inicios medidos en los orígenes seleccionados: visitas de landing y chats iniciados en WhatsApp Cloud API, con canal capturado."
+    : sourceContext === "landing"
     ? "Page views internos deduplicados por recorrido de landing. No se envian a Meta via CAPI."
     : "Primeros mensajes entrantes recibidos por WhatsApp Cloud API, antes del click al asesor.";
   const contactSummaryLabel = sourceContext === "whatsapp_cloud_api"
@@ -1165,65 +1145,34 @@ export default function StatsPanel({
     : sourceContext === "landing"
       ? "Eventos Contact registrados al tocar el boton de la landing."
       : "Eventos Contact registrados al tocar un CTA de contacto.";
-  const startToContactLabel = sourceContext === "landing"
-    ? "Porcentaje de conversion de la landing"
-    : "Porcentaje de conversion de WhatsApp API";
-  const startToContactTooltip = sourceContext === "landing"
-    ? "Porcentaje de clientes que luego de abrir la landing page tocan el CTA. Se calcula como Contactos / visitas unicas."
-    : "Porcentaje de clientes que luego de iniciar un chat en WhatsApp Cloud API tocan el CTA del mensaje de bienvenida. Se calcula como Contactos / chats iniciados.";
-  const journeyPathSteps = useMemo<JourneyPathStep[]>(() => [
-    {
-      label: startSummaryLabel,
-      value: stats.journeyStarts,
-      color: "text-emerald-300",
-    },
-    {
-      label: "Clicks en el CTA",
-      value: stats.uniqueContacts,
-      color: "text-zinc-100",
-    },
-    {
-      label: "Mensajes recibidos",
-      value: stats.uniqueLeadsLinkedToContact,
-      color: "text-amber-300",
-    },
-    {
-      label: "Primeras cargas",
-      value: stats.purchaseFirstCount,
-      color: "text-sky-300",
-    },
-    {
-      label: "Cargas -> recargas del periodo",
-      value: stats.repeatEventsFromFirstInRange,
-      color: "text-fuchsia-300",
-    },
-  ], [
-    startSummaryLabel,
-    stats.journeyStarts,
-    stats.purchaseFirstCount,
-    stats.repeatEventsFromFirstInRange,
-    stats.uniqueContacts,
-    stats.uniqueLeadsLinkedToContact,
-  ]);
-  const journeyPathRates = useMemo(() => [
-    pct(stats.uniqueContacts, stats.journeyStarts),
-    pct(stats.uniqueLeadsLinkedToContact, stats.uniqueContacts),
-    pct(stats.purchaseFirstCount, stats.uniqueLeadsLinkedToContact),
-    pct(stats.repeatEventsFromFirstInRange, stats.purchaseFirstCount),
-  ], [
-    stats.journeyStarts,
-    stats.purchaseFirstCount,
-    stats.repeatEventsFromFirstInRange,
-    stats.uniqueContacts,
-    stats.uniqueLeadsLinkedToContact,
-  ]);
+  const measuredVisits = journeyStarts.length > 0;
+  const contactsWithMeasuredVisit = countStatisticsVisitConversions(journeyStarts, conversions);
+  const journeyPathSteps: JourneyPathStep[] = [
+    { label: startSummaryLabel, value: measuredVisits ? stats.journeyStarts : "Sin medición", color: "text-emerald-300" },
+    { label: channel === "atrio" ? "Solicitaron usuario" : "Clicks en el CTA", value: funnel.contacts, color: "text-zinc-100" },
+    ...(channel === "whatsapp" ? [
+      { label: "Mensajes recibidos", value: funnel.messages, color: "text-amber-300" },
+      { label: "Crearon usuario", value: funnel.registered ?? "Sin medición", color: "text-teal-300" },
+    ] : []),
+    { label: "Primera carga en el recorrido", value: funnel.firstPurchases, color: "text-sky-300" },
+    { label: "Volvieron a cargar", value: funnel.repeats, color: "text-fuchsia-300" },
+  ];
+  const journeyPathRates = [
+    statisticsRate(measuredVisits ? contactsWithMeasuredVisit : null, measuredVisits ? stats.journeyStarts : null),
+    ...(channel === "whatsapp" ? [statisticsRate(funnel.messages, funnel.contacts), statisticsRate(funnel.registered, funnel.messages)] : []),
+    statisticsRate(funnel.firstPurchases, channel === "atrio" ? funnel.contacts : funnel.registered),
+    statisticsRate(funnel.repeats, funnel.firstPurchases),
+  ];
 
-  const assistantContext = useMemo(() => ({
+  const assistantContext = {
     isTodayRange,
     currency,
     summary: {
       clicks_cta: stats.uniqueContacts,
-      mensajes_recibidos: stats.uniqueLeadsLinkedToContact,
+      canal: channel,
+      tipo_actividad: activityLabel,
+      actividad_del_canal: channel === "atrio" ? funnel.contacts : funnel.messages,
+      crearon_usuario: funnel.registrations,
       recorridos_cargaron: stats.firstLoadPurchasersLinkedToLead,
       recorridos_recargaron: stats.reachedRepeat,
       recorridos_first_y_repeat_periodo: stats.repeatFromFirstInRange,
@@ -1235,26 +1184,7 @@ export default function StatsPanel({
       total_cargado: stats.totalRevenue,
       ticket_promedio: Number(stats.avgTicket.toFixed(2)),
     },
-    funnel_pct: {
-      inicio_conversacion: stats.uniqueContacts > 0 ? Number(((stats.uniqueLeadsLinkedToContact / stats.uniqueContacts) * 100).toFixed(1)) : 0,
-      carga: stats.uniqueLeadsLinkedToContact > 0 ? Number(((stats.firstLoadPurchasersLinkedToLead / stats.uniqueLeadsLinkedToContact) * 100).toFixed(1)) : 0,
-      recarga: stats.firstLoadPurchasersLinkedToLead > 0 ? Number(((stats.repeatFromFirstInRange / stats.firstLoadPurchasersLinkedToLead) * 100).toFixed(1)) : 0,
-    },
-    lead_frequency: {
-      total_leads: stats.leadRepeatStats.totalLeads,
-      unique_phones: stats.leadRepeatStats.uniquePhones,
-      first_leads: stats.leadRepeatStats.firstLeads,
-      repeat_leads: stats.leadRepeatStats.repeatLeads,
-      repeat_pct: Number(stats.leadRepeatStats.repeatPct.toFixed(1)),
-      golondrina_phones: stats.leadRepeatStats.golondrinaPhones,
-      golondrina_pct: Number(stats.leadRepeatStats.golondrinaPct.toFixed(1)),
-      buckets: stats.leadRepeatStats.buckets.map((bucket) => ({
-        bucket: bucket.label,
-        phones: bucket.phones,
-        leads: bucket.leads,
-        repeat_leads: bucket.repeatLeads,
-      })),
-    },
+    funnel: { channel, steps: journeyPathSteps, rates: journeyPathRates },
     charts: {
       hourly_total_cargas_last24: stats.hourlyBuckets.map((r) => ({ hour: r.hour, cargas: r.cargas })),
       hourly_mensajes_vs_cargas_last24: hourlyMessagesLoadsData.map((r) => ({
@@ -1285,9 +1215,8 @@ export default function StatsPanel({
         cargas: r.cargas,
         revenue: r.revenue,
       })),
-      by_landing_tag_lead_frequency_top5: stats.leadRepeatStats.byLandingTag.slice(0, 5),
     },
-  }), [isTodayRange, currency, stats, hourlyMessagesLoadsData, dailyMessagesLoadsData, dailyFunnelPctData]);
+  };
 
   const sendAssistantQuestion = async () => {
     const question = assistantInput.trim();
@@ -1355,30 +1284,26 @@ export default function StatsPanel({
       {/*  RESUMEN GENERAL  */}
       <div>
         <SectionTitle>Resumen general</SectionTitle>
-        <div className={`mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 ${showJourneyStartMetrics ? "lg:grid-cols-7" : "lg:grid-cols-6"}`}>
+        <div className={`mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4`}>
           {showJourneyStartMetrics && (
             <KpiCard
               label={startSummaryLabel}
-              value={stats.journeyStarts}
+              value={measuredVisits ? stats.journeyStarts : "Sin medición"}
               color="text-emerald-300"
               tooltip={startSummaryTooltip}
             />
           )}
           <KpiCard
-            label={contactSummaryLabel}
-            value={stats.uniqueContacts}
+            label={channel === "atrio" ? "Solicitaron usuario" : contactSummaryLabel}
+            value={funnel.contacts}
             tooltip={contactSummaryTooltip}
           />
-          <KpiCard
-            label="Mensajes recibidos"
-            value={stats.uniqueLeadsLinkedToContact}
-            color="text-amber-300"
-            tooltip={
-              stats.inferredLeadsFromContactPurchase > 0
-                ? `Eventos Lead vinculados al recorrido publicitario. Hay ${stats.inferredLeadsFromContactPurchase} recorridos inferidos por carga sin Lead.`
-                : "Eventos Lead vinculados al recorrido de la landing."
-            }
-          />
+          {channel === "whatsapp" && <KpiCard
+            label="Mensajes recibidos" value={conversions.filter(row => row.lead_event_id).length} color="text-amber-300"
+            tooltip="Eventos Lead reales recibidos en el período, aunque el CTA haya ocurrido antes. El recorrido calcula por separado las etapas vinculadas del período. No se infieren mensajes por una carga."
+          />}
+          <KpiCard label="Crearon usuario" value={funnel.registrations ?? "Sin medición"} color="text-teal-300"
+            tooltip="Altas confirmadas, deduplicadas por evento. El CompleteRegistration del CTA de Atrio es una solicitud y no se cuenta como alta. Los períodos sin eventos de alta confirmada no permiten reconstruir esta métrica." />
           <KpiCard
             label="Primeras cargas"
             value={stats.purchaseFirstCount}
@@ -1400,11 +1325,10 @@ export default function StatsPanel({
             tooltip="Cantidad de primeras cargas (first) y de recargas (repeat) registradas para el rango de fecha seleccionado."
           />
           <KpiCard
-            label="Cargas -> recargas del periodo"
-            value={stats.repeatEventsFromFirstInRange}
-            sub={`${stats.repeatPlayersFromFirstInRange} ${stats.repeatPlayersFromFirstInRange === 1 ? "jugador" : "jugadores"}`}
+            label="Recorridos con primera carga y recarga"
+            value={funnel.repeats}
             color="text-fuchsia-300"
-            tooltip="Eventos repeat de jugadores que tambien tuvieron un evento first en el mismo periodo y filtros."
+            tooltip="Recorridos vinculados que tuvieron una primera carga y después al menos una recarga, en el período seleccionado."
           />
         </div>
       </div>
@@ -1419,40 +1343,13 @@ export default function StatsPanel({
         </div>
       )}
 
-      {/*  EMBUDO DE CONVERSIN  */}
       <div>
         <SectionTitle>Embudo de conversión</SectionTitle>
-        <div className={`mt-3 grid grid-cols-1 gap-3 ${showJourneyStartMetrics ? "sm:grid-cols-2 xl:grid-cols-4" : "sm:grid-cols-3"}`}>
-          {showJourneyStartMetrics && (
-            <KpiCard
-              label={startToContactLabel}
-              value={pct(stats.uniqueContacts, stats.journeyStarts)}
-              sub={`${stats.uniqueContacts} de ${stats.journeyStarts} recorridos`}
-              color="text-emerald-400"
-              tooltip={startToContactTooltip}
-            />
-          )}
-          <KpiCard
-            label="Porcentaje de inicio de conversación"
-            value={pct(stats.uniqueLeadsLinkedToContact, stats.uniqueContacts)}
-            sub={`${stats.uniqueLeadsLinkedToContact} de ${stats.uniqueContacts} recorridos`}
-            color="text-amber-400"
-            tooltip="Porcentaje de recorridos con Contact que tambien tuvieron Lead."
-          />
-          <KpiCard
-            label="Porcentaje de carga"
-            value={pct(stats.firstLoadPurchasersLinkedToLead, stats.uniqueLeadsLinkedToContact)}
-            sub={`${stats.firstLoadPurchasersLinkedToLead} de ${stats.uniqueLeadsLinkedToContact} recorridos`}
-            color="text-sky-400"
-            tooltip="Porcentaje de recorridos con Lead que tambien tuvieron Purchase first."
-          />
-          <KpiCard
-            label="Porcentaje de recarga"
-            value={pct(stats.repeatFromFirstInRange, stats.firstLoadPurchasersLinkedToLead)}
-            sub={`${stats.repeatFromFirstInRange} de ${stats.firstLoadPurchasersLinkedToLead} recorridos`}
-            color="text-violet-400"
-            tooltip="Porcentaje de recorridos con first que tambien tuvieron repeat dentro del mismo periodo y filtros."
-          />
+        <p className="mt-2 text-xs text-zinc-500">Porcentajes de etapas vinculadas al mismo recorrido dentro del período. «—» indica que falta medición o una base comparable.</p>
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {journeyPathRates.map((rate, index) => <KpiCard key={index}
+            label={`${journeyPathSteps[index].label} → ${journeyPathSteps[index + 1].label}`}
+            value={rate} color="text-emerald-300" />)}
         </div>
       </div>
 
@@ -1465,7 +1362,7 @@ export default function StatsPanel({
             value={formatCurrencyAmount(stats.totalRevenue, currency)}
             color="text-emerald-400"
             trendInfo={
-              stats.revenueTrend && stats.revenuePctChange !== undefined
+              !dateRange && stats.revenueTrend && stats.revenuePctChange !== undefined
                 ? {
                     trend: stats.revenueTrend,
                     pctChange: stats.revenuePctChange,
@@ -1509,12 +1406,13 @@ export default function StatsPanel({
         </div>
 
         {/* Ad spend input */}
-        <div className="mt-4 flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
-          <label className="text-[11px] text-zinc-500 whitespace-nowrap">Importe gastado ({currency})</label>
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+          <label htmlFor="statistics-ad-spend" className="text-[11px] font-bold text-zinc-300">Importe gastado ({currency})</label>
           <div className="relative max-w-[200px]">
             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-zinc-600">{currency}</span>
             <input
               type="text"
+              id="statistics-ad-spend"
               inputMode="numeric"
               value={adSpend}
               onChange={(e) => {
@@ -1527,7 +1425,7 @@ export default function StatsPanel({
                 setAdSpend(n.toLocaleString("es-AR"));
               }}
               placeholder="0"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 pl-11 pr-3 py-1.5 text-[12px] text-zinc-200 outline-none focus:border-zinc-500"
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 pl-11 pr-3 py-1.5 text-[12px] font-bold text-zinc-200 outline-none focus:border-zinc-500"
             />
           </div>
           <p className="text-[10px] text-zinc-600">Ingresá el gasto publicitario para calcular ROAS.</p>
@@ -1613,122 +1511,6 @@ export default function StatsPanel({
         </div>
       </div>
 
-      {stats.leadRepeatStats.totalLeads > 0 && (
-        <div>
-          <SectionTitle>Frecuencia de mensajes por cliente</SectionTitle>
-          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            <KpiCard
-              label="Mensajes recibidos"
-              value={stats.leadRepeatStats.totalLeads}
-              color="text-amber-300"
-              tooltip="Mensajes recibidos que entran en los filtros actuales."
-            />
-            <KpiCard
-              label="Primer mensaje por cliente"
-              value={stats.leadRepeatStats.firstLeads}
-              color="text-emerald-300"
-              tooltip="Primer mensaje recibido de cada cliente dentro del periodo y filtros seleccionados."
-            />
-            <KpiCard
-              label="Mensajes repetidos por cliente"
-              value={stats.leadRepeatStats.repeatLeads}
-              sub={`${stats.leadRepeatStats.repeatPct.toFixed(1)}%`}
-              color="text-fuchsia-300"
-              tooltip="Mensajes de clientes que ya habian escrito antes dentro del periodo y filtros seleccionados."
-            />
-            <KpiCard
-              label="Clientes repetidos"
-              value={stats.leadRepeatStats.golondrinaPhones}
-              sub={`${stats.leadRepeatStats.golondrinaPct.toFixed(1)}%`}
-              color="text-sky-300"
-              tooltip="Clientes que escribieron dos o mas veces dentro del periodo y filtros seleccionados."
-            />
-            <KpiCard
-              label="Frecuencia principal"
-              value={stats.dominantLeadFrequencyBucket?.label ?? "-"}
-              sub={`${fmtInt(stats.dominantLeadFrequencyBucket?.leads ?? 0)} mensajes`}
-              tooltip="El grupo que concentra mayor cantidad de mensajes."
-            />
-          </div>
-
-          <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(460px,0.75fr)]">
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-              <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-                <h4 className="text-xs font-semibold text-zinc-200">
-                  Veces que escribio el mismo cliente
-                </h4>
-                <p className="text-[10px] text-zinc-500">
-                  Horizontal: mensajes recibidos · Vertical: frecuencia por cliente
-                </p>
-              </div>
-              <ResponsiveContainer width="100%" height={Math.max(220, stats.leadRepeatStats.buckets.length * 42)}>
-                <BarChart layout="vertical" data={stats.leadRepeatStats.buckets} margin={{ top: 8, right: 28, bottom: 24, left: 12 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                  <XAxis
-                    type="number"
-                    tick={{ fill: "#71717a", fontSize: 10 }}
-                    axisLine={{ stroke: "#3f3f46" }}
-                    tickLine={false}
-                    allowDecimals={false}
-                    label={{ value: "Mensajes recibidos", position: "insideBottom", offset: -12, fill: "#71717a", fontSize: 10 }}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="label"
-                    tick={{ fill: "#71717a", fontSize: 10 }}
-                    axisLine={false}
-                    tickLine={false}
-                    width={72}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "rgba(82,82,91,0.18)" }}
-                    contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11, boxShadow: "0 18px 36px rgba(0,0,0,0.35)" }}
-                    labelStyle={{ color: "#a1a1aa" }}
-                    formatter={(value) => [`${fmtInt(Number(value) || 0)} mensajes`, "Total"]}
-                    labelFormatter={(label) => `Clientes que escribieron ${label}`}
-                  />
-                  <Bar dataKey="leads" name="Mensajes recibidos" fill="#f59e0b" radius={[0, 5, 5, 0]} barSize={14} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {stats.leadRepeatStats.byLandingTag.length > 0 && (
-              <TableCard title="Resumen por landing tag">
-                <table className="w-full text-[11px]" style={{ minWidth: 620 }}>
-                  <thead>
-                    <tr className="text-zinc-500">
-                      <th className="pb-2 text-left font-medium">Tag</th>
-                      <th className="pb-2 text-center font-medium">Mensajes</th>
-                      <th className="pb-2 text-center font-medium">Clientes</th>
-                      <th className="pb-2 text-center font-medium">Primer mensaje</th>
-                      <th className="pb-2 text-center font-medium">Mensajes repetidos</th>
-                      <th className="pb-2 text-center font-medium">% repetidos</th>
-                      <th className="pb-2 text-center font-medium">Clientes repetidos</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-800/60">
-                    {stats.leadRepeatStats.byLandingTag.slice(0, 12).map((row) => (
-                      <tr key={row.landingTag}>
-                        <td className="py-1.5 font-mono text-zinc-300">{row.landingTag}</td>
-                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{fmtInt(row.totalLeads)}</td>
-                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{fmtInt(row.uniquePhones)}</td>
-                        <td className="py-1.5 text-center text-emerald-300 tabular-nums">{fmtInt(row.firstLeads)}</td>
-                        <td className="py-1.5 text-center text-fuchsia-300 tabular-nums">{fmtInt(row.repeatLeads)}</td>
-                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{row.repeatPct.toFixed(1)}%</td>
-                        <td className="py-1.5 text-center text-sky-300 tabular-nums">
-                          {fmtInt(row.golondrinaPhones)}
-                          <span className="ml-1 text-zinc-500">({row.golondrinaPct.toFixed(1)}%)</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </TableCard>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* El mapa actual modela provincias argentinas; no se muestra para PYG. */}
       {currency === "ARS" && (
       <div>
@@ -1739,6 +1521,7 @@ export default function StatsPanel({
             conversions={conversions}
             allConversions={allConversions}
             premiumThreshold={premiumThreshold}
+            channel={channel}
             adSpend={parsedAdSpend}
           />
         </div>
@@ -1750,7 +1533,7 @@ export default function StatsPanel({
         {/* Mensajes por hora */}
         <div className={`order-1 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 ${isTodayRange ? "lg:col-span-2" : ""}`}>
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h4 className="text-xs font-semibold text-zinc-200">Mensajes recibidos [distribucion por hora]</h4>
+            <h4 className="text-xs font-semibold text-zinc-200">{activityLabel} [distribucion por hora]</h4>
             <label className="inline-flex h-7 w-fit items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300">
               <span>SMA</span>
               <button
@@ -1785,7 +1568,7 @@ export default function StatsPanel({
                 itemStyle={{ color: "#facc15" }}
                 labelFormatter={(v) => `${v}:00 hs`}
               />
-              <Bar dataKey="mensajes" name="Mensajes recibidos" fill="#facc15" radius={[3, 3, 0, 0]} maxBarSize={20} />
+              <Bar dataKey="mensajes" name={activityLabel} fill="#facc15" radius={[3, 3, 0, 0]} maxBarSize={20} />
               {hourlyMessagesSmaEnabled && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#22d3ee" strokeWidth={2} dot={false} />}
               <Legend wrapperStyle={{ fontSize: 11 }} />
             </ComposedChart>
@@ -1797,7 +1580,7 @@ export default function StatsPanel({
         {/* Mensajes por dia */}
         <div className="order-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h4 className="text-xs font-semibold text-zinc-200">Mensajes recibidos [distribucion por dia]</h4>
+            <h4 className="text-xs font-semibold text-zinc-200">{activityLabel} [distribucion por dia]</h4>
             <label className="inline-flex h-7 w-fit items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300">
               <span>SMA</span>
               <button
@@ -1834,7 +1617,7 @@ export default function StatsPanel({
                 labelStyle={{ color: "#a1a1aa" }}
                 itemStyle={{ color: "#facc15" }}
               />
-              <Bar dataKey="mensajes" name="Mensajes recibidos" fill="#facc15" radius={[3, 3, 0, 0]} maxBarSize={20} />
+              <Bar dataKey="mensajes" name={activityLabel} fill="#facc15" radius={[3, 3, 0, 0]} maxBarSize={20} />
               {dailyMessagesSmaEnabled && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#22d3ee" strokeWidth={2} dot={false} />}
               <Legend wrapperStyle={{ fontSize: 11 }} />
             </ComposedChart>
@@ -1968,7 +1751,7 @@ export default function StatsPanel({
           <>
             <div className="order-5 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
               <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <h4 className="text-xs font-semibold text-zinc-200">Mensajes recibidos [distribucion por dia de la semana]</h4>
+                <h4 className="text-xs font-semibold text-zinc-200">{activityLabel} [distribucion por dia de la semana]</h4>
                 <label className="inline-flex h-7 w-fit items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300">
                   <span>SMA</span>
                   <button
@@ -2002,7 +1785,7 @@ export default function StatsPanel({
                     labelStyle={{ color: "#a1a1aa" }}
                     itemStyle={{ color: "#facc15" }}
                   />
-                  <Bar dataKey="mensajes" name="Mensajes recibidos" fill="#facc15" radius={[3, 3, 0, 0]} maxBarSize={24} />
+                  <Bar dataKey="mensajes" name={activityLabel} fill="#facc15" radius={[3, 3, 0, 0]} maxBarSize={24} />
                   {weekdayMessagesSmaEnabled && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#22d3ee" strokeWidth={2} dot={false} />}
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                 </ComposedChart>
@@ -2072,7 +1855,7 @@ export default function StatsPanel({
             </button>
             {funnelPctMenuOpen && (
               <div className="absolute right-0 top-8 z-20 w-52 rounded-lg border border-zinc-700 bg-zinc-900/95 p-2 shadow-xl">
-                <button
+                {channel === "whatsapp" && <button
                   type="button"
                   aria-pressed={funnelPctEnabled.inicio}
                   onClick={() => setFunnelPctEnabled((prev) => ({ ...prev, inicio: !prev.inicio }))}
@@ -2089,7 +1872,7 @@ export default function StatsPanel({
                     }`}
                   />
                   % inicio de conversación
-                </button>
+                </button>}
                 <button
                   type="button"
                   aria-pressed={funnelPctEnabled.carga}
@@ -2172,7 +1955,7 @@ export default function StatsPanel({
               formatter={(value) => `${Number(value ?? 0).toFixed(1)}%`}
             />
             <Legend wrapperStyle={{ fontSize: 10, color: "#a1a1aa" }} />
-            {funnelPctEnabled.inicio && (
+            {channel === "whatsapp" && funnelPctEnabled.inicio && (
               <Area type="monotone" dataKey="pct_inicio" name="% inicio de conversación" stroke="#fbbf24" strokeWidth={2.4} fill="url(#funnelInicioGradient)" dot={false} activeDot={{ r: 4, strokeWidth: 0, fill: "#fde68a" }} connectNulls={false} />
             )}
             {funnelPctEnabled.carga && (
@@ -2191,7 +1974,7 @@ export default function StatsPanel({
         <div>
           <SectionTitle>Por campana</SectionTitle>
           <div className="mt-3">
-            <TableCard title="Mensajes recibidos, cargas e ingresos por campana">
+            <TableCard title={`${activityLabel}, cargas e ingresos por campaña`}>
               <div className="overflow-x-auto">
               <table className="w-full text-[11px]" style={{ minWidth: 760 }}>
                 <thead><tr className="text-zinc-500">
@@ -2199,7 +1982,7 @@ export default function StatsPanel({
                     <SortButton active={campaignSort.key === "name"} direction={campaignSort.direction} onClick={() => toggleCampaignSort("name")} align="left">Campana</SortButton>
                   </th>
                   <th className="text-center pb-2 font-medium w-24">
-                    <SortButton active={campaignSort.key === "mensajes"} direction={campaignSort.direction} onClick={() => toggleCampaignSort("mensajes")}>Mensajes recibidos</SortButton>
+                    <SortButton active={campaignSort.key === "mensajes"} direction={campaignSort.direction} onClick={() => toggleCampaignSort("mensajes")}>{activityLabel}</SortButton>
                   </th>
                   <th className="text-center pb-2 font-medium w-14">
                     <SortButton active={campaignSort.key === "cargas"} direction={campaignSort.direction} onClick={() => toggleCampaignSort("cargas")}>Cargas</SortButton>
@@ -2230,7 +2013,7 @@ export default function StatsPanel({
                         <td className="py-1.5 text-zinc-300 truncate">{r.campaign}</td>
                         <td className="py-1.5 text-center text-zinc-400">{r.mensajes}</td>
                         <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
-                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{pct(r.cargas, r.mensajes || 1)}</td>
+                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{statisticsRate(r.cargas, r.baseCargas)}</td>
                         <td className="py-1.5 text-center text-zinc-400 tabular-nums">{formatCurrencyAmount(r.revenue, currency)}</td>
                         {parsedAdSpend > 0 && (
                           <>
@@ -2254,7 +2037,7 @@ export default function StatsPanel({
         <div>
           <SectionTitle>Por landing</SectionTitle>
           <div className="mt-3">
-            <TableCard title="Mensajes recibidos, cargas e ingresos por landing">
+            <TableCard title={`${activityLabel}, cargas e ingresos por landing`}>
               <div className="overflow-x-auto">
               <table className="w-full text-[11px]" style={{ minWidth: 760 }}>
                 <thead><tr className="text-zinc-500">
@@ -2262,7 +2045,7 @@ export default function StatsPanel({
                     <SortButton active={landingSort.key === "name"} direction={landingSort.direction} onClick={() => toggleLandingSort("name")} align="left">Landing</SortButton>
                   </th>
                   <th className="text-center pb-2 font-medium w-24">
-                    <SortButton active={landingSort.key === "mensajes"} direction={landingSort.direction} onClick={() => toggleLandingSort("mensajes")}>Mensajes recibidos</SortButton>
+                    <SortButton active={landingSort.key === "mensajes"} direction={landingSort.direction} onClick={() => toggleLandingSort("mensajes")}>{activityLabel}</SortButton>
                   </th>
                   <th className="text-center pb-2 font-medium w-14">
                     <SortButton active={landingSort.key === "cargas"} direction={landingSort.direction} onClick={() => toggleLandingSort("cargas")}>Cargas</SortButton>
@@ -2293,7 +2076,7 @@ export default function StatsPanel({
                         <td className="py-1.5 text-zinc-300 truncate">{r.landing}</td>
                         <td className="py-1.5 text-center text-zinc-400">{r.mensajes}</td>
                         <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
-                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{pct(r.cargas, r.mensajes || 1)}</td>
+                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{statisticsRate(r.cargas, r.baseCargas)}</td>
                         <td className="py-1.5 text-center text-zinc-400 tabular-nums">{formatCurrencyAmount(r.revenue, currency)}</td>
                         {parsedAdSpend > 0 && (
                           <>

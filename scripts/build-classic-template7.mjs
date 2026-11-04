@@ -16,6 +16,9 @@ const handoffSource = '// GENERATED from landing-builder/frontend/lib/reyDeAses/
 const fbcTarget = path.resolve(root, "../landing-prueba-1/lib/tracking/landingFbc.ts");
 const fbcSource = '// GENERATED from landing-builder/frontend/lib/tracking/landingFbc.ts.\n' +
   await readFile(path.join(root, 'frontend/lib/tracking/landingFbc.ts'), 'utf8');
+const registrationStatsTarget = path.resolve(root, "../landing-prueba-1/lib/reyDeAses/registrationStats.server.ts");
+const registrationStatsSource = '// GENERATED from landing-builder/frontend/lib/reyDeAses/registrationStats.server.ts.\n' +
+  await readFile(path.join(root, 'frontend/lib/reyDeAses/registrationStats.server.ts'), 'utf8');
 const result = await build({
   absWorkingDir: path.join(root, "frontend"),
   entryPoints: ["components/public-landing/template7ClassicEntry.ts"],
@@ -38,10 +41,12 @@ if (process.argv.includes("--write")) {
   await writeFile(resolutionTarget, resolutionSource);
   await writeFile(handoffTarget, handoffSource);
   await writeFile(fbcTarget, fbcSource);
+  await writeFile(registrationStatsTarget, registrationStatsSource);
   console.log(`Generated shared Template 7 renderer (${Buffer.byteLength(source)} bytes, server-side only).`);
 } else {
   const current = await readFile(target, "utf8");
   if (current !== source) throw new Error("Classic Template 7 is out of sync; regenerate before release.");
+  if (await readFile(registrationStatsTarget, 'utf8') !== registrationStatsSource) throw new Error('Confirmed account statistics are out of sync.');
   if (await readFile(resolutionTarget, 'utf8') !== resolutionSource) throw new Error('Classic landing resolution capture is out of sync.');
   if (await readFile(handoffTarget, 'utf8') !== handoffSource) throw new Error('Classic handoff URL validation is out of sync.');
   if (await readFile(fbcTarget, 'utf8') !== fbcSource) throw new Error('Classic scoped FBC is out of sync.');

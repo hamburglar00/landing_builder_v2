@@ -72,6 +72,7 @@ import {
   journeyStartAttribution,
   matchesConversionAttributionFilters,
 } from "@/components/conversiones/attributionFilters";
+import { STATISTICS_ORIGINS, statisticsOrigin, scopeStatisticsStages } from "@/lib/conversionJourneyStats";
 import { useConversionStatsFilters } from "@/components/conversiones/useConversionStatsFilters";
 import {
   ConversionPagination,
@@ -449,8 +450,8 @@ export default function AdminConversionesPage() {
   );
   const premiumThreshold = getPremiumThreshold(config, reportingCurrency);
   const statsConversions = useMemo(
-    () => activeConversions.filter((r) => !String(r.test_event_code ?? "").trim()),
-    [activeConversions],
+    () => scopeStatisticsStages(scopedConversions.filter((r) => !String(r.test_event_code ?? "").trim()), dateRange),
+    [scopedConversions, dateRange],
   );
   const statsAllConversions = useMemo(
     () => scopedConversions.filter((r) => !String(r.test_event_code ?? "").trim()),
@@ -530,7 +531,7 @@ export default function AdminConversionesPage() {
       const src = String(r.source_platform ?? "").trim().toLowerCase();
       if (src) set.add(src);
     }
-    return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
+    return STATISTICS_ORIGINS.filter(origin => set.has(origin)) as string[];
   }, [statsAllConversions, scopedJourneyStarts]);
   const statsSexoOptions = useMemo(() => {
     const set = new Set<string>();
@@ -645,7 +646,7 @@ export default function AdminConversionesPage() {
         (statsFromMetaAdsFilter === "true" ? !!r.from_meta_ads : !r.from_meta_ads);
       const bySourcePlatform =
         statsSourcePlatformFilter === "__all__" ||
-        String(r.source_platform ?? "").trim().toLowerCase() === statsSourcePlatformFilter;
+        statisticsOrigin(r) === statsSourcePlatformFilter;
       const bySexo =
         statsSexoFilter === "__all__" ||
         normalizeSexValue((r as { inferred_sex?: string | null }).inferred_sex) === statsSexoFilter;
@@ -675,7 +676,7 @@ export default function AdminConversionesPage() {
         (statsFromMetaAdsFilter === "true" ? !!r.from_meta_ads : !r.from_meta_ads);
       const bySourcePlatform =
         statsSourcePlatformFilter === "__all__" ||
-        String(r.source_platform ?? "").trim().toLowerCase() === statsSourcePlatformFilter;
+        statisticsOrigin(r) === statsSourcePlatformFilter;
       const bySexo =
         statsSexoFilter === "__all__" ||
         normalizeSexValue((r as { inferred_sex?: string | null }).inferred_sex) === statsSexoFilter;
@@ -712,8 +713,7 @@ export default function AdminConversionesPage() {
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byAttribution && byDevice;
     });
   }, [statsJourneyStartsWithAttribution, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsFacebookFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter, gerenciaByPhone]);
-  const showJourneyStartStats = statsSourcePlatformFilter === "landing" ||
-    statsSourcePlatformFilter === "whatsapp_cloud_api";
+  const showJourneyStartStats = true;
   const filteredPhoneSet = useMemo(
     () => new Set(
       statsConversionsFiltered
@@ -745,7 +745,7 @@ export default function AdminConversionesPage() {
         (statsFromMetaAdsFilter === "true" ? !!r.from_meta_ads : !r.from_meta_ads);
       const bySourcePlatform =
         statsSourcePlatformFilter === "__all__" ||
-        String(r.source_platform ?? "").trim().toLowerCase() === statsSourcePlatformFilter;
+        statisticsOrigin(r) === statsSourcePlatformFilter;
       const bySexo =
         statsSexoFilter === "__all__" ||
         normalizeSexValue((r as { inferred_sex?: string | null }).inferred_sex) === statsSexoFilter;

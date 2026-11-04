@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import CustomSelect from "@/components/ui/CustomSelect";
+import { STATISTICS_ORIGINS } from "@/lib/conversionJourneyStats";
 import { ModalShell } from "@/components/ui/PanelPrimitives";
 import { friendlySourcePlatform, sexLabel } from "@/components/conversiones/conversionPageShared";
 import {
@@ -246,7 +247,7 @@ function stringOptions(values: readonly string[]): ConversionFilterOption[] {
 }
 
 function sourcePlatformOptions(values: readonly string[]): ConversionFilterOption[] {
-  return values.map((value) => ({ value, label: friendlySourcePlatform(value) }));
+  return STATISTICS_ORIGINS.filter(value => values.includes(value)).map((value) => ({ value, label: friendlySourcePlatform(value) }));
 }
 
 export default function ConversionFiltersModal({
@@ -310,6 +311,7 @@ export default function ConversionFiltersModal({
                 options={sourcePlatformOptions(options.sourcePlatforms)}
                 onChange={handleSourcePlatformChange}
               />
+              <p className="text-[11px] text-zinc-500">Origen del recorrido. El canal de atención se elige con los chips WhatsApp y Atrio en Estadísticas.</p>
               {showLandingFilter ? (
                 <FilterField
                   id="conversion-filter-landing"

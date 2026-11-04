@@ -11,6 +11,7 @@ import { allowTemplate7Start, template7StartRateLimitKeys } from "./rateLimit.se
 import { api2Readiness, createProviderHandoff, gatewayReadiness, linkInternalChatProviderAccount, resolveInternalChatPlayer, resolveTargetAccount, TargetIntegrationError, validateResolvedPlayer } from "./integrations.server";
 import { parseTemplate7StartPayload } from "./start-payload.server";
 import type { EntryFunnelContext } from "../landing/entryFunnel";
+import { recordConfirmedAccountRegistration, type ConfirmedAccountRegistration } from "./registrationStats.server";
 export { parseTemplate7StartPayload } from "./start-payload.server";
 
 type LandingRow = { id: string; name: string; user_id: string; workspace_currency: string; config: unknown; landing_config: unknown };
@@ -32,6 +33,7 @@ export type StartDb = {
 };
 
 export type StartDependencies = {
+  recordAccountCreated?(input: ConfirmedAccountRegistration): void;
   db: StartDb;
   resolveContext?(request: Request, payload: StartRequest, identity: ClientIdentity): Promise<ResolvedStartContext>;
   api2Status(): "integration_pending" | null;
@@ -249,6 +251,12 @@ async function handleTemplate7StartInner(
     if (account.platform !== provider || (!account.username || !account.password)) {
       throw new TargetIntegrationError("upstream_unavailable");
     }
+    if (account.created) {
+      try {
+        deps.recordAccountCreated?.({ userId: landing.user_id, landingId: landing.id,
+          promoCode: payload.promo_code, providerAccountId: player.player_provider_account_id, agencyId: player.agency_id });
+      } catch { /* Internal statistics must not change the result of an account operation. */ }
+    }
     const prepared: Template7PreparedStart = {
       ...(payload.entry_funnel ? { entryFunnel: { ...payload.entry_funnel, account_kind: account.created ? "new" : "existing" } } : {}),
       provider,
@@ -396,6 +404,7 @@ function productionContextResolver() {
 
 export function productionDependencies(): StartDependencies {
   return {
+    recordAccountCreated: recordConfirmedAccountRegistration,
     db: productionDb(),
     resolveContext: productionContextResolver(),
     api2Status: api2Readiness,

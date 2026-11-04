@@ -15,6 +15,31 @@ const multiSkinAccountId = "99999999-9999-4999-8999-999999999999";
 const ownerId = "66666666-6666-4666-8666-666666666666";
 const demoDeviceId = "77777777-7777-4777-8777-777777777777";
 
+test("internal account statistics record only confirmed new accounts for all four providers", async () => {
+  for (const provider of ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_skin"] as const) {
+    for (const created of [true, false]) {
+      const { deps } = dependencies(null, provider);
+      const original = deps.resolveAccount;
+      deps.resolveAccount = async input => ({ ...await original(input), created });
+      const outcomes: unknown[] = [];
+      deps.recordAccountCreated = outcome => { outcomes.push(outcome); };
+      const response = await handleReyStart(request(validPayload), deps);
+      assert.equal(response.status, 200);
+      assert.equal(outcomes.length, created ? 1 : 0);
+      if (created) assert.deepEqual(outcomes[0], { userId: ownerId, landingId, promoCode: "LP-a1b2",
+        providerAccountId: provider === "multi_skin" ? multiSkinAccountId : providerAccountId, agencyId: 272 });
+    }
+  }
+});
+
+test("statistics failure does not prevent normal account handoff or expose credentials", async () => {
+  const { deps } = dependencies();
+  const original = deps.resolveAccount;
+  deps.resolveAccount = async input => ({ ...await original(input), created: true });
+  deps.recordAccountCreated = () => { throw new Error("statistics unavailable"); };
+  assert.equal((await handleReyStart(request(validPayload), deps)).status, 200);
+});
+
 function resolvedPlayer(provider: TargetProvider = "rey_de_ases", resolvedDeviceId = deviceId): ResolvedPlayer {
   return {
     manager_id: 1035, agency_id:272, advisor_id: advisorId, advisor_slug: "gera", player_id: playerId, device_id: resolvedDeviceId,

@@ -1,4 +1,5 @@
 "use client";
+import { computeChannelFunnel, isStatisticsRepeat, type StatisticsChannel } from "@/lib/conversionJourneyStats";
 
 import { useState, useMemo, useEffect } from "react";
 import { geoMercator, geoPath, type GeoPermissibleObjects } from "d3-geo";
@@ -179,6 +180,7 @@ interface ProvinceData {
   contactos: number;
   reachedLead: number;
   reachedLeadLinkedToContact: number;
+  loadBase: number;
   reachedPurchase: number;
   reachedPurchaseLinkedToLead: number;
   reachedRepeat: number;
@@ -199,6 +201,7 @@ function buildProvinceData(
   conversions: ConversionRow[],
   allConversions: ConversionRow[],
   premiumThreshold: number,
+  channel: StatisticsChannel,
 ): Map<string, ProvinceData> {
   const map = new Map<string, ProvinceData>();
   const allProvinces = new Set<string>([
@@ -212,18 +215,20 @@ function buildProvinceData(
     const conversionsProv = conversions.filter((c) => normalizeProvince(c.geo_region) === prov);
     const allConvProv = allConversions.filter((c) => normalizeProvince(c.geo_region) === prov);
     const core = computeCoreStats(conversionsProv, contactsProv, allConvProv, premiumThreshold);
+    const funnel = computeChannelFunnel(conversionsProv, channel);
     const leadToPurchaseAvgHours = core.leadPurchaseHours.length > 0
       ? core.leadPurchaseHours.reduce((acc, n) => acc + n, 0) / core.leadPurchaseHours.length
       : 0;
     map.set(prov, {
-      contactos: core.adContactJourneys,
-      reachedLead: core.adLeadJourneysLinkedToContact,
-      reachedLeadLinkedToContact: core.adLeadJourneysLinkedToContact,
-      reachedPurchase: core.adFirstPurchaseEventsAttributed,
-      reachedPurchaseLinkedToLead: core.adFirstPurchaseJourneysAttributed,
+      contactos: funnel.contacts,
+      reachedLead: channel === "atrio" ? funnel.contacts : funnel.messages,
+      reachedLeadLinkedToContact: channel === "atrio" ? funnel.contacts : funnel.messages,
+      reachedPurchase: conversionsProv.filter(row => row.purchase_event_id && !isStatisticsRepeat(row)).length,
+      reachedPurchaseLinkedToLead: funnel.firstPurchases,
+      loadBase: channel === "atrio" ? funnel.contacts : funnel.registered ?? 0,
       reachedRepeat: core.adRepeatEvents,
-      repeatFromFirstInRange: core.adRepeatJourneysFromAttributedFirstInRange,
-      primerasCargas: core.adFirstPurchaseEventsAttributed,
+      repeatFromFirstInRange: funnel.repeats,
+      primerasCargas: conversionsProv.filter(row => row.purchase_event_id && !isStatisticsRepeat(row)).length,
       recurrentes: core.repeatPlayers,
       totalCargado: core.totalRevenue,
       firstPurchaseRevenue: core.firstPurchaseEventRevenue,
@@ -252,7 +257,7 @@ function getMetricValue(
     case "recargas": return d.reachedRepeat;
     case "cargas_totales": return d.purchaseCount;
     case "pct_inicio": return d.contactos > 0 ? (d.reachedLeadLinkedToContact / d.contactos) * 100 : 0;
-    case "pct_carga": return d.reachedLeadLinkedToContact > 0 ? (d.reachedPurchaseLinkedToLead / d.reachedLeadLinkedToContact) * 100 : 0;
+    case "pct_carga": return d.loadBase > 0 ? (d.reachedPurchaseLinkedToLead / d.loadBase) * 100 : 0;
     case "pct_recarga": return d.reachedPurchaseLinkedToLead > 0 ? (d.repeatFromFirstInRange / d.reachedPurchaseLinkedToLead) * 100 : 0;
     case "carga_promedio": return d.purchaseCount > 0 ? d.totalCargado / d.purchaseCount : 0;
     case "carga_mediana": return d.cargaMediana;
@@ -319,13 +324,17 @@ export default function ArgentinaMap({
   allConversions = [],
   premiumThreshold,
   adSpend = 0,
+  channel = "whatsapp",
 }: {
   contacts: FunnelContact[];
   conversions?: ConversionRow[];
   allConversions?: ConversionRow[];
   premiumThreshold: number;
   adSpend?: number;
+  channel?: StatisticsChannel;
 }) {
+  const metricLabels = channel === "atrio" ? { ...METRIC_LABELS, leads: "Solicitudes de usuario", pct_carga: "% de solicitudes que cargaron" } : { ...METRIC_LABELS, pct_carga: "% de altas que cargaron" };
+  const metricTooltips = channel === "atrio" ? { ...METRIC_TOOLTIPS, leads: "Formularios válidos enviados por el CTA.", pct_carga: "Recorridos con solicitud que luego tuvieron una primera carga." } : { ...METRIC_TOOLTIPS, pct_carga: "Recorridos con alta confirmada que luego tuvieron una primera carga." };
   const [metric, setMetric] = useState<MapMetric>("contactos");
   const [hovered, setHovered] = useState<string | null>(null);
 
@@ -340,26 +349,27 @@ export default function ArgentinaMap({
   }, []);
 
   const provinceData = useMemo(
-    () => buildProvinceData(contacts, conversions, allConversions, premiumThreshold),
-    [contacts, conversions, allConversions, premiumThreshold],
+    () => buildProvinceData(contacts, conversions, allConversions, premiumThreshold, channel),
+    [contacts, conversions, allConversions, premiumThreshold, channel],
   );
 
   const totalContacts = contacts.length;
   const globalMetricValue = useMemo(() => {
     const core = computeCoreStats(conversions, contacts, allConversions, premiumThreshold);
+    const funnel = computeChannelFunnel(conversions, channel);
     const leadToPurchaseAvgHours = core.leadPurchaseHours.length > 0
       ? core.leadPurchaseHours.reduce((acc, n) => acc + n, 0) / core.leadPurchaseHours.length
       : 0;
 
     switch (metric) {
-      case "contactos": return core.adContactJourneys;
-      case "leads": return core.adLeadJourneysLinkedToContact;
-      case "primeras_cargas": return core.adFirstPurchaseEventsAttributed;
+      case "contactos": return funnel.contacts;
+      case "leads": return channel === "atrio" ? funnel.contacts : funnel.messages;
+      case "primeras_cargas": return conversions.filter(row => row.purchase_event_id && !isStatisticsRepeat(row)).length;
       case "recargas": return core.adRepeatEvents;
       case "cargas_totales": return core.totalPurchases;
-      case "pct_inicio": return core.adContactJourneys > 0 ? (core.adLeadJourneysLinkedToContact / core.adContactJourneys) * 100 : 0;
-      case "pct_carga": return core.adLeadJourneysLinkedToContact > 0 ? (core.adFirstPurchaseJourneysAttributed / core.adLeadJourneysLinkedToContact) * 100 : 0;
-      case "pct_recarga": return core.adFirstPurchaseJourneysAttributed > 0 ? (core.adRepeatJourneysFromAttributedFirstInRange / core.adFirstPurchaseJourneysAttributed) * 100 : 0;
+      case "pct_inicio": return funnel.contacts > 0 ? 100 * funnel.messages / funnel.contacts : 0;
+      case "pct_carga": return (channel === "atrio" ? funnel.contacts : funnel.registered ?? 0) > 0 ? 100 * funnel.firstPurchases / (channel === "atrio" ? funnel.contacts : funnel.registered!) : 0;
+      case "pct_recarga": return funnel.firstPurchases > 0 ? 100 * funnel.repeats / funnel.firstPurchases : 0;
       case "carga_promedio": return core.totalPurchases > 0 ? core.totalRevenue / core.totalPurchases : 0;
       case "carga_mediana": return median(core.purchaseValues);
       case "tiempo_lead_purchase_prom": return leadToPurchaseAvgHours;
@@ -371,7 +381,7 @@ export default function ArgentinaMap({
       case "retencion_activa_30d": return core.activeRetention30d;
     }
     return 0;
-  }, [contacts, conversions, allConversions, premiumThreshold, adSpend, metric]);
+  }, [contacts, conversions, allConversions, premiumThreshold, adSpend, metric, channel]);
 
   const { provinces, viewW, viewH } = useMemo(() => {
     if (!geoData) return { provinces: [] as { key: string; path: string; name: string }[], viewW: MAP_W, viewH: MAP_H };
@@ -435,11 +445,12 @@ export default function ArgentinaMap({
 
           {/* Metric selector */}
           <div className="flex flex-wrap gap-1.5 mb-5">
-            {(Object.keys(METRIC_LABELS) as MapMetric[])
+            {(Object.keys(metricLabels) as MapMetric[]).filter(value => channel === "whatsapp" ? value !== "pct_carga" || conversions.some(row => row.registration_event_id) : !["pct_inicio", "tiempo_lead_purchase_prom"].includes(value))
               .filter((m) => !ROAS_METRICS.has(m) || adSpend > 0)
               .map((m) => (
                 <div key={m} className="group relative">
                   <button
+                    title={metricTooltips[m]}
                     onClick={() => setMetric(m)}
                     className={`cursor-pointer rounded-lg px-2.5 py-1 text-[10px] font-medium transition-all ${
                       metric === m
@@ -447,11 +458,8 @@ export default function ArgentinaMap({
                         : "bg-zinc-900/60 text-zinc-500 border border-zinc-800/40 hover:text-zinc-300 hover:border-zinc-700/50"
                     }`}
                   >
-                    {METRIC_LABELS[m]}
+                    {metricLabels[m]}
                   </button>
-                  <div className="pointer-events-none absolute left-1/2 z-50 mt-1 w-56 -translate-x-1/2 rounded-lg border border-zinc-700/60 bg-zinc-900/95 px-3 py-2 text-[10px] leading-relaxed text-zinc-300 opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100">
-                    {METRIC_TOOLTIPS[m]}
-                  </div>
                 </div>
               ))}
           </div>
@@ -498,7 +506,7 @@ export default function ArgentinaMap({
                 <p className="text-[13px] font-bold text-emerald-400 tabular-nums">
                   {formatMetricValue(hoveredValue, metric)}
                 </p>
-                <p className="text-[9px] text-zinc-500 mt-0.5">{METRIC_LABELS[metric]}</p>
+                <p className="text-[9px] text-zinc-500 mt-0.5">{metricLabels[metric]}</p>
                 {hoveredData && (
                   <div className="mt-1.5 pt-1.5 border-t border-zinc-800/60 space-y-0.5">
                     <p className="text-[9px] text-zinc-500">
@@ -532,7 +540,7 @@ export default function ArgentinaMap({
         {/* Right: Ranking sidebar */}
         <div className="lg:w-64 shrink-0">
           <h4 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wide mb-3">
-            Top provincias — {METRIC_LABELS[metric]}
+            Top provincias — {metricLabels[metric]}
           </h4>
           {ranking.length === 0 ? (
             <p className="text-[11px] text-zinc-600">Sin datos con provincia</p>
@@ -577,7 +585,7 @@ export default function ArgentinaMap({
             <p className="text-sm font-semibold text-zinc-100 tabular-nums">
               {formatMetricValue(globalMetricValue, metric)}
             </p>
-            <p className="text-[10px] text-zinc-600 mt-0.5">{METRIC_LABELS[metric]}</p>
+            <p className="text-[10px] text-zinc-600 mt-0.5">{metricLabels[metric]}</p>
           </div>
 
           {(() => {
