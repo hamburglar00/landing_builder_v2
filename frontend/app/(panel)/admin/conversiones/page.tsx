@@ -72,7 +72,7 @@ import {
   journeyStartAttribution,
   matchesConversionAttributionFilters,
 } from "@/components/conversiones/attributionFilters";
-import { STATISTICS_ORIGINS, statisticsOrigin, scopeStatisticsStages } from "@/lib/conversionJourneyStats";
+import { STATISTICS_ORIGINS, statisticsOrigin, scopeStatisticsStages, type StatisticsChannel } from "@/lib/conversionJourneyStats";
 import { useConversionStatsFilters } from "@/components/conversiones/useConversionStatsFilters";
 import {
   ConversionPagination,
@@ -354,6 +354,14 @@ export default function AdminConversionesPage() {
     hasStatsFiltersApplied,
     statsFiltersCount,
   } = useConversionStatsFilters();
+  const [selectedStatisticsChannel, setStatisticsChannel] = useState<StatisticsChannel>("whatsapp");
+  const canViewAtrio = true;
+  const statisticsChannel = canViewAtrio ? selectedStatisticsChannel : "whatsapp";
+  const selectStatisticsChannel = (channel: StatisticsChannel) => {
+    setStatisticsChannel(channel);
+    if (channel === "atrio") setStatsSourcePlatformFilter("landing");
+  };
+
   const [gerenciaByPhone, setGerenciaByPhone] = useState<Record<string, string[]>>({});
   const [activePhonesByGerenciaLabel, setActivePhonesByGerenciaLabel] = useState<Record<string, string[]>>({});
   const [performanceLandingOptions, setPerformanceLandingOptions] = useState<LandingPerformanceFilterOption[]>([]);
@@ -522,6 +530,7 @@ export default function AdminConversionesPage() {
     return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
   }, [statsAllConversions, scopedJourneyStarts, gerenciaByPhone]);
   const statsSourcePlatformOptions = useMemo(() => {
+    if (tab === "estadisticas" && statisticsChannel === "atrio") return ["landing"];
     const set = new Set<string>();
     for (const r of statsAllConversions) {
       const src = String(r.source_platform ?? "").trim().toLowerCase();
@@ -532,7 +541,7 @@ export default function AdminConversionesPage() {
       if (src) set.add(src);
     }
     return STATISTICS_ORIGINS.filter(origin => set.has(origin)) as string[];
-  }, [statsAllConversions, scopedJourneyStarts]);
+  }, [statsAllConversions, scopedJourneyStarts, tab, statisticsChannel]);
   const statsSexoOptions = useMemo(() => {
     const set = new Set<string>();
     for (const r of statsAllConversions) {
@@ -1345,6 +1354,7 @@ export default function AdminConversionesPage() {
       )}
       {statsFilterModalOpen && (
         <ConversionFiltersModal
+          landingOriginOnly={tab === "estadisticas" && statisticsChannel === "atrio"}
           title="Filtros de estadisticas"
           pixelConfigs={pixelConfigs}
           draft={{
@@ -1579,7 +1589,7 @@ export default function AdminConversionesPage() {
           </div>
           {isAllCurrencies ? (
             <SingleCurrencyRequired title="Elegí ARS o PYG para calcular estadísticas" />
-          ) : activeFunnelFiltered.length === 0 && statsConversionsFiltered.length === 0 && (!showJourneyStartStats || statsJourneyStartsFiltered.length === 0) ? (
+          ) : !canViewAtrio && activeFunnelFiltered.length === 0 && statsConversionsFiltered.length === 0 && (!showJourneyStartStats || statsJourneyStartsFiltered.length === 0) ? (
             refreshingTable ? (
               <div className="flex min-h-[120px] flex-col items-center justify-center gap-3 text-sm text-zinc-500">
                 <div className="h-1 w-40 overflow-hidden rounded-full bg-zinc-800">
@@ -1592,6 +1602,9 @@ export default function AdminConversionesPage() {
             )
           ) : (
             <StatsPanel
+              canViewAtrio={canViewAtrio}
+              channel={statisticsChannel}
+              onChannelChange={selectStatisticsChannel}
               funnelContacts={activeFunnelFiltered}
               conversions={statsConversionsFiltered}
               allConversions={statsAllConversionsFiltered}

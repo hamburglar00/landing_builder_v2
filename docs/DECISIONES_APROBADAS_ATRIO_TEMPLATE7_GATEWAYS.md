@@ -1,10 +1,19 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Ajuste de jugadores, visibilidad y origen en Estadísticas (04/11/2026)
+
+- En Recorrido, «Primeras cargas» y «Cargas -> recargas del periodo» muestran jugadores distintos del canal y período, no operaciones ni cantidad de recorridos publicitarios. Una persona que recarga varias veces cuenta una vez en esa última etapa. El ejemplo de 51 jugadores y 38 recargas de 16 jugadores se muestra como 51 → 16 (31,4 %). En Resumen general se mantienen operaciones con subtítulos de jugadores.
+- Ocultar CompleteRegistration/«Crearon usuario» de toda la estadística general de WhatsApp: sólo aplica a Full Carga, por lo que no debe ser una etapa ni condicionar tasas de los demás bots. Conservar su captura y sus eventos existentes. Atrio conserva su medición interna de altas confirmadas.
+- Si el cliente tiene `show_atrio` apagado, no mostrar chips y usar exclusivamente WhatsApp, incluso si había una selección anterior de Atrio. Superadmin conserva ambos canales.
+- Atrio sólo admite origen Landing: al seleccionar su chip fijar ese origen, bloquear el selector en Landing y excluir registros de WhatsApp Cloud API/Chatrace de sus estadísticas. WhatsApp conserva los tres orígenes.
+- Restaurar tarjetas compactas en una sola fila de escritorio para Resumen general (siete) y Embudo de conversión (cuatro en WhatsApp, tres en Atrio), adaptándolas a móvil. «Sin medición» usa la mitad del tamaño del valor numérico. No modificar tracking, migraciones, ingresos/operaciones financieras ni API2.
+- [Validación del ajuste](validation/conversion-statistics-refinements-20261104.md).
+
 ### Estadísticas por canal y significado de los eventos (04/11/2026)
 
 - Los chips «WhatsApp» y «Atrio» filtran toda la card de Estadísticas: resumen, recorrido, porcentajes, ingresos, gasto/ROAS, mapa, tablas, gráficos y contexto del asistente. No mezclar ambos canales. Ocultar «Frecuencia de mensajes por cliente» y mostrar el importe gastado y su input en negrita; mantener gastos independientes por canal durante la consulta.
 - «Plataforma de origen» ofrece únicamente Landing, Chatrace y WhatsApp Cloud API (más Todas, mostrando los valores presentes). Atrio es el canal de atención, no una cuarta opción de origen. Ambos filtros se combinan.
-- WhatsApp: CTA Contact → mensaje Lead real → alta confirmada CompleteRegistration → primera carga Purchase. Atrio: CTA con Lead/CompleteRegistration elegido → Purchase; no interpretar el nombre del evento del CTA como alta o mensaje humano. El resumen distingue «Solicitaron usuario» de «Crearon usuario».
+- WhatsApp general: CTA Contact → mensaje Lead real → primera carga Purchase. CompleteRegistration sigue disponible para Full Carga, pero no se muestra ni condiciona el embudo general. Atrio: CTA con Lead/CompleteRegistration elegido → Purchase; no interpretar el nombre del evento del CTA como alta o mensaje humano. El resumen distingue «Solicitaron usuario» de «Crearon usuario».
 - Contar altas de Atrio sólo desde la respuesta positiva de creación nueva de API2, mediante una medición interna posterior a la respuesta, sin otro evento Meta, credenciales ni cambios en acceso o finanzas. Compartir el registrador en Builder y clásica y verificar Rey, Ases, NET y Multi Skin. Las cuentas existentes no generan altas. WhatsApp depende del emisor preparado sólo en local en API2.
 - Preservar el destino capturado de cada recorrido y su pertenencia por propietario, landing y gerencia; nunca reclasificar historia usando la configuración actual de una landing. Las nuevas visitas guardan su canal en inserción. Los históricos inciertos quedan señalados y excluidos; falta de medición no equivale a cero.
 - Filtrar cada hito por su fecha, deduplicar entregas/operaciones y calcular tasas sobre etapas compatibles del mismo recorrido, sin inferir mensajes ni altas por una compra. No reconstruir registros históricos ni emitir eventos para probar esta mejora.

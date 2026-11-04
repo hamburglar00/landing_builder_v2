@@ -177,10 +177,8 @@ export function computeChannelFunnel(rows: ConversionRow[], channel: StatisticsC
     if (after(journey.lead, journey.contact)) messages++;
     const preceding = channel === "atrio" ? journey.contact : after(journey.lead, journey.contact) ? journey.lead : undefined;
     if (after(journey.registration, preceding)) registered++;
-    // Missing registration telemetry does not imply a completed account.
-    const purchasePreceding = channel === "whatsapp" && registrations > 0
-      ? after(journey.registration, preceding) ? journey.registration : undefined : preceding;
-    if (after(journey.purchase, purchasePreceding)) {
+    // Registration is specific to Full Carga, so it cannot gate a mixed WhatsApp funnel.
+    if (after(journey.purchase, preceding)) {
       firstPurchases++;
       if (after(journey.repeat, journey.purchase)) repeats++;
     }
@@ -189,6 +187,10 @@ export function computeChannelFunnel(rows: ConversionRow[], channel: StatisticsC
 }
 
 export function scopeStatisticsChannel(rows: ConversionRow[], starts: ConversionJourneyStartRow[], channel: StatisticsChannel, range: StatisticsRange) {
+  if (channel === "atrio") {
+    rows = rows.filter(row => statisticsOrigin(row) === "landing");
+    starts = starts.filter(row => lower(row.source_platform) === "landing");
+  }
   const resolve = createStatisticsChannelResolver(rows);
   const classified = rows.map(row => ({ row, channel: resolve(row) }));
   const channelRows = classified.filter(item => item.channel === channel).map(({ row }) => row.confirmed_registration_event_id
@@ -208,6 +210,23 @@ export function statisticsPlayerKey(row: ConversionRow): string {
   const player = lower(row.purchase_player_username) || lower(row.atrio_players_id) || digits(row.phone) || lower(row.external_id) || text(row.id);
   const agency = text(row.purchase_agency_id || row.purchase_gerencia_external_id || row.purchase_gerencia_id || row.assigned_gerencia_external_id || row.assigned_gerencia_id);
   return `${row.user_id}::${agency}::${player}`;
+}
+
+/** Monetary event totals and distinct players are different statistics. Rows are period-scoped. */
+export function computeStatisticsPurchasePlayers(rows: ConversionRow[]) {
+  const firsts = new Map<string, number>();
+  const repeats: Array<{ key: string; time: number }> = [];
+  for (const row of dedupeStatisticsEvents(rows)) {
+    if (!text(row.purchase_event_id)) continue;
+    const key = statisticsPlayerKey(row), time = stageDate(row, "purchase")?.getTime();
+    if (time === undefined) continue;
+    if (isStatisticsRepeat(row)) repeats.push({ key, time });
+    else firsts.set(key, Math.min(firsts.get(key) ?? Infinity, time));
+  }
+  const repeatsFromFirst = repeats.filter(repeat => firsts.has(repeat.key) && repeat.time >= firsts.get(repeat.key)!);
+  return { firstPlayers: firsts.size, repeatPlayers: new Set(repeats.map(repeat => repeat.key)).size,
+    repeatPlayersFromFirst: new Set(repeatsFromFirst.map(repeat => repeat.key)).size,
+    repeatEventsFromFirst: repeatsFromFirst.length };
 }
 
 export function statisticsRate(numerator: number | null, denominator: number | null): string {

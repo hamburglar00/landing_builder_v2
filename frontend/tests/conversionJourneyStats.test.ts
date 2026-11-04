@@ -3,7 +3,7 @@ import test from "node:test";
 import type { ConversionJourneyStartRow, ConversionRow } from "../lib/conversionsDb";
 import { STATISTICS_ORIGINS, computeChannelFunnel, createStatisticsChannelResolver, dedupeStatisticsEvents,
   scopeStatisticsChannel, scopeStatisticsStages, stageDate, statisticsEventRangeFilter, statisticsOrigin,
-  statisticsRate, statisticsTemporalRows, countStatisticsVisitConversions } from "../lib/conversionJourneyStats";
+  statisticsRate, statisticsTemporalRows, countStatisticsVisitConversions, computeStatisticsPurchasePlayers } from "../lib/conversionJourneyStats";
 
 const time = Math.floor(Date.parse("2026-11-04T15:00:00Z") / 1000);
 const range = { start: new Date("2026-11-04T00:00:00Z"), end: new Date("2026-11-04T23:59:59.999Z") };
@@ -42,6 +42,38 @@ test("WhatsApp follows real CTA, message, confirmed registration, first purchase
     row("repeat", { purchase_event_id: "repeat", purchase_event_time: time + 4, purchase_type: "repeat" }),
     row("repeat2", { purchase_event_id: "repeat2", purchase_event_time: time + 5, purchase_type: "repeat" })];
   assert.deepEqual(computeChannelFunnel(rows, "whatsapp"), { contacts: 1, messages: 1, registrations: 1, registered: 1, firstPurchases: 1, repeats: 1 });
+});
+test("a Full Carga registration cannot exclude purchases of other WhatsApp bot types", () => {
+  const rows = ["full", "manual"].flatMap((kind, index) => [contact(kind, "whatsapp", { promo_code: `P-${kind}` }),
+    row(`l-${kind}`, { promo_code: `P-${kind}`, lead_event_id: `l-${kind}`, lead_event_time: time + 1 }),
+    ...(index === 0 ? [row("r-full", { promo_code: "P-full", registration_event_id: "r", registration_event_time: time + 2 })] : []),
+    row(`p-${kind}`, { promo_code: `P-${kind}`, purchase_event_id: `p-${kind}`, purchase_event_time: time + 3, purchase_type: "first" })]);
+  assert.equal(computeChannelFunnel(rows, "whatsapp").firstPurchases, 2);
+});
+test("the reference period has 51 first-load players and 16 repeated players, not 38 repeat events", () => {
+  const firsts = Array.from({ length: 51 }, (_, index) => row(`first-${index}`, { purchase_event_id: `first-${index}`,
+    purchase_type: "first", purchase_player_username: `player-${index}`, purchase_agency_id: "184", purchase_event_time: time }));
+  const repeats = Array.from({ length: 38 }, (_, index) => row(`repeat-${index}`, { purchase_event_id: `repeat-${index}`,
+    purchase_type: "repeat", purchase_player_username: `player-${index % 16}`, purchase_agency_id: "184", purchase_event_time: time + index + 1 }));
+  const result = computeStatisticsPurchasePlayers([...firsts, ...repeats]);
+  assert.deepEqual(result, { firstPlayers: 51, repeatPlayers: 16, repeatPlayersFromFirst: 16, repeatEventsFromFirst: 38 });
+  assert.equal(statisticsRate(result.repeatPlayersFromFirst, result.firstPlayers), "31.4%");
+});
+test("player progression excludes unrelated agencies, prior repeats and first loads outside the period", () => {
+  const rows = [row("first", { purchase_event_id: "first", purchase_type: "first", purchase_event_time: time, purchase_player_username: "one", purchase_agency_id: "10" }),
+    row("earlier", { purchase_event_id: "earlier", purchase_type: "repeat", purchase_event_time: time - 1, purchase_player_username: "one", purchase_agency_id: "10" }),
+    row("other", { purchase_event_id: "other", purchase_type: "repeat", purchase_event_time: time + 1, purchase_player_username: "one", purchase_agency_id: "20" }),
+    row("old-first", { purchase_event_id: "old-first", purchase_type: "first", purchase_event_time: time - 4 * 86400, purchase_player_username: "two", purchase_agency_id: "10" }),
+    row("new-repeat", { purchase_event_id: "new-repeat", purchase_type: "repeat", purchase_event_time: time + 1, purchase_player_username: "two", purchase_agency_id: "10" })];
+  const result = computeStatisticsPurchasePlayers(scopeStatisticsStages(rows, range));
+  assert.equal(result.firstPlayers, 1); assert.equal(result.repeatPlayersFromFirst, 0);
+});
+test("Atrio excludes Chatrace and Cloud API origins even if they claim an Atrio destination", () => {
+  const rows = [contact("landing", "atrio", { purchase_event_id: "lp", purchase_event_time: time + 1, valor: 1000 }),
+    contact("chatrace", "atrio", { source_platform: "chatrace", promo_code: "P-chat", purchase_event_id: "cp", purchase_event_time: time + 1, valor: 2000 }),
+    contact("cloud", "atrio", { source_platform: "whatsapp_cloud_api", promo_code: "P-cloud", purchase_event_id: "wp", purchase_event_time: time + 1, valor: 3000 })];
+  const result = scopeStatisticsChannel(rows, [], "atrio", range);
+  assert.equal(result.conversions.length, 1); assert.equal(result.conversions[0].valor, 1000);
 });
 test("out-of-order milestones and separate owners or landings never form a chain", () => {
   const rows = [contact("a", "whatsapp"), row("before", { lead_event_id: "before", lead_event_time: time - 1 }),
@@ -93,7 +125,7 @@ test("legacy contact assignments classify the original channel without current l
 test("all selected statistics are isolated by channel and only captured visit destinations count", () => {
   const rows = [contact("wa", "whatsapp", { purchase_event_id: "wp", purchase_event_time: time + 10, valor: 1000 }),
     contact("at", "atrio", { promo_code: "P-two", purchase_event_id: "ap", purchase_event_time: time + 10, valor: 2000 })];
-  const starts = ["whatsapp", "atrio", null].map((channel, index) => ({ id: String(index), first_seen_at: "2026-11-04T12:00:00Z", journey_destination: channel } as ConversionJourneyStartRow));
+  const starts = ["whatsapp", "atrio", null].map((channel, index) => ({ id: String(index), source_platform: "landing", first_seen_at: "2026-11-04T12:00:00Z", journey_destination: channel } as ConversionJourneyStartRow));
   const result = scopeStatisticsChannel(rows, starts, "atrio", range);
   assert.equal(result.conversions.length, 1); assert.equal(result.conversions[0].valor, 2000);
   assert.equal(result.journeyStarts.length, 1); assert.equal(result.unknownStarts, 1);

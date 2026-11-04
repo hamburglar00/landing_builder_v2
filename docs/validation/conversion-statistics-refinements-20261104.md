@@ -1,0 +1,13 @@
+# Ajustes de Estadísticas — 04/11/2026
+
+- Recorrido usa jugadores únicos en las dos etapas de carga. El resumen sigue mostrando operaciones y agrega su cantidad de jugadores; 38 recargas de 16 jugadores no se convierten en 38 jugadores. La identidad mantiene propietario y gerencia y la progresión exige primera carga y recarga posterior en el período.
+- WhatsApp excluye la tarjeta/etapa de registro y usa mensajes como base de carga. Una confirmación de Full Carga no excluye las cargas de bots manuales/MKT de porcentajes, gráficos, tablas o mapa. Se conserva la captura existente de CompleteRegistration.
+- Cliente usa el permiso existente `show_atrio`; con el módulo oculto no hay chips y el cálculo queda en WhatsApp. Superadmin mantiene ambos. No se agregan requests de permisos: se reutiliza el contexto del panel.
+- El chip Atrio fija Landing en los filtros globales de Estadísticas. El selector queda bloqueado con una sola opción; la lógica de cálculo también excluye Cloud API y Chatrace de ese canal.
+- Resumen general: siete tarjetas en una fila desde 1024 px. Embudo: cuatro tarjetas WhatsApp o tres Atrio en una fila de escritorio. En móvil se reacomodan. «Sin medición» pasa de 20 a 10 px en tarjetas y de 18 a 9 px en Recorrido.
+
+Verificación: 45 pruebas de estadísticas/atribución/UI y cuatro escenarios nuevos (51/16 con 38 recargas; gerencias/fechas; bots WhatsApp con y sin registro; origen exclusivo de Atrio). El navegador usa componentes y CSS reales con todas las requests interceptadas: Chromium y WebKit en 1280/1024/768/390/320, sin datos/usuarios/eventos reales. Comprueba conteos 51→16 y 31,4 %, una fila de tarjetas, origen fijo de Atrio, ausencia de chips cuando está oculto, gastos por canal, registros de WhatsApp ocultos y tipografías reducidas. Capturas y resultados en `%TEMP%/conversion-statistics-refinements-20261104/`.
+
+Sólo Builder requiere publicación. Sin cambios de esquema, cuentas, finanzas, gateways, clásica o API2. Se preserva la migración aditiva del lote anterior y no se reclasifica el historial. TypeScript, ESLint y compilación de producción se verifican antes de publicar; el SHA promovido queda registrado en el manifiesto local de release.
+
+Al retomar después del corte se comprobó que el último ajuste mantiene el selector disponible aunque no haya datos: Chromium y WebKit a 390 px permiten alternar ambos canales vacíos. Se conserva la autorización de commit, push y publicación del hilo anterior. La publicación usa un archivo del commit exacto, excluye archivos de entorno y comprueba el SHA del candidato antes de promoverlo.

@@ -60,6 +60,7 @@ type ConversionFilterChanges = {
 };
 
 type ConversionFiltersModalProps = {
+  landingOriginOnly?: boolean;
   title: string;
   draft: ConversionFilterDraft;
   options: ConversionFilterOptions;
@@ -79,6 +80,8 @@ function FilterField({
   allLabel,
   options,
   onChange,
+  includeAll = true,
+  disabled = false,
 }: {
   id: string;
   label: string;
@@ -86,6 +89,8 @@ function FilterField({
   allLabel: string;
   options: readonly ConversionFilterOption[];
   onChange: (value: string) => void;
+  includeAll?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <CustomSelect
@@ -93,11 +98,12 @@ function FilterField({
       label={label}
       value={value}
       options={[
-        { value: "__all__", label: allLabel },
+        ...(includeAll ? [{ value: "__all__", label: allLabel }] : []),
         ...options,
       ]}
       onChange={onChange}
       placeholder={allLabel}
+      disabled={disabled}
     />
   );
 }
@@ -258,10 +264,11 @@ export default function ConversionFiltersModal({
   onClose,
   onApply,
   pixelConfigs = [],
+  landingOriginOnly = false,
 }: ConversionFiltersModalProps) {
-  const showLandingFilter = draft.sourcePlatform === "landing";
+  const showLandingFilter = landingOriginOnly || draft.sourcePlatform === "landing";
   const showMetaAdsFilters = draft.fromMetaAds === "true";
-  const trackingKind = trackingFilterKindForSource(draft.sourcePlatform);
+  const trackingKind = trackingFilterKindForSource(landingOriginOnly ? "landing" : draft.sourcePlatform);
   const handleSourcePlatformChange = (value: string) => {
     onChange.sourcePlatform(value);
     if (value !== "landing") onChange.landing("__all__");
@@ -306,12 +313,14 @@ export default function ConversionFiltersModal({
               <FilterField
                 id="conversion-filter-platform"
                 label="Plataforma de origen"
-                value={draft.sourcePlatform}
+                value={landingOriginOnly ? "landing" : draft.sourcePlatform}
                 allLabel="Todas"
-                options={sourcePlatformOptions(options.sourcePlatforms)}
+                options={sourcePlatformOptions(landingOriginOnly ? ["landing"] : options.sourcePlatforms)}
                 onChange={handleSourcePlatformChange}
+                includeAll={!landingOriginOnly}
+                disabled={landingOriginOnly}
               />
-              <p className="text-[11px] text-zinc-500">Origen del recorrido. El canal de atención se elige con los chips WhatsApp y Atrio en Estadísticas.</p>
+              <p className="text-[11px] text-zinc-500">{landingOriginOnly ? "Atrio recibe únicamente recorridos con origen Landing." : "Origen del recorrido. El canal de atención se elige con los chips WhatsApp y Atrio en Estadísticas."}</p>
               {showLandingFilter ? (
                 <FilterField
                   id="conversion-filter-landing"

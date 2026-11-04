@@ -225,7 +225,7 @@ function buildProvinceData(
       reachedLeadLinkedToContact: channel === "atrio" ? funnel.contacts : funnel.messages,
       reachedPurchase: conversionsProv.filter(row => row.purchase_event_id && !isStatisticsRepeat(row)).length,
       reachedPurchaseLinkedToLead: funnel.firstPurchases,
-      loadBase: channel === "atrio" ? funnel.contacts : funnel.registered ?? 0,
+      loadBase: channel === "atrio" ? funnel.contacts : funnel.messages,
       reachedRepeat: core.adRepeatEvents,
       repeatFromFirstInRange: funnel.repeats,
       primerasCargas: conversionsProv.filter(row => row.purchase_event_id && !isStatisticsRepeat(row)).length,
@@ -333,8 +333,8 @@ export default function ArgentinaMap({
   adSpend?: number;
   channel?: StatisticsChannel;
 }) {
-  const metricLabels = channel === "atrio" ? { ...METRIC_LABELS, leads: "Solicitudes de usuario", pct_carga: "% de solicitudes que cargaron" } : { ...METRIC_LABELS, pct_carga: "% de altas que cargaron" };
-  const metricTooltips = channel === "atrio" ? { ...METRIC_TOOLTIPS, leads: "Formularios válidos enviados por el CTA.", pct_carga: "Recorridos con solicitud que luego tuvieron una primera carga." } : { ...METRIC_TOOLTIPS, pct_carga: "Recorridos con alta confirmada que luego tuvieron una primera carga." };
+  const metricLabels = channel === "atrio" ? { ...METRIC_LABELS, leads: "Solicitudes de usuario", pct_carga: "% de solicitudes que cargaron" } : METRIC_LABELS;
+  const metricTooltips = channel === "atrio" ? { ...METRIC_TOOLTIPS, leads: "Formularios válidos enviados por el CTA.", pct_carga: "Recorridos con solicitud que luego tuvieron una primera carga." } : METRIC_TOOLTIPS;
   const [metric, setMetric] = useState<MapMetric>("contactos");
   const [hovered, setHovered] = useState<string | null>(null);
 
@@ -368,7 +368,7 @@ export default function ArgentinaMap({
       case "recargas": return core.adRepeatEvents;
       case "cargas_totales": return core.totalPurchases;
       case "pct_inicio": return funnel.contacts > 0 ? 100 * funnel.messages / funnel.contacts : 0;
-      case "pct_carga": return (channel === "atrio" ? funnel.contacts : funnel.registered ?? 0) > 0 ? 100 * funnel.firstPurchases / (channel === "atrio" ? funnel.contacts : funnel.registered!) : 0;
+      case "pct_carga": return (channel === "atrio" ? funnel.contacts : funnel.messages) > 0 ? 100 * funnel.firstPurchases / (channel === "atrio" ? funnel.contacts : funnel.messages) : 0;
       case "pct_recarga": return funnel.firstPurchases > 0 ? 100 * funnel.repeats / funnel.firstPurchases : 0;
       case "carga_promedio": return core.totalPurchases > 0 ? core.totalRevenue / core.totalPurchases : 0;
       case "carga_mediana": return median(core.purchaseValues);
@@ -445,7 +445,7 @@ export default function ArgentinaMap({
 
           {/* Metric selector */}
           <div className="flex flex-wrap gap-1.5 mb-5">
-            {(Object.keys(metricLabels) as MapMetric[]).filter(value => channel === "whatsapp" ? value !== "pct_carga" || conversions.some(row => row.registration_event_id) : !["pct_inicio", "tiempo_lead_purchase_prom"].includes(value))
+            {(Object.keys(metricLabels) as MapMetric[]).filter(value => channel === "whatsapp" || !["pct_inicio", "tiempo_lead_purchase_prom"].includes(value))
               .filter((m) => !ROAS_METRICS.has(m) || adSpend > 0)
               .map((m) => (
                 <div key={m} className="group relative">
