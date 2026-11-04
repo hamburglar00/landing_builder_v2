@@ -54,12 +54,21 @@ for(const [name,engine]of[['Chromium',playwright.chromium],['WebKit',playwright.
       await gallery.locator(`img[alt="${alt}"]`).waitFor();
       for(const [width,height]of [[300,400],[240,320],[180,240]]){
         await page.locator('#fixture-gallery').evaluate((el,[w,h])=>{el.style.width=w+'px';el.style.height=h+'px'},[width,height]);
+        await page.waitForFunction(()=>{
+          const container=document.querySelector('#fixture-gallery').getBoundingClientRect(),frame=document.querySelector('#fixture-gallery iframe').getBoundingClientRect();
+          return frame.width<=container.width+1&&frame.height<=container.height+1;
+        });
         const metrics=await gallery.locator('.template9').evaluate(root=>{
           const wrap=root.querySelector('.template9__wrap'),cta=root.querySelector('.template9__cta');
           return {width:root.clientWidth,height:root.clientHeight,rootOverflow:root.scrollHeight-root.clientHeight,wrapOverflow:wrap.scrollHeight-wrap.clientHeight,ctaBottom:cta.getBoundingClientRect().bottom};
         });
         assert.ok(metrics.rootOverflow<=1&&metrics.wrapOverflow<=1,`${name} ${label} gallery ${width}: ${JSON.stringify(metrics)}`);
-        assert.ok(metrics.ctaBottom<=height,`${name} ${label} gallery CTA clipped`);
+        const bounds=await page.locator('#fixture-gallery iframe').boundingBox();
+        const container=await page.locator('#fixture-gallery').boundingBox();
+        assert.ok(bounds&&container&&bounds.width<=container.width+1&&bounds.height<=container.height+1, 'entire preview fits its tile');
+        assert.ok(await gallery.locator('.template9__footer').isVisible());
+        assert.ok(await gallery.locator('.template9__cookies').isVisible());
+        assert.ok(metrics.ctaBottom<=metrics.height, 'CTA is inside the complete virtual phone');
         checks.push({browser:name,platform:label,gallery:{width,height}});
       }
       await page.locator('#fixture-gallery').evaluate(el=>{el.style.width='300px';el.style.height='400px'});

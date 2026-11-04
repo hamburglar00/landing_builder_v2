@@ -6,6 +6,7 @@ import path from 'node:path';
 import * as localPlaywright from 'playwright';
 import {renderTemplate9View,TEMPLATE9_UI_SCRIPT} from '../components/public-landing/template9View';
 import {TEMPLATE9_CSS} from '../components/public-landing/template9Css';
+import {renderTemplate9LegalHtml,TEMPLATE9_LEGAL_PAGES} from '../components/public-landing/template9Legal';
 import {PUBLIC_LANDING_CSS} from '../components/public-landing/publicLandingCss';
 import {DEFAULT_CONFIG} from '../lib/landing/mocks';
 import {switchLandingTemplate} from '../lib/landing/templateVariants';
@@ -17,7 +18,7 @@ let playwright=localPlaywright;
 try{playwright=createRequire(path.resolve('package.json'))(path.join(process.env.APPDATA||'','npm/node_modules/playwright'))}catch{}
 async function main(){
 await mkdir(directory,{recursive:true});
-const sizes=[{width:320,height:568},{width:360,height:640},{width:375,height:667},{width:390,height:664},{width:390,height:844},{width:430,height:932},{width:844,height:390}];
+const sizes=[{width:320,height:568},{width:360,height:640},{width:375,height:667},{width:390,height:664},{width:390,height:844},{width:430,height:932},{width:844,height:390},{width:1366,height:635},{width:1440,height:900}];
 const checks:unknown[]=[];
 for(const [name,engine]of [['Chromium',playwright.chromium],['WebKit',playwright.webkit]] as const){
   const browser=await engine.launch({headless:true});
@@ -33,7 +34,8 @@ for(const [name,engine]of [['Chromium',playwright.chromium],['WebKit',playwright
         if(/^\/public-assets\/template9\/[a-z_0-9]+\.webp$/.test(u.pathname))return route.fulfill({contentType:'image/webp',body:await readFile(path.resolve('public','.'+u.pathname))});
         return route.fulfill({contentType:'text/html',body:html});
       });
-      for(const provider of ['rey_de_ases','ases_del_norte','ganamos_net','multi_skin'] as TargetProvider[])for(const whatsapp of [false,true])for(const viewport of sizes){
+      if(!process.env.TEMPLATE9_LEGAL_ONLY)for(const provider of ['rey_de_ases','ases_del_norte','ganamos_net','multi_skin'] as TargetProvider[])for(const whatsapp of [false,true])for(const viewport of sizes){
+        if(whatsapp&&viewport.width>1000)continue;
         const label=`${name} ${provider} ${viewport.width}x${viewport.height} whatsapp=${whatsapp}`;
         await page.setViewportSize(viewport);
         const config=buildLandingConfig({id:'a0000000-0000-4000-8000-000000000001',name:'layout',comment:'',pixelId:'',postUrl:'',landingTag:'',config:{...switchLandingTemplate(DEFAULT_CONFIG,'template9'),targetProvider:provider,template7WhatsappEnabled:whatsapp}});
@@ -50,7 +52,7 @@ for(const [name,engine]of [['Chromium',playwright.chromium],['WebKit',playwright
         assert.ok(metrics.footerBottom<=metrics.noticeTop+1,`${label}: cookie overlap ${JSON.stringify(metrics)}`);
         assert.ok(metrics.ctaTop>=0&&metrics.ctaBottom<=viewport.height,`${label}: CTA outside viewport`);
         if(provider==='rey_de_ases'||provider==='ases_del_norte')assert.equal(metrics.ctaColor,'rgb(18, 18, 18)',`${label}: readable metal button`);
-        if(name==='Chromium'&&!whatsapp&&viewport.width===390&&viewport.height===844)await page.screenshot({path:path.join(directory,`${provider}-390.png`)});
+        if(name==='Chromium'&&!whatsapp&&((viewport.width===390&&viewport.height===844)||viewport.width===1366))await page.screenshot({path:path.join(directory,`${provider}-${viewport.width}.png`)});
         if(name==='Chromium'&&whatsapp&&viewport.width===320)await page.screenshot({path:path.join(directory,`${provider}-320-phone.png`)});
         await page.locator('[data-template9-cookie-dismiss]').click();
         assert.equal(await page.locator('[data-template9-cookie-notice]').isVisible(),false);
@@ -62,10 +64,22 @@ for(const [name,engine]of [['Chromium',playwright.chromium],['WebKit',playwright
         }
         checks.push({browser:name,provider,whatsapp,viewport,metrics});
       }
+      for(const provider of ['rey_de_ases','ases_del_norte','ganamos_net','multi_skin'] as TargetProvider[])for(const legal of Object.keys(TEMPLATE9_LEGAL_PAGES)){
+        const config=buildLandingConfig({id:'a0000000-0000-4000-8000-000000000001',name:'layout',comment:'',pixelId:'',postUrl:'',landingTag:'',config:{...switchLandingTemplate(DEFAULT_CONFIG,'template9'),targetProvider:provider}});
+        html=renderTemplate9LegalHtml({...config,layout:{...config.layout,ctaPosition:'bottom'}},legal,'/fixture')!;
+        await page.setViewportSize({width:390,height:664});
+        await page.goto('https://layout.invalid/fixture/'+legal);
+        assert.ok(await page.locator('article h1').isVisible());
+        assert.equal(await page.locator('script,form').count(),0);
+        assert.equal(await page.locator('footer a').getAttribute('href'),'/fixture');
+        assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+        if(name==='Chromium'&&legal==='privacidad')await page.screenshot({path:path.join(directory,`${provider}-privacy.png`),fullPage:true});
+        checks.push({browser:name,provider,legal});
+      }
     }finally{await context.close()}
   }finally{await browser.close()}
 }
-await writeFile(path.join(directory,'layout-results.json'),JSON.stringify({passed:checks.length,checks},null,2));
+await writeFile(path.join(directory,process.env.TEMPLATE9_LEGAL_ONLY?'legal-results.json':'layout-results.json'),JSON.stringify({passed:checks.length,checks},null,2));
 console.log(JSON.stringify({passed:checks.length,directory}));
 }
 main().catch(error=>{console.error(error);process.exitCode=1});

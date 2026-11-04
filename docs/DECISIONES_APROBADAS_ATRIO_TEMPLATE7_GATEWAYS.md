@@ -1,5 +1,12 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Template 9: páginas legales y proporciones finales (04/11/2026)
+
+- El usuario autorizó terminar/publicar T9 y después preparar sólo en local el evento de alta exitosa de Full Carga WhatsApp. API2 sigue sin commit/push/despliegue.
+- Conservar el tamaño de tarjeta/logo/campo/CTA de la referencia en escritorio, limitar el ajuste compacto a móvil y mostrar la página completa en las miniaturas y vista previa, incluido el pie.
+- Los cuatro enlaces legales abren páginas propias por landing, con la marca/skin y país del workspace. Usar texto adaptado al funcionamiento real, sin contactos ni condiciones comerciales ajenas. No iniciar cuentas ni medición publicitaria desde esas páginas. Conservar el runtime/tracking y las demás plantillas.
+- [Implementación, validación y publicación](validation/template9-legal-release-20261104.md).
+
 ### Evento del CTA y mensajes internos de Atrio (04/11/2026)
 
 - El usuario cambió explícitamente el disparador: en T7/T8/T9 emitir el evento elegido al enviar un formulario válido con el CTA, antes del resultado de creación, igual que la referencia pública. El selector ofrece Lead o CompleteRegistration, uno solo por acción; conservar ID, captura, FBC por landing/píxel y deduplicación. Sin elección guardada, usar Lead para preservar las campañas existentes. No cambiar Contact de T1–T6.

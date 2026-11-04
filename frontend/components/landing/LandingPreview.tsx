@@ -1,6 +1,7 @@
 "use client";
 
 import { renderTemplate9View } from "@/components/public-landing/template9View";
+import { Template9Preview } from "./Template9Preview";
 import { TEMPLATE9_CSS } from "@/components/public-landing/template9Css";
 import { PUBLIC_LANDING_CSS } from "@/components/public-landing/publicLandingCss";
 import { buildLandingConfig } from "@/lib/landing/buildLandingConfig";
@@ -1074,9 +1075,9 @@ export function LandingPreview({
   }
   if (config.template === "template9") {
     const preview = buildLandingConfig({ id: "", name: "Vista previa", comment: "", pixelId: "", postUrl: "", landingTag: "", config });
-    const view = renderTemplate9View({ ...preview, layout: { ...preview.layout, ctaPosition: config.ctaPosition } });
-    const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${PUBLIC_LANDING_CSS.slice(0, PUBLIC_LANDING_CSS.indexOf("body.public-lead-capture-open"))}${TEMPLATE9_CSS}</style></head><body>${gallery ? view.replace('class="public-landing template9"', 'class="public-landing template9 template9--gallery"') : view}</body></html>`;
-    return <iframe title="Vista previa de Plantilla 9" sandbox="" srcDoc={html} tabIndex={gallery ? -1 : undefined} className={gallery ? "pointer-events-none block h-full w-full border-0" : compact ? "h-full min-h-[240px] w-full rounded-3xl border-0" : "mx-auto aspect-[390/844] w-full max-w-[390px] rounded-3xl border-0"} />;
+    const view = renderTemplate9View({ ...preview, layout: { ...preview.layout, ctaPosition: config.ctaPosition } }, true);
+    const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${PUBLIC_LANDING_CSS.slice(0, PUBLIC_LANDING_CSS.indexOf("body.public-lead-capture-open"))}${TEMPLATE9_CSS}</style></head><body>${view}</body></html>`;
+    return <Template9Preview html={html} compact={compact} gallery={gallery} />;
   }
   return renderTemplate1();
 }

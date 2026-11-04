@@ -12,6 +12,7 @@ import { buildTemplate7RuntimeConfig } from "../components/public-landing/templa
 import { LandingTemplateSection } from "../components/landing/LandingEditorForm";
 import { LandingPreview } from "../components/landing/LandingPreview";
 import { validateEntryFunnelBatch, validateEntryFunnelContext } from "../lib/landing/entryFunnel";
+import { renderTemplate9LegalHtml, TEMPLATE9_LEGAL_PAGES } from "../components/public-landing/template9Legal";
 
 const id = "a0000000-0000-4000-8000-000000000001";
 const config = switchLandingTemplate({ ...DEFAULT_CONFIG, template: "template7", titleLine1: "Mi T7", template7WhatsappEnabled: true }, "template9");
@@ -92,4 +93,36 @@ test("Template 9 diagnostic context is accepted end to end without accepting unk
   assert.equal(validateEntryFunnelContext(context)?.template, 9);
   assert.equal(validateEntryFunnelBatch({ landing_id: id, flow_id: id, template: 9, events: [{ id, name: "cta_clicked", elapsed_ms: 10 }] })?.template, 9);
   assert.equal(validateEntryFunnelContext({ ...context, template: 10 }), null);
+});
+
+test("T9 legal links keep the exact landing in Builder and classic, without advertising or entry side effects", () => {
+  const payload = publicConfig("multi_skin", "bet30");
+  for (const [base, html] of [
+    ["/l/fixture", renderPublicLandingHtml({ slug: "fixture", config: payload })],
+    ["/fixture", renderClassicTemplate7InlineHtml({ slug: "fixture", config: payload }, "")],
+  ]) {
+    for (const page of Object.keys(TEMPLATE9_LEGAL_PAGES)) {
+      assert.ok(html.includes(`href="${base}/${page}"`));
+      const legal = renderTemplate9LegalHtml(payload, page, base)!;
+      assert.match(legal, /Bet30/);
+      assert.ok(legal.includes(`href="${base}"`));
+      assert.doesNotMatch(legal, /<script|<form|fbq\(|functions\/v1|data-template7-runtime|ganamosmayor|soportegaming|KYC|zx_track|lp_slug/);
+    }
+  }
+});
+
+test("Legal pages follow every saved skin and workspace country; unsupported pages/templates are absent", () => {
+  for (const provider of ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_skin"]) {
+    for (const skin of provider === "multi_skin" ? MULTI_SKIN_CODES : [undefined]) {
+      const payload = publicConfig(provider, skin);
+      const legal = renderTemplate9LegalHtml({ ...payload, workspaceCurrency: "PYG" }, "privacidad", "/fixture")!;
+      assert.ok(legal.includes(getTemplate9Brand(provider, skin).name));
+      assert.match(legal, /Paraguay/);
+      assert.doesNotMatch(legal, /Argentina/);
+    }
+  }
+  assert.equal(renderTemplate9LegalHtml(publicConfig(), "constructor", "/fixture"), null);
+  assert.equal(renderTemplate9LegalHtml(publicConfig(), "__proto__", "/fixture"), null);
+  assert.equal(renderTemplate9LegalHtml({ ...publicConfig(), layout: { template: 7, ctaPosition: "bottom" } }, "cookies", "/fixture"), null);
+  assert.doesNotMatch(renderTemplate9LegalHtml(publicConfig(), "cookies", '/fixture"><script>')!, /href="\/fixture"><script>/);
 });

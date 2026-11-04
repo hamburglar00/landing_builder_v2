@@ -99,14 +99,9 @@ async function main(){
             if(scenario==='desktop'&&!classic&&browserName==='Chromium')await page.screenshot({path:path.join(directory,'ganamos_net-1440.png')});
             await page.locator('[data-template9-cookie-dismiss]').click();
             assert.equal(await page.locator('[data-template9-cookie-notice]').isVisible(),false);
-            for(const legal of ['terms','cookies','responsible']){
-              await page.locator(`nav [data-template9-open="${legal}"]`).click();
-              assert.equal(await page.locator(`[data-template9-dialog="${legal}"]`).evaluate((el:HTMLDialogElement)=>el.open),true);
-              await page.locator(`[data-template9-dialog="${legal}"] [data-template9-close]`).click();
+            for(const legal of ['privacidad','terminos','cookies','juego-responsable']){
+              assert.equal(await page.locator('nav a[href$="/'+legal+'"]').getAttribute('href'),(classic?'/fixture':'/l/fixture')+'/'+legal);
             }
-            await page.locator('[data-public-privacy-open]').click();
-            assert.equal(await page.locator('[data-public-privacy-dialog]').evaluate((el:HTMLDialogElement)=>el.open),true);
-            await page.locator('[data-public-privacy-close]').click();
             if(scenario==='keyboard')await page.setViewportSize({width:390,height:360});
           }
           await page.locator('[data-template7-name]').fill('Martín');

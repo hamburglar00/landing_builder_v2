@@ -155,10 +155,11 @@ test("conserva Contact con eventID y deduplicación local", () => {
   assert.equal(
     occurrences(
       source,
-      'window.fbq("track", "Contact", { source: "main_button" }, { eventID: eventId })',
+      'window.fbq("track", eventName, data, { eventID: eventId })',
     ),
     1,
   );
+  assert.match(source, /var eventName = cfg\.ctaMetaEvent \|\| "Contact"/);
   assert.match(source, /CONTACT_DEDUP_TTL_MS = 5 \* 60 \* 1000/);
   assert.match(source, /contact_sent:/);
   assert.match(source, /scheduleMetaClientIpCollection/);

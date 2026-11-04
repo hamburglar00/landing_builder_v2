@@ -29,6 +29,6 @@ export function template9Style(brand: Template9Brand) {
   const reference = brand.primary === violet.primary
     ? ";--t9-card-top:rgba(30,16,54,.92);--t9-card-bottom:rgba(18,9,34,.94);--t9-background-mid:#2a0a4a;--t9-background-low:#150829;--t9-surface:#1a0e2e" : "";
   const neutral = brand.neutralSurface
-    ? ";--t9-card-top:#1b1b1b;--t9-card-bottom:#101010;--t9-background-mid:#141414;--t9-background-low:#0c0c0c;--t9-surface:#171717;--t9-input:#090909;--t9-muted:#a6a6a6;--t9-placeholder:#858585;--t9-link:#d0d0d0;--t9-subtitle:#d5d5d5;--t9-cta-foreground:#121212" : "";
+    ? ";--t9-card-top:#1b1b1b;--t9-card-bottom:#101010;--t9-background-glow:#171717;--t9-overlay-glow:#ffffff05;--t9-background-mid:#111111;--t9-background-low:#0c0c0c;--t9-surface:#171717;--t9-input:#090909;--t9-muted:#a6a6a6;--t9-placeholder:#858585;--t9-link:#d0d0d0;--t9-subtitle:#d5d5d5;--t9-cta-foreground:#121212" : "";
   return `--t9-primary:${brand.primary};--t9-secondary:${brand.secondary};--t9-highlight:${brand.highlight};--t9-deep:${brand.deep}${reference}${neutral}`;
 }

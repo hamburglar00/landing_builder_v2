@@ -27,6 +27,7 @@ type RenderParams = {
   config: PublicLandingConfig;
   cachedPhone?: PublicLandingPhoneResponse | null;
   canonicalUrl?: string;
+  legalBasePath?: string;
 };
 
 type ResponsiveImage = {
@@ -302,8 +303,9 @@ function renderTemplate5Avatar(profileImageUrl: string) {
 }
 
 function renderPrivacyFooter(config: PublicLandingConfig) {
+  if (config.layout?.template === 9) return ""; // T9 links to its branded legal pages.
   const businessName = config.name || "el responsable de esta landing";
-  const template7IdentityNotice = config.layout?.template === 7 || config.layout?.template === 9
+  const template7IdentityNotice = config.layout?.template === 7
     ? '<p><strong>Identidad técnica.</strong> Usamos la cookie propia necesaria <code>lb_cid</code> para conservar su identidad técnica y evitar cuentas duplicadas. Dura dos años. Si elimina las cookies del navegador, puede generarse una identidad nueva.</p>'
     : "";
 
@@ -724,7 +726,7 @@ function renderTemplate8(params: RenderParams) {
 function renderTemplate(params: RenderParams) {
   if (params.config.layout?.template === 9) {
     const brand = getTemplate9Brand(params.config.tracking?.target_provider || "rey_de_ases", params.config.tracking?.skin_code);
-    return renderTemplate9View(params.config) + renderGatewayEntryTransition(params.config.tracking?.target_provider || "rey_de_ases", { stage: "creating", brand: { name: brand.name, logo: brand.logo, background: brand.deep, glow: brand.primary + "55", accent: brand.secondary, accentText: "#ffffff" } }) + TEMPLATE9_UI_SCRIPT;
+    return renderTemplate9View(params.config, false, params.legalBasePath || `/l/${encodeURIComponent(params.slug)}`) + renderGatewayEntryTransition(params.config.tracking?.target_provider || "rey_de_ases", { stage: "creating", brand: { name: brand.name, logo: brand.logo, background: brand.deep, glow: brand.primary + "55", accent: brand.secondary, accentText: "#ffffff" } }) + TEMPLATE9_UI_SCRIPT;
   }
   if (params.config.layout?.template === 8) return renderTemplate8(params);
   if (params.config.layout?.template === 7) return renderTemplate7(params);
@@ -800,7 +802,7 @@ export function renderClassicTemplate7InlineHtml(params: RenderParams, deviceIdS
   const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
   const isTemplate8 = config.layout?.template === 8;
   const runtimeAsset = renderTemplate7RuntimeAsset(params.slug, config, deviceIdScript);
-  const html = `${runtimeAsset.preload}${runtimeAsset.config}${isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug: params.slug, landingId: config.id || "", deviceIdScript }))}${buildPreloadLinks(config)}<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS + (config.layout?.template === 9 ? TEMPLATE9_CSS : "")}</style>${pixelScriptForTemplate(pixelId, params.slug, config.tracking?.phoneCountryCode || "54", 7)}${buildPixelNoscript(pixelId)}${renderTemplate({ ...params, config })}${renderPrivacyFooter(config.layout?.template === 9 ? config : { ...config, layout: { ...config.layout, template: 0 } })}${runtimeAsset.script}${resourceWarmup(config)}`;
+  const html = `${runtimeAsset.preload}${runtimeAsset.config}${isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug: params.slug, landingId: config.id || "", deviceIdScript }))}${buildPreloadLinks(config)}<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS + (config.layout?.template === 9 ? TEMPLATE9_CSS : "")}</style>${pixelScriptForTemplate(pixelId, params.slug, config.tracking?.phoneCountryCode || "54", 7)}${buildPixelNoscript(pixelId)}${renderTemplate({ ...params, config, legalBasePath: `/${encodeURIComponent(params.slug)}` })}${renderPrivacyFooter(config.layout?.template === 9 ? config : { ...config, layout: { ...config.layout, template: 0 } })}${runtimeAsset.script}${resourceWarmup(config)}`;
   if (isTemplate8) return html;
   const reentry = buildTemplate7ReentryScript(template7GatewayOrigin(config), `/${encodeURIComponent(params.slug)}`, config.tracking?.target_provider !== "multi_skin");
   return reentry ? reentry + guardTemplate7ReentryScripts(html) : html;
