@@ -1,5 +1,13 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Consumo de consultas del chat y cierre de pruebas (03/11/2026)
+
+- El usuario autorizó corregir las consultas repetitivas detectadas durante el bloqueo de Vercel: detenerlas ante una sesión rechazada, reducir las consultas sin novedades y cerrar los navegadores de prueba. No modificar operaciones financieras, creación de cuentas, permisos del servidor ni tracking comercial.
+- Implementación única en Atrio para los cuatro gateways, chat completo firmado y acceso legacy. Una respuesta 401 detiene los trabajos de mensajes y presencia de ese token en memoria; un token nuevo vuelve a habilitar su conversación. No renovar identidad ni crear una cuenta como respuesta al rechazo. Un 403 de una acción individual no invalida todo el chat.
+- Mensajes cada 2 s mientras hay actividad reciente y cada 10 s tras un minuto sin cambios/interacciones. Widget cerrado: consulta cada 30 s para conservar avisos y contador; presencia suspendida. Pestaña oculta, pagehide o sin conexión: pausar y cancelar las consultas pendientes, reanudando al volver. Una sola lectura en curso, plazo de 12 s incluyendo el cuerpo y espera creciente ante fallos transitorios, respetando Retry-After. Conservar presentación, introducción ordenada y mensajes no leídos; no marcar como visto mientras esté cerrado u oculto.
+- Las verificaciones de navegador de Atrio tienen cierre en finally, límite de duración y cierre ante las señales de terminación admitidas por Playwright. Sus transportes están aislados antes de navegar. No ejecutar pruebas de carga ni sesiones sintéticas persistentes en producción.
+- Publicado en Atrio `eabf24f`, deployment `dpl_CV6hsor9mZJqTRoC9q6u1BT6UHzs`, con commit productivo coincidente y login público HTTP 200. Pasaron 55 pruebas focales, 44 escenarios Chromium/WebKit, tipos, lint y build. Sin migración, API2 ni nueva publicación de los padres de los gateways. Las páginas abiertas deben recibir el JavaScript nuevo. [Evidencia y verificaciones](../../internal-chat/docs/validation/chat-polling-20261103.json).
+
 ### Flujo de retiro separado de avisos en Full Carga (03/11/2026)
 
 - El usuario separó los pedidos de monto/CBU/CVU y confirmación de la solicitud por chat de los avisos operativos. Incorporar «Flujo de retiro» como switch independiente, apagado por defecto también en bots existentes; el usuario confirmó expresamente este valor. «Avisos de retiro» conserva su preferencia y comprende procesamiento, pendientes, pagos, errores, restricciones y cancelaciones.
