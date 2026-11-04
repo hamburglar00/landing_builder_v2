@@ -78,6 +78,8 @@ export function buildRuntimeConfig({ slug, config }: Props) {
     postUrl: config.tracking?.postUrl || "",
     landingTag: config.tracking?.landingTag || "LP",
     sendContactPixel: config.tracking?.sendContactPixel !== false,
+    ctaMetaEvent: [7, 8, 9].includes(Number(config.layout?.template))
+      ? config.tracking?.ctaMetaEvent === "CompleteRegistration" ? "CompleteRegistration" : "Lead" : null,
     ctaDestination: config.layout?.template === 7 ? "atrio" : "whatsapp",
     targetProvider: config.tracking?.target_provider === "multi_skin"
       ? "multi_skin"
@@ -1084,7 +1086,10 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
       function firePixelContact(eventId) {
         try {
           if (!cfg.sendContactPixel || !window.fbq) return;
-          window.fbq("track", "Contact", { source: "main_button" }, { eventID: eventId });
+          var eventName = cfg.ctaMetaEvent || "Contact";
+          var data = { source: "main_button" };
+          if (eventName === "CompleteRegistration") data.status = "registered";
+          window.fbq("track", eventName, data, { eventID: eventId });
         } catch (e) {}
       }
 
@@ -1406,6 +1411,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
               var assignedGerenciaSnapshot = atrioMode ? {} : extractAssignedGerenciaSnapshot(phoneData);
               var payload = {
                 event_name: "Contact",
+                cta_meta_event: gatewayMode ? cfg.ctaMetaEvent : undefined,
                 target_provider: gatewayMode ? cfg.targetProvider : undefined,
                 skin_code: gatewayMode && cfg.targetProvider === "multi_skin" ? cfg.skinCode : undefined,
                 meta_pixel_id: String(cfg.pixelId || "").trim() || undefined,

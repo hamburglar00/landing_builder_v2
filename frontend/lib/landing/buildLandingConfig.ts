@@ -39,6 +39,7 @@ export interface LandingConfigPayload {
     postUrl: string;
     landingTag: string;
     sendContactPixel: boolean;
+    ctaMetaEvent?: "Lead" | "CompleteRegistration";
     ctaDestination?: "whatsapp" | "atrio";
     target_provider?: TargetProvider;
     skin_code?: MultiSkinCode;
@@ -248,6 +249,8 @@ export function buildLandingConfig({
       postUrl,
       landingTag,
       sendContactPixel: config.sendContactPixel,
+      ...(["template7", "template8", "template9"].includes(config.template)
+        ? { ctaMetaEvent: config.ctaMetaEvent === "CompleteRegistration" ? "CompleteRegistration" as const : "Lead" as const } : {}),
       ctaDestination: (config.template === "template7" || config.template === "template8" || config.template === "template9") ? "atrio" : "whatsapp",
       ...((config.template === "template7" || config.template === "template8" || config.template === "template9") ? { target_provider: config.targetProvider } : {}),
       ...((config.template === "template7" || config.template === "template8" || config.template === "template9") && config.targetProvider === "multi_skin"

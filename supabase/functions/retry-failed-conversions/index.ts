@@ -26,6 +26,7 @@ import {
 } from "../conversions/pixel_attribution.ts";
 import { workspaceCapiEnabled, WORKSPACE_CAPI_DISABLED_STATUS } from "../conversions/workspace_capi.ts";
 import { resolvePurchaseEventSourceUrl, sourceUrlFromPayload } from "../conversions/purchase_source_url.ts";
+import { landingCtaCapiEnabled } from "../conversions/landing_cta_event.ts";
 import { hasActivePurchaseIngestEvent } from "../conversions/purchase_ingest.ts";
 
 const corsHeaders = {
@@ -1824,7 +1825,7 @@ async function retrySingleContactLeadCapiEvent(
     return;
   }
 
-  if (eventName === "Contact" && config.send_contact_capi === false) {
+  if (eventName === "Contact" && (config.send_contact_capi === false || !landingCtaCapiEnabled(config, eventName, row))) {
     await skip(
       JSON.stringify({
         event_name: eventName,

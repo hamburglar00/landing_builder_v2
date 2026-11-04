@@ -33,7 +33,7 @@ if(write)await writeFile(file,manifest);else if(await readFile(file,'utf8')!==ma
 const publicBundle=await build({absWorkingDir:path.join(root,'frontend'),entryPoints:['components/public-landing/PublicLandingRuntimeScript.tsx'],bundle:true,write:false,platform:'node',format:'cjs',target:'es2020',jsx:'automatic',external:['react','react/jsx-runtime']});
 const publicLoaded={exports:{}};
 new Function('module','exports','require',publicBundle.outputFiles[0].text)(publicLoaded,publicLoaded.exports,require);
-const publicSource=publicLoaded.exports.buildPublicLandingRuntimeSource();
+const publicSource=publicLoaded.exports.buildPublicLandingRuntimeSource().replace(/^[\t ]+$/gm,'').trimEnd()+'\n';
 const publicName=`landing-${createHash('sha256').update(publicSource).digest('hex').slice(0,24)}.js`;
 const publicFile=path.join(output,publicName);
 const publicManifest=JSON.stringify({name:publicName},null,2)+'\n';

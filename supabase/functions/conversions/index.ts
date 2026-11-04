@@ -45,6 +45,7 @@ import {
 } from "./event_attribution.ts";
 
 import { urlAttribution } from "./url_attribution.ts";
+import { freezeLandingCtaEvent, landingCtaCapiEnabled, serializeLandingCtaCapture } from "./landing_cta_event.ts";
 import { withOriginalEventTime } from "./event_time.ts";
 import { resolvePurchaseEventSourceUrl } from "./purchase_source_url.ts";
 import {
@@ -4639,7 +4640,8 @@ async function handleContact(
   }
 
   p = guardNewContactLandingAttribution(p, landing);
-  payloadRaw = safePayloadRaw(p);
+  p = freezeLandingCtaEvent(p, landing.landing_config);
+  payloadRaw = serializeLandingCtaCapture(p, safePayloadRaw(p));
 
   const contactEventId = inboundContactEventId || generateEventId();
   const contactEventTime = toValidEventTime(
@@ -4883,6 +4885,7 @@ async function handleContact(
   const isWhatsappCloudApiContact =
     normalizedSourcePlatform(row.source_platform) === "whatsapp_cloud_api";
   const shouldSendContactCapi = effectiveConfig.send_contact_capi &&
+    landingCtaCapiEnabled(effectiveConfig, "Contact", row) &&
     !isWhatsappCloudApiContact;
 
   if (shouldSendContactCapi) {

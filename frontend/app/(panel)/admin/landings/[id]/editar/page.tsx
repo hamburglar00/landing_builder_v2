@@ -712,7 +712,7 @@ export default function AdminLandingEditarPage() {
             <div className="rounded-lg border border-zinc-800 bg-zinc-950/30 px-3 py-2">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs font-medium text-zinc-300">Enviar Contact via Pixel</p>
+                  <p className="text-xs font-medium text-zinc-300">{["template7", "template8", "template9"].includes(landing.config.template) ? "Enviar evento del CTA via Pixel" : "Enviar Contact via Pixel"}</p>
                 </div>
                 <button
                   type="button"

@@ -537,8 +537,8 @@ Deno.test("CompleteRegistration website CAPI uses Meta standard event shape", as
   );
   assert("user_data" in event, "user_data is required by CAPI");
   assert(
-    !("custom_data" in event),
-    "CompleteRegistration must not invent custom_data unless explicitly provided",
+    (event.custom_data as Record<string, unknown>)?.status === "registered",
+    "CompleteRegistration includes the approved registration status",
   );
 });
 

@@ -93,6 +93,7 @@ function globalConfig(config: LandingThemeConfig) {
   return {
     marketCountry: config.marketCountry,
     sendContactPixel: config.sendContactPixel,
+    ctaMetaEvent: config.ctaMetaEvent,
     ctaDestination: config.ctaDestination,
     atrioRedirectUrl: config.atrioRedirectUrl,
     atrioClientId: config.atrioClientId,

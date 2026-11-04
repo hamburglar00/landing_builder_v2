@@ -29,6 +29,13 @@ async function main(){
           console.log(`${browserName} ${classic?'classic':'builder'} ${provider} ${scenario}`);
           const context=await browser.newContext({userAgent:ua,viewport:scenario==='desktop'?{width:1440,height:900}:scenario==='small-screen'?{width:320,height:568}:{width:390,height:844}});
           const page=await context.newPage(),errors:string[]=[],requests:{path:string;payload:Record<string,any>}[]=[];
+          const ctaMetaEvent = scenario === 'fresh-meta' || scenario === 'retry' ? 'CompleteRegistration' as const : 'Lead' as const;
+          await context.addInitScript(() => {
+            (window as any).__ctaPixelEvents=[];
+            (window as any).fbq=(...args:any[])=>{
+              if(args[0]==='track'&&['Lead','CompleteRegistration','Contact'].includes(args[1]))(window as any).__ctaPixelEvents.push(args);
+            };
+          });
           const beacons:Record<string,any>[]=[];
           let contactSeen!:()=>void;const contactReady=new Promise<void>(resolve=>{contactSeen=resolve});
           await context.exposeBinding('__auditContactBeacon',(_source,body:string)=>{beacons.push(JSON.parse(body).payload);contactSeen()});
@@ -45,7 +52,7 @@ async function main(){
           let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve});let attempts=0;
           const origin=classic?'https://classic.entry.invalid':'https://builder.entry.invalid';
           const url=origin+(classic?'/fixture':'/l/fixture')+(scenario==='organic'?'':'?fbclid=CurrentFixtureClick&utm_source=facebook');
-          const theme={...switchLandingTemplate(DEFAULT_CONFIG,'template9'),targetProvider:provider,multiSkinCode:scenario==='bet30'?'bet30' as const:'ganamos_plus' as const};
+          const theme={...switchLandingTemplate(DEFAULT_CONFIG,'template9'),ctaMetaEvent,targetProvider:provider,multiSkinCode:scenario==='bet30'?'bet30' as const:'ganamos_plus' as const};
           const payload=buildLandingConfig({id:id(1),name:'fixture',comment:'',pixelId:'123456789',postUrl:'https://events.invalid/conversions',landingTag:'TEST',config:theme});
           const config={...payload,layout:{...payload.layout,ctaPosition:'bottom'}};
           const html=classic?renderClassicTemplate7Html({slug:'fixture',config},`function getOrCreateDeviceId(){return '${id(9)}';}`):renderPublicLandingHtml({slug:'fixture',config});
@@ -67,6 +74,10 @@ async function main(){
             if(u.pathname==='/api/client-identity/bootstrap')return route.fulfill({json:{ok:true}});
             if(u.pathname==='/api/template7/destination')return route.fulfill({json:advisor});
             if(u.pathname==='/api/template7/prepare'||u.pathname==='/api/template7/start'){
+              const events=await page.evaluate(()=>(window as any).__ctaPixelEvents);
+              assert.equal(events.length,1,'one selected event precedes creation, including a failed attempt');
+              assert.equal(events[0][1],ctaMetaEvent);
+              if(ctaMetaEvent==='CompleteRegistration')assert.equal(events[0][2].status,'registered');
               attempts++;if(scenario==='retry'&&attempts===1)return route.fulfill({status:503,json:{error:'integration_pending',retryable:false}});
               return route.fulfill({json:{handoff_url:origins[provider]+(classic?'/start?t=fixture-valid':'/prepare?t=p1.fixture-valid')+'&ef=e1.signed-fixture'+(scenario==='bet30'?'&skin=bet30':'')}});
             }

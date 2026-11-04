@@ -3,7 +3,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 const GLOBAL_CONFIG_KEYS = [
-  "marketCountry", "sendContactPixel", "ctaDestination", "targetProvider",
+  "marketCountry", "sendContactPixel", "ctaMetaEvent", "ctaDestination", "targetProvider",
   "atrioRedirectUrl", "atrioClientId", "atrioId", "atrioSlug",
 ];
 

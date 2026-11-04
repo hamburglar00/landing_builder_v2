@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { frozenLandingCtaEvent } from "./landing_cta_event.ts";
 
 // Shared types kept in sync with conversions/index.ts
 export interface ConversionsConfig {
@@ -962,17 +963,20 @@ export async function buildMetaRequest(
 ): Promise<MetaRequest> {
   const userData = await buildUserData(row, config.send_geo_capi !== false);
   const srcUrl = row.event_source_url || "";
+  const metaEventName = eventName === "Contact" ? frozenLandingCtaEvent(row) || eventName : eventName;
 
   // deno-lint-ignore no-explicit-any
   const eventPayload: Record<string, any> = {
-    event_name: eventName,
+    event_name: metaEventName,
     event_time: eventTime,
     event_id: eventId,
     action_source: "website",
     event_source_url: srcUrl,
     user_data: userData,
   };
-  if (customData) eventPayload.custom_data = customData;
+  if (customData || metaEventName === "CompleteRegistration") eventPayload.custom_data = {
+    ...(metaEventName === "CompleteRegistration" ? { status: "registered" } : {}), ...customData,
+  };
 
   // deno-lint-ignore no-explicit-any
   const body: Record<string, any> = { data: [eventPayload] };

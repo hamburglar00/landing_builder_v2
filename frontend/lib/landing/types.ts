@@ -187,6 +187,8 @@ export interface LandingThemeConfig {
    * Si es false, solo envia al endpoint de conversiones/CAPI.
    */
   sendContactPixel: boolean;
+  /** Event sent to Meta for the validated CTA of T7/T8/T9. Legacy landings default to Lead. */
+  ctaMetaEvent?: "Lead" | "CompleteRegistration";
   /**
    * Canal final del CTA. WhatsApp mantiene el flujo actual con phone ganador;
    * Atrio conserva el tracking de Contact y redirige a un webchat con promo_code.

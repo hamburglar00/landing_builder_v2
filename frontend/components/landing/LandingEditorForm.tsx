@@ -428,6 +428,14 @@ export function LandingEditorForm({
       )}
 
       {isTemplate9 && <div className="rounded-xl border border-zinc-800 p-4 text-sm text-zinc-300">El logo y los colores se adaptan al casino seleccionado. La tarjeta conserva el diseño de registro de Plantilla 9.</div>}
+      {["template7", "template8", "template9"].includes(config.template) && <div className="rounded-xl border border-zinc-800 p-4">
+        <label htmlFor={fieldId("cta-meta-event")} className="block text-sm font-semibold">Evento de Meta al tocar el CTA</label>
+        <CustomSelect portal id={fieldId("cta-meta-event")} value={config.ctaMetaEvent === "CompleteRegistration" ? "CompleteRegistration" : "Lead"}
+          onChange={value => updateConfig(setConfig, { ctaMetaEvent: value === "CompleteRegistration" ? "CompleteRegistration" : "Lead" })}
+          options={[{ value: "Lead", label: "Lead" }, { value: "CompleteRegistration", label: "CompleteRegistration" }]}
+          className="mt-2" buttonClassName="h-10 bg-zinc-950 px-3 text-sm" />
+        <p className="mt-2 text-xs text-zinc-400">Se envía al ingresar un nombre válido y continuar, antes de conocer el resultado de la creación de cuenta. El envío por servidor también respeta los eventos habilitados del píxel.</p>
+      </div>}
       {(!hidesVisualControls || isTemplate6) && (
         <CollapsibleSection title="CTA">
         <div className="space-y-3">

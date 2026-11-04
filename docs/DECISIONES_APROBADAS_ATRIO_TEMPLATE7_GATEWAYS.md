@@ -1,5 +1,12 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Evento del CTA y mensajes internos de Atrio (04/11/2026)
+
+- El usuario cambió explícitamente el disparador: en T7/T8/T9 emitir el evento elegido al enviar un formulario válido con el CTA, antes del resultado de creación, igual que la referencia pública. El selector ofrece Lead o CompleteRegistration, uno solo por acción; conservar ID, captura, FBC por landing/píxel y deduplicación. Sin elección guardada, usar Lead para preservar las campañas existentes. No cambiar Contact de T1–T6.
+- La captura interna del clic mantiene su registro y lineage actuales. El nombre enviado a Meta se guarda con el evento, de modo que un reintento no lo cambie por una edición posterior. El servidor decide el evento desde la configuración publicada; ignorar marcadores aportados por el navegador. CompleteRegistration agrega status registered. Conservar las preferencias CAPI, las rutas de WhatsApp y Purchase.
+- Ni la llegada visible, ni el primer mensaje humano ni sus reintentos emiten eventos a Meta desde Atrio. Conservar mensajes, bot, avisos y estadísticas internas de personas que escribieron; excluir mensajes automáticos de esa métrica. Una única implementación cubre widget, chat completo y los cuatro gateways.
+- API2 permanece sólo en local: cron de cierre confirmado cada cinco minutos y logs HG observacionales, acotados y sin datos de cuenta o credenciales. No modificar saldos, estados, reintentos monetarios ni filas históricas para verificar el diagnóstico.
+
 ### Editor y presentación responsive de Template 9 (04/11/2026)
 
 - Ocultar el campo «País donde circulará la landing» en todos los editores. Conservar la asignación automática AR/PY por workspace y su persistencia; no cambiar tracking ni validación de teléfonos.

@@ -11,6 +11,7 @@ export type PublicLandingConfig = {
     postUrl: string;
     landingTag: string;
     sendContactPixel?: boolean;
+    ctaMetaEvent?: "Lead" | "CompleteRegistration";
     ctaDestination?: "whatsapp" | "atrio" | string;
     target_provider?: "rey_de_ases" | "multi_skin" | "ases_del_norte" | "ganamos_net";
     skin_code?: import("@/lib/multi-skin-catalog").MultiSkinCode;
