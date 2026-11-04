@@ -35,3 +35,5 @@ Las migraciones se aplicaron en ambos proyectos y sus registros MCP se alinearon
 4. Verificar los commits activos, cron/outbox/catálogo y lecturas públicas. Las mejoras de segundos se calcularán con nuevas cohortes reales, sin sumar percentiles de etapas que se solapan.
 
 Estado: validación y publicación en curso. Las referencias finales se completan al verificar producción.
+
+El primer build remoto del constructor detectó que `effectiveSkinEntry.test.ts` importaba el repositorio hermano del clásico, disponible solo en el workspace. Se excluyó exclusivamente ese archivo del build de aplicación y se añadió `test:entry-integration` con configuración TypeScript propia, para conservar tanto su comprobación estricta como su ejecución local. El resto de pruebas y el código productivo siguen en la comprobación original.
