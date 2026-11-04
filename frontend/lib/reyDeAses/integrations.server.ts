@@ -1,3 +1,4 @@
+import { safeProvisionTiming } from "./performance.server";
 import type { AssignedAdvisor, Api2ResolveAccountRequest, HandoffResult, LinkedProviderAccount, TargetAccount, ResolvedPlayer, PlayerResolveRequest } from "./contracts";
 import type { MultiSkinCode, TargetProvider } from "../landing/types";
 import { isDeviceId } from "./clientIdentity.server";
@@ -160,7 +161,8 @@ export async function resolveTargetAccount(request: Api2ResolveAccountRequest): 
         data.platform !== API2_PLATFORM_BY_PROVIDER[request.target_provider]) {
       throw new TargetIntegrationError("upstream_unavailable");
     }
-    return { username, password, platform: request.target_provider, created, externalAccountId: request.external_user_id };
+    const provisionTiming = safeProvisionTiming(response.headers.get("server-timing"));
+    return { username, password, platform: request.target_provider, created, externalAccountId: request.external_user_id, ...(provisionTiming ? { provisionTiming } : {}) };
   } catch (error) {
     if (error instanceof TargetIntegrationError) throw error;
     throw new TargetIntegrationError("upstream_unavailable");

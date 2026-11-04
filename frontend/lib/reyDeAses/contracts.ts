@@ -63,6 +63,7 @@ export type TargetAccount = {
   platform: TargetProvider;
   created: boolean;
   externalAccountId?: string | null;
+  provisionTiming?: string;
 };
 
 export type LinkedProviderAccount = {

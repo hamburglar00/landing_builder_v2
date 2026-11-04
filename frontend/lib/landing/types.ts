@@ -53,7 +53,8 @@ export type TemplateOption =
   | "template5"
   | "template6"
   | "template7"
-  | "template8";
+  | "template8"
+  | "template9";
 
 /**
  * Motor que sirve la URL publica de una landing creada en el constructor.

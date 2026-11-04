@@ -91,6 +91,7 @@ function templateNumberForOption(template: unknown): number {
   if (value === "template5") return 5;
   if (value === "template7") return 7;
   if (value === "template8") return 8;
+  if (value === "template9") return 9;
   return 1;
 }
 
@@ -258,7 +259,7 @@ Deno.serve(async (req) => {
         (rawConfig.leadCapture as Record<string, unknown>) ?? {};
       const rawConfigLeadCaptureFields =
         (rawConfigLeadCapture.fields as Record<string, unknown>) ?? {};
-      const publishedTemplate = rawConfig.template === "template8" ? 8 : rawConfig.template === "template7" ? 7 : Number(
+      const publishedTemplate = rawConfig.template === "template9" ? 9 : rawConfig.template === "template8" ? 8 : rawConfig.template === "template7" ? 7 : Number(
         ((cfg.layout as Record<string, unknown> | undefined)?.template) ??
           templateNumberForOption(rawConfig.template),
       );
@@ -270,9 +271,9 @@ Deno.serve(async (req) => {
         workspaceCurrency,
         tracking: {
           ...tracking,
-          ctaDestination: (publishedTemplate === 7 || publishedTemplate === 8) ? "atrio" : tracking.ctaDestination,
-          ...((publishedTemplate === 7 || publishedTemplate === 8) ? { target_provider: targetProviderForTemplate7(rawConfig) } : {}),
-          ...((publishedTemplate === 7 || publishedTemplate === 8) && targetProviderForTemplate7(rawConfig) === "multi_skin"
+          ctaDestination: (publishedTemplate === 7 || publishedTemplate === 8 || publishedTemplate === 9) ? "atrio" : tracking.ctaDestination,
+          ...((publishedTemplate === 7 || publishedTemplate === 8 || publishedTemplate === 9) ? { target_provider: targetProviderForTemplate7(rawConfig) } : {}),
+          ...((publishedTemplate === 7 || publishedTemplate === 8 || publishedTemplate === 9) && targetProviderForTemplate7(rawConfig) === "multi_skin"
             ? { skin_code: publicSkinCode(rawConfig.multiSkinCode, tracking.skin_code) }
             : {}),
           postUrl: effectivePostUrl,
@@ -314,17 +315,17 @@ Deno.serve(async (req) => {
         } : {}),
         interactions: {
           ...rawInteractions,
-          enabled: (publishedTemplate === 7 || publishedTemplate === 8) ? false : typeof rawConfig.interactionsEnabled === "boolean"
+          enabled: (publishedTemplate === 7 || publishedTemplate === 8 || publishedTemplate === 9) ? false : typeof rawConfig.interactionsEnabled === "boolean"
             ? rawConfig.interactionsEnabled
             : ((rawInteractions.enabled as boolean | undefined) ?? false),
-          whatsappPrefillText: (publishedTemplate === 7 || publishedTemplate === 8) ? "" : typeof rawConfig.whatsappPrefillText === "string"
+          whatsappPrefillText: (publishedTemplate === 7 || publishedTemplate === 8 || publishedTemplate === 9) ? "" : typeof rawConfig.whatsappPrefillText === "string"
             ? rawConfig.whatsappPrefillText
             : ((rawInteractions.whatsappPrefillText as string | undefined) ??
               ""),
         },
         leadCapture: {
           ...rawLeadCapture,
-          enabled: (publishedTemplate === 7 || publishedTemplate === 8) ? false : typeof rawConfigLeadCapture.enabled === "boolean"
+          enabled: (publishedTemplate === 7 || publishedTemplate === 8 || publishedTemplate === 9) ? false : typeof rawConfigLeadCapture.enabled === "boolean"
             ? rawConfigLeadCapture.enabled
             : ((rawLeadCapture.enabled as boolean | undefined) ?? false),
           title: typeof rawConfigLeadCapture.title === "string"
@@ -351,7 +352,7 @@ Deno.serve(async (req) => {
               : ((rawLeadCaptureFields.email as boolean | undefined) ?? true),
           },
         },
-        ...((publishedTemplate === 7 || publishedTemplate === 8) ? {
+        ...((publishedTemplate === 7 || publishedTemplate === 8 || publishedTemplate === 9) ? {
           template7Capture: {
             whatsapp: rawConfig.template7WhatsappEnabled === true,
           },
@@ -386,7 +387,7 @@ Deno.serve(async (req) => {
       ctaGlowColor: toHex(rawConfig.ctaGlowColor, "#000000"),
     } as Record<string, unknown>;
     const templateNumber = templateNumberForOption(themeWithHex.template);
-    const fixedVisualTemplate = templateNumber === 4 || templateNumber === 5 || (templateNumber === 7 || templateNumber === 8);
+    const fixedVisualTemplate = templateNumber === 4 || templateNumber === 5 || (templateNumber === 7 || templateNumber === 8 || templateNumber === 9);
     const rawImages = (themeWithHex.backgroundImages as string[]) ?? [];
 
     const payload = {
@@ -401,9 +402,9 @@ Deno.serve(async (req) => {
         pixelId: data.pixel_id ?? "",
         postUrl: effectivePostUrl,
         landingTag: data.landing_tag ?? "",
-        ctaDestination: (templateNumber === 7 || templateNumber === 8) ? "atrio" : (themeWithHex.ctaDestination === "atrio" ? "atrio" : "whatsapp"),
-        ...((templateNumber === 7 || templateNumber === 8) ? { target_provider: targetProviderForTemplate7(rawConfig) } : {}),
-        ...((templateNumber === 7 || templateNumber === 8) && targetProviderForTemplate7(rawConfig) === "multi_skin"
+        ctaDestination: (templateNumber === 7 || templateNumber === 8 || templateNumber === 9) ? "atrio" : (themeWithHex.ctaDestination === "atrio" ? "atrio" : "whatsapp"),
+        ...((templateNumber === 7 || templateNumber === 8 || templateNumber === 9) ? { target_provider: targetProviderForTemplate7(rawConfig) } : {}),
+        ...((templateNumber === 7 || templateNumber === 8 || templateNumber === 9) && targetProviderForTemplate7(rawConfig) === "multi_skin"
           ? { skin_code: publicSkinCode(rawConfig.multiSkinCode) }
           : {}),
         atrioRedirectUrl: (themeWithHex.atrioRedirectUrl as string) ?? "",
@@ -514,7 +515,7 @@ Deno.serve(async (req) => {
               ?.email as boolean | undefined) ?? true,
         },
       },
-      ...((templateNumber === 7 || templateNumber === 8) ? {
+      ...((templateNumber === 7 || templateNumber === 8 || templateNumber === 9) ? {
         template7Capture: {
           whatsapp: themeWithHex.template7WhatsappEnabled === true,
         },

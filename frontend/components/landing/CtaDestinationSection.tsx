@@ -5,16 +5,16 @@ import type { LandingThemeConfig, TargetProvider } from "@/lib/landing/types";
 import CustomSelect from "@/components/ui/CustomSelect";
 import { MULTI_SKIN_CATALOG, MULTI_SKIN_CODES, type MultiSkinCode } from "@/lib/multi-skin-catalog";
 export function isAtrioUrlValidForSave(config: LandingThemeConfig) {
-  return config.ctaDestination === (["template7", "template8"].includes(config.template) ? "atrio" : "whatsapp");
+  return config.ctaDestination === (["template7", "template8", "template9"].includes(config.template) ? "atrio" : "whatsapp");
 }
 export function CtaDestinationSection({ config, setConfig }: {
   config: LandingThemeConfig; setConfig: (updater: SetStateAction<LandingThemeConfig>) => void; atrioClients?: AtrioClient[];
 }) {
   useEffect(() => {
-    const channel = ["template7", "template8"].includes(config.template) ? "atrio" : "whatsapp";
+    const channel = ["template7", "template8", "template9"].includes(config.template) ? "atrio" : "whatsapp";
     if (config.ctaDestination !== channel) setConfig(prev => ({ ...prev, ctaDestination: channel }));
   }, [config.template, config.ctaDestination, setConfig]);
-  if (config.template !== "template7") return null;
+  if (config.template !== "template7" && config.template !== "template9") return null;
   return <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] p-4">
     <label htmlFor="template7-target-provider" className="block text-sm font-semibold">Casino</label>
           <CustomSelect

@@ -318,3 +318,16 @@ test("production scope makes exactly one database request with server quotas and
     }
   }
 });
+
+test("Template 9 configures and resolves the saved platform without permitting another provider", async () => {
+  const nine = { ...landing, config: { ...landing.config, template: "template9" } };
+  calls.length = 0;
+  const deps = backend({ landing: async () => nine });
+  assert.equal((await handleManagerDestinations(request(configure), deps)).status, 200);
+  const before = calls.length;
+  assert.equal((await handleManagerDestinations(request({ ...configure, targetProvider: "rey_de_ases" }), deps)).status, 409);
+  assert.equal(calls.length, before);
+  const selected = await handleTemplate7Destination(request(selection), ids.device, resolutionBackend({ context: async () => ({ allowed: true, blocked: false, landing: nine, advisors: [client] }) }));
+  assert.equal(selected.status, 200);
+  assert.equal((await selected.json()).targetProvider, "ganamos_net");
+});

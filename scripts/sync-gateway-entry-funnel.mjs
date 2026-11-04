@@ -8,6 +8,7 @@ const sources = [
   ['landing-autologuin/src/lib/entry-funnel-server.ts', 'src/lib/entry-funnel-server.ts'],
   ['landing-autologuin/src/lib/entry-funnel-proxy.ts', 'src/lib/entry-funnel-proxy.ts'],
   ['landing-autologuin/src/lib/entry-funnel-server.test.ts', 'src/lib/entry-funnel-server.test.ts'],
+  ['landing-autologuin/src/lib/entry-funnel-client.test.ts', 'src/lib/entry-funnel-client.test.ts'],
   ['landing-autologuin/src/app/api/entry-funnel/route.ts', 'src/app/api/entry-funnel/route.ts'],
   ['landing-autologuin/src/app/api/preparations/complete/funnel-error.test.ts', 'src/app/api/preparations/complete/funnel-error.test.ts'],
 ];

@@ -87,7 +87,7 @@ test("la plantilla 7 publica un formulario de nombre con asesor de Atrio", () =>
   assert.match(source, /var redirectUrl = gatewayMode \? "" : atrioMode/);
   assert.match(source, /startTemplate7Gateway\(formFn, formPhone, promoCode, atrioData, tracking, params\)/);
   assert.match(source, /navigateTemplate7Handoff\(handoffUrl\)/);
-  assert.match(html, /fetch\("\/api\/client-identity\/bootstrap"/);
+  assert.match(html, /window\.__T7_FETCH_JSON__\("\/api\/client-identity\/bootstrap"/);
   assert.match(html, /credentials: "same-origin", cache: "no-store"/);
   assert.match(html, /cookie propia necesaria <code>lb_cid<\/code>/);
   assert.match(source, /template7AttemptContext = context/);
@@ -175,7 +175,7 @@ test("Template 7 inicia bootstrap antes del Pixel y conserva Contact sin duplica
     landingTag: "TEST", config: { ...DEFAULT_CONFIG, template: "template7" },
   });
   const html = renderPublicLandingHtml({ slug: "prueba-7", config: built as PublicLandingConfig });
-  const bootstrapAt = html.indexOf('fetch("/api/client-identity/bootstrap"');
+  const bootstrapAt = html.indexOf('window.__T7_FETCH_JSON__("/api/client-identity/bootstrap"');
   const pixelAt = html.indexOf("fbq('track', 'PageView')");
   const runtimeAt = html.indexOf('data-template7-runtime defer');
   assert.ok(bootstrapAt > 0 && bootstrapAt < pixelAt && pixelAt < runtimeAt);

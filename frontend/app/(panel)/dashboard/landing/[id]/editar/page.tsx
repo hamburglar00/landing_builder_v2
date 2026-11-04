@@ -153,7 +153,7 @@ function seedAtrioAssignments(
   clients: AtrioClient[],
   stored: LandingAtrioAssignment[],
 ): LandingAtrioAssignment[] {
-  if (stored.length > 0 || (landing.config.ctaDestination !== "atrio" && landing.config.template !== "template7")) return stored;
+  if (stored.length > 0 || (landing.config.ctaDestination !== "atrio" && !["template7", "template9"].includes(landing.config.template))) return stored;
   const match = clients.find((client) =>
     client.id === landing.config.atrioClientId ||
     client.atrio_id === landing.config.atrioId ||
@@ -276,14 +276,14 @@ export default function DashboardLandingEditarPage() {
     if (saving) return;
     setSaveError(null);
     if (landing.config.template === "template8" && !(await fetchTemplate8Permission(userId ?? ""))) { setSaveError("Plantilla 8 no está habilitada para esta cuenta."); return; }
-    if (landing.config.template === "template7") {
+    if (["template7", "template9"].includes(landing.config.template)) {
       try {
         if (!(await fetchTemplate7Permission(userId ?? ""))) {
-          setSaveError("Plantilla 7 no está habilitada para esta cuenta.");
+          setSaveError("Esta plantilla de ingreso no está habilitada para esta cuenta.");
           return;
         }
       } catch {
-        setSaveError("No se pudo verificar el permiso de Plantilla 7. Intentá de nuevo.");
+        setSaveError("No se pudo verificar el permiso de esta plantilla. Intentá de nuevo.");
         return;
       }
     }
@@ -352,7 +352,7 @@ export default function DashboardLandingEditarPage() {
         setSaveError("Elegí al menos un bot de cada casino integrado que usen las tarjetas y esperá a que termine de cargar."); return;
       }
     }
-    if (landing.config.template === "template7" && (!managerDraft?.loaded || managerDraft.provider !== landing.config.targetProvider || !managerDraft.destinations.length)) {
+    if (["template7", "template9"].includes(landing.config.template) && (!managerDraft?.loaded || managerDraft.provider !== landing.config.targetProvider || !managerDraft.destinations.length)) {
       setSaveError("Elegí al menos un bot para la redirección y esperá a que termine de cargar.");
       return;
     }
@@ -394,7 +394,7 @@ export default function DashboardLandingEditarPage() {
         updatedAt: undefined,
       });
 
-      if (configToSave.ctaDestination !== "atrio" && !["template7", "template8"].includes(configToSave.template)) {
+      if (configToSave.ctaDestination !== "atrio" && !["template7", "template8", "template9"].includes(configToSave.template)) {
         await assertLandingGerenciasWorkspaceCompatible(
           landing.id,
           assignments,
@@ -427,7 +427,7 @@ export default function DashboardLandingEditarPage() {
         config: configToSave,
         landingConfig,
       });
-      if (!["template7", "template8"].includes(configToSave.template)) await setLandingGerencias(landing.id, assignments);
+      if (!["template7", "template8", "template9"].includes(configToSave.template)) await setLandingGerencias(landing.id, assignments);
       if (configToSave.template === "template8") {
         const cover = normalizeTemplate8Cover(configToSave.template8Cover);
         for (const provider of new Set(cover.cards.slice(0, cover.cardCount).map(card => card.targetProvider))) {
@@ -435,7 +435,7 @@ export default function DashboardLandingEditarPage() {
           const draft = pageDrafts[provider];
           await requestManagerDestinations({ action: "configure", landingId: landing.id, targetProvider: provider, mode: draft.mode, criterion: draft.criterion, destinations: draft.destinations });
         }
-      } else if (configToSave.template === "template7" && managerDraft) {
+      } else if (["template7", "template9"].includes(configToSave.template) && managerDraft) {
         await requestManagerDestinations({ action: "configure", landingId: landing.id, targetProvider: managerDraft.provider,
           mode: managerDraft.mode, criterion: managerDraft.criterion, destinations: managerDraft.destinations });
       } else {
@@ -821,7 +821,7 @@ export default function DashboardLandingEditarPage() {
           </div>
         </CollapsibleSection>
 
-        {["template7", "template8"].includes(landing.config.template) ? (
+        {["template7", "template8", "template9"].includes(landing.config.template) ? (
           <AtrioRedirectSection
             landing={landing}
             setLanding={setLanding}
@@ -862,7 +862,7 @@ export default function DashboardLandingEditarPage() {
             pixelId={landing.pixelId}
             postUrl={landing.postUrl}
             landingTag={landing.landingTag}
-            getPhoneForPreview={["template7", "template8"].includes(landing.config.template) ? undefined : async () => {
+            getPhoneForPreview={["template7", "template8", "template9"].includes(landing.config.template) ? undefined : async () => {
               try {
                 const base =
                   process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";

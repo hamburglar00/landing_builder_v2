@@ -44,8 +44,8 @@ export async function handleManagerDestinations(request: Request, backend: Desti
     // work while editing its first Atrio configuration, before anything is saved.
     // Writes still require the saved template and casino to match.
     if (input.action === "configure") {
-      if (!["template7", "template8"].includes(String(config.template)) || config.ctaDestination !== "atrio") return json({ error: "Guardá la landing con destino Atrio antes de configurar los bots." }, 409);
-      if (config.template === "template7" && (config.targetProvider || "rey_de_ases") !== input.targetProvider) return json({ error: "El casino elegido no coincide con el guardado en la landing." }, 409);
+      if (!["template7", "template8", "template9"].includes(String(config.template)) || config.ctaDestination !== "atrio") return json({ error: "Guardá la landing con destino Atrio antes de configurar los bots." }, 409);
+      if (["template7", "template9"].includes(String(config.template)) && (config.targetProvider || "rey_de_ases") !== input.targetProvider) return json({ error: "El casino elegido no coincide con el guardado en la landing." }, 409);
     }
     const clients = await backend.workspaceClients(token, landing.user_id, landing.workspace_currency);
     if (!clients.length || clients.some(client => !uuid.test(client.atrio_id))) return json({ error: "No hay asesores válidos en este workspace." }, 409);

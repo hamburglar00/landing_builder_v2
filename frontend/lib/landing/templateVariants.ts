@@ -1,3 +1,4 @@
+import { TEMPLATE9_DEFAULTS } from "./template9";
 import { DEFAULT_CONFIG } from "./mocks";
 import type {
   LandingLeadCaptureConfig,
@@ -122,7 +123,7 @@ export function withCurrentTemplateSnapshot(
 ): LandingThemeConfig {
   return {
     ...config,
-    ctaDestination: (config.template === "template7" || config.template === "template8") ? "atrio" : "whatsapp",
+    ctaDestination: (config.template === "template7" || config.template === "template8" || config.template === "template9") ? "atrio" : "whatsapp",
     templateConfigs: {
       ...(config.templateConfigs ?? {}),
       [config.template]: snapshotTemplateVariant(config),
@@ -146,11 +147,12 @@ export function switchLandingTemplate(
     ...(savedNextVariant ?? {}),
     ...globalConfig(config),
     template: nextTemplate,
-    ...((config.template === "template7" || config.template === "template8") && (nextTemplate !== "template7" && nextTemplate !== "template8") ? {
+    ...(nextTemplate === "template9" && !savedNextVariant ? { ...TEMPLATE9_DEFAULTS, template7WhatsappEnabled: false } : {}),
+    ...((config.template === "template7" || config.template === "template8" || config.template === "template9") && (nextTemplate !== "template7" && nextTemplate !== "template8" && nextTemplate !== "template9") ? {
       ctaDestination: savedNextVariant?.ctaDestination ?? DEFAULT_CONFIG.ctaDestination,
     } : {}),
-    ...((nextTemplate !== "template7" && nextTemplate !== "template8") ? { ctaDestination: "whatsapp" as const } : {}),
-    ...((nextTemplate === "template7" || nextTemplate === "template8") ? {
+    ...((nextTemplate !== "template7" && nextTemplate !== "template8" && nextTemplate !== "template9") ? { ctaDestination: "whatsapp" as const } : {}),
+    ...((nextTemplate === "template7" || nextTemplate === "template8" || nextTemplate === "template9") ? {
       ctaDestination: "atrio" as const,
       socialProofEnabled: false,
       emailCaptureEnabled: false,

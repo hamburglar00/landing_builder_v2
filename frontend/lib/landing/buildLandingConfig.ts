@@ -19,6 +19,7 @@ function templateNumberForOption(template: LandingThemeConfig["template"]) {
   if (template === "template6") return 6;
   if (template === "template7") return 7;
   if (template === "template8") return 8;
+  if (template === "template9") return 9;
   return 1;
 }
 
@@ -247,9 +248,9 @@ export function buildLandingConfig({
       postUrl,
       landingTag,
       sendContactPixel: config.sendContactPixel,
-      ctaDestination: (config.template === "template7" || config.template === "template8") ? "atrio" : "whatsapp",
-      ...((config.template === "template7" || config.template === "template8") ? { target_provider: config.targetProvider } : {}),
-      ...((config.template === "template7" || config.template === "template8") && config.targetProvider === "multi_skin"
+      ctaDestination: (config.template === "template7" || config.template === "template8" || config.template === "template9") ? "atrio" : "whatsapp",
+      ...((config.template === "template7" || config.template === "template8" || config.template === "template9") ? { target_provider: config.targetProvider } : {}),
+      ...((config.template === "template7" || config.template === "template8" || config.template === "template9") && config.targetProvider === "multi_skin"
         ? { skin_code: config.multiSkinCode }
         : {}),
       atrioRedirectUrl: config.atrioRedirectUrl.trim(),
@@ -375,16 +376,16 @@ export function buildLandingConfig({
       template: templateNumberForOption(themeWithHex.template),
     },
     socialProof: {
-      enabled: (themeWithHex.template !== "template7" && themeWithHex.template !== "template8") && themeWithHex.socialProofEnabled,
+      enabled: (themeWithHex.template !== "template7" && themeWithHex.template !== "template8" && themeWithHex.template !== "template9") && themeWithHex.socialProofEnabled,
     },
     interactions: {
-      enabled: fixedVisualTemplate || (themeWithHex.template === "template7" || themeWithHex.template === "template8") ? false : themeWithHex.interactionsEnabled,
-      whatsappPrefillText: fixedVisualTemplate || (themeWithHex.template === "template7" || themeWithHex.template === "template8")
+      enabled: fixedVisualTemplate || (themeWithHex.template === "template7" || themeWithHex.template === "template8" || themeWithHex.template === "template9") ? false : themeWithHex.interactionsEnabled,
+      whatsappPrefillText: fixedVisualTemplate || (themeWithHex.template === "template7" || themeWithHex.template === "template8" || themeWithHex.template === "template9")
         ? ""
         : themeWithHex.whatsappPrefillText.trim(),
     },
     leadCapture: {
-      enabled: fixedVisualTemplate || (themeWithHex.template === "template7" || themeWithHex.template === "template8") ? false : themeWithHex.leadCapture?.enabled === true,
+      enabled: fixedVisualTemplate || (themeWithHex.template === "template7" || themeWithHex.template === "template8" || themeWithHex.template === "template9") ? false : themeWithHex.leadCapture?.enabled === true,
       title: themeWithHex.leadCapture?.title?.trim() || "",
       description: themeWithHex.leadCapture?.description?.trim() || "",
       fields: {
@@ -394,13 +395,13 @@ export function buildLandingConfig({
         email: themeWithHex.leadCapture?.fields?.email === true,
       },
     },
-    ...((themeWithHex.template === "template7" || themeWithHex.template === "template8") ? {
+    ...((themeWithHex.template === "template7" || themeWithHex.template === "template8" || themeWithHex.template === "template9") ? {
       template7Capture: {
         whatsapp: themeWithHex.template7WhatsappEnabled === true,
       },
     } : {}),
     emailCapture: {
-      enabled: !fixedVisualTemplate && (themeWithHex.template !== "template7" && themeWithHex.template !== "template8") && themeWithHex.emailCaptureEnabled === true,
+      enabled: !fixedVisualTemplate && (themeWithHex.template !== "template7" && themeWithHex.template !== "template8" && themeWithHex.template !== "template9") && themeWithHex.emailCaptureEnabled === true,
     },
   };
 }

@@ -121,6 +121,7 @@ const TEMPLATE_OPTIONS: { label: string; value: TemplateOption }[] = [
   { label: "Plantilla 6 (portada)", value: "template6" },
   { label: "Plantilla 7", value: "template7" },
   { label: "Plantilla 8 (Atrio por página)", value: "template8" },
+  { label: "Plantilla 9 (registro)", value: "template9" },
 ];
 
 const LEAD_CAPTURE_DEFAULT_TITLE =
@@ -165,7 +166,7 @@ export function LandingTemplateSection({
           Elegí la plantilla de layout que define qué secciones se configuran.
         </p>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-3">
-          {TEMPLATE_OPTIONS.filter((opt) => (allowTemplate7 || opt.value !== "template7") && (allowTemplate8 || opt.value !== "template8")).map((opt) => (
+          {TEMPLATE_OPTIONS.filter((opt) => (allowTemplate7 || !["template7", "template9"].includes(opt.value)) && (allowTemplate8 || opt.value !== "template8")).map((opt) => (
             <label
               key={opt.value}
               className="flex flex-1 cursor-pointer items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-800"
@@ -187,9 +188,9 @@ export function LandingTemplateSection({
         {!allowTemplate8 && config.template === "template8" ? (
           <p className="text-xs text-amber-300" role="alert">Plantilla 8 ya no está habilitada para esta cuenta. Elegí otra plantilla para guardar cambios.</p>
         ) : null}
-        {!allowTemplate7 && config.template === "template7" ? (
+        {!allowTemplate7 && ["template7", "template9"].includes(config.template) ? (
           <p className="text-xs text-amber-300" role="alert">
-            Plantilla 7 ya no está habilitada para esta cuenta. Elegí otra plantilla para guardar cambios.
+            Esta plantilla de ingreso ya no está habilitada para esta cuenta. Elegí otra plantilla para guardar cambios.
           </p>
         ) : null}
       </div>
@@ -250,12 +251,13 @@ export function LandingEditorForm({
   const isTemplate3 = config.template === "template3";
   const isTemplate4 = config.template === "template4";
   const isTemplate5 = config.template === "template5";
+  const isTemplate9 = config.template === "template9";
   const isTemplate8 = config.template === "template8";
   const isTemplate6 = config.template === "template6" || isTemplate8;
-  const isTemplate7 = config.template === "template7" || isTemplate8;
+  const isTemplate7 = config.template === "template7" || isTemplate8 || isTemplate9;
   const isFixedVisualTemplate =
     config.template === "template4" || config.template === "template5" || isTemplate6;
-  const hidesVisualControls = isTemplate3 || isFixedVisualTemplate;
+  const hidesVisualControls = isTemplate3 || isFixedVisualTemplate || isTemplate9;
   const template4Chat = {
     ...TEMPLATE4_CHAT_DEFAULTS,
     ...(config.template4Chat ?? {}),
@@ -425,6 +427,7 @@ export function LandingEditorForm({
         <LandingTemplateSection config={config} setConfig={setConfig} />
       )}
 
+      {isTemplate9 && <div className="rounded-xl border border-zinc-800 p-4 text-sm text-zinc-300">El logo y los colores se adaptan al casino seleccionado. La tarjeta conserva el diseño de registro de Plantilla 9.</div>}
       {(!hidesVisualControls || isTemplate6) && (
         <CollapsibleSection title="CTA">
         <div className="space-y-3">

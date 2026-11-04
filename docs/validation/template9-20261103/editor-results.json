@@ -1,0 +1,49 @@
+{
+  "passed": 10,
+  "checks": [
+    {
+      "browser": "Chromium",
+      "platform": "Rey de Ases"
+    },
+    {
+      "browser": "Chromium",
+      "platform": "Ases del Norte"
+    },
+    {
+      "browser": "Chromium",
+      "platform": "Ganamos NET"
+    },
+    {
+      "browser": "Chromium",
+      "platform": "Multi Skin"
+    },
+    {
+      "browser": "Chromium",
+      "platform": "Bet30",
+      "drafts": "independent",
+      "writes": 0
+    },
+    {
+      "browser": "WebKit",
+      "platform": "Rey de Ases"
+    },
+    {
+      "browser": "WebKit",
+      "platform": "Ases del Norte"
+    },
+    {
+      "browser": "WebKit",
+      "platform": "Ganamos NET"
+    },
+    {
+      "browser": "WebKit",
+      "platform": "Multi Skin"
+    },
+    {
+      "browser": "WebKit",
+      "platform": "Bet30",
+      "drafts": "independent",
+      "writes": 0
+    }
+  ]
+}

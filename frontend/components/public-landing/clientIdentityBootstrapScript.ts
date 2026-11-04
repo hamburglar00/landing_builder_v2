@@ -10,7 +10,7 @@ export function buildClientIdentityBootstrapScript(destination?: Destination): s
       `\\u${value.charCodeAt(0).toString(16).padStart(4, "0")}`)
     : "null";
   return `<script>
-    ${buildTemplate7BoundedRequestScript()}
+    ${buildTemplate7BoundedRequestScript(true)}
     window.__LB_BOOTSTRAP_IDENTITY__ = function () {
       if (window.__LB_IDENTITY_INFLIGHT__) return window.__LB_IDENTITY_INFLIGHT__;
       var destination = ${destinationConfig};

@@ -525,7 +525,7 @@ export default function AdminClientManagePage() {
               onChange={(e) => setTemplate7Enabled(e.target.checked)}
               className="h-4 w-4 rounded border-zinc-700 bg-zinc-900"
             />
-            Habilitar Plantilla 7 para este cliente
+            Habilitar Plantillas 7 y 9 para este cliente
           </label>
 <label className="inline-flex items-center gap-2 text-xs text-zinc-200">
             <input

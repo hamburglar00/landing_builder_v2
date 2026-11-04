@@ -148,8 +148,8 @@ test("diagnostic context follows the confirmed account handoff; invalid context 
     assert.equal(response.status,200);
     const body=await response.json();
     assert.equal(body.username,"player");
-    assert.deepEqual(captured,candidate===context?context:undefined);
-    assert.deepEqual(body.entry_funnel,candidate===context?context:undefined);
+    assert.deepEqual(captured,candidate===context?{...context,account_kind:"existing"}:undefined);
+    assert.deepEqual(body.entry_funnel,candidate===context?{...context,account_kind:"existing"}:undefined);
   }
 });
 

@@ -1,5 +1,9 @@
 "use client";
 
+import { renderTemplate9View } from "@/components/public-landing/template9View";
+import { TEMPLATE9_CSS } from "@/components/public-landing/template9Css";
+import { PUBLIC_LANDING_CSS } from "@/components/public-landing/publicLandingCss";
+import { buildLandingConfig } from "@/lib/landing/buildLandingConfig";
 import { useEffect, useRef, useState } from "react";
 import type { LandingThemeConfig } from "@/lib/landing/types";
 import { getColorHex, SYSTEM_FONT_FAMILY } from "@/lib/landing/helpers";
@@ -1067,6 +1071,11 @@ export function LandingPreview({
         </div>
       </div>
     );
+  }
+  if (config.template === "template9") {
+    const preview = buildLandingConfig({ id: "", name: "Vista previa", comment: "", pixelId: "", postUrl: "", landingTag: "", config });
+    const html = `<!doctype html><html lang="es"><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>${PUBLIC_LANDING_CSS.slice(0, PUBLIC_LANDING_CSS.indexOf("body.public-lead-capture-open"))}${TEMPLATE9_CSS}</style></head><body>${renderTemplate9View({ ...preview, layout: { ...preview.layout, ctaPosition: config.ctaPosition } })}</body></html>`;
+    return <iframe title="Vista previa de Plantilla 9" sandbox="" srcDoc={html} className={compact ? "h-full min-h-[240px] w-full rounded-3xl border-0" : "mx-auto aspect-[390/844] w-full max-w-[390px] rounded-3xl border-0"} />;
   }
   return renderTemplate1();
 }

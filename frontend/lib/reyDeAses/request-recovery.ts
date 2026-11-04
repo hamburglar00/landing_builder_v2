@@ -43,6 +43,14 @@ export async function fetchWithEntryRecovery(url: string, init: RequestInit, onR
     if (onRetry) onRetry();
     const delay = Math.max(Number.isFinite(retryAfter) ? retryAfter : 0, [500, 1500, 3500][attempt]);
     if (Date.now() + delay >= deadline) { if (response) return response; throw failure || new Error('entry_recovery_pending'); }
+    // Purely observational: keep the same identity, request body and retry policy.
+    try {
+      const browser = window as typeof window & { __entryFunnel?: { emit(name: string, details: Record<string, unknown>): void }; __gatewayEntryFunnel?: { emit(name: string, details: Record<string, unknown>): void } };
+      const diagnostic = browser.__gatewayEntryFunnel || browser.__entryFunnel;
+      const path = new URL(url, location.origin).pathname;
+      const stage = path === "/api/session/recover" ? "session" : path === "/start" ? "login" : "account";
+      diagnostic?.emit("entry_retry", { error_stage: stage, ...(response ? { status: response.status } : {}) });
+    } catch { /* Diagnostics never control recovery or expose the URL. */ }
     await new Promise<void>((resolve, reject) => {
       const abort = () => { clearTimeout(pause); init.signal?.removeEventListener('abort', abort); reject(init.signal?.reason || new Error('entry_cancelled')); };
       const pause = setTimeout(() => { init.signal?.removeEventListener('abort', abort); resolve(); }, delay);

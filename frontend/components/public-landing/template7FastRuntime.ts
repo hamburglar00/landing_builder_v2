@@ -19,6 +19,7 @@ export function buildTemplate7RuntimeConfig(
 ) {
   const isTemplate8 = config.layout?.template === 8;
   return { ...buildRuntimeConfig({ slug, config }), socialProofItems: [], automaticLandingSelection: !!classicDeviceIdScript,
+    ...(config.layout?.template === 9 ? { template: 7, entryTemplate: 9, ctaDestination: "atrio" } : {}),
     ...(isTemplate8 ? { template: 7, entryTemplate: 8, template8: true, ctaDestination: "atrio", targetProvider: "", cardIndex: null,
       template8Cards: (config.content?.template8?.cards || []).map((card, i) => {
         const skinCode = card.targetProvider === "multi_skin" ? card.multiSkinCode ?? "ganamos_plus" : null;
@@ -163,6 +164,7 @@ export function buildTemplate7FastRuntime(
           // The server still reuses this identity on submit. A late background
           // response must never pull an actively typing visitor off the form.
           if (!isCurrent() || window.__T7_ENTRY_STARTED__ || window.__T7_FORM_INTERACTED__) return;
+          try { if(window.__entryFunnel)window.__entryFunnel.beginAttempt(); } catch (_) {}
           var entryAttempt = ++template7EntryGeneration;
           window.__T7_ENTRY_STARTED__ = true; clickLocked = true;
           if (template7Transition) template7Transition.start('preparing');
@@ -172,7 +174,7 @@ export function buildTemplate7FastRuntime(
               entry_funnel:window.__entryFunnel?window.__entryFunnel.context():undefined,
               atrio_client_id:advisor.atrioClientId || advisor.atrio_client_id,advisor_id:advisor.atrioId || advisor.atrio_id,
               advisor_slug:advisor.atrioSlug || advisor.atrio_slug,name:name,promo_code:promo,attribution:template7RecoveryAttribution()})
-          }).then(function(response){if(!response.ok){var error=new Error('entry pending');error.status=response.status;throw error;}return response.json()}).then(function(result){
+          }).then(function(response){try{if(window.__entryFunnel)window.__entryFunnel.timings(response.headers.get('server-timing'));}catch(_){}if(!response.ok){var error=new Error('entry pending');error.status=response.status;throw error;}return response.json()}).then(function(result){
             if (entryAttempt !== template7EntryGeneration) return;
             if(!result || typeof result.handoff_url !== 'string')throw new Error('entry pending');
             navigateTemplate7Handoff(template7TransitionUrl(result.handoff_url));

@@ -54,7 +54,7 @@ export async function handleTemplate7Destination(
     if (!context.allowed) return respond({ error: "rate_limited" }, 429);
     const landing = context?.landing;
     const config = resolveEffectiveLandingConfig(landing?.config);
-    if (!landing || landing.id !== input.landing_id || landing.name !== input.landing_slug || !["template7", "template8"].includes(String(config.template)) || config.ctaDestination !== "atrio") return respond({ error: "landing_not_found" }, 404);
+    if (!landing || landing.id !== input.landing_id || landing.name !== input.landing_slug || !["template7", "template8", "template9"].includes(String(config.template)) || config.ctaDestination !== "atrio") return respond({ error: "landing_not_found" }, 404);
     const isTemplate8 = config.template === "template8";
     const provider = isTemplate8 ? template8Provider(config, input.card_index) : config.targetProvider || "rey_de_ases";
     if (isTemplate8 && !provider || !isTemplate8 && input.card_index !== undefined) return respond({ error: "invalid_page" }, 400);

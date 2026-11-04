@@ -196,7 +196,7 @@ export default function DashboardLandingsPage() {
       if (atrioAssignments.length > 0) {
         await setLandingAtrioAssignments(id, atrioAssignments);
       }
-      if (landing.config.template === "template7") {
+      if (["template7", "template9"].includes(landing.config.template)) {
         await copyTemplate7ManagerDestinations(landing.id, id, landing.config.targetProvider || "rey_de_ases");
       }
       router.push(`/dashboard/landing/${id}/editar`);

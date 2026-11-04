@@ -132,8 +132,12 @@ test("destination prewarming starts after identity bootstrap, before image disco
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "synthetic";
   try {
     const html = renderPublicLandingHtml({ slug: "test", config: fixture() });
-    assert.ok(html.indexOf("/api/template7/destination") < html.indexOf("<style data-template7-critical>"));
-    assert.ok(html.indexOf("/api/client-identity/bootstrap") < html.indexOf("/api/template7/destination"));
+    // Inspect request calls, not the timing observer's allowlisted path strings.
+    const identityCall=html.indexOf('window.__T7_FETCH_JSON__("/api/client-identity/bootstrap"');
+    const destinationCall=html.indexOf('window.__T7_FETCH_JSON__("/api/template7/destination"');
+    assert.ok(identityCall>=0&&destinationCall>=0);
+    assert.ok(destinationCall<html.indexOf("<style data-template7-critical>"));
+    assert.ok(identityCall<destinationCall);
     assert.match(html, /if \(!window\.__PUBLIC_LANDING_ATRIO_PROMISES\[slug\]\)/);
     assert.doesNotMatch(html, /landing-atrio\?name/);
   } finally {

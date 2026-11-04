@@ -73,7 +73,7 @@ export function isTemplate7Landing(landing: LandingRow): boolean {
   const published = landing.landing_config && typeof landing.landing_config === "object"
     ? landing.landing_config as Record<string, unknown> : {};
   const layout = published.layout && typeof published.layout === "object" ? published.layout as Record<string, unknown> : {};
-  return (raw.template === "template7" || raw.template === "template8" || layout.template === 7) && raw.ctaDestination === "atrio";
+  return (raw.template === "template7" || raw.template === "template8" || raw.template === "template9" || layout.template === 7 || layout.template === 9) && raw.ctaDestination === "atrio";
 }
 
 export function configuredTargetProvider(landing: LandingRow): TargetProvider | null {
@@ -250,7 +250,7 @@ async function handleTemplate7StartInner(
       throw new TargetIntegrationError("upstream_unavailable");
     }
     const prepared: Template7PreparedStart = {
-      ...(payload.entry_funnel ? { entryFunnel: payload.entry_funnel } : {}),
+      ...(payload.entry_funnel ? { entryFunnel: { ...payload.entry_funnel, account_kind: account.created ? "new" : "existing" } } : {}),
       provider,
       advisor: resolvedAdvisor,
       deviceId: effectiveDeviceId,
@@ -264,7 +264,7 @@ async function handleTemplate7StartInner(
     const response = accountReadyResponder ? await accountReadyResponder(prepared)
       : json({ handoff_url: (await finalizeTemplate7PreparedStart(prepared, deps)).handoff_url }, 200);
     stageTimings.total = Math.round(performance.now() - flowStartedAt);
-    response.headers.set("Server-Timing", template7ServerTiming(prepared.accountResolutionMs!, account.created, stageTimings));
+    response.headers.set("Server-Timing", template7ServerTiming(prepared.accountResolutionMs!, account.created, stageTimings, account.provisionTiming));
     return response;
   } catch (error) {
     if (error instanceof TargetIntegrationError) return json({ error: error.code, retryable: error.retryable }, 503);

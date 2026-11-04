@@ -58,3 +58,16 @@ test("beacons are accepted; database refusal and outages remain bounded diagnost
   assert.equal((await handleEntryFunnel(request(batch), { async write() { return false; } })).status, 429);
   assert.equal((await handleEntryFunnel(request(batch), { async write() { throw new Error("sensitive database detail"); } })).status, 503);
 });
+
+test("attempts and finite phases preserve old payloads and reject diagnostic free text", () => {
+  const attempt = { attempt_id: flow, attempt_number: 2, account_kind: "existing" };
+  const measured = { ...event, ...attempt, name: "stage_timing", phase: "provider_create", duration_ms: 250 };
+  assert.deepEqual(validateEntryFunnelBatch({ ...batch, events: [measured] })?.events, [measured]);
+  assert.ok(validateEntryFunnelBatch({ ...batch, events: [{ ...event, ...attempt, name: "entry_retry", error_stage: "login" }] }));
+  for (const invalid of [{ attempt_id: "secret" }, { attempt_number: 0 }, { attempt_number: 1.5 }, { attempt_number: 1001 }, { account_kind: "guess" }, { phase: "https://provider/private" }, { duration_ms: undefined }]) {
+    assert.equal(validateEntryFunnelBatch({ ...batch, events: [{ ...measured, ...invalid }] }), null);
+  }
+  assert.equal(validateEntryFunnelBatch({ ...batch, events: [{ ...event, attempt_id: flow }] }), null);
+  const context = { landing_id: landing, flow_id: flow, template: 7, started_at: Date.now(), telemetry_origin: "https://landing.panelbotadmin.com", ...attempt };
+  assert.deepEqual(validateEntryFunnelContext(context), context);
+});

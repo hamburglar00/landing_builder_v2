@@ -231,6 +231,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
             }
           })
         }).then(function (response) {
+          try { if (window.__entryFunnel) window.__entryFunnel.timings(response.headers.get("server-timing")); } catch (_) {}
           if (!response.ok) throw new Error("gateway unavailable");
           return response.json();
         }).then(function (data) {
@@ -1556,7 +1557,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
         var input = document.querySelector("[data-template7-name]");
         var whatsappInput = document.querySelector("[data-template7-whatsapp]");
         var whatsappWarning = document.querySelector("[data-template7-phone-warning]");
-        var button = document.querySelector(".template7__cta[data-public-landing-cta]");
+        var button = document.querySelector("[data-template7-form] [data-public-landing-cta]");
         var form = document.querySelector("[data-template7-form]");
         if (!input || !button || !form) return;
         function sync() {

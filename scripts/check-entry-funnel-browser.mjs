@@ -96,7 +96,8 @@ for (const [name, engine] of [["Chromium", chromium], ["WebKit", webkit]]) {
     },{factory,context:next});
     await nextResponse;
     assert.equal(batches.at(-1).flow_id,next.flow_id);
-    assert.deepEqual(batches.at(-1).events.map(e=>e.name),["chat_ready"]);
+    assert.deepEqual(batches.at(-1).events.filter(e=>e.name!=="stage_timing").map(e=>e.name),["chat_ready"]);
+    assert.ok(batches.at(-1).events.filter(e=>e.name==="stage_timing").every(e=>e.phase.startsWith("gateway_") && e.duration_ms>=0));
     assert.doesNotMatch(JSON.stringify(batches),/encrypted-fixture/);
     checks++;
     await page.close();

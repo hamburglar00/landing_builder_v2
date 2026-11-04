@@ -1,3 +1,6 @@
+import { renderTemplate9View, TEMPLATE9_UI_SCRIPT } from "./template9View";
+import { TEMPLATE9_CSS } from "./template9Css";
+import { getTemplate9Brand, TEMPLATE9_DEFAULTS } from "../../lib/landing/template9";
 import { buildTemplate7ResourceWarmup } from "./template7ResourceWarmup";
 import PhonePrewarmScript from "./PhonePrewarmScript";
 import PublicLandingRuntimeScript from "./PublicLandingRuntimeScript";
@@ -118,6 +121,7 @@ function buildImageSrcSet(image?: ResponsiveImage) {
 }
 
 function buildPreloadLinks(config: PublicLandingConfig) {
+  if (config.layout?.template === 9) return `<link rel="preload" as="image" href="${getTemplate9Brand(config.tracking?.target_provider || "rey_de_ases", config.tracking?.skin_code).logo}" fetchpriority="high">`;
   if (config.layout?.template === 7) {
     const logo = config.content;
     return logo?.logoUrl
@@ -160,7 +164,7 @@ function buildPreloadLinks(config: PublicLandingConfig) {
 }
 
 function template7GatewayOrigin(config: PublicLandingConfig): string {
-  if (config.layout?.template !== 7) return "";
+  if (config.layout?.template !== 7 && config.layout?.template !== 9) return "";
   const raw = gatewayOriginFor(config.tracking?.target_provider, config.tracking?.skin_code);
   try {
     const url = new URL(raw || "");
@@ -171,6 +175,11 @@ function template7GatewayOrigin(config: PublicLandingConfig): string {
 }
 
 function publicMetadata(config: PublicLandingConfig, slug: string) {
+  if (config.layout?.template === 9) return {
+    title: config.content?.title?.map(line => line.trim()).filter(Boolean).join(" ") || TEMPLATE9_DEFAULTS.titleLine1,
+    description: config.content?.subtitle?.map(line => line.trim()).filter(Boolean).join(" ") || TEMPLATE9_DEFAULTS.subtitleLine1,
+    image: getTemplate9Brand(config.tracking?.target_provider || "rey_de_ases", config.tracking?.skin_code).logo,
+  };
   if (config.layout?.template === 6 || config.layout?.template === 8) {
     const isTemplate8 = config.layout?.template === 8;
   const cover = { ...config.content?.template6, ...(isTemplate8 ? { ...config.content?.template8, showWhatsAppLogo: false } : {}) };
@@ -210,6 +219,7 @@ function buildPublicMetadataTags(
 ) {
   const metadata = publicMetadata(config, slug);
   const canonical = String(canonicalUrl ?? "").trim();
+  if (config.layout?.template === 9 && canonical) metadata.image = new URL(metadata.image, canonical).href;
 
   return [
     `<meta name="description" content="${escapeHtml(metadata.description)}">`,
@@ -293,18 +303,18 @@ function renderTemplate5Avatar(profileImageUrl: string) {
 
 function renderPrivacyFooter(config: PublicLandingConfig) {
   const businessName = config.name || "el responsable de esta landing";
-  const template7IdentityNotice = config.layout?.template === 7
+  const template7IdentityNotice = config.layout?.template === 7 || config.layout?.template === 9
     ? '<p><strong>Identidad técnica.</strong> Usamos la cookie propia necesaria <code>lb_cid</code> para conservar su identidad técnica y evitar cuentas duplicadas. Dura dos años. Si elimina las cookies del navegador, puede generarse una identidad nueva.</p>'
     : "";
 
-  return `<footer class="public-privacy-footer"><button type="button" class="public-privacy-link" data-public-privacy-open aria-haspopup="dialog">Política de privacidad</button></footer><dialog class="public-privacy-dialog" data-public-privacy-dialog aria-labelledby="public-privacy-title"><div class="public-privacy-dialog__header"><h2 id="public-privacy-title">Política de privacidad</h2><button type="button" class="public-privacy-dialog__close" data-public-privacy-close aria-label="Cerrar política de privacidad">×</button></div><div class="public-privacy-dialog__content"><p><strong>Responsable.</strong> Esta landing es gestionada por ${escapeHtml(
+  return `${config.layout?.template === 9 ? "" : `<footer class="public-privacy-footer"><button type="button" class="public-privacy-link" data-public-privacy-open aria-haspopup="dialog">Política de privacidad</button></footer>`}<dialog class="public-privacy-dialog" data-public-privacy-dialog aria-labelledby="public-privacy-title"><div class="public-privacy-dialog__header"><h2 id="public-privacy-title">Política de privacidad</h2><button type="button" class="public-privacy-dialog__close" data-public-privacy-close aria-label="Cerrar política de privacidad">×</button></div><div class="public-privacy-dialog__content"><p><strong>Responsable.</strong> Esta landing es gestionada por ${escapeHtml(
     businessName,
   )}.</p>${template7IdentityNotice}<p><strong>Datos tratados.</strong> Al navegar o utilizar el botón de contacto pueden procesarse datos técnicos del dispositivo y la conexión, cookies e identificadores publicitarios, la procedencia de la visita y los datos que usted proporcione voluntariamente.</p><p><strong>Finalidades.</strong> Los datos se utilizan para atender consultas por WhatsApp, operar el servicio, medir resultados y atribuir conversiones publicitarias.</p><p><strong>Meta.</strong> Esta landing puede utilizar Meta Pixel y Conversions API. En consecuencia, cierta información puede compartirse con Meta Platforms para medición, atribución y publicidad, de acuerdo con sus políticas.</p><p><strong>Derechos y contacto.</strong> Puede solicitar información, actualización o supresión de sus datos mediante el canal de WhatsApp ofrecido en esta landing.</p><p>También puede administrar las cookies desde su navegador y revisar sus preferencias publicitarias en Meta.</p><div class="public-privacy-dialog__links"><a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noreferrer noopener">Política de privacidad de Meta</a><a href="https://www.facebook.com/adpreferences/ad_settings" target="_blank" rel="noreferrer noopener">Preferencias de anuncios de Meta</a></div></div></dialog>`;
 }
 
 function pixelScriptForTemplate(pixelId: string, slug: string, phoneCountryCode: string, template: number): string {
   const original = buildPixelInitScript(pixelId, slug, phoneCountryCode);
-  if (template !== 7 || !original) return original;
+  if (template !== 7 && template !== 9 || !original) return original;
   const body = original.slice("<script>".length, -"</script>".length);
   return `<script>(function(){function init(){${body}}var ready=window.__LB_IDENTITY_READY__;if(ready&&typeof ready.then==="function")ready.then(init,init);else init();})();</script>`;
 }
@@ -712,6 +722,10 @@ function renderTemplate8(params: RenderParams) {
   return `<section data-template8-grid>${renderTemplate6(params)}<p data-template8-status role="status" class="template8__status"></p></section><section data-template8-entry hidden><button type="button" data-template8-back class="template8__back">← Cambiar página</button>${entry}</section>`;
 }
 function renderTemplate(params: RenderParams) {
+  if (params.config.layout?.template === 9) {
+    const brand = getTemplate9Brand(params.config.tracking?.target_provider || "rey_de_ases", params.config.tracking?.skin_code);
+    return renderTemplate9View(params.config) + renderGatewayEntryTransition(params.config.tracking?.target_provider || "rey_de_ases", { stage: "creating", brand: { name: brand.name, logo: brand.logo, background: brand.deep, glow: brand.primary + "55", accent: brand.secondary, accentText: "#ffffff" } }) + TEMPLATE9_UI_SCRIPT;
+  }
   if (params.config.layout?.template === 8) return renderTemplate8(params);
   if (params.config.layout?.template === 7) return renderTemplate7(params);
   if (params.config.layout?.template === 6) return renderTemplate6(params);
@@ -726,7 +740,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
   params = { ...params, config: optimizeTemplate7Images(params.config) };
   const { slug, config, cachedPhone, canonicalUrl } = params;
   const isTemplate8 = config.layout?.template === 8;
-  const isTemplate7 = config.layout?.template === 7 || isTemplate8;
+  const isTemplate7 = config.layout?.template === 7 || isTemplate8 || config.layout?.template === 9;
   const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
   const metadata = publicMetadata(config, slug);
   const supabaseOrigin = (() => {
@@ -745,7 +759,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
   const runtimeScript = runtimeAsset
       ? runtimeAsset.script
     : `${renderScriptElement(PublicLandingRuntimeScript({ slug, config }))}<script src="/public-assets/template-entry/${publicLandingRuntimeAsset.name}" defer></script>`;
-  const template7PlaceholderScript = isTemplate7
+  const template7PlaceholderScript = isTemplate7 && config.layout?.template !== 9
     ? `<script>(()=>{const input=document.querySelector('[data-template7-name]');if(!input)return;const names=${JSON.stringify(TEMPLATE7_EXAMPLE_NAMES)};input.placeholder='Ej.: '+names[Math.floor(Math.random()*names.length)];})();</script>`
     : "";
 
@@ -755,7 +769,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     config,
     slug,
     canonicalUrl,
-  )}<meta name="theme-color" content="#000000">${
+  )}<meta name="theme-color" content="${config.layout?.template === 9 ? getTemplate9Brand(config.tracking?.target_provider || "rey_de_ases", config.tracking?.skin_code).deep : "#000000"}">${
     supabaseOrigin
       ? `<link rel="preconnect" href="${escapeHtml(supabaseOrigin)}" crossorigin><link rel="dns-prefetch" href="${escapeHtml(supabaseOrigin)}">`
       : ""
@@ -767,7 +781,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     pixelId
       ? '<link rel="preconnect" href="https://www.facebook.com"><link rel="preconnect" href="https://connect.facebook.net">'
       : ""
-  }${runtimeAsset ? runtimeAsset.preload + runtimeAsset.config : ""}${isTemplate7 ? buildClientIdentityBootstrapScript(isTemplate8 ? undefined : { slug, landingId: config.id || "" }) + (isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug, landingId: config.id || "" }))) : ""}${buildPreloadLinks(config)}${isTemplate7 ? `<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS}</style>` : '<link rel="stylesheet" href="/public-assets/landing-styles-v3.css">'}${phonePrewarmScript}${pixelScriptForTemplate(
+  }${runtimeAsset ? runtimeAsset.preload + runtimeAsset.config : ""}${isTemplate7 ? buildClientIdentityBootstrapScript(isTemplate8 ? undefined : { slug, landingId: config.id || "" }) + (isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug, landingId: config.id || "" }))) : ""}${buildPreloadLinks(config)}${isTemplate7 ? `<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS + (config.layout?.template === 9 ? TEMPLATE9_CSS : "")}</style>` : '<link rel="stylesheet" href="/public-assets/landing-styles-v3.css">'}${phonePrewarmScript}${pixelScriptForTemplate(
     pixelId,
     slug,
     config.tracking?.phoneCountryCode || "54",
@@ -786,7 +800,7 @@ export function renderClassicTemplate7InlineHtml(params: RenderParams, deviceIdS
   const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
   const isTemplate8 = config.layout?.template === 8;
   const runtimeAsset = renderTemplate7RuntimeAsset(params.slug, config, deviceIdScript);
-  const html = `${runtimeAsset.preload}${runtimeAsset.config}${isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug: params.slug, landingId: config.id || "", deviceIdScript }))}${buildPreloadLinks(config)}<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS}</style>${pixelScriptForTemplate(pixelId, params.slug, config.tracking?.phoneCountryCode || "54", 7)}${buildPixelNoscript(pixelId)}${renderTemplate({ ...params, config })}${renderPrivacyFooter({ ...config, layout: { ...config.layout, template: 0 } })}${runtimeAsset.script}${resourceWarmup(config)}`;
+  const html = `${runtimeAsset.preload}${runtimeAsset.config}${isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug: params.slug, landingId: config.id || "", deviceIdScript }))}${buildPreloadLinks(config)}<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS + (config.layout?.template === 9 ? TEMPLATE9_CSS : "")}</style>${pixelScriptForTemplate(pixelId, params.slug, config.tracking?.phoneCountryCode || "54", 7)}${buildPixelNoscript(pixelId)}${renderTemplate({ ...params, config })}${renderPrivacyFooter(config.layout?.template === 9 ? config : { ...config, layout: { ...config.layout, template: 0 } })}${runtimeAsset.script}${resourceWarmup(config)}`;
   if (isTemplate8) return html;
   const reentry = buildTemplate7ReentryScript(template7GatewayOrigin(config), `/${encodeURIComponent(params.slug)}`, config.tracking?.target_provider !== "multi_skin");
   return reentry ? reentry + guardTemplate7ReentryScripts(html) : html;
@@ -795,5 +809,5 @@ export function renderClassicTemplate7InlineHtml(params: RenderParams, deviceIdS
 /** Complete classic document without React hydration, layout CSS or Next chunks. */
 export function renderClassicTemplate7Html(params: RenderParams, deviceIdScript: string) {
   const metadata = publicMetadata(params.config, params.slug);
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#000000"><title>${escapeHtml(metadata.title)}</title>${buildPublicMetadataTags(params.config, params.slug, params.canonicalUrl)}</head><body>${renderClassicTemplate7InlineHtml(params, deviceIdScript)}</body></html>`;
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="${params.config.layout?.template === 9 ? getTemplate9Brand(params.config.tracking?.target_provider || "rey_de_ases", params.config.tracking?.skin_code).deep : "#000000"}"><title>${escapeHtml(metadata.title)}</title>${buildPublicMetadataTags(params.config, params.slug, params.canonicalUrl)}</head><body>${renderClassicTemplate7InlineHtml(params, deviceIdScript)}</body></html>`;
 }

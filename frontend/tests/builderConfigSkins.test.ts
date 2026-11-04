@@ -166,3 +166,24 @@ test("non Multi Skin providers keep their existing route without requiring a ski
     assert.equal(payload.tracking.skin_code, undefined);
   }
 });
+
+test("both Edge payload paths publish Template 9 with its active platform, skin and Atrio entry", async () => {
+  for (const provider of ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_skin"]) {
+    for (const saved of [null, published(7)]) {
+      const raw = { template: "template9", targetProvider: provider, multiSkinCode: "jugamos", templateConfigs: { template9: { multiSkinCode: "bet30" } } };
+      const response = await requestConfig(raw, saved);
+      assert.equal(response.status, 200);
+      const payload = await response.json() as PublicLandingConfig;
+      assert.equal(payload.layout.template, 9);
+      assert.equal(payload.tracking.ctaDestination, "atrio");
+      assert.equal(payload.tracking.target_provider, provider);
+      if (provider === "multi_skin") assert.equal(payload.tracking.skin_code, "bet30");
+      for (const html of renderBoth(payload)) {
+        assert.equal(runtimeConfig(html).entryTemplate, 9);
+        assert.equal(runtimeConfig(html).template, 7);
+        assert.equal(runtimeConfig(html).targetProvider, provider);
+        assert.match(html, /class="public-landing template9"/);
+      }
+    }
+  }
+});
