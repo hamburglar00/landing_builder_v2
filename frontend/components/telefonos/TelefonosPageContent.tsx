@@ -947,7 +947,7 @@ export function TelefonosPageContent({
       {unifiedBots&&canAtrio&&<div role="group" aria-label="Canal de los bots" className="flex flex-wrap gap-2">{(['all','whatsapp','atrio'] as const).map(channel=><button key={channel} type="button" aria-pressed={channelFilter===channel} onClick={()=>setChannelFilter(channel)} className={`rounded-lg border px-3 py-1.5 text-xs ${channelFilter===channel?'border-zinc-500 bg-zinc-700 text-zinc-100':'border-zinc-800 text-zinc-400'}`}>{channel==='all'?'Todos':channel==='whatsapp'?'WhatsApp':'Atrio'}</button>)}</div>}
       {displayGerencias.length === 0 ? (
         <p className="text-sm text-zinc-500">
-          {unifiedBots?'Todavía no hay bots. Usá Agregar gerencia para comenzar.':<>No tienes gerencias. Crea una en{" "}
+          {unifiedBots?'Todavía no hay bots. Usá Vincular Bots para comenzar.':<>No tienes gerencias. Crea una en{" "}
           <Link
             href={(backLink ?? "").includes("admin") ? "/admin/gerencias" : "/dashboard/gerencias"}
             className="text-zinc-300 underline hover:text-zinc-100"

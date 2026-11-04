@@ -1,5 +1,11 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Vincular Bots: modal y controles (04/11/2026)
+
+- El acceso y el título pasan a «Vincular Bots». Usar selector personalizado, campos visibles del tema y ancho compacto, conservando Agency ID, Owner ID, gerencia manual y vínculo Atrio con sus permisos actuales.
+- Corregir la pérdida de foco al escribir o seleccionar mediante callbacks de cierre estables del componente local. No cambiar importación, sincronización ni servicios externos.
+- [Validación](validation/bots-link-modal-20261104.md).
+
 ### Template 9: páginas legales y proporciones finales (04/11/2026)
 
 - El usuario autorizó terminar/publicar T9 y después preparar sólo en local el evento de alta exitosa de Full Carga WhatsApp. API2 sigue sin commit/push/despliegue.

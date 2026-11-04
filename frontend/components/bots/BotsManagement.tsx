@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import {
   createGerencia,
@@ -16,9 +16,11 @@ import type { Gerencia, GerenciaWorkGroup } from "@/lib/gerencias/types";
 import type { ReportingCurrency } from "@/lib/currency";
 import type { ImportDirectory } from "@/lib/bots/directory";
 import { ModalShell } from "@/components/ui/PanelPrimitives";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import { GerenciaWorkGroupsPanel } from "@/components/gerencias/GerenciaWorkGroupsPanel";
-const field = "ui-input w-full";
+const field =
+  "h-10 w-full rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-0)] px-3 text-sm text-[var(--color-text-strong)] outline-none placeholder:text-zinc-500 focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft-bg)] disabled:opacity-50";
 export function BotsManagement({
   userId,
   workspace,
@@ -47,6 +49,8 @@ export function BotsManagement({
     [notice, setNotice] = useState("");
   const [groupOpen, setGroupOpen] = useState(false),
     [groups, setGroups] = useState<GerenciaWorkGroup[]>([]);
+  const closeLinkModal = useCallback(() => setOpen(false), []);
+  const closeGroupsModal = useCallback(() => setGroupOpen(false), []);
   useEffect(() => {
     setOpen(false);
     setPreview(null);
@@ -166,7 +170,7 @@ export function BotsManagement({
             setOpen(true);
           }}
         >
-          + Agregar gerencia
+          Vincular Bots
         </button>
       </div>
       {notice && (
@@ -184,11 +188,11 @@ export function BotsManagement({
       )}
       <ModalShell
         open={open}
-        title="Agregar gerencia"
+        title="Vincular Bots"
         description="Importá los bots de PBAdmin o agregá una gerencia manual."
-        onClose={() => setOpen(false)}
+        onClose={closeLinkModal}
         closeDisabled={busy}
-        width="lg"
+        width="sm"
         footer={
           mode === "manual" || mode === "atrio" || preview ? (
             <button
@@ -224,29 +228,27 @@ export function BotsManagement({
         }
       >
         <div className="space-y-4">
-          <label className="block space-y-1 text-xs text-zinc-400">
-            <span>Agregar mediante</span>
-            <select
-              disabled={busy}
-              className={field}
-              value={mode}
-              onChange={(e) => {
-                setMode(e.target.value);
-                setPreview(null);
-                setId("");
-                setError("");
-              }}
-            >
-              <option value="agency">Agency ID · una gerencia</option>
-              <option value="owner">Owner ID · todas sus gerencias</option>
-              <option value="manual">Gerencia manual</option>
-              {canAtrio && (
-                <option value="atrio">
-                  Vincular asesor de Atrio existente
-                </option>
-              )}
-            </select>
-          </label>
+          <CustomSelect
+            id="bots-link-mode"
+            label="Vincular mediante"
+            disabled={busy}
+            portal
+            value={mode}
+            onChange={(value) => {
+              setMode(value);
+              setPreview(null);
+              setId("");
+              setError("");
+            }}
+            options={[
+              { value: "agency", label: "Agency ID · una gerencia" },
+              { value: "owner", label: "Owner ID · todas sus gerencias" },
+              { value: "manual", label: "Gerencia manual" },
+              ...(canAtrio
+                ? [{ value: "atrio", label: "Vincular asesor de Atrio existente" }]
+                : []),
+            ]}
+          />
           {mode !== "manual" && (
             <label className="block space-y-1 text-xs text-zinc-400">
               <span>
@@ -261,6 +263,7 @@ export function BotsManagement({
                 disabled={busy}
                 value={id}
                 inputMode={mode === "atrio" ? "text" : "numeric"}
+                placeholder={mode === "atrio" ? "UUID del asesor" : "Ej.: 123"}
                 onChange={(e) => {
                   setId(e.target.value);
                   setPreview(null);
@@ -275,6 +278,7 @@ export function BotsManagement({
                 className={field}
                 disabled={busy}
                 value={name}
+                placeholder="Nombre de la gerencia"
                 onChange={(e) => setName(e.target.value)}
               />
             </label>
@@ -286,6 +290,7 @@ export function BotsManagement({
                 className={field}
                 disabled={busy}
                 value={slug}
+                placeholder="Ej.: nombre-del-asesor"
                 onChange={(e) => setSlug(e.target.value)}
               />
             </label>
@@ -344,7 +349,7 @@ export function BotsManagement({
         open={groupOpen}
         title="Grupos de trabajo"
         width="lg"
-        onClose={() => setGroupOpen(false)}
+        onClose={closeGroupsModal}
         closeDisabled={busy}
       >
         {error && (
@@ -387,6 +392,7 @@ export function GerenciaActions({
     [source, setSource] = useState<"pbadmin" | "manual">("pbadmin"),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
+  const closeModal = useCallback(() => setOpen(false), []);
   return (
     <>
       <button
@@ -405,7 +411,7 @@ export function GerenciaActions({
       <ModalShell
         open={open}
         title="Administrar gerencia"
-        onClose={() => setOpen(false)}
+        onClose={closeModal}
         closeDisabled={busy}
         footer={
           <div className="flex w-full justify-between gap-3">
@@ -479,20 +485,18 @@ export function GerenciaActions({
               onChange={(e) => setName(e.target.value)}
             />
           </label>
-          <label className="block space-y-1 text-xs text-zinc-400">
-            <span>Origen</span>
-            <select
-              className={field}
-              value={source}
-              disabled={busy}
-              onChange={(e) =>
-                setSource(e.target.value as "pbadmin" | "manual")
-              }
-            >
-              <option value="pbadmin">PBAdmin</option>
-              <option value="manual">Manual</option>
-            </select>
-          </label>
+          <CustomSelect
+            id="bots-gerencia-source"
+            label="Origen"
+            value={source}
+            disabled={busy}
+            portal
+            onChange={(value) => setSource(value as "pbadmin" | "manual")}
+            options={[
+              { value: "pbadmin", label: "PBAdmin" },
+              { value: "manual", label: "Manual" },
+            ]}
+          />
           {source === "pbadmin" && (
             <label className="block space-y-1 text-xs text-zinc-400">
               <span>Agency ID</span>

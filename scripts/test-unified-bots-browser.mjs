@@ -412,9 +412,10 @@ try {
       await search.fill("");
       await f.page.getByText("Métricas de Atrio", { exact: true }).click();
       await f.page
-        .getByRole("button", { name: "+ Agregar gerencia", exact: true })
+        .getByRole("button", { name: "Vincular Bots", exact: true })
         .click();
-      await f.page.getByLabel("Agregar mediante").selectOption("owner");
+      await f.page.getByRole("button", { name: "Vincular mediante", exact: true }).click();
+      await f.page.getByRole("option", { name: "Owner ID · todas sus gerencias", exact: true }).click();
       await f.page.getByLabel("Owner ID", { exact: true }).fill("200");
       await f.page
         .getByRole("button", { name: "Buscar bots", exact: true })
