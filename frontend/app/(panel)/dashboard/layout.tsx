@@ -28,7 +28,6 @@ const DASHBOARD_PREFETCH_ROUTES = [
   "/dashboard/telefonos",
   "/dashboard/integraciones",
   "/dashboard/notificaciones",
-  "/dashboard/plan",
 ];
 
 function MenuIcon({ className }: { className?: string }) {
@@ -326,7 +325,6 @@ export default function DashboardLayout({
   const [clientName, setClientName] = useState("");
   const [isPlanBlocked, setIsPlanBlocked] = useState(false);
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
-  const [planCode, setPlanCode] = useState<"starter" | "plus" | "pro" | "premium" | "scale">("starter");
   const [planStartsAt, setPlanStartsAt] = useState<string | null>(null);
   const [planExpiresAt, setPlanExpiresAt] = useState<string | null>(null);
   const [planMaxLandings, setPlanMaxLandings] = useState<number>(1);
@@ -374,7 +372,6 @@ export default function DashboardLayout({
         .select("plan_code, status, starts_at, expires_at, grace_days, max_landings, max_phones")
         .eq("user_id", data.user.id)
         .maybeSingle();
-      setPlanCode((sub?.plan_code as typeof planCode) ?? "starter");
       setPlanStartsAt(sub?.starts_at ?? null);
       setPlanExpiresAt(sub?.expires_at ?? null);
       setPlanGraceDays(Number(sub?.grace_days ?? 5));
@@ -577,23 +574,6 @@ export default function DashboardLayout({
     );
   }
 
-  const planLabel = (code: string) => code.toUpperCase();
-  const planClass = (code: string) => {
-    switch (code) {
-      case "starter":
-        return "border-slate-600 text-slate-200 bg-slate-900/50";
-      case "plus":
-        return "border-sky-600 text-sky-200 bg-sky-950/50";
-      case "pro":
-        return "border-violet-600 text-violet-200 bg-violet-950/50";
-      case "premium":
-        return "border-amber-600 text-amber-200 bg-amber-950/50";
-      case "scale":
-        return "border-emerald-600 text-emerald-200 bg-emerald-950/50";
-      default:
-        return "border-zinc-700 text-zinc-200 bg-zinc-900/50";
-    }
-  };
   const isExpiringSoon = (() => {
     if (!planExpiresAt || planNowMs === null) return false;
     const exp = new Date(planExpiresAt).getTime();
@@ -801,7 +781,7 @@ export default function DashboardLayout({
             <span>INTEGRACIONES</span>
           </Link>
 
-          <Link
+          {modulePermissions.show_notifications && <Link
             href="/dashboard/notificaciones"
             onClick={(event) => handleNavClick("/dashboard/notificaciones", event)}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
@@ -815,22 +795,13 @@ export default function DashboardLayout({
               active={Boolean(pathname?.startsWith("/dashboard/notificaciones"))}
             />
             <span>NOTIFICACIONES</span>
-          </Link>
+          </Link>}
 
         </nav>
         <div className="border-t border-[var(--color-border)] p-3 space-y-2">
           <p className="truncate px-1 text-[11px] text-[var(--color-text-muted)]" title={user?.email ?? undefined}>
             {user?.email}
           </p>
-          <Link
-            href="/dashboard/plan"
-            onClick={(event) => handleNavClick("/dashboard/plan", event)}
-            className={`block w-full rounded-lg border px-3 py-2 text-center text-xs font-semibold transition hover:opacity-90 ${planClass(planCode)} ${
-              pathname?.startsWith("/dashboard/plan") ? "ring-2 ring-zinc-500/60" : ""
-            }`}
-          >
-            Plan {planLabel(planCode)}
-          </Link>
           <button
             type="button"
             onClick={handleSignOut}

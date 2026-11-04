@@ -77,7 +77,7 @@ export default function AdminClientManagePage() {
   const [resetPassword, setResetPassword] = useState("");
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
-  const [showLogs, setShowLogs] = useState(true);
+  const [showLogs, setShowLogs] = useState(false);
   const [showInbox, setShowInbox] = useState(false);
   const [showAiAssistant, setShowAiAssistant] = useState(false);
   const [showPromotions, setShowPromotions] = useState(false);
@@ -120,7 +120,7 @@ export default function AdminClientManagePage() {
       }
       setNombre(found.nombre ?? "");
       setEmail(found.email ?? "");
-      setShowLogs(typeof found.show_logs === "boolean" ? found.show_logs : true);
+      setShowLogs(found.show_logs === true);
       setShowInbox(typeof found.show_inbox === "boolean" ? found.show_inbox : false);
       setShowAiAssistant(typeof found.show_ai_assistant === "boolean" ? found.show_ai_assistant : false);
       setShowPromotions(typeof found.show_promotions === "boolean" ? found.show_promotions : false);

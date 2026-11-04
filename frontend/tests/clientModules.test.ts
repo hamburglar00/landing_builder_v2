@@ -3,18 +3,31 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
-  CLIENT_MODULES, DEFAULT_CLIENT_MODULE_PERMISSIONS, normalizeClientModulePermissions,
+  CLIENT_MODULES, DEFAULT_CLIENT_MODULE_PERMISSIONS, ADMIN_CLIENT_MODULE_PERMISSIONS, normalizeClientModulePermissions,
   canViewClientRoute, canViewClientIntegration,
 } from "../lib/clientModules";
 import { IntegrationMenu } from "../components/integraciones/IntegrationMenu";
 import { ClientModulePermissionsFields } from "../components/clients/ClientModulePermissions";
 import { CLIENT_MODULE_KEYS, parseModuleVisibility } from "../../supabase/functions/_shared/client-module-permissions";
 
-test("existing clients retain visibility; each switch blocks only its module and nested pages", () => {
+test("missing and partial permissions hide optional sections until explicitly enabled", () => {
   assert.deepEqual(normalizeClientModulePermissions(null), DEFAULT_CLIENT_MODULE_PERMISSIONS);
+  assert.ok(Object.values(DEFAULT_CLIENT_MODULE_PERMISSIONS).every(value => value === false));
+  for (const row of [undefined, {}, { show_notifications: false }]) {
+    assert.deepEqual(normalizeClientModulePermissions(row), DEFAULT_CLIENT_MODULE_PERMISSIONS);
+  }
+  const permissions = normalizeClientModulePermissions({ show_notifications: true });
+  assert.equal(canViewClientRoute("/dashboard/notificaciones", permissions), true);
+  assert.equal(canViewClientRoute("/dashboard/seguimiento", permissions), false);
+  assert.equal(canViewClientRoute("/dashboard/whatsapp-cloud-api/inbox", permissions), false);
+  assert.equal(canViewClientRoute("/dashboard/notificaciones-extra", permissions), true);
+});
+
+test("saved enablements survive; each switch blocks only its module and nested pages", () => {
   assert.deepEqual(CLIENT_MODULES.map(m => m.key), [...CLIENT_MODULE_KEYS]);
+  const enabled = Object.fromEntries(CLIENT_MODULES.map(({ key }) => [key, true]));
   for (const module of CLIENT_MODULES) {
-    const permissions = normalizeClientModulePermissions({ [module.key]: false });
+    const permissions = normalizeClientModulePermissions({ ...enabled, [module.key]: false });
     for (const candidate of CLIENT_MODULES.filter(m => m.path)) {
       for (const suffix of ["", "/", "/configuracion", "/inbox", "/logs", "/contactos"]) {
         assert.equal(canViewClientRoute(candidate.path + suffix, permissions), candidate.key !== module.key);
@@ -43,19 +56,37 @@ test("integration menu independently hides Kommo and Chatrace while preserving M
   }
 });
 
-test("admin form shows the five saved visibility choices", () => {
-  const html = renderToStaticMarkup(createElement(ClientModulePermissionsFields, {
-    value: normalizeClientModulePermissions({ show_atrio: false, show_kommo: false }),
+test("superadmin retains its own sections and integrations with client defaults disabled", () => {
+  const html = renderToStaticMarkup(createElement(IntegrationMenu, {
+    permissions: ADMIN_CLIENT_MODULE_PERMISSIONS, onSelect: () => {}, constructorLogo: null,
+  }));
+  assert.ok(html.includes("CRM Kommo"));
+  assert.ok(html.includes("con Chatrace"));
+  for (const {path} of CLIENT_MODULES) {
+    if (path) assert.equal(canViewClientRoute(path, ADMIN_CLIENT_MODULE_PERMISSIONS), true);
+  }
+});
+
+test("admin form shows all six choices unchecked by default and preserves saved choices", () => {
+  const defaults = renderToStaticMarkup(createElement(ClientModulePermissionsFields, {
+    value: DEFAULT_CLIENT_MODULE_PERMISSIONS,
     onChange: () => {},
   }));
-  assert.equal((html.match(/type="checkbox"/g) ?? []).length, 5);
-  assert.equal((html.match(/checked=""/g) ?? []).length, 3);
+  assert.equal((defaults.match(/type="checkbox"/g) ?? []).length, 6);
+  assert.doesNotMatch(defaults, /checked=""/);
+  const html = renderToStaticMarkup(createElement(ClientModulePermissionsFields, {
+    value: normalizeClientModulePermissions({ show_atrio: true, show_notifications: true }),
+    onChange: () => {},
+  }));
+  assert.equal((html.match(/type="checkbox"/g) ?? []).length, 6);
+  assert.equal((html.match(/checked=""/g) ?? []).length, 2);
   for (const { label } of CLIENT_MODULES) assert.ok(html.includes(label));
 });
 
 test("admin API accepts explicit false and partial updates; rejects malformed or unknown permissions", () => {
   assert.equal(parseModuleVisibility(undefined), undefined);
   assert.deepEqual(parseModuleVisibility({ show_atrio: false }), { show_atrio: false });
+  assert.deepEqual(parseModuleVisibility({ show_notifications: true }), { show_notifications: true });
   assert.deepEqual(parseModuleVisibility(DEFAULT_CLIENT_MODULE_PERMISSIONS), DEFAULT_CLIENT_MODULE_PERMISSIONS);
   for (const payload of [null, [], true, "false", { show_atrio: "false" }, { show_kommo: null }, { user_id: "other" }, { show_atrio: 0 }]) {
     assert.throws(() => parseModuleVisibility(payload));
@@ -70,14 +101,23 @@ test("permission reads distinguish absent rows from failures and always scope to
   let result: { data: unknown; error: unknown } = { data: null, error: null };
   t.mock.method(supabase, "from", (table: string) => {
     assert.equal(table, "client_module_permissions");
-    return { select: () => ({ eq: (key: string, value: string) => {
-      assert.equal(key, "user_id"); assert.equal(value, "test-client");
-      return { maybeSingle: async () => result };
-    } }) } as never;
+    return {
+      select: (columns: string) => {
+        assert.ok(columns.split(",").includes("show_notifications"));
+        return {
+          eq: (key: string, value: string) => {
+            assert.equal(key, "user_id"); assert.equal(value, "test-client");
+            return { maybeSingle: async () => result };
+          },
+        };
+      },
+    } as never;
   });
   assert.deepEqual(await fetchClientModulePermissions("test-client"), DEFAULT_CLIENT_MODULE_PERMISSIONS);
-  result = { data: { show_chatrace: false }, error: null };
-  assert.equal((await fetchClientModulePermissions("test-client")).show_chatrace, false);
+  result = { data: { show_chatrace: false, show_notifications: true }, error: null };
+  assert.deepEqual(await fetchClientModulePermissions("test-client"), {
+    ...DEFAULT_CLIENT_MODULE_PERMISSIONS, show_notifications: true,
+  });
   result = { data: null, error: { message: "unavailable" } };
   await assert.rejects(fetchClientModulePermissions("test-client"));
 });

@@ -1,5 +1,12 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Secciones opcionales del constructor (04/11/2026)
+
+- Ocultar el acceso a Planes en los menús de cliente y superadmin, tanto en escritorio como en móvil. Conservar las reglas de suscripción existentes.
+- El superadmin administra por cliente la visibilidad de WhatsApp API, Seguimientos y Notificaciones, junto con Atrio, Kommo y Chatrace. Notificaciones usa el mismo mecanismo de persistencia y protección de pantallas que los otros módulos.
+- Todas las opciones de visibilidad parten deshabilitadas cuando falta una habilitación guardada, incluido Logs. Conservar los valores ya guardados; no realizar un apagado masivo de cuentas existentes. Las integraciones y tareas en segundo plano conservan su funcionamiento.
+- El superadmin conserva disponibles sus propias secciones e integraciones. Los valores por defecto deshabilitados se aplican al espacio de los clientes y a su formulario de configuración.
+
 ### Entrada paralela, sesión reutilizada y catálogo privado (03/11/2026)
 
 - Autorización expresa posterior: «Implementa todo. Luego comittea y pushea. Aplica migraciones y deploya si hace falta». Incluye terminar y publicar la medición local, herramientas diferidas, preparación anticipada, independencia del HTML del casino, reutilización de sesión y catálogo sincronizado. Conservar el trabajo autorizado de T9 pendiente en el mismo conjunto; API2 sigue a cargo del programador.

@@ -42,7 +42,7 @@ export default function NuevoClientePage() {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showLogs, setShowLogs] = useState(true);
+  const [showLogs, setShowLogs] = useState(false);
   const [showAiAssistant, setShowAiAssistant] = useState(false);
   const [showPromotions, setShowPromotions] = useState(false);
   const [moduleVisibility, setModuleVisibility] = useState(DEFAULT_CLIENT_MODULE_PERMISSIONS);

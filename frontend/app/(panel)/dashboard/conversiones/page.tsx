@@ -1247,13 +1247,13 @@ export default function DashboardConversionesPage() {
     () => {
       const base = [...TAB_ORDER_BASE];
       if (config?.show_inbox === true) base.push("inbox");
-      if (config?.show_logs !== false) base.push("logs");
+      if (config?.show_logs === true) base.push("logs");
       return base;
     },
     [config?.show_logs, config?.show_inbox],
   );
   useEffect(() => {
-    if (config?.show_logs === false && tab === "logs") {
+    if (config?.show_logs !== true && tab === "logs") {
       setTab("funnel");
     }
     if (config?.show_inbox !== true && tab === "inbox") {

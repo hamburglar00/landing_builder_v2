@@ -190,7 +190,7 @@ Deno.serve(async (req) => {
     if (templatePermissionsError) throw templatePermissionsError;
     const { data: modulePermissions, error: modulePermissionsError } = await supabaseAdmin
       .from("client_module_permissions")
-      .select("user_id,show_followups,show_whatsapp_api,show_atrio,show_kommo,show_chatrace")
+      .select("user_id,show_followups,show_whatsapp_api,show_notifications,show_atrio,show_kommo,show_chatrace")
       .in("user_id", ids);
     if (modulePermissionsError) throw modulePermissionsError;
     const { data: subsRows } = await supabaseAdmin
@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
     const cfgByUserId = new Map(
       (cfgRows ?? []).map((r) => [r.user_id, {
         visible_columns: r.visible_columns ?? [],
-        show_logs: r.show_logs ?? true,
+        show_logs: r.show_logs ?? false,
         show_inbox: r.show_inbox ?? false,
         show_ai_assistant: r.show_ai_assistant ?? false,
         show_promotions: r.show_promotions ?? false,
@@ -238,14 +238,14 @@ Deno.serve(async (req) => {
           nombre: profileById.get(u.id)?.nombre ?? null,
           role: profileById.get(u.id)?.role ?? "cliente",
           visible_columns: cfgByUserId.get(u.id)?.visible_columns ?? [],
-          show_logs: cfgByUserId.get(u.id)?.show_logs ?? true,
+          show_logs: cfgByUserId.get(u.id)?.show_logs ?? false,
           show_inbox: cfgByUserId.get(u.id)?.show_inbox ?? false,
           show_ai_assistant: cfgByUserId.get(u.id)?.show_ai_assistant ?? false,
           show_promotions: cfgByUserId.get(u.id)?.show_promotions ?? false,
           template8_enabled: template8ByUserId.get(u.id) ?? false,
           template7_enabled: template7ByUserId.get(u.id) ?? false,
           module_visibility: Object.fromEntries(CLIENT_MODULE_KEYS.map((key) => [
-            key, modulesByUserId.get(u.id)?.[key] !== false,
+            key, modulesByUserId.get(u.id)?.[key] === true,
           ])),
           plan_code: subsByUserId.get(u.id)?.plan_code ?? "starter",
           max_landings: subsByUserId.get(u.id)?.max_landings ?? 1,

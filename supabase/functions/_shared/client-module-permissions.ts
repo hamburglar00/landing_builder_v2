@@ -1,5 +1,5 @@
 export const CLIENT_MODULE_KEYS = [
-  "show_followups", "show_whatsapp_api", "show_atrio", "show_kommo", "show_chatrace",
+  "show_followups", "show_whatsapp_api", "show_notifications", "show_atrio", "show_kommo", "show_chatrace",
 ] as const;
 export type ClientModulePermissions = Record<(typeof CLIENT_MODULE_KEYS)[number], boolean>;
 

@@ -8,6 +8,8 @@ import { supabase } from "@/lib/supabaseClient";
 import { RouteProgress } from "@/components/ui/RouteProgress";
 import { CurrencyScopeSelector } from "@/components/currency/CurrencyScope";
 import { AppConfirmProvider } from "@/components/ui/AppConfirmDialog";
+import { ClientModulePermissionsContext } from "@/components/clients/ClientModulePermissions";
+import { ADMIN_CLIENT_MODULE_PERMISSIONS } from "@/lib/clientModules";
 
 function MenuIcon({ className }: { className?: string }) {
   return (
@@ -495,6 +497,7 @@ export default function AdminLayout({
   }
 
   return (
+    <ClientModulePermissionsContext.Provider value={ADMIN_CLIENT_MODULE_PERMISSIONS}>
     <AppConfirmProvider>
     <div className="panel-shell flex min-h-screen text-[var(--color-text)]">
       <RouteProgress active={isNavigating} />
@@ -759,17 +762,6 @@ export default function AdminLayout({
           <p className="truncate px-1 text-[11px] text-[var(--color-text-muted)]" title={user?.email ?? undefined}>
             {user?.email}
           </p>
-          <Link
-            href="/admin/plan"
-            {...getNavLinkProps("/admin/plan")}
-            className={`block w-full rounded-lg border px-3 py-2 text-center text-xs font-semibold transition hover:bg-[var(--color-bg-3)] ${
-              pathname?.startsWith("/admin/plan")
-                ? "border-[var(--color-primary-soft-border)] bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)]"
-                : "border-[var(--color-border)] text-[var(--color-text-muted)]"
-            }`}
-          >
-            Ver planes
-          </Link>
           <button
             type="button"
             onClick={handleSignOut}
@@ -808,5 +800,6 @@ export default function AdminLayout({
       </div>
     </div>
     </AppConfirmProvider>
+    </ClientModulePermissionsContext.Provider>
   );
 }

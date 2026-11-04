@@ -397,7 +397,7 @@ Deno.serve(async (req) => {
       requestedVisibleColumns && requestedVisibleColumns.length > 0
         ? requestedVisibleColumns
         : FALLBACK_VISIBLE_COLUMNS;
-    const finalShowLogs = requestedShowLogs ?? true;
+    const finalShowLogs = requestedShowLogs ?? false;
     const finalShowAiAssistant = requestedShowAiAssistant ?? false;
     const finalShowPromotions = requestedShowPromotions ?? false;
 
