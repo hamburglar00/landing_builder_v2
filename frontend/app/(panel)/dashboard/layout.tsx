@@ -17,15 +17,13 @@ const SETUP_GUIDE_STORAGE_PREFIX = "constructor_setup_guide_hidden:";
 const DASHBOARD_PREFETCH_ROUTES = [
   "/dashboard/inicio",
   "/dashboard/landings",
-  "/dashboard/atrio",
   "/dashboard/conversiones",
   "/dashboard/seguimiento",
   "/dashboard/whatsapp-cloud-api",
   "/dashboard/whatsapp-cloud-api/configuracion",
   "/dashboard/whatsapp-cloud-api/inbox",
   "/dashboard/whatsapp-cloud-api/logs",
-  "/dashboard/gerencias",
-  "/dashboard/telefonos",
+  "/dashboard/bots",
   "/dashboard/integraciones",
   "/dashboard/notificaciones",
 ];
@@ -670,18 +668,6 @@ export default function DashboardLayout({
             <span>WHATSAPP API</span>
           </Link>}
 
-          {modulePermissions.show_atrio && <Link
-            href="/dashboard/atrio"
-            onClick={(event) => handleNavClick("/dashboard/atrio", event)}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
-              pathname?.startsWith("/dashboard/atrio")
-                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
-                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
-            }`}
-          >
-            <NavIcon variant="atrio" active={Boolean(pathname?.startsWith("/dashboard/atrio"))} />
-            <span>ATRIO</span>
-          </Link>}
 
           <Link
             href="/dashboard/conversiones"
@@ -733,36 +719,21 @@ export default function DashboardLayout({
             <span>SEGUIMIENTOS</span>
           </Link>}
 
-          <Link
-            href="/dashboard/gerencias"
-            onClick={(event) => handleNavClick("/dashboard/gerencias", event)}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
-              pathname?.startsWith("/dashboard/gerencias")
-                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
-                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
-            }`}
-          >
-            <NavIcon
-              variant="gerencias"
-              active={Boolean(pathname?.startsWith("/dashboard/gerencias"))}
-            />
-            <span>GERENCIAS</span>
-          </Link>
 
           <Link
-            href="/dashboard/telefonos"
-            onClick={(event) => handleNavClick("/dashboard/telefonos", event)}
+            href="/dashboard/bots"
+            onClick={(event) => handleNavClick("/dashboard/bots", event)}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
-              pathname?.startsWith("/dashboard/telefonos")
+              pathname?.startsWith("/dashboard/bots")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
                 : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
             }`}
           >
             <NavIcon
               variant="telefonos"
-              active={Boolean(pathname?.startsWith("/dashboard/telefonos"))}
+              active={Boolean(pathname?.startsWith("/dashboard/bots"))}
             />
-            <span>TELÉFONOS</span>
+            <span>BOTS</span>
           </Link>
 
           <Link

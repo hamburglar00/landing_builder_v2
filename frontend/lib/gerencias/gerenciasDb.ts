@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { normalizeCurrency, type ReportingCurrency } from "@/lib/currency";
 import type { Gerencia, GerenciaWorkGroup } from "./types";
 import type { PhoneKind } from "@/lib/landing/types";
+import {savedBotInventory} from '@/lib/bots/directory';
 import {
   findGerenciaWorkspaceConflicts,
   workspaceCurrencyLabel,
@@ -63,20 +64,22 @@ export function sortGerenciasByName(list: Gerencia[]): Gerencia[] {
 export async function fetchGerencias(
   userId: string,
   workspaceCurrency?: ReportingCurrency,
+  includeBotInventory = false,
 ): Promise<Gerencia[]> {
+  const columns=includeBotInventory?"id, nombre, gerencia_id, workspace_currency, source_type, fair_criterion, pbadmin_bots, pbadmin_bots_synced_at":"id, nombre, gerencia_id, workspace_currency, source_type, fair_criterion";
   let query = supabase
     .from("gerencias")
-    .select("id, nombre, gerencia_id, workspace_currency, source_type, fair_criterion")
+    .select(columns)
     .eq("user_id", userId)
     .order("nombre", { ascending: true })
     .order("gerencia_id", { ascending: true });
 
   if (workspaceCurrency) query = query.eq("workspace_currency", workspaceCurrency);
 
-  const { data, error } = await query;
+  const { data, error } = await query.overrideTypes<Gerencia[],{merge:false}>();
 
   if (error) throw error;
-  return sortGerenciasByName((data ?? []) as Gerencia[]);
+  return sortGerenciasByName(((data ?? []) as Gerencia[]).map(group=>({...group,pbadmin_bots:group.source_type==='manual'?[]:savedBotInventory(group.pbadmin_bots).filter(bot=>bot.agency_id===group.gerencia_id)})));
 }
 
 /**
@@ -85,19 +88,21 @@ export async function fetchGerencias(
 export async function fetchGerenciasForAdmin(
   adminUserId: string,
   workspaceCurrency?: ReportingCurrency,
+  includeBotInventory = false,
 ): Promise<Gerencia[]> {
+  const columns=includeBotInventory?"id, nombre, gerencia_id, workspace_currency, source_type, fair_criterion, user_id, pbadmin_bots, pbadmin_bots_synced_at":"id, nombre, gerencia_id, workspace_currency, source_type, fair_criterion, user_id";
   let query = supabase
     .from("gerencias")
-    .select("id, nombre, gerencia_id, workspace_currency, source_type, fair_criterion, user_id")
+    .select(columns)
     .order("nombre", { ascending: true })
     .order("gerencia_id", { ascending: true });
 
   if (workspaceCurrency) query = query.eq("workspace_currency", workspaceCurrency);
 
-  const { data, error } = await query;
+  const { data, error } = await query.overrideTypes<Gerencia[],{merge:false}>();
 
   if (error) throw error;
-  const list = (data ?? []) as Gerencia[];
+  const list = ((data ?? []) as Gerencia[]).map(group=>({...group,pbadmin_bots:group.source_type==='manual'?[]:savedBotInventory(group.pbadmin_bots).filter(bot=>bot.agency_id===group.gerencia_id)}));
   const mine: Gerencia[] = [];
   const others: Gerencia[] = [];
   for (const g of list) {

@@ -6,7 +6,7 @@ const base = process.env.BUILDER_TEST_URL ?? 'http://127.0.0.1:3137';
 const browser = await chromium.launch();
 const id = '92000000-0000-4000-8000-000000000001';
 const keys = ['show_followups','show_whatsapp_api','show_notifications','show_atrio','show_kommo','show_chatrace'];
-const paths = ['/dashboard/seguimiento','/dashboard/whatsapp-cloud-api','/dashboard/notificaciones','/dashboard/atrio'];
+const paths = ['/dashboard/seguimiento','/dashboard/whatsapp-cloud-api','/dashboard/notificaciones'];
 let checks = 0;
 async function fixture(role, width, enabled = false) {
   const context = await browser.newContext({viewport:{width,height:900}});
@@ -67,6 +67,7 @@ try {
         await client.page.goto(base+'/dashboard/inicio');
         await client.page.locator('aside nav a[href="/dashboard/inicio"]').waitFor({state:'attached'});
         for(const path of paths)assert.equal(await client.page.locator(`aside nav a[href="${path}"]`).count(),enabled?1:0);
+        assert.equal(await client.page.locator('aside nav a[href="/dashboard/bots"]').count(),1);
         assert.equal(await client.page.locator('a[href="/dashboard/plan"]').count(),0,'client has no Plans button');checks++;
         if(!enabled) {
           await client.page.goto(base+'/dashboard/notificaciones');

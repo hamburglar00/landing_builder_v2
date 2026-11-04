@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import { normalizeCurrency, type ReportingCurrency } from "@/lib/currency";
+import { savedBotInventory, type DirectoryBot } from "@/lib/bots/directory";
 
 export const ATRIO_BASE_URL = "https://www.atrio.website";
 
@@ -12,6 +13,8 @@ export type AtrioClient = {
   usage_count: number;
   created_at?: string | null;
   updated_at?: string | null;
+  pbadmin_bots?: DirectoryBot[];
+  pbadmin_bots_synced_at?: string | null;
 };
 
 export type LandingAtrioAssignment = {
@@ -26,7 +29,8 @@ type DbErrorLike = {
 };
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]{0,80}$/;
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function normalizeAtrioSlug(value: string): string {
   return String(value ?? "")
@@ -40,7 +44,9 @@ export function normalizeAtrioSlug(value: string): string {
 
 export function buildAtrioUrl(slug: string): string {
   const normalizedSlug = normalizeAtrioSlug(slug);
-  return normalizedSlug ? `${ATRIO_BASE_URL}/${normalizedSlug}` : `${ATRIO_BASE_URL}/`;
+  return normalizedSlug
+    ? `${ATRIO_BASE_URL}/${normalizedSlug}`
+    : `${ATRIO_BASE_URL}/`;
 }
 
 export function isValidAtrioSlug(value: string): boolean {
@@ -82,7 +88,8 @@ export function formatAtrioError(error: unknown, fallback: string): string {
     return "No se puede guardar: revisa el formato del slug o del ID de Atrio.";
   }
 
-  if (e.code === "42501") return "No tienes permisos para realizar esta accion.";
+  if (e.code === "42501")
+    return "No tienes permisos para realizar esta accion.";
   if (details) return `${fallback}: ${details}`;
   if (message) return `${fallback}: ${message}`;
   return fallback;
@@ -98,33 +105,46 @@ function mapAtrioClient(row: Record<string, unknown>): AtrioClient {
     usage_count: Number(row.usage_count ?? 0) || 0,
     created_at: typeof row.created_at === "string" ? row.created_at : null,
     updated_at: typeof row.updated_at === "string" ? row.updated_at : null,
+    pbadmin_bots: savedBotInventory(row.pbadmin_bots, "atrio"),
+    pbadmin_bots_synced_at:
+      typeof row.pbadmin_bots_synced_at === "string"
+        ? row.pbadmin_bots_synced_at
+        : null,
   };
 }
 
 export async function fetchAtrioClients(
   userId: string,
   workspaceCurrency: ReportingCurrency,
+  includeBotInventory = false,
 ): Promise<AtrioClient[]> {
+  const columns=includeBotInventory?"id, user_id, workspace_currency, slug, atrio_id, usage_count, created_at, updated_at, pbadmin_bots, pbadmin_bots_synced_at":"id, user_id, workspace_currency, slug, atrio_id, usage_count, created_at, updated_at";
   const { data, error } = await supabase
     .from("atrio_clients")
-    .select("id, user_id, workspace_currency, slug, atrio_id, usage_count, created_at, updated_at")
+    .select(columns)
     .eq("user_id", userId)
     .eq("workspace_currency", workspaceCurrency)
-    .order("slug", { ascending: true });
+    .order("slug", { ascending: true })
+    .overrideTypes<Record<string,unknown>[],{merge:false}>();
 
   if (error) throw error;
-  return sortAtrioClients(((data ?? []) as Record<string, unknown>[]).map(mapAtrioClient));
+  return sortAtrioClients(
+    ((data ?? []) as Record<string, unknown>[]).map(mapAtrioClient),
+  );
 }
 
 export async function fetchAtrioClientsForAdmin(
   adminUserId: string,
   workspaceCurrency: ReportingCurrency,
+  includeBotInventory = false,
 ): Promise<AtrioClient[]> {
+  const columns=includeBotInventory?"id, user_id, workspace_currency, slug, atrio_id, usage_count, created_at, updated_at, pbadmin_bots, pbadmin_bots_synced_at":"id, user_id, workspace_currency, slug, atrio_id, usage_count, created_at, updated_at";
   const { data, error } = await supabase
     .from("atrio_clients")
-    .select("id, user_id, workspace_currency, slug, atrio_id, usage_count, created_at, updated_at")
+    .select(columns)
     .eq("workspace_currency", workspaceCurrency)
-    .order("slug", { ascending: true });
+    .order("slug", { ascending: true })
+    .overrideTypes<Record<string,unknown>[],{merge:false}>();
 
   if (error) throw error;
   const list = ((data ?? []) as Record<string, unknown>[]).map(mapAtrioClient);
@@ -149,7 +169,9 @@ export async function createAtrioClient(
       slug: normalizeAtrioSlug(payload.slug),
       atrio_id: payload.atrioId.trim(),
     })
-    .select("id, user_id, workspace_currency, slug, atrio_id, usage_count, created_at, updated_at")
+    .select(
+      "id, user_id, workspace_currency, slug, atrio_id, usage_count, created_at, updated_at",
+    )
     .single();
 
   if (error) throw error;
@@ -170,7 +192,9 @@ export async function updateAtrioClient(
       atrio_id: payload.atrioId.trim(),
     })
     .eq("id", id)
-    .select("id, user_id, workspace_currency, slug, atrio_id, usage_count, created_at, updated_at")
+    .select(
+      "id, user_id, workspace_currency, slug, atrio_id, usage_count, created_at, updated_at",
+    )
     .single();
 
   if (error) throw error;
@@ -191,10 +215,12 @@ export async function fetchLandingAtrioAssignments(
     .eq("landing_id", landingId);
 
   if (error) throw error;
-  return (data ?? []).map((row) => ({
-    atrioClientId: String(row.atrio_client_id ?? ""),
-    weight: Number(row.weight ?? 0) || 0,
-  })).filter((row) => row.atrioClientId);
+  return (data ?? [])
+    .map((row) => ({
+      atrioClientId: String(row.atrio_client_id ?? ""),
+      weight: Number(row.weight ?? 0) || 0,
+    }))
+    .filter((row) => row.atrioClientId);
 }
 
 export async function setLandingAtrioAssignments(
@@ -220,7 +246,9 @@ export async function setLandingAtrioAssignments(
 
   if (rows.length === 0) return;
   const { error } = preserveExisting
-    ? await supabase.from("landings_atrio_clients").upsert(rows, { onConflict: "landing_id,atrio_client_id" })
+    ? await supabase
+        .from("landings_atrio_clients")
+        .upsert(rows, { onConflict: "landing_id,atrio_client_id" })
     : await supabase.from("landings_atrio_clients").insert(rows);
   if (error) throw error;
 }

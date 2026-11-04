@@ -14,6 +14,13 @@ import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import ModalPortal from "@/components/ui/ModalPortal";
 import { CURRENCY_ALL } from "@/lib/currency";
 import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
+import {useClientModulePermissions} from '@/components/clients/ClientModulePermissions';
+import {useBotsWorkspace} from '@/components/bots/useBotsWorkspace';
+import {BotsManagement,GerenciaActions} from '@/components/bots/BotsManagement';
+import {AtrioBotTable} from '@/components/bots/AtrioBotTable';
+import {WhatsAppInventoryExtras} from '@/components/bots/WhatsAppInventoryExtras';
+import {AtrioWorkspaceActions} from '@/components/bots/AtrioWorkspaceActions';
+import {botSearchText,type BotGerencia} from '@/lib/bots/workspace';
 
 export type GerenciaPhoneRow = {
   id: number;
@@ -55,6 +62,7 @@ type Props = {
   title?: string;
   /** Si true, se listan todas las gerencias (admin): propias primero, luego de clientes. */
   isAdmin?: boolean;
+  unifiedBots?: boolean;
 };
 
 type PhoneMetricRow = {
@@ -131,6 +139,7 @@ export function TelefonosPageContent({
   backLabel,
   title = "Teléfonos",
   isAdmin = false,
+  unifiedBots = false,
 }: Props) {
   const confirmAction = useAppConfirm();
   const { currencyScope, isAllCurrencies } = useCurrencyScope();
@@ -161,8 +170,12 @@ export function TelefonosPageContent({
   const [autoResetDaily, setAutoResetDaily] = useState(false);
   const [autoResetSaving, setAutoResetSaving] = useState(false);
   const [switchingGerenciaId, setSwitchingGerenciaId] = useState<number | null>(null);
-  const [openGerenciaId, setOpenGerenciaId] = useState<number | null>(null);
+  const [openGerenciaId, setOpenGerenciaId] = useState<number | string | null>(null);
   const [gerenciaSearch, setGerenciaSearch] = useState("");
+  const [channelFilter,setChannelFilter]=useState<'all'|'whatsapp'|'atrio'>('all');
+  const permissions=useClientModulePermissions();
+  const canAtrio=unifiedBots&&(isAdmin||permissions.show_atrio);
+  const bots=useBotsWorkspace(userId,workspaceCurrency,isAdmin,canAtrio&&!isAllCurrencies,gerencias);
   const [showOnlyActiveGerencias, setShowOnlyActiveGerencias] = useState(false);
   const [nextSyncCountdown, setNextSyncCountdown] = useState<string>("--:--");
   const [manualPhoneInput, setManualPhoneInput] = useState<Record<number, string>>({});
@@ -212,8 +225,8 @@ export function TelefonosPageContent({
     }
 
     const listRaw = isAdmin
-      ? await fetchGerenciasForAdmin(uid, workspaceCurrency)
-      : await fetchGerencias(uid, workspaceCurrency);
+      ? await fetchGerenciasForAdmin(uid, workspaceCurrency, unifiedBots)
+      : await fetchGerencias(uid, workspaceCurrency, unifiedBots);
     const list = [...listRaw].sort((a, b) => {
       const byName = a.nombre.localeCompare(b.nombre, "es", { sensitivity: "base" });
       if (byName !== 0) return byName;
@@ -268,7 +281,7 @@ export function TelefonosPageContent({
       };
     }
     setPhoneMetricsById(metricsById);
-  }, [isAdmin, workspaceCurrency]);
+  }, [isAdmin, workspaceCurrency, unifiedBots]);
 
   const getActivePhonesCount = useCallback(() => {
     return Object.values(phonesByGerencia).reduce((acc, list) => {
@@ -351,6 +364,27 @@ export function TelefonosPageContent({
     return () => clearInterval(t);
   }, [loadData]);
 
+  const refreshBotInventory = async (gerenciaId: number | null) => {
+    if(!unifiedBots)return;
+    const selected=gerencias.filter(g=>g.source_type!=='manual'&&(gerenciaId===null?(!isAdmin||(g.user_id??userId)===userId):g.id===gerenciaId));
+    const scopes=new Map<string,{kind:'owner'|'agency';id:number;targetUserId?:string}>();
+    for(const group of selected){
+      const owners=[...new Set((group.pbadmin_bots??[]).map(bot=>bot.owner_id).filter((id):id is number=>Number.isSafeInteger(id)&&Number(id)>0))];
+      const source=gerenciaId===null&&owners.length===1?{kind:'owner' as const,id:owners[0]}:{kind:'agency' as const,id:group.gerencia_id??group.id};
+      const scope={...source,...(isAdmin&&group.user_id&&group.user_id!==userId?{targetUserId:group.user_id}:{})};
+      scopes.set(`${group.user_id??userId}:${scope.kind}:${scope.id}`,scope);
+    }
+    const {data}=await supabase.auth.getSession();if(!data.session)throw Error('Volvé a iniciar sesión.');
+    const requests=[...scopes.values()];
+    for(let offset=0;offset<requests.length;offset+=4){
+      await Promise.all(requests.slice(offset,offset+4).map(async scope=>{
+        const response=await fetch('/api/bots/import',{method:'POST',headers:{Authorization:`Bearer ${data.session!.access_token}`,'Content-Type':'application/json'},
+          body:JSON.stringify({action:'refresh',...scope,workspaceCurrency}),signal:AbortSignal.timeout(60000)});
+        const result=await response.json();if(!response.ok||result.warnings?.length)throw Error(result.error||result.warnings?.join(' ')||'No se pudo actualizar el inventario de bots.');
+      }));
+    }
+  };
+
   const handleSync = async (gerenciaId: number | null) => {
     if (!userId || !base) return;
     if (gerenciaId !== null) setSyncingGerenciaId(gerenciaId);
@@ -387,6 +421,7 @@ export function TelefonosPageContent({
         } catch {
           // ignore parse errors and continue normal flow
         }
+        try{await refreshBotInventory(gerenciaId);}catch(e){setError(e instanceof Error?e.message:'No se pudo actualizar el inventario de bots.');}
         await loadData(userId);
       }
     } catch (e) {
@@ -717,12 +752,15 @@ export function TelefonosPageContent({
 
   const normalizedGerenciaSearch = gerenciaSearch.trim().toLowerCase();
   const normalizedPhoneSearch = onlyDigits(gerenciaSearch);
-  const gerenciaHasActivePhone = (g: Gerencia) =>
-    (phonesByGerencia[g.id] ?? []).some(
+  const displayGerencias:BotGerencia[]=unifiedBots?bots.groups:gerencias.map(g=>({...g,atrioBots:[]}));
+  const gerenciaHasActivePhone = (g: BotGerencia) =>
+    (channelFilter!=='atrio'&&(phonesByGerencia[g.id] ?? []).some(
       (p) => p.status === "active" && p.source_available !== false,
-    );
-  const activeGerenciasCount = gerencias.filter(gerenciaHasActivePhone).length;
-  const filteredGerencias = gerencias.filter((g) => {
+    )) || (channelFilter!=='whatsapp'&&g.atrioBots.some(entry=>entry.connection?.active||entry.inventory?.active));
+  const activeGerenciasCount = displayGerencias.filter(gerenciaHasActivePhone).length;
+  const filteredGerencias = displayGerencias.filter((g) => {
+    if(channelFilter==='whatsapp'&&g.virtual)return false;
+    if(channelFilter==='atrio'&&!g.atrioBots.length)return false;
     if (showOnlyActiveGerencias && !gerenciaHasActivePhone(g)) return false;
     if (!normalizedGerenciaSearch) return true;
     const id = String(g.gerencia_id ?? g.id ?? "").toLowerCase();
@@ -733,7 +771,7 @@ export function TelefonosPageContent({
       normalizedPhoneSearch.length > 0 &&
       phones.some((p) => onlyDigits(p.phone).includes(normalizedPhoneSearch));
     return (
-      name.includes(normalizedGerenciaSearch) ||
+      botSearchText(g).includes(normalizedGerenciaSearch) || name.includes(normalizedGerenciaSearch) ||
       id.includes(normalizedGerenciaSearch) ||
       internalId.includes(normalizedGerenciaSearch) ||
       hasPhoneMatch
@@ -767,7 +805,7 @@ export function TelefonosPageContent({
         title={title}
         description={
           <>
-            Historial de teléfonos por gerencia. Sincronizá y reiniciá contadores por gerencia o en bloque.
+            {unifiedBots?'Bots de WhatsApp y Atrio agrupados por gerencia.':'Historial de teléfonos por gerencia. Sincronizá y reiniciá contadores por gerencia o en bloque.'}
             <span className="mt-1 block text-[11px] text-[var(--color-text-disabled)]">
           {isAdmin
             ? "Próxima sincronización automática (cron):"
@@ -781,6 +819,12 @@ export function TelefonosPageContent({
           </>
         }
       />
+
+      {unifiedBots&&userId&&<BotsManagement userId={userId} workspace={workspaceCurrency} gerencias={gerencias} isAdmin={isAdmin} canAtrio={canAtrio}
+        onChanged={async()=>{await loadData(userId);bots.reload();}} onImported={async()=>{await handleSync(null);bots.reload();}}/>}
+      {unifiedBots&&bots.busy&&<p role="status" className="text-xs text-zinc-400">Actualizando bots de Atrio…</p>}
+      {unifiedBots&&bots.error&&<p role="alert" className="text-xs text-amber-300">{bots.error} <button type="button" className="underline" onClick={bots.reload}>Reintentar</button></p>}
+      {unifiedBots&&canAtrio&&!!bots.clients.length&&<AtrioWorkspaceActions clients={bots.clients} onChanged={bots.reload}/>}
 
       {error && (
         <p
@@ -800,8 +844,8 @@ export function TelefonosPageContent({
           <input
             value={gerenciaSearch}
             onChange={(e) => setGerenciaSearch(e.target.value)}
-            placeholder="Buscar por gerencia, ID o phone..."
-            aria-label="Buscar gerencia por nombre, ID o phone"
+            placeholder={unifiedBots?'Buscar gerencia, bot, asesor o teléfono…':'Buscar por gerencia, ID o phone...'}
+            aria-label={unifiedBots?'Buscar gerencia, bot, asesor o teléfono':'Buscar gerencia por nombre, ID o phone'}
             className="h-8 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-xs text-zinc-100 placeholder:text-zinc-500 lg:max-w-xs"
           />
           {(() => {
@@ -825,7 +869,7 @@ export function TelefonosPageContent({
             >
               <span>{showOnlyActiveGerencias ? "Mostrando activas" : "Solo activas"}</span>
               <span className="text-[10px] text-zinc-400">
-                {activeGerenciasCount}/{gerencias.length}
+                {activeGerenciasCount}/{displayGerencias.length}
               </span>
             </button>
             {!isAdmin ? (
@@ -860,8 +904,8 @@ export function TelefonosPageContent({
             ) : null}
             <button
               type="button"
-              onClick={() => void handleSync(null)}
-              disabled={globalSyncing || !hasPbadmin}
+              onClick={() => {if(hasPbadmin)void handleSync(null);if(unifiedBots)bots.reload();}}
+              disabled={globalSyncing || (!hasPbadmin&&!canAtrio)}
               title="Trae/actualiza los teléfonos disponibles desde el panel de PB admin para todas las gerencias."
               className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
             >
@@ -874,7 +918,7 @@ export function TelefonosPageContent({
               title="Reinicia a 0 el contador de uso de teléfonos en todas las gerencias."
               className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
             >
-              {globalResetting ? "Reiniciando..." : "Reiniciar contadores"}
+              {globalResetting ? "Reiniciando..." : unifiedBots?"Contadores WhatsApp":"Reiniciar contadores"}
             </button>
             <button
               type="button"
@@ -883,7 +927,7 @@ export function TelefonosPageContent({
               title="Reinicia el conteo operativo de mensajes recibidos sin borrar el historico de conversiones."
               className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
             >
-              {globalResettingMessages ? "Reiniciando..." : "Reiniciar mensajes"}
+              {globalResettingMessages ? "Reiniciando..." : unifiedBots?"Mensajes WhatsApp":"Reiniciar mensajes"}
             </button>
             <button
               type="button"
@@ -900,34 +944,37 @@ export function TelefonosPageContent({
         </div>
       </div>
 
-      {gerencias.length === 0 ? (
+      {unifiedBots&&canAtrio&&<div role="group" aria-label="Canal de los bots" className="flex flex-wrap gap-2">{(['all','whatsapp','atrio'] as const).map(channel=><button key={channel} type="button" aria-pressed={channelFilter===channel} onClick={()=>setChannelFilter(channel)} className={`rounded-lg border px-3 py-1.5 text-xs ${channelFilter===channel?'border-zinc-500 bg-zinc-700 text-zinc-100':'border-zinc-800 text-zinc-400'}`}>{channel==='all'?'Todos':channel==='whatsapp'?'WhatsApp':'Atrio'}</button>)}</div>}
+      {displayGerencias.length === 0 ? (
         <p className="text-sm text-zinc-500">
-          No tienes gerencias. Crea una en{" "}
+          {unifiedBots?'Todavía no hay bots. Usá Agregar gerencia para comenzar.':<>No tienes gerencias. Crea una en{" "}
           <Link
             href={(backLink ?? "").includes("admin") ? "/admin/gerencias" : "/dashboard/gerencias"}
             className="text-zinc-300 underline hover:text-zinc-100"
           >
             Gerencias
           </Link>
-          .
+          .</>}
         </p>
       ) : (
         <div className="space-y-2">
           {filteredGerencias.length === 0 ? (
             <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-6 text-center text-sm text-zinc-500">
               {showOnlyActiveGerencias
-                ? "No hay gerencias con teléfonos activos para mostrar."
+                ? "No hay gerencias con bots activos para mostrar."
                 : "No hay gerencias que coincidan con la búsqueda."}
             </div>
           ) : null}
           {filteredGerencias.map((g) => {
             const phones = phonesByGerencia[g.id] ?? [];
-            const activePhonesCount = phones.filter(
+            const atrioConnections=g.atrioBots.flatMap(entry=>entry.connection?[entry.connection]:[]);
+            const unknownMetrics=g.virtual&&!atrioConnections.length&&g.atrioBots.some(entry=>entry.inventory);
+            const activePhonesCount = g.virtual?g.atrioBots.filter(entry=>entry.connection?.active||entry.inventory?.active).length:phones.filter(
               (p) => p.status === "active" && getAssignmentRole(p) === "acquisition",
             ).length;
             const totalUsage = phones.reduce(
               (acc, p) => acc + (Number(p.usage_count) || 0),
-              0,
+              g.virtual?atrioConnections.reduce((sum,c)=>sum+c.usage_count,0):0,
             );
             const isPbadminSource = (g.source_type ?? "pbadmin") === "pbadmin";
             const hasPhones = phones.length > 0;
@@ -936,31 +983,33 @@ export function TelefonosPageContent({
             const totalMessages = phones.reduce(
               (acc, p) =>
                 acc + (phoneMetricsById[p.id]?.messagesReceived ?? 0),
-              0,
+              g.virtual?atrioConnections.reduce((sum,c)=>sum+c.chats_started,0):0,
             );
             const totalHistoricalMessages = phones.reduce(
               (acc, p) =>
                 acc + (phoneMetricsById[p.id]?.messagesReceivedHistorical ?? 0),
-              0,
+              g.virtual?atrioConnections.reduce((sum,c)=>sum+(c.chats_started_total??c.chats_started),0):0,
             );
-            const isOpen = openGerenciaId === g.id;
+            const viewId=g.uiKey??g.id;
+            const isOpen = openGerenciaId === viewId;
             const syncing = syncingGerenciaId === g.id;
             const resetting = resettingGerenciaId === g.id;
             const resettingMessages = resettingMessagesGerenciaId === g.id;
             return (
               <div
-                key={g.id}
+                key={viewId}
                 className="rounded-xl border border-zinc-800 bg-zinc-950/40 overflow-hidden"
               >
                 <button
                   type="button"
                   onClick={() =>
-                    setOpenGerenciaId((prev) => (prev === g.id ? null : g.id))
+                    setOpenGerenciaId((prev) => (prev === viewId ? null : viewId))
                   }
                   className="grid w-full grid-cols-1 items-center gap-2 px-4 py-3 text-left hover:bg-zinc-800/50 lg:grid-cols-[minmax(220px,1fr)_72px_110px_92px_150px_105px_20px]"
                 >
                   <span className="min-w-0 truncate font-medium text-zinc-200">
                       {g.nombre} {g.gerencia_id ? `(ID ${g.gerencia_id})` : ""}
+                      {unifiedBots&&<span className="ml-2 inline-flex gap-1 text-[10px] font-normal text-zinc-400">{!g.virtual&&<span>WhatsApp</span>}{!!g.atrioBots.length&&<span>· Atrio {g.atrioBots.filter(entry=>entry.connection||entry.inventory).length}</span>}</span>}
                   </span>
                   <span className="inline-flex w-fit rounded border border-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300 lg:justify-self-start">
                     {(g.source_type ?? "pbadmin") === "manual" ? "Manual" : "PBadmin"}
@@ -971,16 +1020,16 @@ export function TelefonosPageContent({
                       aria-label={activePhonesCount > 0 ? "Tiene WhatsApp publicitarios activos" : "No tiene WhatsApp publicitarios activos"}
                       title={activePhonesCount > 0 ? "Tiene WhatsApp publicitarios activos" : "No tiene WhatsApp publicitarios activos"}
                     />
-                    publicitarios: {activePhonesCount}
+                    {g.virtual?'activos':'publicitarios'}: {activePhonesCount}
                   </span>
                   <div className="whitespace-nowrap text-xs text-zinc-500 lg:text-right">
-                    Contador: {totalUsage}
+                    Contador: {unknownMetrics?'—':totalUsage}
                   </div>
                   <div className="whitespace-nowrap text-xs text-zinc-500 lg:text-right">
-                    Mensajes recibidos: {totalMessages}
+                    {g.virtual?'Chats iniciados':'Mensajes recibidos'}: {unknownMetrics?'—':totalMessages}
                   </div>
                   <div className="whitespace-nowrap text-xs text-zinc-500 lg:text-right">
-                    Histórico: {totalHistoricalMessages}
+                    Histórico: {unknownMetrics?'—':totalHistoricalMessages}
                   </div>
                   <svg
                     className={`h-4 w-4 shrink-0 justify-self-end text-zinc-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -998,6 +1047,9 @@ export function TelefonosPageContent({
                 </button>
                 {isOpen && (
                   <div className="border-t border-zinc-800 px-4 pb-4 pt-2">
+                    {unifiedBots&&!g.virtual&&userId&&<div className="mb-3 flex"><GerenciaActions gerencia={g} onChanged={async()=>{await loadData(userId);bots.reload();}}/></div>}
+                    {!g.virtual&&channelFilter!=='atrio'&&<>
+                    {unifiedBots&&<h3 className="mb-2 text-xs font-semibold text-zinc-300">WhatsApp</h3>}
                     <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2">
                       <span className="text-[11px] text-zinc-400">
                         Equitativo por:
@@ -1252,6 +1304,9 @@ export function TelefonosPageContent({
                         </tbody>
                       </table>
                     </div>
+                    {unifiedBots&&<WhatsAppInventoryExtras gerencia={g} phones={phones}/>}
+                    </>}
+                    {unifiedBots&&channelFilter!=='whatsapp'&&!!g.atrioBots.length&&<AtrioBotTable entries={g.atrioBots} onChanged={bots.reload}/>}
                   </div>
                 )}
               </div>

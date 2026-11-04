@@ -2,7 +2,7 @@ export const CLIENT_MODULES = [
   { key: "show_followups", label: "Seguimientos", path: "/dashboard/seguimiento" },
   { key: "show_whatsapp_api", label: "WhatsApp API", path: "/dashboard/whatsapp-cloud-api" },
   { key: "show_notifications", label: "Notificaciones", path: "/dashboard/notificaciones" },
-  { key: "show_atrio", label: "Atrio", path: "/dashboard/atrio" },
+  { key: "show_atrio", label: "Bots de Atrio", path: "/dashboard/atrio" },
   { key: "show_kommo", label: "Integraciones: Kommo", path: null },
   { key: "show_chatrace", label: "Integraciones: Chatrace", path: null },
 ] as const;

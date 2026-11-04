@@ -1,0 +1,22 @@
+# Entrega Bots, secciones opcionales y presentación T9 — 04/11/2026
+
+El usuario autorizó commit, push y publicación de los proyectos propios. API2 se conserva sólo en local; el programador gestiona su despliegue.
+
+## Alcance verificado
+
+- Builder: pestaña Bots, importación por Agency ID/Owner ID, galería y layout T9, paletas negro/dorado y negro/plateado, país automático oculto, Planes oculto y secciones opcionales por cliente. El checkpoint anterior es `027d4db`.
+- Atrio: puente privado de inventario de bots; no modifica el chat ni las operaciones.
+- Clásico: renderer canónico regenerado con la presentación T9.
+- API2: endpoint del directorio y mejoras de recuperación/diagnóstico en desarrollo local; nada de este lote API2 se publica desde esta máquina.
+
+Pruebas previas: Bots Builder 26, API2 6, Atrio 6, SQL aislado y navegador 26; T9 112 escenarios de layout, 36 comprobaciones de editor, 48 recorridos de ambos motores y 17 pruebas focales. Compilaciones de Builder/Atrio aprobadas. No hubo operaciones financieras ni creación de cuentas reales.
+
+## Base productiva
+
+Verificados schema y RLS existentes antes de aplicar cambios. Se aplicaron por MCP las migraciones `client_module_visibility_opt_in` y `bots_display_inventory`, con las mismas sentencias de los archivos locales. Se verificaron columnas y defaults posteriores; no cambian valores guardados ni permisos de filas.
+
+Publicadas por CLI, sin cambiar su autenticación existente (`verify_jwt=false` y autorización propia), las funciones `list-clients`, `create-client` y `update-client`.
+
+## Estado web
+
+Publicación en curso. Se registrarán aquí los commits, deployments y comprobaciones públicas al terminar. La importación por Agency ID/Owner ID depende del nuevo endpoint de API2; mientras falte, se informa su actualización pendiente y permanece disponible la administración existente.

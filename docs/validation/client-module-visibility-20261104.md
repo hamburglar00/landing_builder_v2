@@ -1,6 +1,6 @@
 # Visibilidad de secciones del constructor — 04/11/2026
 
-Implementación local, sin commit, push ni despliegue de este lote.
+Implementación incluida en el checkpoint `027d4db` (`checkpoint/constructor-pre-bots-20261104`). El 04/11 el usuario autorizó su publicación junto con Bots: migración aplicada y funciones `list-clients`, `create-client` y `update-client` publicadas. El estado final de las webs se registra en [la entrega](../release/bots-template9-20261104/README.md). La unificación del directorio se documenta en [Bots](unified-bots-20261104/README.md).
 
 ## Comportamiento
 

@@ -1,19 +1,2 @@
-"use client";
-
-import dynamic from "next/dynamic";
-import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
-
-const TelefonosPageContent = dynamic(
-  () => import("@/components/telefonos/TelefonosPageContent").then((mod) => mod.TelefonosPageContent),
-  { loading: () => <DashboardSkeleton title="Cargando teléfonos..." /> },
-);
-
-export default function AdminTelefonosPage() {
-  return (
-    <TelefonosPageContent
-      title="TELEFONOS"
-      isAdmin
-    />
-  );
-}
-
+import {redirect} from "next/navigation";
+export default function LegacyBotsPage(){redirect("/admin/bots");}

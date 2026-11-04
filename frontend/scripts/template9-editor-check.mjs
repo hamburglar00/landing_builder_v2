@@ -1,25 +1,28 @@
 // Actual editor components, isolated React state and local assets only.
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
-import {readFile,writeFile} from 'node:fs/promises';
+import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import path from 'node:path';
 const require=createRequire(import.meta.url),{build}=require('esbuild');
 let playwright;try{playwright=require(path.join(process.env.APPDATA,'npm/node_modules/playwright'))}catch{playwright=require('playwright')}
 const root=process.cwd();
+const directory=process.env.TEMPLATE9_ARTIFACT_DIR||path.resolve('../docs/validation/template9-20261103');
+await mkdir(directory,{recursive:true});
 const compiled=await build({absWorkingDir:root,stdin:{resolveDir:root,loader:'tsx',contents:`
   import React,{useState} from 'react';import{createRoot}from'react-dom/client';
   import{LandingTemplateSection}from'./components/landing/LandingEditorForm';
   import{CtaDestinationSection}from'./components/landing/CtaDestinationSection';
   import{LandingPreview}from'./components/landing/LandingPreview';
+  import{LandingMarketCountryField}from'./components/landing/LandingMarketCountryField';
   import{DEFAULT_CONFIG}from'./lib/landing/mocks';
-  function Fixture(){const[config,setConfig]=useState({...DEFAULT_CONFIG,template:'template7',titleLine1:'Título guardado T7'});return <div style={{display:'grid',gridTemplateColumns:'1fr 390px',gap:24,padding:24}}><section><LandingTemplateSection config={config} setConfig={setConfig}/><CtaDestinationSection config={config} setConfig={setConfig}/><pre id="fixture-config">{JSON.stringify(config)}</pre></section><LandingPreview config={config}/></div>}
+  function Fixture(){const[config,setConfig]=useState({...DEFAULT_CONFIG,template:'template7',titleLine1:'Título guardado T7',marketCountry:'PY'});const[workspace,setWorkspace]=useState('ARS');return <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) 390px',gap:24,padding:24}}><section><LandingMarketCountryField config={config} setConfig={setConfig} workspaceCurrency={workspace}/><button id="fixture-ars" onClick={()=>setWorkspace('ARS')}>Workspace ARS</button><button id="fixture-pyg" onClick={()=>setWorkspace('PYG')}>Workspace PYG</button><LandingTemplateSection config={config} setConfig={setConfig}/><CtaDestinationSection config={config} setConfig={setConfig}/><pre id="fixture-config" style={{whiteSpace:'pre-wrap'}}>{JSON.stringify(config)}</pre><a id="fixture-gallery" href="#selected-landing" style={{display:'block',width:300,height:400,overflow:'hidden'}}><LandingPreview config={config} compact gallery/></a></section><div id="fixture-editor-preview"><LandingPreview config={config}/></div></div>}
   createRoot(document.getElementById('root')).render(<Fixture/>);
 `},bundle:true,write:false,platform:'browser',format:'iife',jsx:'automatic',define:{'process.env':'{}','process.env.NODE_ENV':'"production"'},plugins:[{name:'fixture-client',setup(b){
   b.onResolve({filter:/^@\/lib\/supabaseClient$/},()=>({path:'supabase',namespace:'fixture'}));
   b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:'export const supabase = {};',loader:'js'}));
 }}]});
 const postcss=require('postcss'),css=(await postcss([require('@tailwindcss/postcss')()]).process(await readFile('app/globals.css','utf8'),{from:path.resolve('app/globals.css')})).css;
-const html=`<!doctype html><html lang="es"><head><style>${css}</style></head><body><div id="root"></div><script src="/fixture.js"></script></body></html>`;
+const html=`<!doctype html><html lang="es"><head><meta charset="utf-8"><style>${css}</style></head><body><div id="root"></div><script src="/fixture.js"></script></body></html>`;
 const checks=[];
 for(const [name,engine]of[['Chromium',playwright.chromium],['WebKit',playwright.webkit]]){
   const browser=await engine.launch({headless:true});
@@ -33,13 +36,35 @@ for(const [name,engine]of[['Chromium',playwright.chromium],['WebKit',playwright.
       return route.fulfill({contentType:'text/html',body:html});
     });
     await page.goto('https://editor.invalid/fixture');
+    await page.waitForFunction(()=>JSON.parse(document.querySelector('#fixture-config').textContent).marketCountry==='AR');
+    assert.equal(await page.getByText('País donde circulará la landing',{exact:true}).count(),0);
+    await page.locator('#fixture-pyg').click();
+    await page.waitForFunction(()=>JSON.parse(document.querySelector('#fixture-config').textContent).marketCountry==='PY');
+    await page.locator('#fixture-ars').click();
+    await page.waitForFunction(()=>JSON.parse(document.querySelector('#fixture-config').textContent).marketCountry==='AR');
+    checks.push({browser:name,country:'hidden; follows ARS/PYG workspace'});
     await page.locator('input[value="template9"]').check();
-    const preview=page.frameLocator('iframe[title="Vista previa de Plantilla 9"]');
+    const preview=page.frameLocator('#fixture-editor-preview iframe');
     assert.equal(await preview.locator('h1').innerText(),'Creá tu cuenta gratis');
     for(const [label,alt]of[['Rey de Ases','Rey de Ases'],['Ases del Norte','Ases del Norte'],['Ganamos NET','Ganamos NET'],['Multi Skin','Ganamos+']]){
       await page.locator('#template7-target-provider').click();await page.getByRole('option',{name:label,exact:true}).click();
       await preview.locator(`img[alt="${alt}"]`).waitFor();
       assert.equal(await preview.locator('h1').innerText(),'Creá tu cuenta gratis');
+      const gallery=page.frameLocator('#fixture-gallery iframe');
+      await gallery.locator(`img[alt="${alt}"]`).waitFor();
+      for(const [width,height]of [[300,400],[240,320],[180,240]]){
+        await page.locator('#fixture-gallery').evaluate((el,[w,h])=>{el.style.width=w+'px';el.style.height=h+'px'},[width,height]);
+        const metrics=await gallery.locator('.template9').evaluate(root=>{
+          const wrap=root.querySelector('.template9__wrap'),cta=root.querySelector('.template9__cta');
+          return {width:root.clientWidth,height:root.clientHeight,rootOverflow:root.scrollHeight-root.clientHeight,wrapOverflow:wrap.scrollHeight-wrap.clientHeight,ctaBottom:cta.getBoundingClientRect().bottom};
+        });
+        assert.ok(metrics.rootOverflow<=1&&metrics.wrapOverflow<=1,`${name} ${label} gallery ${width}: ${JSON.stringify(metrics)}`);
+        assert.ok(metrics.ctaBottom<=height,`${name} ${label} gallery CTA clipped`);
+        checks.push({browser:name,platform:label,gallery:{width,height}});
+      }
+      await page.locator('#fixture-gallery').evaluate(el=>{el.style.width='300px';el.style.height='400px'});
+      await page.locator('#fixture-gallery').click();
+      assert.equal(new URL(page.url()).hash,'#selected-landing','thumbnail opens its parent landing link');
       checks.push({browser:name,platform:label});
     }
     // Skin is selected with the actual CustomSelect; preview must follow it.
@@ -59,5 +84,5 @@ for(const [name,engine]of[['Chromium',playwright.chromium],['WebKit',playwright.
     checks.push({browser:name,platform:'Bet30',drafts:'independent',writes});
   }finally{await browser.close()}
 }
-await writeFile('../docs/validation/template9-20261103/editor-results.json',JSON.stringify({passed:checks.length,checks},null,2));
+await writeFile(path.join(directory,'editor-results.json'),JSON.stringify({passed:checks.length,checks},null,2));
 console.log(JSON.stringify({passed:checks.length}));

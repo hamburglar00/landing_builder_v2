@@ -1,5 +1,2 @@
-import AtrioClientsPageContent from "@/components/atrio/AtrioClientsPageContent";
-
-export default function AdminAtrioPage() {
-  return <AtrioClientsPageContent mode="admin" />;
-}
+import {redirect} from "next/navigation";
+export default function LegacyBotsPage(){redirect("/admin/bots");}

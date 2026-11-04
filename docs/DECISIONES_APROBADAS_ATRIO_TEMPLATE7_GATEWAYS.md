@@ -1,5 +1,23 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Editor y presentación responsive de Template 9 (04/11/2026)
+
+- Ocultar el campo «País donde circulará la landing» en todos los editores. Conservar la asignación automática AR/PY por workspace y su persistencia; no cambiar tracking ni validación de teléfonos.
+- Template 9: Rey de Ases usa negro/dorado; Ases del Norte usa negro/plateado, incluidas superficies, textos y contraste de botones. Conservar los logos, las paletas de NET/Plus y las demás skins.
+- La galería usa una miniatura sin scroll ni interacción propia que impida abrir la landing. La landing pública adapta espacios y tamaños a celulares; el aviso de cookies participa del layout y no cubre el formulario o el pie. Mantener todos los contenidos legales en la página pública y permitir desplazamiento accesible si el teclado o contenido personalizado excede la altura disponible.
+- Implementación canónica de presentación en Builder, compartida con el renderer clásico. No cambia el runtime T7, redirecciones, gateways, API2 ni operaciones financieras. Verificación y límites: [validación visual](validation/template9-layout-20261104/README.md).
+
+### Directorio unificado Bots y checkpoint del constructor (04/11/2026)
+
+- El usuario aprobó reunir Teléfonos, Atrio y Gerencias en una única pestaña «Bots», con la estética de Teléfonos y su administración por gerencia. Antes de comenzar pidió un checkpoint: commit local `027d4db`, etiqueta `checkpoint/constructor-pre-bots-20261104`, que incluye las modificaciones locales anteriores de visibilidad.
+- Agregar gerencia permite importar por Agency ID o por Owner ID de PBAdmin, además de conservar la gerencia manual y el vínculo manual a un asesor existente. La importación enlaza asesores existentes; no crea asesores, jugadores ni cuentas de plataformas. Conservar nombres editados, asignaciones, teléfonos y contadores existentes.
+- Mantener una sola entrada de navegación en cliente y superadmin; las seis rutas antiguas redirigen a Bots. «Bots de Atrio» sigue controlado por el permiso opcional `show_atrio`; deshabilitarlo no oculta la administración de WhatsApp. El superadmin conserva sus propios módulos.
+- Agrupar Atrio por propietario del workspace y gerencia operativa de cada conexión; los IDs sintéticos de gerencias manuales no identifican gerencias PBAdmin. Mantener visibles los asesores sin bots y las conexiones sin gerencia registrada, sin registrarlas automáticamente en la sincronización de teléfonos.
+- El directorio privado de API2 devuelve metadatos por gerencia/propietario, incluyendo bots inactivos o sin teléfono. Conservar la asociación MKT mediante `purchase_settings` y la gerencia operativa de MKT Atrio; el endpoint público `random-contact` no cambia. Atrio aporta el nombre y slug actuales del asesor mediante un puente autenticado.
+- Los snapshots `gerencias.pbadmin_bots` y `atrio_clients.pbadmin_bots` son exclusivamente visuales. Los bots de Atrio sin conexión real se muestran como pendientes, sin habilitarles acciones por ese snapshot. No habilita teléfonos, redirecciones, credenciales ni operaciones. Cargarlo sólo al pedir el inventario desde Bots, no desde los lectores de gerencias del editor de landings. La sincronización manual puede refrescarlo; no agrega un cron.
+- Los reinicios mantienen sus implementaciones existentes y confirman el alcance: WhatsApp por número/gerencia; Atrio por asesor o workspace completo, conservando históricos. Los filtros no reducen el alcance de un reinicio global. Este lote no modifica lógica financiera ni de ingreso; API2 permanece local y a cargo del programador para desplegar.
+- Implementación, límites de transporte, evidencia y publicación pendiente: [validación del lote](validation/unified-bots-20261104/README.md).
+
 ### Secciones opcionales del constructor (04/11/2026)
 
 - Ocultar el acceso a Planes en los menús de cliente y superadmin, tanto en escritorio como en móvil. Conservar las reglas de suscripción existentes.

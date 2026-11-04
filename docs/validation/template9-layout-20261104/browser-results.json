@@ -1,0 +1,389 @@
+{
+  "passed": 48,
+  "checks": [
+    {
+      "browser": "Chromium",
+      "engine": "builder",
+      "provider": "rey_de_ases",
+      "scenario": "fresh-meta",
+      "html_bytes": 55198,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "builder",
+      "provider": "ases_del_norte",
+      "scenario": "fresh-meta",
+      "html_bytes": 55226,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "builder",
+      "provider": "ganamos_net",
+      "scenario": "fresh-meta",
+      "html_bytes": 55088,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "builder",
+      "provider": "ganamos_net",
+      "scenario": "organic",
+      "html_bytes": 55088,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "builder",
+      "provider": "ganamos_net",
+      "scenario": "early-click",
+      "html_bytes": 55088,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "builder",
+      "provider": "ganamos_net",
+      "scenario": "retry",
+      "html_bytes": 55088,
+      "account_requests": 2
+    },
+    {
+      "browser": "Chromium",
+      "engine": "builder",
+      "provider": "ganamos_net",
+      "scenario": "reentry",
+      "html_bytes": 55088,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "builder",
+      "provider": "ganamos_net",
+      "scenario": "small-screen",
+      "html_bytes": 55088,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "builder",
+      "provider": "ganamos_net",
+      "scenario": "desktop",
+      "html_bytes": 55088,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "builder",
+      "provider": "ganamos_net",
+      "scenario": "keyboard",
+      "html_bytes": 55088,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "builder",
+      "provider": "multi_skin",
+      "scenario": "fresh-meta",
+      "html_bytes": 55107,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "builder",
+      "provider": "multi_skin",
+      "scenario": "bet30",
+      "html_bytes": 54914,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "classic",
+      "provider": "rey_de_ases",
+      "scenario": "fresh-meta",
+      "html_bytes": 52480,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "classic",
+      "provider": "ases_del_norte",
+      "scenario": "fresh-meta",
+      "html_bytes": 52506,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "classic",
+      "provider": "ganamos_net",
+      "scenario": "fresh-meta",
+      "html_bytes": 52370,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "classic",
+      "provider": "ganamos_net",
+      "scenario": "organic",
+      "html_bytes": 52370,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "classic",
+      "provider": "ganamos_net",
+      "scenario": "early-click",
+      "html_bytes": 52370,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "classic",
+      "provider": "ganamos_net",
+      "scenario": "retry",
+      "html_bytes": 52370,
+      "account_requests": 2
+    },
+    {
+      "browser": "Chromium",
+      "engine": "classic",
+      "provider": "ganamos_net",
+      "scenario": "reentry",
+      "html_bytes": 52370,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "classic",
+      "provider": "ganamos_net",
+      "scenario": "small-screen",
+      "html_bytes": 52370,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "classic",
+      "provider": "ganamos_net",
+      "scenario": "desktop",
+      "html_bytes": 52370,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "classic",
+      "provider": "ganamos_net",
+      "scenario": "keyboard",
+      "html_bytes": 52370,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "classic",
+      "provider": "multi_skin",
+      "scenario": "fresh-meta",
+      "html_bytes": 52385,
+      "account_requests": 1
+    },
+    {
+      "browser": "Chromium",
+      "engine": "classic",
+      "provider": "multi_skin",
+      "scenario": "bet30",
+      "html_bytes": 52192,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "builder",
+      "provider": "rey_de_ases",
+      "scenario": "fresh-meta",
+      "html_bytes": 55198,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "builder",
+      "provider": "ases_del_norte",
+      "scenario": "fresh-meta",
+      "html_bytes": 55226,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "builder",
+      "provider": "ganamos_net",
+      "scenario": "fresh-meta",
+      "html_bytes": 55088,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "builder",
+      "provider": "ganamos_net",
+      "scenario": "organic",
+      "html_bytes": 55088,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "builder",
+      "provider": "ganamos_net",
+      "scenario": "early-click",
+      "html_bytes": 55088,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "builder",
+      "provider": "ganamos_net",
+      "scenario": "retry",
+      "html_bytes": 55088,
+      "account_requests": 2
+    },
+    {
+      "browser": "WebKit",
+      "engine": "builder",
+      "provider": "ganamos_net",
+      "scenario": "reentry",
+      "html_bytes": 55088,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "builder",
+      "provider": "ganamos_net",
+      "scenario": "small-screen",
+      "html_bytes": 55088,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "builder",
+      "provider": "ganamos_net",
+      "scenario": "desktop",
+      "html_bytes": 55088,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "builder",
+      "provider": "ganamos_net",
+      "scenario": "keyboard",
+      "html_bytes": 55088,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "builder",
+      "provider": "multi_skin",
+      "scenario": "fresh-meta",
+      "html_bytes": 55107,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "builder",
+      "provider": "multi_skin",
+      "scenario": "bet30",
+      "html_bytes": 54914,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "classic",
+      "provider": "rey_de_ases",
+      "scenario": "fresh-meta",
+      "html_bytes": 52480,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "classic",
+      "provider": "ases_del_norte",
+      "scenario": "fresh-meta",
+      "html_bytes": 52506,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "classic",
+      "provider": "ganamos_net",
+      "scenario": "fresh-meta",
+      "html_bytes": 52370,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "classic",
+      "provider": "ganamos_net",
+      "scenario": "organic",
+      "html_bytes": 52370,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "classic",
+      "provider": "ganamos_net",
+      "scenario": "early-click",
+      "html_bytes": 52370,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "classic",
+      "provider": "ganamos_net",
+      "scenario": "retry",
+      "html_bytes": 52370,
+      "account_requests": 2
+    },
+    {
+      "browser": "WebKit",
+      "engine": "classic",
+      "provider": "ganamos_net",
+      "scenario": "reentry",
+      "html_bytes": 52370,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "classic",
+      "provider": "ganamos_net",
+      "scenario": "small-screen",
+      "html_bytes": 52370,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "classic",
+      "provider": "ganamos_net",
+      "scenario": "desktop",
+      "html_bytes": 52370,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "classic",
+      "provider": "ganamos_net",
+      "scenario": "keyboard",
+      "html_bytes": 52370,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "classic",
+      "provider": "multi_skin",
+      "scenario": "fresh-meta",
+      "html_bytes": 52385,
+      "account_requests": 1
+    },
+    {
+      "browser": "WebKit",
+      "engine": "classic",
+      "provider": "multi_skin",
+      "scenario": "bet30",
+      "html_bytes": 52192,
+      "account_requests": 1
+    }
+  ]
+}

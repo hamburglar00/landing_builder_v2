@@ -1,0 +1,2245 @@
+{
+  "passed": 112,
+  "checks": [
+    {
+      "browser": "Chromium",
+      "provider": "rey_de_ases",
+      "whatsapp": false,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 436.09375,
+        "noticeTop": 485.3125,
+        "ctaTop": 217.6875,
+        "ctaBottom": 263.6875,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "rey_de_ases",
+      "whatsapp": false,
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 472.265625,
+        "noticeTop": 570,
+        "ctaTop": 266.203125,
+        "ctaBottom": 312.203125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "rey_de_ases",
+      "whatsapp": false,
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 521.953125,
+        "noticeTop": 586.71875,
+        "ctaTop": 284.953125,
+        "ctaBottom": 334.953125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "rey_de_ases",
+      "whatsapp": false,
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 520.453125,
+        "noticeTop": 583.71875,
+        "ctaTop": 283.453125,
+        "ctaBottom": 333.453125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "rey_de_ases",
+      "whatsapp": false,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 652.90625,
+        "noticeTop": 735.25,
+        "ctaTop": 365.375,
+        "ctaBottom": 425.375,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "rey_de_ases",
+      "whatsapp": false,
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 706,
+        "noticeTop": 841.4375,
+        "ctaTop": 418.46875,
+        "ctaBottom": 478.46875,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "rey_de_ases",
+      "whatsapp": false,
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 213.359375,
+        "noticeTop": 320,
+        "ctaTop": 198.734375,
+        "ctaBottom": 244.734375,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "rey_de_ases",
+      "whatsapp": true,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 471.59375,
+        "noticeTop": 485.3125,
+        "ctaTop": 253.1875,
+        "ctaBottom": 299.1875,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "rey_de_ases",
+      "whatsapp": true,
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 507.765625,
+        "noticeTop": 570,
+        "ctaTop": 301.703125,
+        "ctaBottom": 347.703125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "rey_de_ases",
+      "whatsapp": true,
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 562.953125,
+        "noticeTop": 586.71875,
+        "ctaTop": 325.953125,
+        "ctaBottom": 375.953125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "rey_de_ases",
+      "whatsapp": true,
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 561.453125,
+        "noticeTop": 583.71875,
+        "ctaTop": 324.453125,
+        "ctaBottom": 374.453125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "rey_de_ases",
+      "whatsapp": true,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 696.90625,
+        "noticeTop": 735.25,
+        "ctaTop": 409.375,
+        "ctaBottom": 469.375,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "rey_de_ases",
+      "whatsapp": true,
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 750,
+        "noticeTop": 841.4375,
+        "ctaTop": 462.46875,
+        "ctaBottom": 522.46875,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "rey_de_ases",
+      "whatsapp": true,
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 1,
+        "documentOverflowY": 0,
+        "footerBottom": 213.359375,
+        "noticeTop": 320,
+        "ctaTop": 234.25,
+        "ctaBottom": 280.25,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ases_del_norte",
+      "whatsapp": false,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 436.09375,
+        "noticeTop": 485.3125,
+        "ctaTop": 217.6875,
+        "ctaBottom": 263.6875,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ases_del_norte",
+      "whatsapp": false,
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 472.265625,
+        "noticeTop": 570,
+        "ctaTop": 266.203125,
+        "ctaBottom": 312.203125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ases_del_norte",
+      "whatsapp": false,
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 521.953125,
+        "noticeTop": 586.71875,
+        "ctaTop": 284.953125,
+        "ctaBottom": 334.953125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ases_del_norte",
+      "whatsapp": false,
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 520.453125,
+        "noticeTop": 583.71875,
+        "ctaTop": 283.453125,
+        "ctaBottom": 333.453125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ases_del_norte",
+      "whatsapp": false,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 652.90625,
+        "noticeTop": 735.25,
+        "ctaTop": 365.375,
+        "ctaBottom": 425.375,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ases_del_norte",
+      "whatsapp": false,
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 706,
+        "noticeTop": 841.4375,
+        "ctaTop": 418.46875,
+        "ctaBottom": 478.46875,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ases_del_norte",
+      "whatsapp": false,
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 213.359375,
+        "noticeTop": 320,
+        "ctaTop": 198.734375,
+        "ctaBottom": 244.734375,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ases_del_norte",
+      "whatsapp": true,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 471.59375,
+        "noticeTop": 485.3125,
+        "ctaTop": 253.1875,
+        "ctaBottom": 299.1875,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ases_del_norte",
+      "whatsapp": true,
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 507.765625,
+        "noticeTop": 570,
+        "ctaTop": 301.703125,
+        "ctaBottom": 347.703125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ases_del_norte",
+      "whatsapp": true,
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 562.953125,
+        "noticeTop": 586.71875,
+        "ctaTop": 325.953125,
+        "ctaBottom": 375.953125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ases_del_norte",
+      "whatsapp": true,
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 561.453125,
+        "noticeTop": 583.71875,
+        "ctaTop": 324.453125,
+        "ctaBottom": 374.453125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ases_del_norte",
+      "whatsapp": true,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 696.90625,
+        "noticeTop": 735.25,
+        "ctaTop": 409.375,
+        "ctaBottom": 469.375,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ases_del_norte",
+      "whatsapp": true,
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 750,
+        "noticeTop": 841.4375,
+        "ctaTop": 462.46875,
+        "ctaBottom": 522.46875,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ases_del_norte",
+      "whatsapp": true,
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 1,
+        "documentOverflowY": 0,
+        "footerBottom": 213.359375,
+        "noticeTop": 320,
+        "ctaTop": 234.25,
+        "ctaBottom": 280.25,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ganamos_net",
+      "whatsapp": false,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 436.09375,
+        "noticeTop": 485.3125,
+        "ctaTop": 217.6875,
+        "ctaBottom": 263.6875,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ganamos_net",
+      "whatsapp": false,
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 472.265625,
+        "noticeTop": 570,
+        "ctaTop": 266.203125,
+        "ctaBottom": 312.203125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ganamos_net",
+      "whatsapp": false,
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 521.953125,
+        "noticeTop": 586.71875,
+        "ctaTop": 284.953125,
+        "ctaBottom": 334.953125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ganamos_net",
+      "whatsapp": false,
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 520.453125,
+        "noticeTop": 583.71875,
+        "ctaTop": 283.453125,
+        "ctaBottom": 333.453125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ganamos_net",
+      "whatsapp": false,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 652.90625,
+        "noticeTop": 735.25,
+        "ctaTop": 365.375,
+        "ctaBottom": 425.375,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ganamos_net",
+      "whatsapp": false,
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 706,
+        "noticeTop": 841.4375,
+        "ctaTop": 418.46875,
+        "ctaBottom": 478.46875,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ganamos_net",
+      "whatsapp": false,
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 213.359375,
+        "noticeTop": 320,
+        "ctaTop": 198.734375,
+        "ctaBottom": 244.734375,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ganamos_net",
+      "whatsapp": true,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 471.59375,
+        "noticeTop": 485.3125,
+        "ctaTop": 253.1875,
+        "ctaBottom": 299.1875,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ganamos_net",
+      "whatsapp": true,
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 507.765625,
+        "noticeTop": 570,
+        "ctaTop": 301.703125,
+        "ctaBottom": 347.703125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ganamos_net",
+      "whatsapp": true,
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 562.953125,
+        "noticeTop": 586.71875,
+        "ctaTop": 325.953125,
+        "ctaBottom": 375.953125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ganamos_net",
+      "whatsapp": true,
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 561.453125,
+        "noticeTop": 583.71875,
+        "ctaTop": 324.453125,
+        "ctaBottom": 374.453125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ganamos_net",
+      "whatsapp": true,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 696.90625,
+        "noticeTop": 735.25,
+        "ctaTop": 409.375,
+        "ctaBottom": 469.375,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ganamos_net",
+      "whatsapp": true,
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 750,
+        "noticeTop": 841.4375,
+        "ctaTop": 462.46875,
+        "ctaBottom": 522.46875,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "ganamos_net",
+      "whatsapp": true,
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 1,
+        "documentOverflowY": 0,
+        "footerBottom": 213.359375,
+        "noticeTop": 320,
+        "ctaTop": 234.25,
+        "ctaBottom": 280.25,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "multi_skin",
+      "whatsapp": false,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 436.09375,
+        "noticeTop": 485.3125,
+        "ctaTop": 217.6875,
+        "ctaBottom": 263.6875,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "multi_skin",
+      "whatsapp": false,
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 472.265625,
+        "noticeTop": 570,
+        "ctaTop": 266.203125,
+        "ctaBottom": 312.203125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "multi_skin",
+      "whatsapp": false,
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 521.953125,
+        "noticeTop": 586.71875,
+        "ctaTop": 284.953125,
+        "ctaBottom": 334.953125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "multi_skin",
+      "whatsapp": false,
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 520.453125,
+        "noticeTop": 583.71875,
+        "ctaTop": 283.453125,
+        "ctaBottom": 333.453125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "multi_skin",
+      "whatsapp": false,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 652.90625,
+        "noticeTop": 735.25,
+        "ctaTop": 365.375,
+        "ctaBottom": 425.375,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "multi_skin",
+      "whatsapp": false,
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 706,
+        "noticeTop": 841.4375,
+        "ctaTop": 418.46875,
+        "ctaBottom": 478.46875,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "multi_skin",
+      "whatsapp": false,
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 213.359375,
+        "noticeTop": 320,
+        "ctaTop": 198.734375,
+        "ctaBottom": 244.734375,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "multi_skin",
+      "whatsapp": true,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 471.59375,
+        "noticeTop": 485.3125,
+        "ctaTop": 253.1875,
+        "ctaBottom": 299.1875,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "multi_skin",
+      "whatsapp": true,
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 507.765625,
+        "noticeTop": 570,
+        "ctaTop": 301.703125,
+        "ctaBottom": 347.703125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "multi_skin",
+      "whatsapp": true,
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 562.953125,
+        "noticeTop": 586.71875,
+        "ctaTop": 325.953125,
+        "ctaBottom": 375.953125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "multi_skin",
+      "whatsapp": true,
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 561.453125,
+        "noticeTop": 583.71875,
+        "ctaTop": 324.453125,
+        "ctaBottom": 374.453125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "multi_skin",
+      "whatsapp": true,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 696.90625,
+        "noticeTop": 735.25,
+        "ctaTop": 409.375,
+        "ctaBottom": 469.375,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "multi_skin",
+      "whatsapp": true,
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 750,
+        "noticeTop": 841.4375,
+        "ctaTop": 462.46875,
+        "ctaBottom": 522.46875,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "Chromium",
+      "provider": "multi_skin",
+      "whatsapp": true,
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 1,
+        "documentOverflowY": 0,
+        "footerBottom": 213.359375,
+        "noticeTop": 320,
+        "ctaTop": 234.25,
+        "ctaBottom": 280.25,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "rey_de_ases",
+      "whatsapp": false,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 436.09375,
+        "noticeTop": 485.3125,
+        "ctaTop": 217.6875,
+        "ctaBottom": 263.6875,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "rey_de_ases",
+      "whatsapp": false,
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 472.265625,
+        "noticeTop": 570,
+        "ctaTop": 266.203125,
+        "ctaBottom": 312.203125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "rey_de_ases",
+      "whatsapp": false,
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 521.953125,
+        "noticeTop": 586.71875,
+        "ctaTop": 284.953125,
+        "ctaBottom": 334.953125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "rey_de_ases",
+      "whatsapp": false,
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 520.453125,
+        "noticeTop": 583.71875,
+        "ctaTop": 283.453125,
+        "ctaBottom": 333.453125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "rey_de_ases",
+      "whatsapp": false,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 652.90625,
+        "noticeTop": 735.234375,
+        "ctaTop": 365.375,
+        "ctaBottom": 425.375,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "rey_de_ases",
+      "whatsapp": false,
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 706,
+        "noticeTop": 841.4375,
+        "ctaTop": 418.46875,
+        "ctaBottom": 478.46875,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "rey_de_ases",
+      "whatsapp": false,
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 213.359375,
+        "noticeTop": 320,
+        "ctaTop": 198.734375,
+        "ctaBottom": 244.734375,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "rey_de_ases",
+      "whatsapp": true,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 471.59375,
+        "noticeTop": 485.3125,
+        "ctaTop": 253.1875,
+        "ctaBottom": 299.1875,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "rey_de_ases",
+      "whatsapp": true,
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 507.765625,
+        "noticeTop": 570,
+        "ctaTop": 301.703125,
+        "ctaBottom": 347.703125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "rey_de_ases",
+      "whatsapp": true,
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 562.953125,
+        "noticeTop": 586.71875,
+        "ctaTop": 325.953125,
+        "ctaBottom": 375.953125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "rey_de_ases",
+      "whatsapp": true,
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 561.453125,
+        "noticeTop": 583.71875,
+        "ctaTop": 324.453125,
+        "ctaBottom": 374.453125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "rey_de_ases",
+      "whatsapp": true,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 696.90625,
+        "noticeTop": 735.234375,
+        "ctaTop": 409.375,
+        "ctaBottom": 469.375,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "rey_de_ases",
+      "whatsapp": true,
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 750,
+        "noticeTop": 841.4375,
+        "ctaTop": 462.46875,
+        "ctaBottom": 522.46875,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "rey_de_ases",
+      "whatsapp": true,
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 1,
+        "documentOverflowY": 0,
+        "footerBottom": 213.359375,
+        "noticeTop": 320,
+        "ctaTop": 234.25,
+        "ctaBottom": 280.25,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ases_del_norte",
+      "whatsapp": false,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 436.09375,
+        "noticeTop": 485.3125,
+        "ctaTop": 217.6875,
+        "ctaBottom": 263.6875,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ases_del_norte",
+      "whatsapp": false,
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 472.265625,
+        "noticeTop": 570,
+        "ctaTop": 266.203125,
+        "ctaBottom": 312.203125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ases_del_norte",
+      "whatsapp": false,
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 521.953125,
+        "noticeTop": 586.71875,
+        "ctaTop": 284.953125,
+        "ctaBottom": 334.953125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ases_del_norte",
+      "whatsapp": false,
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 520.453125,
+        "noticeTop": 583.71875,
+        "ctaTop": 283.453125,
+        "ctaBottom": 333.453125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ases_del_norte",
+      "whatsapp": false,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 652.90625,
+        "noticeTop": 735.234375,
+        "ctaTop": 365.375,
+        "ctaBottom": 425.375,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ases_del_norte",
+      "whatsapp": false,
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 706,
+        "noticeTop": 841.4375,
+        "ctaTop": 418.46875,
+        "ctaBottom": 478.46875,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ases_del_norte",
+      "whatsapp": false,
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 213.359375,
+        "noticeTop": 320,
+        "ctaTop": 198.734375,
+        "ctaBottom": 244.734375,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ases_del_norte",
+      "whatsapp": true,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 471.59375,
+        "noticeTop": 485.3125,
+        "ctaTop": 253.1875,
+        "ctaBottom": 299.1875,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ases_del_norte",
+      "whatsapp": true,
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 507.765625,
+        "noticeTop": 570,
+        "ctaTop": 301.703125,
+        "ctaBottom": 347.703125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ases_del_norte",
+      "whatsapp": true,
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 562.953125,
+        "noticeTop": 586.71875,
+        "ctaTop": 325.953125,
+        "ctaBottom": 375.953125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ases_del_norte",
+      "whatsapp": true,
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 561.453125,
+        "noticeTop": 583.71875,
+        "ctaTop": 324.453125,
+        "ctaBottom": 374.453125,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ases_del_norte",
+      "whatsapp": true,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 696.90625,
+        "noticeTop": 735.234375,
+        "ctaTop": 409.375,
+        "ctaBottom": 469.375,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ases_del_norte",
+      "whatsapp": true,
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 750,
+        "noticeTop": 841.4375,
+        "ctaTop": 462.46875,
+        "ctaBottom": 522.46875,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ases_del_norte",
+      "whatsapp": true,
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 1,
+        "documentOverflowY": 0,
+        "footerBottom": 213.359375,
+        "noticeTop": 320,
+        "ctaTop": 234.25,
+        "ctaBottom": 280.25,
+        "ctaColor": "rgb(18, 18, 18)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ganamos_net",
+      "whatsapp": false,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 436.09375,
+        "noticeTop": 485.3125,
+        "ctaTop": 217.6875,
+        "ctaBottom": 263.6875,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ganamos_net",
+      "whatsapp": false,
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 472.265625,
+        "noticeTop": 570,
+        "ctaTop": 266.203125,
+        "ctaBottom": 312.203125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ganamos_net",
+      "whatsapp": false,
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 521.953125,
+        "noticeTop": 586.71875,
+        "ctaTop": 284.953125,
+        "ctaBottom": 334.953125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ganamos_net",
+      "whatsapp": false,
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 520.453125,
+        "noticeTop": 583.71875,
+        "ctaTop": 283.453125,
+        "ctaBottom": 333.453125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ganamos_net",
+      "whatsapp": false,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 652.90625,
+        "noticeTop": 735.234375,
+        "ctaTop": 365.375,
+        "ctaBottom": 425.375,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ganamos_net",
+      "whatsapp": false,
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 706,
+        "noticeTop": 841.4375,
+        "ctaTop": 418.46875,
+        "ctaBottom": 478.46875,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ganamos_net",
+      "whatsapp": false,
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 213.359375,
+        "noticeTop": 320,
+        "ctaTop": 198.734375,
+        "ctaBottom": 244.734375,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ganamos_net",
+      "whatsapp": true,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 471.59375,
+        "noticeTop": 485.3125,
+        "ctaTop": 253.1875,
+        "ctaBottom": 299.1875,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ganamos_net",
+      "whatsapp": true,
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 507.765625,
+        "noticeTop": 570,
+        "ctaTop": 301.703125,
+        "ctaBottom": 347.703125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ganamos_net",
+      "whatsapp": true,
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 562.953125,
+        "noticeTop": 586.71875,
+        "ctaTop": 325.953125,
+        "ctaBottom": 375.953125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ganamos_net",
+      "whatsapp": true,
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 561.453125,
+        "noticeTop": 583.71875,
+        "ctaTop": 324.453125,
+        "ctaBottom": 374.453125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ganamos_net",
+      "whatsapp": true,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 696.90625,
+        "noticeTop": 735.234375,
+        "ctaTop": 409.375,
+        "ctaBottom": 469.375,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ganamos_net",
+      "whatsapp": true,
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 750,
+        "noticeTop": 841.4375,
+        "ctaTop": 462.46875,
+        "ctaBottom": 522.46875,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "ganamos_net",
+      "whatsapp": true,
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 1,
+        "documentOverflowY": 0,
+        "footerBottom": 213.359375,
+        "noticeTop": 320,
+        "ctaTop": 234.25,
+        "ctaBottom": 280.25,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "multi_skin",
+      "whatsapp": false,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 436.09375,
+        "noticeTop": 485.3125,
+        "ctaTop": 217.6875,
+        "ctaBottom": 263.6875,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "multi_skin",
+      "whatsapp": false,
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 472.265625,
+        "noticeTop": 570,
+        "ctaTop": 266.203125,
+        "ctaBottom": 312.203125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "multi_skin",
+      "whatsapp": false,
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 521.953125,
+        "noticeTop": 586.71875,
+        "ctaTop": 284.953125,
+        "ctaBottom": 334.953125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "multi_skin",
+      "whatsapp": false,
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 520.453125,
+        "noticeTop": 583.71875,
+        "ctaTop": 283.453125,
+        "ctaBottom": 333.453125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "multi_skin",
+      "whatsapp": false,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 652.90625,
+        "noticeTop": 735.234375,
+        "ctaTop": 365.375,
+        "ctaBottom": 425.375,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "multi_skin",
+      "whatsapp": false,
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 706,
+        "noticeTop": 841.4375,
+        "ctaTop": 418.46875,
+        "ctaBottom": 478.46875,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "multi_skin",
+      "whatsapp": false,
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 213.359375,
+        "noticeTop": 320,
+        "ctaTop": 198.734375,
+        "ctaBottom": 244.734375,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "multi_skin",
+      "whatsapp": true,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 471.59375,
+        "noticeTop": 485.3125,
+        "ctaTop": 253.1875,
+        "ctaBottom": 299.1875,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "multi_skin",
+      "whatsapp": true,
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 507.765625,
+        "noticeTop": 570,
+        "ctaTop": 301.703125,
+        "ctaBottom": 347.703125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "multi_skin",
+      "whatsapp": true,
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 562.953125,
+        "noticeTop": 586.71875,
+        "ctaTop": 325.953125,
+        "ctaBottom": 375.953125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "multi_skin",
+      "whatsapp": true,
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 561.453125,
+        "noticeTop": 583.71875,
+        "ctaTop": 324.453125,
+        "ctaBottom": 374.453125,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "multi_skin",
+      "whatsapp": true,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 696.90625,
+        "noticeTop": 735.234375,
+        "ctaTop": 409.375,
+        "ctaBottom": 469.375,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "multi_skin",
+      "whatsapp": true,
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 0,
+        "documentOverflowY": 0,
+        "footerBottom": 750,
+        "noticeTop": 841.4375,
+        "ctaTop": 462.46875,
+        "ctaBottom": 522.46875,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "browser": "WebKit",
+      "provider": "multi_skin",
+      "whatsapp": true,
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "metrics": {
+        "rootOverflowX": 0,
+        "wrapOverflowX": 0,
+        "wrapOverflowY": 1,
+        "documentOverflowY": 0,
+        "footerBottom": 213.359375,
+        "noticeTop": 320,
+        "ctaTop": 234.25,
+        "ctaBottom": 280.25,
+        "ctaColor": "rgb(255, 255, 255)"
+      }
+    }
+  ]
+}

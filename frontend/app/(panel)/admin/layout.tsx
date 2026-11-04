@@ -603,18 +603,6 @@ export default function AdminLayout({
             <span>WHATSAPP API</span>
           </Link>
 
-          <Link
-            href="/admin/atrio"
-            {...getNavLinkProps("/admin/atrio")}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
-              pathname?.startsWith("/admin/atrio")
-                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
-                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
-            }`}
-          >
-            <NavIcon variant="atrio" active={Boolean(pathname?.startsWith("/admin/atrio"))} />
-            <span>ATRIO</span>
-          </Link>
 
           <Link
             href="/admin/conversiones"
@@ -648,36 +636,21 @@ export default function AdminLayout({
             <span>SEGUIMIENTOS</span>
           </Link>
 
-          <Link
-            href="/admin/gerencias"
-            {...getNavLinkProps("/admin/gerencias")}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
-              pathname?.startsWith("/admin/gerencias")
-                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
-                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
-            }`}
-          >
-            <NavIcon
-              variant="gerencias"
-              active={Boolean(pathname?.startsWith("/admin/gerencias"))}
-            />
-            <span>GERENCIAS</span>
-          </Link>
 
           <Link
-            href="/admin/telefonos"
-            {...getNavLinkProps("/admin/telefonos")}
+            href="/admin/bots"
+            {...getNavLinkProps("/admin/bots")}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
-              pathname?.startsWith("/admin/telefonos")
+              pathname?.startsWith("/admin/bots")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
                 : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
             }`}
           >
             <NavIcon
               variant="telefonos"
-              active={Boolean(pathname?.startsWith("/admin/telefonos"))}
+              active={Boolean(pathname?.startsWith("/admin/bots"))}
             />
-            <span>TELÉFONOS</span>
+            <span>BOTS</span>
           </Link>
 
           <Link
