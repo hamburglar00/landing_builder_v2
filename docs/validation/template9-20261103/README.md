@@ -1,6 +1,6 @@
 # Template 9 — 03/11/2026
 
-Implementado en local. No hay commit, push, migración aplicada ni deployment de este lote.
+Implementación y evidencia iniciales locales. Publicado posteriormente junto con la entrada paralela: [migraciones, versiones y pruebas públicas](../entry-parallel-release-20261103.md).
 
 ## Resultado
 

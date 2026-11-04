@@ -19,7 +19,7 @@ for(const[repo,origin]of targets){
  results.push({repo,origin,scriptMatches:true,scriptSha256:hash(deployed),entryRequiresSession:true,health:health.status});
 }
 for(const origin of ['https://mkt.panelbotadmin.com','https://landing.panelbotadmin.com']){
- const prefix=origin.includes('mkt.')?'/l/':'';
+ const prefix=origin.includes('mkt.')?'/l/':'/';
  for(const slug of ['diana','goldencjs']){
   const response=await fetch(origin+prefix+slug,{signal:AbortSignal.timeout(20000)});
   assert.equal(response.status,200);const html=await response.text();

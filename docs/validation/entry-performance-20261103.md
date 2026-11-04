@@ -1,6 +1,6 @@
 # Medición por intento y arranque del chat — 03/11/2026
 
-Estado: implementación local, sin commit, push, migración productiva ni despliegue de este lote. Conserva el trabajo local anterior de Template 9.
+Esta evidencia corresponde a la primera implementación local. Después se completaron commits, push, migraciones y producción junto con la entrada paralela y T9: [estado final y versiones verificadas](entry-parallel-release-20261103.md). Las propuestas de catálogo que figuran abajo describen aquella etapa previa.
 
 ## Cambios implementados
 

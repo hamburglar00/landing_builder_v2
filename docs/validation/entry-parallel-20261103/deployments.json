@@ -1,0 +1,69 @@
+{
+  "at": "2026-11-04T02:57:43.598Z",
+  "workerVersion": "e2bab499-1857-4bf1-849d-489e3f69280d",
+  "results": [
+    {
+      "repo": "landing-builder",
+      "commit": "fe98d24c3fc35a0eb01006202dfc5dbb674a0c52",
+      "expectedCommit": "fe98d24c3fc35a0eb01006202dfc5dbb674a0c52",
+      "matched": true,
+      "deploymentId": "dpl_J7af29CkhGF5QDSkkJZTC3c6qnso",
+      "url": "landing-builder-v2-k259-40k5e7jjd-juanclouds-projects.vercel.app",
+      "state": "READY"
+    },
+    {
+      "repo": "landing-prueba-1",
+      "commit": "b5ebcb3242ce5cf7a11f60def4dabfd7bb875830",
+      "expectedCommit": "b5ebcb3242ce5cf7a11f60def4dabfd7bb875830",
+      "matched": true,
+      "deploymentId": "dpl_6bQomk4coQhXzQWXqHWi92Ro2J5z",
+      "url": "public-landing-kygchnflp-juanclouds-projects.vercel.app",
+      "state": "READY"
+    },
+    {
+      "repo": "internal-chat",
+      "commit": "341f090beec5537824ea4504be93a346bcca2e7f",
+      "expectedCommit": "341f090beec5537824ea4504be93a346bcca2e7f",
+      "matched": true,
+      "deploymentId": "dpl_962KEma7S4gNUhM4xeJJYe97htZp",
+      "url": "internal-chat-bd1uoqnd2-juanclouds-projects.vercel.app",
+      "state": "READY"
+    },
+    {
+      "repo": "landing-autologuin",
+      "commit": "cc9657545912ce1eeb884ffc5142796687ee8614",
+      "expectedCommit": "cc9657545912ce1eeb884ffc5142796687ee8614",
+      "matched": true,
+      "deploymentId": "dpl_DkjdkgpyQfzSEgL2H5mDoTCCvQNW",
+      "url": "reydeases-gateway-8ek3e50b0-juanclouds-projects.vercel.app",
+      "state": "READY"
+    },
+    {
+      "repo": "ases-gateway",
+      "commit": "c4de4abcc013d62df6ca9a45a7f71fc490334e3f",
+      "expectedCommit": "c4de4abcc013d62df6ca9a45a7f71fc490334e3f",
+      "matched": true,
+      "deploymentId": "dpl_BozNd8JYfeAcbBqGvDRCTfSNSHpF",
+      "url": "ases-del-norte-gateway-e28u2kti9-juanclouds-projects.vercel.app",
+      "state": "READY"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "commit": "e9aee77516756e2f820d82f02522d3cd41d9b11a",
+      "expectedCommit": "e9aee77516756e2f820d82f02522d3cd41d9b11a",
+      "matched": true,
+      "deploymentId": "dpl_7R8ChK71mEYAjpcqSimG2R92Jhj1",
+      "url": "ganamos-net-gateway-ijk8oij8s-juanclouds-projects.vercel.app",
+      "state": "READY"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "commit": "f8e176bd442b4e1992c015cd2aca3148ac911b86",
+      "expectedCommit": "f8e176bd442b4e1992c015cd2aca3148ac911b86",
+      "matched": true,
+      "deploymentId": "dpl_3WxALkCf3BZHAamaGUVHdSuSFX3n",
+      "url": "multi-skin-gateway-2clwi10f4-juanclouds-projects.vercel.app",
+      "state": "READY"
+    }
+  ]
+}

@@ -34,10 +34,30 @@ Las migraciones se aplicaron en ambos proyectos y sus registros MCP se alinearon
 3. Publicar Atrio, Builder, clásico, los cuatro gateways y Ganamos+ Worker. Conservar assets anteriores y validar scripts canónicos.
 4. Verificar los commits activos, cron/outbox/catálogo y lecturas públicas. Las mejoras de segundos se calcularán con nuevas cohortes reales, sin sumar percentiles de etapas que se solapan.
 
-Estado: validación y publicación en curso. Las referencias finales se completan al verificar producción.
+Estado final: comiteado, pusheado y publicado. Las cinco migraciones, ambas Edge Functions, siete proyectos Vercel y el Worker están activos. API2 permanece sin modificaciones ni despliegue de este lote.
 
 El primer build remoto del constructor detectó que `effectiveSkinEntry.test.ts` importaba el repositorio hermano del clásico, disponible solo en el workspace. Se excluyó exclusivamente ese archivo del build de aplicación y se añadió `test:entry-integration` con configuración TypeScript propia, para conservar tanto su comprobación estricta como su ejecución local. El resto de pruebas y el código productivo siguen en la comprobación original.
 
 El primer Worker con Next corregido devolvió 500 en las lecturas públicas. Se restauró inmediatamente la versión anterior `ed4c625b-f4fa-413e-8940-903e29648536` y se comprobó salud HTTP 200. OpenNext 1.20.9 era anterior al soporte de Next 16.4; se actualizó a 1.20.16 ([soporte anunciado en 1.20.12](https://github.com/opennextjs/opennextjs-cloudflare/releases/tag/%40opennextjs%2Fcloudflare%401.20.12)). El adaptador ya conserva el query original y codifica correctamente sus valores: la comprobación local acepta exclusivamente ese punto corregido y mantiene el reemplazo para builds antiguos, rechazando mezclas o deriva. Las seis pruebas de query pasaron. Antes de promover, la versión `c2dd4d5c-261e-4a09-8ef2-2aa9ee034378` respondió en su URL de preview: salud 200, `/entry` sin sesión 303 y acceso público 401, sin excepciones del Worker. La restauración y esta validación no ejecutaron pases ni operaciones financieras.
 
 La comprobación de assets publicados detectó que las tres fases de navegación del casino faltaban en el allowlist serializado del navegador. Se sincronizaron los seis productores, se probaron las fases emitidas realmente por los cuatro clientes y se versionaron nuevamente sus assets. La sincronización de transiciones ahora normaliza CRLF y elimina todos sus bloques generados antes de insertar uno, para conservar idempotencia en Windows. Los 12 escenarios de entrada verifican también recepción efectiva de esas tres fases; los seis escenarios de intentos comprueban su aceptación. No cambia el tracking comercial.
+
+## Producción verificada
+
+| Servicio | Commit activo de aplicación | Deployment |
+| --- | --- | --- |
+| Constructor | `fe98d24` | `dpl_J7af29CkhGF5QDSkkJZTC3c6qnso` |
+| Clásico | `b5ebcb3` | `dpl_6bQomk4coQhXzQWXqHWi92Ro2J5z` |
+| Atrio | `341f090` | `dpl_962KEma7S4gNUhM4xeJJYe97htZp` |
+| Rey | `cc96575` | `dpl_DkjdkgpyQfzSEgL2H5mDoTCCvQNW` |
+| Ases | `c4de4ab` | `dpl_BozNd8JYfeAcbBqGvDRCTfSNSHpF` |
+| Ganamos NET | `e9aee77` | `dpl_7R8ChK71mEYAjpcqSimG2R92Jhj1` |
+| Multi Skin Vercel | `f8e176b` | `dpl_3WxALkCf3BZHAamaGUVHdSuSFX3n` |
+
+Worker final: `e2bab499-1857-4bf1-849d-489e3f69280d`, probado en URL de preview antes de promoverlo al 100 %. Edge `entry-catalog-source` v1 y `builder-config` v38 activas. Versiones completas y estados READY: [deployments.json](entry-parallel-20261103/deployments.json).
+
+El [smoke público](entry-parallel-20261103/public-smoke.json) pasó las once comprobaciones agrupadas: hashes de scripts en los cuatro gateways y los dos hospedajes de Multi Skin, salud, sesión obligatoria de `/entry`, lecturas de Diana/Goldencjs, T9 WebP y autorización de los endpoints nuevos. Los scripts públicos de Diana en ambos motores contienen las fases nuevas. No se activaron pases, crearon cuentas ni ejecutaron operaciones financieras. Goldencjs conserva su template guardado.
+
+Catálogo: cinco landings y dos asesores; cola Builder vacía y sin lease activo. El cron cada cinco minutos ya registra ejecuciones exitosas. Se reencoló la configuración existente de Diana, sin editarla, para verificar el transporte real: dispatch `4555`, HTTP 202, sin timeout, versión fuente 6 copiada y confirmada. No se enviaron eventos comerciales de prueba.
+
+El commit posterior de evidencias/documentación no cambia el código activo de aplicación ni requiere otro despliegue. Ante una reversión, promover el deployment anterior del servicio; las migraciones son compatibles con los productores previos y no requieren reescribir conversiones ni ejecutar operaciones de cuenta. La mejora de segundos se evalúa con cohortes reales nuevas; no se presenta el smoke ni la emulación como prueba nativa en Instagram/Facebook en iPhone.

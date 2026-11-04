@@ -1,0 +1,80 @@
+{
+  "at": "2026-11-04T02:58:19.916Z",
+  "activatedTickets": 0,
+  "createdAccounts": 0,
+  "financialOperations": 0,
+  "results": [
+    {
+      "repo": "landing-autologuin",
+      "origin": "https://www.reydeases.fun",
+      "scriptMatches": true,
+      "scriptSha256": "18baacc7eb40bb5642eb5917c37d80ea047f3f35fe43887906c0b4a28c119d90",
+      "entryRequiresSession": true,
+      "health": 200
+    },
+    {
+      "repo": "ases-gateway",
+      "origin": "https://www.asesdelnorte.online",
+      "scriptMatches": true,
+      "scriptSha256": "e93b8e0a67aeac5e1147b2b4af4432ea1933b6508d049e6582ef62e9eb7ad643",
+      "entryRequiresSession": true,
+      "health": 200
+    },
+    {
+      "repo": "ganamos-gateway",
+      "origin": "https://www.ganamosnet.icu",
+      "scriptMatches": true,
+      "scriptSha256": "d266191b862281f830e8f0890db65fec73413adff1a4bd9a4fd0ced1eb602033",
+      "entryRequiresSession": true,
+      "health": 200
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "origin": "https://ganamosnet.global",
+      "scriptMatches": true,
+      "scriptSha256": "bc2d8a3c7e6bf8e15f72fcf8e3a4f4d9a006225080f419475a3abef756f0eb75",
+      "entryRequiresSession": true,
+      "health": 200
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "origin": "https://multi-skin-gateway.vercel.app",
+      "scriptMatches": true,
+      "scriptSha256": "bc2d8a3c7e6bf8e15f72fcf8e3a4f4d9a006225080f419475a3abef756f0eb75",
+      "entryRequiresSession": true,
+      "health": 200
+    },
+    {
+      "origin": "https://mkt.panelbotadmin.com",
+      "path": "/l/diana",
+      "status": 200,
+      "sharedEntryRuntime": true
+    },
+    {
+      "origin": "https://mkt.panelbotadmin.com",
+      "path": "/l/goldencjs",
+      "status": 200,
+      "sharedEntryRuntime": false
+    },
+    {
+      "origin": "https://landing.panelbotadmin.com",
+      "path": "/diana",
+      "status": 200,
+      "sharedEntryRuntime": true
+    },
+    {
+      "origin": "https://landing.panelbotadmin.com",
+      "path": "/goldencjs",
+      "status": 200,
+      "sharedEntryRuntime": false
+    },
+    {
+      "route": "/api/gateway/chat/prepare",
+      "requiresAuthorization": true
+    },
+    {
+      "route": "/api/internal/entry-catalog/reconcile",
+      "requiresAuthorization": true
+    }
+  ]
+}
