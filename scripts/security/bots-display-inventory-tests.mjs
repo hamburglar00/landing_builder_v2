@@ -17,7 +17,7 @@ try{
   insert into gerencias values(10,'${owner}','Edited name',17),(20,'${other}','Other client',22);
   insert into gerencia_phones values(1,10,'5493511234567','active',7);`);
  const before=(await db.query('select * from gerencia_phones')).rows;
- await db.exec(await readFile(new URL('../../supabase/migrations/20261104143552_bots_display_inventory.sql',import.meta.url),'utf8'));
+ await db.exec(await readFile(new URL('../../supabase/migrations/20261104163007_bots_display_inventory.sql',import.meta.url),'utf8'));
  assert.deepEqual((await db.query('select nombre,usage_count,pbadmin_bots,pbadmin_bots_synced_at from gerencias order by id')).rows,
   [{nombre:'Edited name',usage_count:17,pbadmin_bots:[],pbadmin_bots_synced_at:null},{nombre:'Other client',usage_count:22,pbadmin_bots:[],pbadmin_bots_synced_at:null}]);
  await db.exec(`set role authenticated;select set_config('request.jwt.claim.sub','${owner}',false)`);

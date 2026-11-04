@@ -22,7 +22,7 @@ try {
   await db.exec(await readFile(new URL('../../supabase/migrations/20261015181921_client_module_visibility.sql', import.meta.url), 'utf8'));
   await db.exec(`insert into public.client_module_permissions(user_id,show_followups) values ('${first}',false)`);
   const before = (await db.query('select * from public.client_module_permissions')).rows[0];
-  await db.exec(await readFile(new URL('../../supabase/migrations/20261104134536_client_module_visibility_opt_in.sql', import.meta.url), 'utf8'));
+  await db.exec(await readFile(new URL('../../supabase/migrations/20261104163005_client_module_visibility_opt_in.sql', import.meta.url), 'utf8'));
   const {show_notifications, ...after} = (await db.query('select * from public.client_module_permissions')).rows[0];
   assert.deepEqual(after, before, 'migration preserves all saved flags and timestamps');
   assert.equal(show_notifications, false, 'new section starts hidden for existing clients');

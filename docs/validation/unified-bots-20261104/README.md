@@ -44,6 +44,6 @@ Capturas con datos sintéticos: [escritorio](desktop.png), [móvil](mobile.png).
 ## Publicación pendiente
 
 1. Programador: publicar el endpoint de API2 desde su rama `feature/atrio-integration`; no requiere migración API2.
-2. Builder: aplicar `20261104143552_bots_display_inventory.sql`. El lote previo del checkpoint también necesita `20261104134536_client_module_visibility_opt_in.sql` y sus Edge Functions si todavía no se publicó.
+2. Builder: aplicar `20261104163007_bots_display_inventory.sql`. El lote previo del checkpoint también necesita `20261104163005_client_module_visibility_opt_in.sql` y sus Edge Functions si todavía no se publicó.
 3. Publicar el puente de Atrio y luego el frontend Builder, conservando las claves de integración actuales. No se agregan secretos ni endpoints de operaciones.
 4. Verificar con una sesión real el listado y la importación de una gerencia conocida. La implementación local y las simulaciones no prueban que el nuevo endpoint ya exista en producción.

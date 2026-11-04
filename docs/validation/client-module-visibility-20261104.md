@@ -22,7 +22,7 @@ Implementación incluida en el checkpoint `027d4db` (`checkpoint/constructor-pre
 
 ## Publicación pendiente
 
-1. Aplicar `supabase/migrations/20261104134536_client_module_visibility_opt_in.sql` en Builder.
+1. Aplicar `supabase/migrations/20261104163005_client_module_visibility_opt_in.sql` en Builder.
 2. Publicar `list-clients`, `create-client` y `update-client`, incluyendo `_shared/client-module-permissions.ts`.
 3. Publicar el frontend del constructor. El nuevo campo debe existir antes de estas publicaciones.
 
