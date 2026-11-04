@@ -6,7 +6,7 @@ Publicación de Builder, Atrio y clásico autorizada el 04/11. Las dos migracion
 
 Antes de modificar la pantalla se guardó todo el trabajo pendiente del constructor en `027d4db` y se creó la etiqueta local `checkpoint/constructor-pre-bots-20261104`. Incluye el lote anterior de Planes y visibilidad de módulos. `git show checkpoint/constructor-pre-bots-20261104` permite revisar ese estado; se puede abrir en un worktree separado sin borrar el trabajo nuevo.
 
-Durante la revisión final se incorporó por `git pull --ff-only origin feature/atrio-integration` el commit del programador `c09680b3` de API2: cambia `MAX_MKT_MANAGERS_PER_USER` de 2 a 999. Sólo tocó `manager.service.ts`; no hubo conflictos ni cambios en nuestros archivos. Las pruebas del directorio y TypeScript se ejecutaron de nuevo sobre esa base. Builder continúa con el checkpoint un commit por delante del remoto y sin avance remoto pendiente; Atrio estaba sincronizado.
+Durante la revisión final se incorporó por `git pull --ff-only origin feature/atrio-integration` el commit del programador `c09680b3` de API2: cambia `MAX_MKT_MANAGERS_PER_USER` de 2 a 999. Sólo tocó `manager.service.ts`; no hubo conflictos ni cambios en nuestros archivos. Las pruebas del directorio y TypeScript se ejecutaron de nuevo sobre esa base. Builder y Atrio fueron posteriormente comiteados, pusheados y publicados; API2 conserva sus cambios solamente en local.
 
 ## Interfaz y compatibilidad
 
@@ -41,9 +41,9 @@ Límites de transporte: API2 devuelve hasta 1000 managers por consulta, sin trun
 
 Capturas con datos sintéticos: [escritorio](desktop.png), [móvil](mobile.png).
 
-## Publicación pendiente
+## Publicación y dependencia pendiente
 
 1. Programador: publicar el endpoint de API2 desde su rama `feature/atrio-integration`; no requiere migración API2.
-2. Builder: aplicar `20261104163007_bots_display_inventory.sql`. El lote previo del checkpoint también necesita `20261104163005_client_module_visibility_opt_in.sql` y sus Edge Functions si todavía no se publicó.
-3. Publicar el puente de Atrio y luego el frontend Builder, conservando las claves de integración actuales. No se agregan secretos ni endpoints de operaciones.
-4. Verificar con una sesión real el listado y la importación de una gerencia conocida. La implementación local y las simulaciones no prueban que el nuevo endpoint ya exista en producción.
+2. Builder: aplicadas `20261104163007_bots_display_inventory.sql` y `20261104163005_client_module_visibility_opt_in.sql`, junto con las Edge Functions del lote previo.
+3. Puente de Atrio, frontend Builder y renderer clásico publicados, conservando las claves de integración actuales. No se agregan secretos ni endpoints de operaciones. Los commits y deployments están en [la entrega](../../release/bots-template9-20261104/README.md).
+4. Cuando el programador publique API2, verificar con una sesión real el listado y la importación de una gerencia conocida. Hasta entonces, la UI informa esa dependencia; las simulaciones no certifican el endpoint productivo.
