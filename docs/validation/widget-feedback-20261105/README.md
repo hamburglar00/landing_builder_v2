@@ -18,4 +18,8 @@ Validación:
 
 Capturas: [carga en WhatsApp](whatsapp-load.png), [premio con tema de plataforma](page-paid.png), [editor](builder-desktop.png). Mediciones: [widget](widget-report.json), [editor](editor-report.json).
 
-Requiere la migración Atrio `20261105213020_widget_operation_success_notices.sql` antes de publicar Atrio. No hay migraciones de Builder ni funciones Edge nuevas. La implementación común de Atrio sirve a los cuatro gateways sin modificar sus fuentes ni SDK. API2 y Panel3 permanecen intactos en local.
+Publicado en Atrio (`51d9786`) y Builder (`504fd7e`). La migración Atrio `20261105213020_widget_operation_success_notices.sql` se aplicó antes de promover la aplicación; el historial remoto quedó al día. Ambos triggers están habilitados, son SECURITY INVOKER y no permiten ejecutar las funciones a anon/authenticated. El asesor de seguridad no agregó hallazgos respecto de la línea base.
+
+Los dominios públicos sirven los recursos nuevos y los proyectos de Vercel apuntan a los commits probados. [Versiones y rollback](deployments.json), [recursos públicos de Atrio](public-atrio.json), [recursos públicos de Builder](public-builder.json). La comprobación pública fue de lectura: no se generaron pagos, cargas, chats ni usuarios.
+
+No hay migraciones de Builder ni funciones Edge nuevas. La implementación común de Atrio sirve a los cuatro gateways sin modificar sus fuentes ni SDK. API2 y Panel3 conservan exactamente su HEAD y todos sus cambios locales.

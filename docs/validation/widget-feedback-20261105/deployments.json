@@ -1,0 +1,36 @@
+{
+  "verifiedAt": "2026-11-05T21:53:21.777852+00:00",
+  "applications": [
+    {
+      "repository": "internal-chat",
+      "domain": "https://www.atrio.website",
+      "commit": "51d978641a6bff6894e1958eee67422c301c438a",
+      "deployment": "dpl_Fo9UFRpW7Ce6U14rE6vZehx91TW8",
+      "state": "READY",
+      "production": true,
+      "previousCommit": "a164731722f5eb1f3009d24536cbc3f6333e4220",
+      "rollbackDeployment": "dpl_4ydgLYLM32YtcJLPgxi84YhRxXAp"
+    },
+    {
+      "repository": "landing-builder",
+      "domain": "https://mkt.panelbotadmin.com",
+      "commit": "504fd7ea603d277489294829d5efd5115e86e722",
+      "deployment": "dpl_3XWLCq8rAAqDmhdHn12UtJNnzLGP",
+      "state": "READY",
+      "production": true,
+      "previousCommit": "ec0bbf71a84c35775785dacfe3aedac420a61eb8",
+      "rollbackDeployment": "dpl_HC5KBxMTihcYovCwnqK6sWganBKu"
+    }
+  ],
+  "migration": {
+    "project": "didrpwkdqizivfbapofx",
+    "version": "20261105213020",
+    "name": "widget_operation_success_notices",
+    "applied": true,
+    "remoteUpToDate": true,
+    "newSecurityAdvisorFindings": 0
+  },
+  "edgeFunctionsChanged": false,
+  "api2AndPanel3": "HEAD and all local changes unchanged",
+  "rollback": "Promote the rollbackDeployment for each application. The additive metadata migration can remain installed."
+}

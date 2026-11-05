@@ -7,6 +7,7 @@
 - Una sola notificación por operación, incluso cuando se actualiza el comprobante y llega su confirmación en chat. No reactivar modales al abrir el historial o recargar; si el widget está cerrado, esperar a que se abra. Sin consultas nuevas al polling, sin cambios financieros ni modificaciones de API2/Panel3. Aplicación común en Atrio para los cuatro gateways.
 - Chips en mayúsculas, con altura mínima de 44 px y Cargar destacado mediante relleno del color del tema, con texto contrastante. Conservar las etiquetas guardadas, mensajes, acciones y permisos.
 - En el editor de Builder usar «Plataforma» en etiquetas, ayudas y validaciones. Separar «Resumen de gerencias asignadas» de la tarjeta de vista previa: tarjeta independiente debajo, con margen exterior, para cliente y administrador. Conservar la vista nítida de Template 9.
+- Publicado en Atrio y Builder, con migración de marcadores aplicada y recursos públicos verificados. Validación: 22 pruebas de avisos/DB/recordatorios, 10 de Template 9, 26 escenarios de widget y 32 de editor en Chromium/WebKit. API2 y Panel3 conservan su estado local. [Capturas, pruebas y versiones](validation/widget-feedback-20261105/README.md).
 
 ### Vista previa del editor con margen y Template 9 legible (05/11/2026)
 

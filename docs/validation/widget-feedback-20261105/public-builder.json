@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-11-05T21:52:36.574Z",
+  "checks": [
+    {
+      "path": "/dashboard/landing/preview/editar",
+      "status": 200,
+      "sharedPreview": true,
+      "bottomMargin": true,
+      "nativeFrame": true,
+      "platformLabel": true,
+      "separatePreviewSection": true
+    },
+    {
+      "path": "/admin/landings/preview/editar",
+      "status": 200,
+      "sharedPreview": true,
+      "bottomMargin": true,
+      "nativeFrame": true,
+      "platformLabel": true,
+      "separatePreviewSection": true
+    }
+  ]
+}
