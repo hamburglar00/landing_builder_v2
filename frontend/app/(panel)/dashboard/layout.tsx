@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
+import { PbadminSessionGuard } from "@/components/pbadmin-session-guard";
 import { supabase } from "@/lib/supabaseClient";
 import ConstructorSetupGuide from "@/components/onboarding/ConstructorSetupGuide";
 import { RouteProgress } from "@/components/ui/RouteProgress";
@@ -587,6 +588,7 @@ export default function DashboardLayout({
   return (
     <ClientModulePermissionsContext.Provider value={modulePermissions}>
     <AppConfirmProvider>
+      <PbadminSessionGuard />
     <div className="panel-shell flex min-h-screen text-[var(--color-text)]">
       <RouteProgress active={isNavigating} />
       {sidebarOpen && (
@@ -770,8 +772,8 @@ export default function DashboardLayout({
 
         </nav>
         <div className="border-t border-[var(--color-border)] p-3 space-y-2">
-          <p className="truncate px-1 text-[11px] text-[var(--color-text-muted)]" title={user?.email ?? undefined}>
-            {user?.email}
+          <p className="truncate px-1 text-[11px] text-[var(--color-text-muted)]" title={user?.app_metadata.pbadmin_managed ? "Ingresaste con PBAdmin" : user?.email ?? undefined}>
+            {user?.app_metadata.pbadmin_managed ? "Cuenta vinculada a PBAdmin" : user?.email}
           </p>
           <button
             type="button"

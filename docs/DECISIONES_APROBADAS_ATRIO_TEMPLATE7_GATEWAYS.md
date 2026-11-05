@@ -1,5 +1,38 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Publicación del trabajo pendiente (05/11/2026)
+
+- El usuario autorizó hacer commit, push y despliegue de todo lo implementado en Landing Builder, Atrio y los cuatro gateways, incluidas las migraciones y funciones necesarias. Esta autorización reemplaza la condición de mantener locales esos proyectos en las entradas anteriores.
+- API2 y Panel3 permanecen exclusivamente en local: sin commit, push, despliegue ni migraciones productivas. No activar Extensiones hasta configurar y publicar ambos extremos. El ingreso `/<agency_id>` muestra «Enlace no disponible» mientras API2 no provea el circuito requerido.
+- Publicar también Ganamos+ en su Cloudflare Worker, además de Vercel. Verificar los dominios públicos sin crear jugadores, vincular clientes excluidos ni ejecutar operaciones financieras.
+
+### Usuario dentro de la confirmación de Full Carga (05/11/2026, local)
+
+- El usuario pidió integrar el usuario acreditado dentro de la misma frase, con monto y usuario en negrita: «Listoo 🙌 ya te quedaron acreditados **$10.000** en tu usuario: **pepe123**». Aplicar a las variantes automáticas con y sin bono, reemplazando la línea separada «👤 Usuario».
+- El cambio vive en el texto compartido de API2 para los canales de Full Carga y los cuatro gateways. Conservar el importe/bono separado, el cierre de instrucciones de juego en Atrio y la confirmación sin usuario cuando no se pueda recuperar ese dato. Los textos manuales de Atrio y los retiros conservan su formato.
+- Sólo presentación, en local; no modifica ejecución financiera, credenciales, destinatarios ni mensajes históricos. Pendiente de despliegue de API2.
+
+### Extensiones PBAdmin, identidad y altas (04/11/2026, implementación local)
+
+- El usuario autorizó implementar con sumo cuidado el hub «Extensiones» en Panel3. Builder aparece para administrador de administración (rol 0); Atrio para administrador y marketing (rol 3). Cajero sólo tiene Ads/Asistente y conserva Tracking, sin alta de Atrio. El superadmin conserva sus herramientas de gestión; no se crea un constructor personal para él.
+- Un constructor por ID de administración, con la persona identificada por sesión. El administrador PBAdmin entra como `client` de Builder. Las cuentas nuevas usan identidad PBAdmin; los logins de Builder/Atrio ofrecen «Ingresar con PBAdmin» y solicitan las credenciales exclusivamente en Panel3. Las credenciales nativas existentes se conservan.
+- Autologin mediante código opaco de 60 segundos, canje único, PKCE y estado del navegador. Secretos permanentes sólo entre servidores. Reservas durables, UUID estable y reintentos sin reemplazar cuentas. Nueva configuración del constructor mediante la misma rutina de alta manual, respetando los defaults de módulos y del plan. ARS en altas; conservar workspaces PYG existentes.
+- Atrio nuevo: administrador por administración y asesor personal por usuario, también para el administrador. Marketing puede iniciar el alta antes que su administrador. Acceso de administrador con cambio a su propio asesor y retorno sin contraseña. Las credenciales del bot se resuelven para su usuario asignado; se mantienen las validaciones de token, gerencia operativa y manager actuales.
+- Corresponden nueve clientes Builder: morejorge→37, fabi→23, diego→25, ailuc→43, tuga→6, elmueca→32, goldencajeros→18, ducklucknuevageneracion→14 y chiva77→7. Las correspondencias por UUID revisadas viven en API2; no inferir nuevas uniones por email. Andres (owner 19) y Golden independientes.
+- No vincular por ahora los Atrio existentes de Gera, Diana, Bianca–Colo ni Cunia. Gera/Chiva (7) y DianaAgencias (33) confirmados; 8 y 18 son candidatos sin confirmar y requieren revisión antes de un alta nueva. Conservar también Gera y Diana en las landings de prueba del constructor Golden; no moverlos ni reemplazarlos al importar Chiva.
+- Importación inicial y reconciliación de bots en segundo plano, conservando landings, configuración propia y el botón manual de vinculación. No agregar llamadas al recorrido template → gateway. Los conflictos se informan como pendientes de revisión, sin apropiarse de registros de otro workspace.
+- Completar URL Post sólo si está vacía; preservar URL existente y toda edición manual, incluso el vaciado posterior a vincular. Acción explícita para restaurar la URL del constructor. Conservar las restricciones de los cuatro gateways; este lote se limita a las cuentas internas.
+- Todo este lote permanece local: sin altas reales, migraciones productivas, despliegue, commit ni push. Las banderas de activación requieren migraciones y configuración de ambos extremos antes de habilitarse.
+
+### Enlace del gateway por gerencia (04/11/2026, preparado en local)
+
+- El usuario autorizó `/<agency_id>` para los cuatro gateways. Antes de mostrar ingreso/alta, validar dominio/proveedor, gerencia operativa activa en API2, un único bot Atrio, su asesor, token vigente con `messages.write`, conexión activa y cuenta real de Atrio habilitada. Sin circuito completo, mostrar enlace no disponible, sin elegir otro destino.
+- El ingreso comprueba usuario, clave y pertenencia a esa gerencia con el casino antes de vincular. Reutilizar la cuenta/chat existente y rechazar reasignaciones. Un jugador procedente de WhatsApp conserva su ID, creador e historial; API2 registra una autorización explícita por jugador/bot/gerencia. No duplicar su registro ni reiniciar bonos/saldos. Esta excepción no modifica las reglas del login genérico, que continúa recuperando sólo cuentas previamente vinculadas.
+- «Crear cuenta» pide el nombre y reutiliza la provisión durable por bot. Reintentos conservan el identificador privado del navegador; no crear otra cuenta para resolver un error. Se ingresa al casino con el widget; las credenciales permanecen disponibles mediante el perfil privado existente, sin agregarlas a URL ni almacenamiento público.
+- Logo transparente y visible en los cuatro formularios de ingreso. Se reutilizan recursos existentes, sin el icono de aplicación con fondo sólido.
+- Las validaciones nuevas se ejecutan sólo desde el enlace por gerencia y su endpoint. El recorrido template → preparación → gateway conserva sus consultas y contratos. La comprobación de permisos de los jugadores originales conserva la salida sin consulta adicional.
+- API2 sigue exclusivamente local y a cargo del programador. No se aplicaron migraciones productivas ni se publicó este lote. [Implementación, pruebas y orden de activación](validation/gateway-agency-20261104/README.md).
+
 ### Ajuste de jugadores, visibilidad y origen en Estadísticas (04/11/2026)
 
 - En Recorrido, «Primeras cargas» y «Cargas -> recargas del periodo» muestran jugadores distintos del canal y período, no operaciones ni cantidad de recorridos publicitarios. Una persona que recarga varias veces cuenta una vez en esa última etapa. El ejemplo de 51 jugadores y 38 recargas de 16 jugadores se muestra como 51 → 16 (31,4 %). En Resumen general se mantienen operaciones con subtítulos de jugadores.

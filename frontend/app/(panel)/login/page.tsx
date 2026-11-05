@@ -165,6 +165,7 @@ export default function LoginPage() {
                 {isSubmitting ? "Iniciando sesión…" : "Entrar al panel"}
               </button>
             </form>
+            {process.env.NEXT_PUBLIC_PBADMIN_EXTENSIONS_ENABLED === "true" && <div className="mt-5 border-t border-[var(--color-border)] pt-5"><a href="/api/pbadmin/start" className="ui-button ui-button-secondary flex h-11 w-full items-center justify-center">Ingresar con PBAdmin</a><p className="mt-2 text-xs text-[var(--color-text-muted)]">Usá tu mismo usuario y contraseña de PBAdmin.</p></div>}
           </div>
         </section>
       </div>
