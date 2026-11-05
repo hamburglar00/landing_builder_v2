@@ -66,12 +66,16 @@ for(const [name,engine]of[['Chromium',playwright.chromium],['WebKit',playwright.
         const bounds=await page.locator('#fixture-gallery iframe').boundingBox();
         const container=await page.locator('#fixture-gallery').boundingBox();
         assert.ok(bounds&&container&&bounds.width<=container.width+1&&bounds.height<=container.height+1, 'entire preview fits its tile');
-        assert.ok(await gallery.locator('.template9__footer').isVisible());
-        assert.ok(await gallery.locator('.template9__cookies').isVisible());
+        assert.equal(await gallery.locator('.template9__footer').isVisible(),false);
+        assert.ok(Math.abs(bounds.width-container.width)<=1, 'gallery preview fills the tile width');
+        assert.equal(await gallery.locator('.template9__cookies').isVisible(),false);
+        assert.ok(await preview.locator('.template9__footer').isVisible());
+        assert.ok(await preview.locator('.template9__cookies').isVisible());
         assert.ok(metrics.ctaBottom<=metrics.height, 'CTA is inside the complete virtual phone');
         checks.push({browser:name,platform:label,gallery:{width,height}});
       }
       await page.locator('#fixture-gallery').evaluate(el=>{el.style.width='300px';el.style.height='400px'});
+      if(name==='Chromium')await page.locator('#fixture-gallery').screenshot({path:path.join(directory,`gallery-${alt.replaceAll(' ','-')}.png`)});
       await page.locator('#fixture-gallery').click();
       assert.equal(new URL(page.url()).hash,'#selected-landing','thumbnail opens its parent landing link');
       checks.push({browser:name,platform:label});

@@ -10,7 +10,7 @@ export const TEMPLATE9_CSS = `
 /* The notice takes its actual height in the layout; it never covers the form/footer. */
 .template9__wrap{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:safe center;padding:max(22px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) 20px max(20px,env(safe-area-inset-left));overflow-y:auto;scroll-padding-block:16px}
 .template9__card{flex-shrink:0;width:100%;max-width:400px;background:linear-gradient(180deg,var(--t9-card-top,color-mix(in srgb,var(--t9-primary) 9%,#140c24)),var(--t9-card-bottom,color-mix(in srgb,var(--t9-deep) 94%,#201330)));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid color-mix(in srgb,var(--t9-secondary) 35%,transparent);border-radius:24px;padding:32px 26px 26px;box-shadow:0 24px 70px #0009,0 0 0 1px #ffffff0a inset,0 0 60px color-mix(in srgb,var(--t9-primary) 25%,transparent);text-align:center;animation:t9-in .5s cubic-bezier(.16,1,.3,1) both}
-.template9__logo{width:76px;height:76px;border-radius:20px;margin:0 auto 18px;display:block;object-fit:cover;box-shadow:0 8px 24px color-mix(in srgb,var(--t9-primary) 50%,transparent);background:var(--t9-surface,color-mix(in srgb,var(--t9-primary) 8%,var(--t9-deep)))}
+.template9__logo{width:220px;max-width:100%;height:110px;margin:0 auto 18px;display:block;object-fit:contain}
 .template9 h1{font-size:27px;line-height:1.15;font-weight:800;letter-spacing:-.5px;text-wrap:balance;margin:0 0 8px;overflow-wrap:anywhere}
 .template9 h1 b{background:linear-gradient(90deg,var(--t9-secondary),var(--t9-highlight));background-clip:text;-webkit-background-clip:text;color:transparent}
 .template9__subtitle{font-size:15px;color:var(--t9-subtitle,color-mix(in srgb,var(--t9-highlight) 22%,#c8bde0));line-height:1.4;margin:0 0 24px}
@@ -35,7 +35,7 @@ export const TEMPLATE9_CSS = `
 .template9__cookies a{color:var(--t9-highlight);font-size:inherit;font-weight:700;text-decoration:underline;background:none;border:0;padding:0}
 .template9__cookies button[data-template9-cookie-dismiss]{flex:none;min-height:44px;font-size:13px;font-weight:800;color:var(--t9-cta-foreground,#fff);border:0;border-radius:10px;padding:9px 18px;background:linear-gradient(135deg,var(--t9-primary),var(--t9-secondary))}
 .template9 button:focus-visible,.template9 a:focus-visible{outline:2px solid var(--t9-highlight);outline-offset:3px}
-.template9--preview{position:relative;width:100%;height:100%;min-height:0}
+.template9--preview{position:relative;width:100%;height:100dvh;min-height:0}
 .template9--preview .template9__card,.template9--preview .template9__cta{animation:none}
 .template9--preview a{pointer-events:none}
 @keyframes t9-in{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}
@@ -43,7 +43,7 @@ export const TEMPLATE9_CSS = `
 @media(max-width:380px){.template9__card{padding:26px 20px 22px}.template9 h1{font-size:24px}}
 @media(max-width:599px) and (max-height:740px){
   .template9__wrap{padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) 14px max(14px,env(safe-area-inset-left))}
-  .template9__card{padding:20px 20px 18px}.template9__logo{width:56px;height:56px;border-radius:16px;margin-bottom:12px}
+  .template9__card{padding:20px 20px 18px}.template9__logo{width:180px;height:70px;margin-bottom:12px}
   .template9 h1{font-size:24px}.template9__subtitle{font-size:14px;margin-bottom:16px}
   .template9 input{height:48px;padding:12px 14px}.template9 .template9__cta{min-height:50px;padding:13px;margin-top:12px;font-size:16px}
   .template9__trust{font-size:11.5px;margin-top:12px}.template9__footer{margin-top:12px;padding:0 4px}
@@ -54,7 +54,7 @@ export const TEMPLATE9_CSS = `
 }
 @media(max-width:599px) and (max-height:660px){
   .template9__wrap{padding-top:max(8px,env(safe-area-inset-top));padding-bottom:8px}
-  .template9__card{padding:12px 16px}.template9__logo{width:40px;height:40px;border-radius:12px;margin-bottom:6px}
+  .template9__card{padding:12px 16px}.template9__logo{width:160px;height:56px;margin-bottom:6px}
   .template9 h1{font-size:22px;margin-bottom:6px}.template9__subtitle{font-size:13px;margin-bottom:8px}
   .template9 input{height:44px;padding:10px 12px;font-size:16px}.template9__phone-label{font-size:11px;margin-top:8px;margin-bottom:4px}
   .template9 .template9__cta{min-height:46px;margin-top:8px;padding:12px}.template9__trust{font-size:10.5px;margin-top:8px}
@@ -63,8 +63,8 @@ export const TEMPLATE9_CSS = `
   .template9__cookies{font-size:10.5px;line-height:1.35;margin-bottom:6px}
 }
 @media(max-height:480px) and (min-width:600px){
-  .template9__wrap{flex-direction:row;gap:24px;justify-content:center;padding-top:max(4px,env(safe-area-inset-top));padding-bottom:4px}.template9__card{max-width:320px;padding:6px 16px}
-  .template9__logo{width:32px;height:32px;margin-bottom:4px}
+  .template9__wrap{flex-direction:row;gap:24px;justify-content:center;padding-top:max(4px,env(safe-area-inset-top));padding-bottom:4px}.template9__card{max-width:320px;padding:4px 16px}
+  .template9__logo{width:120px;height:38px;margin-bottom:4px}
   .template9 h1{font-size:22px;margin-bottom:6px}.template9__subtitle{font-size:13px;margin-bottom:8px}
   .template9 input{height:44px;padding:10px 12px;font-size:16px}.template9__phone-label{font-size:11px;margin:8px 0 4px}
   .template9 .template9__cta{min-height:46px;margin-top:8px;padding:12px;font-size:16px}.template9__trust{font-size:10.5px;margin-top:8px}
@@ -72,27 +72,21 @@ export const TEMPLATE9_CSS = `
 }
 @media(min-width:600px) and (min-height:481px) and (max-height:740px){
   .template9__wrap{padding-bottom:12px}
+  .template9__logo{height:84px;margin-bottom:12px}
   .template9__footer{max-width:560px;margin-top:12px}
   .template9__footer nav{margin-bottom:3px}.template9__footer nav a{min-height:28px;padding:7px 6px}
   .template9__footer p{font-size:10px;line-height:1.4}
   .template9__footer p a{font-size:inherit}
 }
-/* Gallery tiles are inert miniatures, with no independent page to scroll. */
-.template9--gallery .template9__wrap{padding:14px 12px;justify-content:flex-start;overflow:hidden}
-.template9--gallery .template9__card{padding:16px 12px 14px;border-radius:18px}
-.template9--gallery .template9__logo{width:48px;height:48px;border-radius:12px;margin-bottom:10px}
-.template9--gallery h1{font-size:18px;margin-bottom:6px}
-.template9--gallery .template9__subtitle{font-size:10px;margin-bottom:12px}
-.template9--gallery input{height:32px;padding:8px 10px;font-size:11px;border-radius:9px}
-.template9--gallery .template9__cta{min-height:36px;font-size:11px;padding:10px;margin-top:10px;border-radius:9px;animation:none}
-.template9--gallery .template9__trust{font-size:8px;margin-top:8px}
-.template9--gallery .template9__phone-label{font-size:8px;margin:6px 0 3px}
+/* Full-width gallery composition. The public page/editor retain their legal content. */
+.template9--gallery .template9__wrap{padding:24px 16px 100px;justify-content:flex-start;overflow:hidden}
+.template9--gallery .template9__card{padding:20px 18px 16px;border-radius:22px}
+.template9--gallery .template9__logo{width:220px;height:96px;margin-bottom:14px}
+.template9--gallery h1{font-size:24px;margin-bottom:6px}
+.template9--gallery .template9__subtitle{font-size:14px;margin-bottom:18px}
+.template9--gallery input{height:44px;padding:12px 14px;font-size:15px;border-radius:11px}
+.template9--gallery .template9__cta{min-height:48px;font-size:16px;padding:13px;margin-top:12px;border-radius:11px;animation:none}
+.template9--gallery .template9__trust{font-size:11px;margin-top:12px}
 .template9--gallery .template9__footer,.template9--gallery .template9__cookies,.template9--gallery .template9__phone-label,.template9--gallery [data-template7-whatsapp]{display:none}
-@media(max-width:220px),(max-height:300px){
-  .template9--gallery .template9__wrap{padding:10px}.template9--gallery .template9__card{padding:12px 10px}
-  .template9--gallery .template9__logo{width:36px;height:36px;margin-bottom:8px}.template9--gallery h1{font-size:14px;margin-bottom:4px}
-  .template9--gallery .template9__subtitle{font-size:9px;margin-bottom:8px}.template9--gallery input{height:28px;font-size:10px;padding:6px 8px}
-  .template9--gallery .template9__cta{min-height:30px;font-size:9px;padding:8px;margin-top:8px}.template9--gallery .template9__trust{font-size:7px;margin-top:6px}
-}
 @media(prefers-reduced-motion:reduce){.template9__card,.template9__cta{animation:none}}
 `;

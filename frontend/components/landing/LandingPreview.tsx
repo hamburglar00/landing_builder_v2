@@ -1075,7 +1075,7 @@ export function LandingPreview({
   }
   if (config.template === "template9") {
     const preview = buildLandingConfig({ id: "", name: "Vista previa", comment: "", pixelId: "", postUrl: "", landingTag: "", config });
-    const view = renderTemplate9View({ ...preview, layout: { ...preview.layout, ctaPosition: config.ctaPosition } }, true);
+    const view = renderTemplate9View({ ...preview, layout: { ...preview.layout, ctaPosition: config.ctaPosition } }, gallery ? "gallery" : true);
     const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${PUBLIC_LANDING_CSS.slice(0, PUBLIC_LANDING_CSS.indexOf("body.public-lead-capture-open"))}${TEMPLATE9_CSS}</style></head><body>${view}</body></html>`;
     return <Template9Preview html={html} compact={compact} gallery={gallery} />;
   }

@@ -1,5 +1,12 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Template 9: logos de los gateways, Ases azul y galería (05/11/2026)
+
+- Usar los mismos logos transparentes y visibles del ingreso de los gateways, conservando sus proporciones, también para las skins. Reemplaza los iconos cuadrados anteriores de T9; conservar las otras paletas, salvo Ases del Norte.
+- Ases del Norte adopta la paleta del login público indicado por el usuario: fondo `#071b2c`, acento/CTA `#36a8eb` y texto del botón `#08080b`. Reemplaza la elección anterior negro/plateado para T9.
+- La miniatura debe llenar el ancho de la tarjeta de galería, como las otras plantillas, mostrando la marca y el formulario con escala legible. En la galería no se muestran el pie y el aviso de cookies; ambos permanecen completos en la vista previa del editor y en la landing pública. Sin interacción, scroll independiente ni llamadas de alta/tracking desde la miniatura.
+- Presentación canónica de Builder compartida con el renderer clásico. Verificar los cuatro proveedores y las skins; sin cambios en API2, Panel3, ingreso, tracking o finanzas.
+
 ### Publicación del trabajo pendiente (05/11/2026)
 
 - El usuario autorizó hacer commit, push y despliegue de todo lo implementado en Landing Builder, Atrio y los cuatro gateways, incluidas las migraciones y funciones necesarias. Esta autorización reemplaza la condición de mantener locales esos proyectos en las entradas anteriores.

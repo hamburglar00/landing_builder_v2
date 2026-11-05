@@ -51,7 +51,8 @@ for(const [name,engine]of [['Chromium',playwright.chromium],['WebKit',playwright
         assert.ok(metrics.wrapOverflowY<=1&&metrics.documentOverflowY<=1,`${label}: vertical overflow ${JSON.stringify(metrics)}`);
         assert.ok(metrics.footerBottom<=metrics.noticeTop+1,`${label}: cookie overlap ${JSON.stringify(metrics)}`);
         assert.ok(metrics.ctaTop>=0&&metrics.ctaBottom<=viewport.height,`${label}: CTA outside viewport`);
-        if(provider==='rey_de_ases'||provider==='ases_del_norte')assert.equal(metrics.ctaColor,'rgb(18, 18, 18)',`${label}: readable metal button`);
+        if(provider==='rey_de_ases')assert.equal(metrics.ctaColor,'rgb(18, 18, 18)',`${label}: readable gold button`);
+        if(provider==='ases_del_norte')assert.equal(metrics.ctaColor,'rgb(8, 8, 11)',`${label}: gateway blue button contrast`);
         if(name==='Chromium'&&!whatsapp&&((viewport.width===390&&viewport.height===844)||viewport.width===1366))await page.screenshot({path:path.join(directory,`${provider}-${viewport.width}.png`)});
         if(name==='Chromium'&&whatsapp&&viewport.width===320)await page.screenshot({path:path.join(directory,`${provider}-320-phone.png`)});
         await page.locator('[data-template9-cookie-dismiss]').click();
