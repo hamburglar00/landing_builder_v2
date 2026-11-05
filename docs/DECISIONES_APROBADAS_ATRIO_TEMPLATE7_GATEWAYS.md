@@ -5,6 +5,7 @@
 - Dejar margen inferior visible en la tarjeta de vista previa, tanto en el editor de cliente como en el de administrador. Mantener el borde exterior completo y el contenido desplazable para alcanzar el resumen de gerencias, incluso en ventanas bajas.
 - Template 9 usa el ancho disponible como viewport real, sin el doble escalado del editor que achicaba y difuminaba los textos. Mantener el HTML y CSS públicos, el formulario, el pie legal y el aviso de cookies; permitir recorrer su contenido sin ejecutar scripts, altas ni tracking.
 - Conservar la composición propia de las miniaturas de galería y las demás plantillas. Este cambio sólo afecta al editor de Builder; no requiere cambios de gateways, Atrio, renderer clásico, API2, Panel3, migraciones ni funciones Edge.
+- Publicado en Builder tras TypeScript, las 10 pruebas de Template 9 y 32 comprobaciones visuales en Chromium/WebKit, con ambas variantes del editor, cinco tamaños y los cuatro proveedores. [Captura, validación y versión](validation/editor-preview-20261105/README.md).
 
 ### Formulario de gateways dentro de la pantalla (05/11/2026)
 

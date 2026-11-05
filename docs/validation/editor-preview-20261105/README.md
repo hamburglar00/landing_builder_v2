@@ -12,3 +12,5 @@ Validación local con las páginas y layouts reales, datos ficticios y red inter
 [Captura de escritorio](desktop.png). Mediciones en [report.json](report.json).
 
 El ajuste sólo requiere publicar Builder. No modifica el renderer clásico, Atrio, gateways, API2 ni Panel3; no requiere migraciones ni funciones Edge.
+
+Publicado: commit `ec0bbf7`, despliegue Vercel `dpl_HC5KBxMTihcYovCwnqK6sWganBKu`, compilado y promovido a `mkt.panelbotadmin.com`. Verificados los recursos públicos de ambos editores, sin iniciar sesión ni guardar landings. [Versión y rollback](deployment.json), [comprobación pública](public.json). API2 y Panel3 conservan exactamente su HEAD y cambios locales anteriores.

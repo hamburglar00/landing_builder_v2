@@ -1,0 +1,9 @@
+{
+    "commit":  "ec0bbf71a84c35775785dacfe3aedac420a61eb8",
+    "repository":  "landing-builder",
+    "previousCommit":  "71eb65ace9f9cf2040f74ba862f5d98f457b6fe0",
+    "deployment":  "dpl_HC5KBxMTihcYovCwnqK6sWganBKu",
+    "production":  "https://mkt.panelbotadmin.com",
+    "previousDeployment":  "dpl_D874TBTdxRphzrp2u1mYYepf2tpk",
+    "checkedAt":  "2026-11-05T21:24:22.6680764Z"
+}
