@@ -6,6 +6,7 @@
 - API2 y Panel3 permanecen locales, sin commits, push, migraciones ni despliegues. Extensiones y las validaciones de gerencia que dependen de esos proyectos seguirán sujetas a su publicación posterior. Los subdominios nuevos por skin siguen pendientes de que el usuario elija el dominio.
 - Alinear el nombre local de `entry_funnel_chat_diagnostics` con la versión remota `20261031132341`: SQL comparado e idéntico, sin reejecutarlo ni modificar el historial productivo. Actualizar únicamente sus referencias de pruebas.
 - Publicar desde archivos de los commits sin `.env` ni `.dev.vars`; conservar las variables productivas y las versiones previas para rollback. Aplicar las tres migraciones nuevas antes de promover las aplicaciones. Verificar producción con lecturas, sin crear jugadores ni ejecutar operaciones financieras o eliminaciones de usuarios de prueba.
+- Publicación completada: siete aplicaciones Vercel READY y promovidas, Ganamos+ Worker al 100 %, tres migraciones aplicadas y Edge Functions verificadas idénticas a sus fuentes. Pili recuperó sus tres chips; Gera conserva cuatro. API2 y Panel3 conservan exactamente su HEAD y cambios locales. [Versiones, pruebas, dependencias y rollback](validation/complete-release-20261105/README.md).
 
 ### Perfil interno, Conexiones y altas incompletas (05/11/2026, local)
 

@@ -1,0 +1,69 @@
+{
+  "at": "2026-11-05T20:44:42.605Z",
+  "createdAccounts": 0,
+  "financialOperations": 0,
+  "deletedUsers": 0,
+  "results": [
+    {
+      "origin": "https://www.reydeases.fun",
+      "status": 200,
+      "sourceMatches": true,
+      "loginStatus": 401,
+      "agencyStatus": 404,
+      "agencyUnavailable": true
+    },
+    {
+      "origin": "https://www.asesdelnorte.online",
+      "status": 200,
+      "sourceMatches": true,
+      "loginStatus": 401,
+      "agencyStatus": 404,
+      "agencyUnavailable": true
+    },
+    {
+      "origin": "https://www.ganamosnet.icu",
+      "status": 200,
+      "sourceMatches": true,
+      "loginStatus": 401,
+      "agencyStatus": 404,
+      "agencyUnavailable": true
+    },
+    {
+      "origin": "https://multi-skin-gateway.vercel.app",
+      "status": 200,
+      "sourceMatches": true,
+      "loginStatus": 401,
+      "agencyStatus": 404,
+      "agencyUnavailable": true
+    },
+    {
+      "origin": "https://mkt.panelbotadmin.com",
+      "path": "/l/diana",
+      "status": 200,
+      "newEntryTimings": true
+    },
+    {
+      "origin": "https://mkt.panelbotadmin.com",
+      "path": "/l/template9",
+      "status": 200,
+      "newEntryTimings": true
+    },
+    {
+      "origin": "https://landing.panelbotadmin.com",
+      "path": "/diana",
+      "status": 200,
+      "newEntryTimings": true
+    },
+    {
+      "origin": "https://landing.panelbotadmin.com",
+      "path": "/template9",
+      "status": 200,
+      "newEntryTimings": true
+    },
+    {
+      "origin": "https://www.atrio.website",
+      "path": "/login",
+      "status": 200
+    }
+  ]
+}

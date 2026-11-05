@@ -1,0 +1,65 @@
+[
+    {
+        "commit":  "a164731722f5eb1f3009d24536cbc3f6333e4220",
+        "previousDeployment":  "dpl_DESjiEstwQ999tceTK3RsYNQy4SF",
+        "deployment":  "dpl_4ydgLYLM32YtcJLPgxi84YhRxXAp",
+        "previousCommit":  "b99c7f1699602a1e0ff52e003208d40cef381cce",
+        "repo":  "internal-chat",
+        "state":  "READY",
+        "url":  "https://internal-chat-aj5nucdkv-juanclouds-projects.vercel.app"
+    },
+    {
+        "commit":  "71eb65ace9f9cf2040f74ba862f5d98f457b6fe0",
+        "previousDeployment":  "dpl_BqUr1NsD5ET6VPufHLbuMhM9WVMf",
+        "deployment":  "dpl_D874TBTdxRphzrp2u1mYYepf2tpk",
+        "previousCommit":  "a44b006ef6974ab334d0a23b50563dab5b5155a6",
+        "repo":  "landing-builder",
+        "state":  "READY",
+        "url":  "https://landing-builder-v2-k259-el1tobzy4-juanclouds-projects.vercel.app"
+    },
+    {
+        "commit":  "5eb1e22e56fb07863624c0e3b80958c1a1636045",
+        "previousDeployment":  "dpl_hpFfhcZxVaC7MCLnwskxGP5oQPUh",
+        "deployment":  "dpl_coYsuqhe5468exfWrQ95W88N7eBt",
+        "previousCommit":  "c37bb4881be636f0422c9dd99deb444d02e31a81",
+        "repo":  "landing-prueba-1",
+        "state":  "READY",
+        "url":  "https://public-landing-cqqk6bb76-juanclouds-projects.vercel.app"
+    },
+    {
+        "commit":  "62458aa7eedd51b0b401183e0e1e4d4ceb1a7e8f",
+        "previousDeployment":  "dpl_9s2dGjYRCPh8VsYjGqcJ7ZM3vvGq",
+        "deployment":  "dpl_DyZ7s6XDjEUxFwhogTbqN4pY3R4m",
+        "previousCommit":  "b1f1ef43ae4c62e3dc0efe68c0732a20347a9246",
+        "repo":  "landing-autologuin",
+        "state":  "READY",
+        "url":  "https://reydeases-gateway-enkzoclui-juanclouds-projects.vercel.app"
+    },
+    {
+        "commit":  "8863a3aabc488347b670c82486d3d8a9c862ebb1",
+        "previousDeployment":  "dpl_GbahH6AYkYjHCNAjYJkJxCGCEcrF",
+        "deployment":  "dpl_3scCkcKgvS4gQxjFxXSFb3t7e7DW",
+        "previousCommit":  "f9276c78595ca470cfe2c04f6b27cc52dde41a74",
+        "repo":  "ases-gateway",
+        "state":  "READY",
+        "url":  "https://ases-del-norte-gateway-aj1asmnud-juanclouds-projects.vercel.app"
+    },
+    {
+        "commit":  "479ded9f4d87918eb2555a90ddde0f9207bee37d",
+        "previousDeployment":  "dpl_HHAEEi1ERj96tuWxeg2bmF3pgUzU",
+        "deployment":  "dpl_H1KSJBUh5raucQxfYTmBgRQrhUv8",
+        "previousCommit":  "14735a19c6055e1aac9ca393a045c10ffab2e2db",
+        "repo":  "ganamos-gateway",
+        "state":  "READY",
+        "url":  "https://ganamos-net-gateway-eag61xy7l-juanclouds-projects.vercel.app"
+    },
+    {
+        "commit":  "4653079e7e443c19da96ae835395d530f885c378",
+        "previousDeployment":  "dpl_RQhRjybU8vnPDeyTzMBbDvJt6fbk",
+        "deployment":  "dpl_6vfSGMGA8LpU5s2fKdrvT11azdG3",
+        "previousCommit":  "a48dbd31dd9aaf17e33bc4b57bd93aa0d88240b5",
+        "repo":  "multi-skin-gateway",
+        "state":  "READY",
+        "url":  "https://multi-skin-gateway-h8dj06mfr-juanclouds-projects.vercel.app"
+    }
+]
