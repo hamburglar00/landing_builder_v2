@@ -1,0 +1,30 @@
+{
+  "at": "2026-11-05T21:04:04.989Z",
+  "readOnly": true,
+  "results": [
+    {
+      "origin": "https://www.reydeases.fun",
+      "status": 401,
+      "cssMatchesTestedSource": true,
+      "copyMatches": true
+    },
+    {
+      "origin": "https://www.asesdelnorte.online",
+      "status": 401,
+      "cssMatchesTestedSource": true,
+      "copyMatches": true
+    },
+    {
+      "origin": "https://www.ganamosnet.icu",
+      "status": 401,
+      "cssMatchesTestedSource": true,
+      "copyMatches": true
+    },
+    {
+      "origin": "https://multi-skin-gateway.vercel.app",
+      "status": 401,
+      "cssMatchesTestedSource": true,
+      "copyMatches": true
+    }
+  ]
+}

@@ -6,6 +6,7 @@
 - Fondo con degradados orgánicos del color de cada marca hacia negro, sin la cuadrícula anterior. Conservar logos transparentes, proporciones y paletas de proveedor/skin. Cambiar el texto a «Tu plataforma y tu asesor, en el mismo lugar.» y mostrar los CTA de ingreso y registro en mayúsculas, incluidos estados de espera.
 - Implementación compartida en `gateway-auth-view.ts`, `gateway-login-page.ts` y `gateway-agency-page.ts`, sincronizada en los cuatro. Sin cambios de identidad, recuperación, llamadas, creación de cuentas o validación de gerencia; sin migraciones ni funciones Edge.
 - Validación: 480 comprobaciones de navegador aisladas, dos motores, cuatro proveedores, diez tamaños (320×480 a 1920×1080; horizontal desde 568×320), incluyendo errores y registro; márgenes y cero desbordes comprobados. Además, 52 pruebas de ingreso/gerencia y TypeScript por gateway. Publicar Vercel y Worker Ganamos+; API2 y Panel3 siguen locales.
+- Publicado en los cuatro dominios, incluido Worker Ganamos+ al 100 %. CSS productivo y texto verificados contra la fuente probada; [versiones, capturas y rollback](validation/gateway-auth-fit-20261105/README.md).
 
 ### Publicación del lote acumulado (05/11/2026, segunda entrega)
 
