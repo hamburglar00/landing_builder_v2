@@ -53,6 +53,25 @@ for (const engine of [chromium,webkit]) await withTestBrowser(engine,async brows
       const supplied={...state.context,account_kind:"new"};
       await page.evaluate(({factory,supplied})=>(0,eval)(factory)({},supplied),{factory,supplied});
       assert.equal(await page.evaluate(()=>window.__entryFunnel.context().account_kind),"new","same-flow signed metadata is adopted");
+      await page.evaluate(async()=>{
+        await fetch('/api/template7/start?password=private&token=private');
+        await fetch('/unrelated-private-endpoint?token=private');
+      });
+      await page.waitForTimeout(80);
+      const beacons=await page.evaluate(async()=>{
+        const blobs=[];Object.defineProperty(navigator,'sendBeacon',{configurable:true,value:(_url,blob)=>{blobs.push(blob);return true;}});
+        for(let i=0;i<35;i++)window.__entryFunnel.emit('entry_retry',{error_stage:'session',duration_ms:i});
+        window.dispatchEvent(new Event('pagehide'));
+        return Promise.all(blobs.map(async blob=>JSON.parse(await blob.text())));
+      });
+      assert.ok(beacons.length>=2,'pagehide drains every batch, including events after the first 20');
+      assert.equal(beacons.flatMap(b=>b.events).filter(e=>e.name==='entry_retry').length,35);
+      assert.ok(beacons.flatMap(b=>b.events).some(e=>e.phase==='account_request'));
+      assert.doesNotMatch(JSON.stringify(beacons),/private|password|token|unrelated/);
+      const beforeFallback=batches.length;
+      await page.evaluate(()=>{Object.defineProperty(navigator,'sendBeacon',{configurable:true,value:()=>false});window.dispatchEvent(new Event('pagehide'));});
+      await page.waitForTimeout(100);
+      assert.ok(batches.length-beforeFallback>=2,'beacon rejection also flushes every keepalive batch');
     } finally {await context.close();}
   }
 });

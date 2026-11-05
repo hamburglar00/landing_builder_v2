@@ -61,7 +61,7 @@ function t7AssetFailure(){
 }
 window.__T7_ASSET_FAILED__=t7AssetFailure;
 t7AssetTimer=setTimeout(t7AssetFailure,10000);
-window.__ENTRY_FUNNEL_EARLY__={started_at:Date.now(),events:[]};
+window.__ENTRY_FUNNEL_EARLY__={started_at:Math.round(performance.timeOrigin||Date.now()),events:[]};
 try{
   var t7Cfg=window.__PUBLIC_LANDING_RUNTIME_CONFIG__||{};
   var t7Uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -69,7 +69,7 @@ try{
     var t7Key='entry-funnel:v1:'+t7Cfg.landingId,t7Template=t7Cfg.entryTemplate===9?9:t7Cfg.template8?8:7,t7Flow=null,t7Now=Date.now();
     try{t7Flow=JSON.parse(sessionStorage.getItem(t7Key)||'null')}catch(e){}
     if(!t7Flow||!t7Uuid.test(String(t7Flow.flow_id))||t7Flow.landing_id!==t7Cfg.landingId||t7Flow.template!==t7Template||t7Flow.telemetry_origin!==location.origin||!Number.isSafeInteger(t7Flow.started_at)||t7Flow.started_at>t7Now||t7Flow.started_at<t7Now-86400000)
-      t7Flow={flow_id:crypto.randomUUID(),landing_id:t7Cfg.landingId,template:t7Template,telemetry_origin:location.origin,started_at:t7Now};
+      t7Flow={flow_id:crypto.randomUUID(),landing_id:t7Cfg.landingId,template:t7Template,telemetry_origin:location.origin,started_at:window.__ENTRY_FUNNEL_EARLY__.started_at};
     window.__ENTRY_FUNNEL_EARLY__.context=t7Flow;window.__ENTRY_FUNNEL_EARLY__.started_at=t7Flow.started_at;
     try{sessionStorage.setItem(t7Key,JSON.stringify(t7Flow))}catch(e){}
   }

@@ -2,6 +2,48 @@ import type { SupabaseClient, Session } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
 import { AccessError, broker, type Identity } from "./protocol.server";
 
+/** Prove ownership with a temporary native session. Never persist or return its tokens. */
+export async function verifyNativeAccount(
+  auth: SupabaseClient,
+  email: unknown,
+  password: unknown,
+) {
+  if (
+    typeof email !== "string" ||
+    email.length > 254 ||
+    typeof password !== "string" ||
+    !password ||
+    password.length > 512
+  )
+    throw new AccessError(
+      "Ingresá el email y la contraseña de tu cuenta.",
+      400,
+    );
+  try {
+    const result = await auth.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (result.error || !result.data.session)
+      throw new AccessError("El email o la contraseña no son correctos.", 401);
+    const verified = await auth.auth.getUser(result.data.session.access_token);
+    const user = verified.data.user;
+    if (verified.error || !user || !user.email_confirmed_at)
+      throw new AccessError("No se pudo verificar la cuenta.", 401);
+    if (user.factors?.some((factor) => factor.status === "verified"))
+      throw new AccessError(
+        "Esta cuenta tiene doble factor. La vinculación necesita revisión para conservar esa protección.",
+      );
+    if (user.app_metadata.pbadmin_managed)
+      throw new AccessError(
+        "Esta cuenta ya utiliza la identidad de PBAdmin. Ingresá con PBAdmin.",
+      );
+    return user;
+  } finally {
+    await auth.auth.signOut({ scope: "local" }).catch(() => {});
+  }
+}
+
 export async function reserveAccount(db: SupabaseClient, identity: Identity) {
   const result = await db.rpc("reserve_pbadmin_account", {
     p_owner: identity.ownerId,
@@ -11,7 +53,9 @@ export async function reserveAccount(db: SupabaseClient, identity: Identity) {
     throw new AccessError("La cuenta necesita revisión antes de vincularse.");
   const row = result.data;
   if (identity.accountId && row.account_id !== identity.accountId)
-    throw new AccessError("La cuenta no coincide con el vínculo aprobado.");
+    throw new AccessError(
+      "Esta administración ya tiene otra cuenta vinculada.",
+    );
   return row as {
     owner_id: number;
     account_id: string;
@@ -106,16 +150,14 @@ export async function issueSession(
   const claims = JSON.parse(
     Buffer.from(session.access_token.split(".")[1], "base64url").toString(),
   );
-  const result = await db
-    .from("pbadmin_sessions")
-    .insert({
-      session_id: claims.session_id,
-      profile_id: target,
-      owner_id: identity.ownerId,
-      user_id: identity.userId,
-      role: identity.role,
-      expires_at: new Date(Date.now() + 30 * 86400_000).toISOString(),
-    });
+  const result = await db.from("pbadmin_sessions").insert({
+    session_id: claims.session_id,
+    profile_id: target,
+    owner_id: identity.ownerId,
+    user_id: identity.userId,
+    role: identity.role,
+    expires_at: new Date(Date.now() + 30 * 86400_000).toISOString(),
+  });
   if (result.error) {
     await db.auth.admin.signOut(session.access_token, "local");
     throw new AccessError("No se pudo registrar la sesión.", 503);

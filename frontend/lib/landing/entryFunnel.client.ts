@@ -24,7 +24,12 @@ export function installEntryFunnel(config: {
   "preparation_dns", "preparation_connect", "preparation_tls", "preparation_ttfb", "preparation_download", "preparation_navigation",
     "destination_scope", "destination_resolve", "destination_fallback", "destination_total", "identity_bootstrap",
   "builder_context", "atrio_identity", "casino_account", "atrio_link", "gateway_handoff", "entry_finalize", "entry_total",
-    "account_lookup", "provider_create", "provider_verify", "account_finalize", "provider_login", "session_confirm"];
+    "account_lookup", "provider_create", "provider_verify", "account_finalize", "provider_login", "session_confirm",
+    "landing_dom", "landing_load", "landing_fcp", "landing_lcp", "landing_blocked", "landing_runtime",
+    "gateway_dom", "gateway_load", "gateway_fcp", "gateway_lcp", "gateway_blocked", "gateway_runtime",
+    "preparation_dom", "preparation_load", "preparation_fcp", "preparation_lcp", "preparation_blocked", "preparation_runtime",
+    "identity_request", "destination_request", "account_request", "prepare_request", "login_request", "session_request", "chat_session_request",
+    "chat_dns", "chat_connect", "chat_tls", "chat_ttfb", "chat_download", "chat_navigation", "chat_dom", "chat_load", "chat_fcp", "chat_hydration", "chat_visible_to_usable"];
   const stages = ["runtime", "destination", "account", "login", "session", "chat_iframe", "chat_bootstrap", "welcome", "wallet", "chat"];
   const errors = ["destination_unavailable", "account_unavailable", "prepare_rejected", "prepare_unavailable", "login_unavailable", "session_unavailable", "chat_unavailable", "request_timeout", "network_error", "rate_limited", "invalid_entry", "unknown"];
   const providers = ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_skin"];
@@ -58,6 +63,7 @@ export function installEntryFunnel(config: {
   }
   function persistContext() { try { sessionStorage.setItem(key, JSON.stringify(flow)); } catch { /* best effort */ } }
   function beginAttempt() {
+    attemptStartedAt = performance.now();
     flow.attempt_id = id(); flow.attempt_number = Math.min(1000, (flow.attempt_number || 0) + 1);
     delete flow.account_kind; persistContext();
     emit("attempt_started");
@@ -76,13 +82,14 @@ export function installEntryFunnel(config: {
   let inflight = false;
   let count = 0;
   let active = true;
+  let attemptStartedAt = 0;
   let retries = 0;
   const seen = new Set<string>();
   const pendingKey = key + ":pending";
   try {
     const pending = JSON.parse(sessionStorage.getItem(pendingKey) || "null");
     if (pending?.flow_id === flow.flow_id && Array.isArray(pending.events)) {
-      queue = pending.events.slice(0, 20).filter((e: Record<string, unknown>) => uuid.test(String(e.id)) && allowed.includes(String(e.name)));
+      queue = pending.events.slice(0, 80).filter((e: Record<string, unknown>) => uuid.test(String(e.id)) && allowed.includes(String(e.name)));
     }
   } catch { /* best effort */ }
   function saveQueue() {
@@ -93,20 +100,27 @@ export function installEntryFunnel(config: {
     if (timer) { clearTimeout(timer); timer = undefined; }
     if (!queue.length || inflight && !beacon) return;
     const events = queue.slice(0, 20);
-    const payload = JSON.stringify({ landing_id: flow.landing_id, flow_id: flow.flow_id, template: flow.template, events });
     if (beacon && navigator.sendBeacon) {
       try {
         // Retain until an acknowledged fetch. Replays carry the same IDs and SQL deduplicates.
-        if (navigator.sendBeacon(endpoint, new Blob([payload], { type: "text/plain" }))) return;
+        let accepted = true;
+        for (let offset = 0; offset < queue.length; offset += 20) {
+          const batch = JSON.stringify({ landing_id: flow.landing_id, flow_id: flow.flow_id, template: flow.template, events: queue.slice(offset, offset + 20) });
+          if (!navigator.sendBeacon(endpoint, new Blob([batch], { type: "text/plain" }))) { accepted = false; break; }
+        }
+        if (accepted) return;
       } catch { /* fallback to keepalive */ }
     }
     inflight = true;
-    fetch(endpoint, { method: "POST", body: payload, headers: { "Content-Type": "application/json" }, credentials: "same-origin", keepalive: true, cache: "no-store" })
-      .then(response => {
+    const batches = beacon ? Array.from({ length: Math.ceil(queue.length / 20) }, (_, index) => queue.slice(index * 20, index * 20 + 20)) : [events];
+    Promise.all(batches.map(batch => fetch(endpoint, {
+      method: "POST", body: JSON.stringify({ landing_id: flow.landing_id, flow_id: flow.flow_id, template: flow.template, events: batch }),
+      headers: { "Content-Type": "application/json" }, credentials: "same-origin", keepalive: true, cache: "no-store"
+    }).then(response => {
         if (!response.ok) throw new Error("unavailable");
-        const sent = new Set(events.map(e => e.id));
-        queue = queue.filter(e => !sent.has(e.id)); retries = 0; saveQueue();
-      }).catch(() => { retries += 1; })
+        const sent = new Set(batch.map(e => e.id));
+        queue = queue.filter(e => !sent.has(e.id)); saveQueue();
+      }))).then(() => { retries = 0; }).catch(() => { retries += 1; })
       .finally(() => {
         inflight = false;
         if (active && queue.length && retries <= 1 && document.visibilityState !== "hidden") timer = setTimeout(() => flush(), 1800);
@@ -115,19 +129,20 @@ export function installEntryFunnel(config: {
   function emit(name: string, details: Record<string, unknown> = {}) {
     if (!active || !allowed.includes(name) || count >= 120) return;
     if (name === "stage_timing" && (!phases.includes(String(details.phase)) || !Number.isSafeInteger(details.duration_ms) || Number(details.duration_ms) < 0 || Number(details.duration_ms) > 86400000)) return;
-    if (name === "cta_clicked") beginAttempt();
+    if (name === "cta_clicked") { reportVisual(); beginAttempt(); }
+    if (name === "chat_usable") reportVisual();
     if (details.account_kind === "new" || details.account_kind === "existing") { flow.account_kind = details.account_kind; persistContext(); }
     const provider = details.provider || config.targetProvider;
     const skin = details.skin || config.skinCode;
     const once = !["cta_clicked", "entry_retry", "entry_error", "visibility_hidden", "resumed"].includes(name);
-    const attemptScoped = !["page_visible", "form_visible", "name_focus", "name_started", "name_valid", "skin_selected"].includes(name);
-    const stageKey = name + ":" + String(provider || "") + ":" + String(skin || "") + ":" + (attemptScoped ? flow.attempt_id || "" : "") + ":" + String(details.phase || "");
+    const attemptScoped = details.flow_scoped !== true && !(name === 'stage_timing' && String(details.phase).startsWith('landing_')) && !["page_visible", "form_visible", "name_focus", "name_started", "name_valid", "skin_selected"].includes(name);
+    const stageKey = name + ":" + String(provider || "") + ":" + String(skin || "") + ":" + (attemptScoped ? flow.attempt_id || "" : "") + ":" + String(details.phase || "") + ":" + String(details.resource_key || "");
     if (once && seen.has(stageKey)) return;
     seen.add(stageKey); count += 1;
     const event: Record<string, unknown> = {
       id: uuid.test(String(details.event_id)) ? details.event_id : id(), name, elapsed_ms: Math.max(0, Math.min(86400000, Number.isSafeInteger(details.elapsed_ms) ? Number(details.elapsed_ms) : Date.now() - flow.started_at)),
     };
-    if (flow.attempt_id && uuid.test(flow.attempt_id)) { event.attempt_id = flow.attempt_id; event.attempt_number = flow.attempt_number; }
+    if (attemptScoped && flow.attempt_id && uuid.test(flow.attempt_id)) { event.attempt_id = flow.attempt_id; event.attempt_number = flow.attempt_number; }
     if (flow.account_kind) event.account_kind = flow.account_kind;
     if (name === "stage_timing") event.phase = details.phase;
     if (providers.includes(String(provider))) event.provider = provider;
@@ -136,7 +151,7 @@ export function installEntryFunnel(config: {
     if (["entry_error", "entry_retry"].includes(name) && stages.includes(String(details.error_stage))) event.error_stage = details.error_stage;
     if (Number.isSafeInteger(details.duration_ms) && Number(details.duration_ms) >= 0 && Number(details.duration_ms) <= 86400000) event.duration_ms = details.duration_ms;
     if (Number.isInteger(details.status) && Number(details.status) >= 100 && Number(details.status) <= 599) event.status = details.status;
-    queue.push(event); if (queue.length > 40) queue = queue.slice(-40); saveQueue();
+    queue.push(event); if (queue.length > 80) queue = queue.slice(-80); saveQueue();
     if (!timer) timer = setTimeout(() => flush(), 500);
   }
   function timings(header: string | null) {
@@ -161,13 +176,56 @@ export function installEntryFunnel(config: {
         ["tls", navigation.secureConnectionStart, navigation.secureConnectionStart > 0 ? navigation.connectEnd : 0],
         ["ttfb", navigation.requestStart, navigation.responseStart], ["download", navigation.responseStart, navigation.responseEnd],
         ["navigation", navigation.startTime, navigation.responseEnd],
+        ["dom", navigation.startTime, navigation.domContentLoadedEventEnd],
+        ["load", navigation.startTime, navigation.loadEventEnd],
       ] as Array<[string, number, number]>) {
-        if (Number.isFinite(start) && Number.isFinite(end) && end >= start && (phase !== "tls" || start > 0))
+        if (Number.isFinite(start) && Number.isFinite(end) && end >= start && (!['dom', 'load'].includes(phase) || end > 0) && (phase !== "tls" || start > 0))
           emit("stage_timing", { phase: prefix + phase, duration_ms: Math.round(end - start) });
       }
     } catch { /* Unsupported/restricted performance APIs do not affect entry. */ }
   }
-  const api = { flowId: flow.flow_id, beginAttempt, emit, flush, timings, adopt, context: () => { if (!flow.attempt_id) beginAttempt(); return { ...flow }; }, stop: () => { active = false; if (timer) clearTimeout(timer); } };
+  // Only closed phase names and durations leave the browser, never resource URLs,
+  // names, credentials or DOM contents. Buffered entries include work before hydration.
+  const prefix = !suppliedContext ? "landing_" : config.navigationKind === "preparation" ? "preparation_" : "gateway_";
+  const observers: PerformanceObserver[] = [];
+  let lcp: number | undefined, blocked = 0, observesLongTasks = false;
+  const metric = (phase: string, value: number, details: Record<string, unknown> = {}) => {
+    if (active && Number.isFinite(value) && value >= 0 && value <= 86400000) emit('stage_timing', { ...details, phase, duration_ms: Math.round(value) });
+  };
+  function reportVisual() {
+    if (typeof lcp === 'number') metric(prefix + 'lcp', lcp);
+    if (observesLongTasks) metric(prefix + 'blocked', blocked);
+  }
+  function observe(type: string, callback: (entries: PerformanceEntry[]) => void) {
+    try {
+      if (typeof PerformanceObserver === 'undefined' || !PerformanceObserver.supportedEntryTypes?.includes(type)) return false;
+      const observer = new PerformanceObserver(list => { if (active) callback(list.getEntries()); });
+      observer.observe({ type, buffered: true }); observers.push(observer); return true;
+    } catch { return false; }
+  }
+  function resourceTimings(entries: PerformanceEntry[]) {
+    const paths: Record<string, string> = {
+      '/api/client-identity/bootstrap': 'identity_request', '/api/template7/destination': 'destination_request',
+      '/api/template7/start': 'account_request', '/api/template7/prepare': 'prepare_request',
+      '/api/preparations/complete': 'account_request', '/start': 'login_request',
+      '/api/session/recover': 'session_request', '/api/internal-chat/session': 'chat_session_request',
+    };
+    for (const entry of entries) {
+      try {
+        const url = new URL(entry.name, location.origin);
+        if (url.origin !== location.origin || !paths[url.pathname]) continue;
+        // Attribute late buffered records to their real attempt only; pre-CTA warmup
+        // remains flow scoped. Resource URLs are discarded here.
+        const resource = entry as PerformanceResourceTiming;
+        if (resource.responseEnd > 0) metric(paths[url.pathname], resource.responseEnd - resource.startTime, {
+          resource_key: resource.startTime,
+          elapsed_ms: Math.max(0, Math.round(performance.timeOrigin + resource.responseEnd - flow.started_at)),
+          flow_scoped: !suppliedContext && (!attemptStartedAt || resource.startTime < attemptStartedAt),
+        });
+      } catch { /* Unsupported resource records are omitted. */ }
+    }
+  }
+  const api = { flowId: flow.flow_id, beginAttempt, emit, flush, timings, adopt, context: () => { if (!flow.attempt_id) beginAttempt(); return { ...flow }; }, stop: () => { active = false; if (timer) clearTimeout(timer); observers.forEach(observer => observer.disconnect()); } };
   browser.__entryFunnel = api;
   if (!suppliedContext) {
     if (Array.isArray(early?.events)) early.events.slice(0, 8).forEach(event => {
@@ -204,13 +262,22 @@ export function installEntryFunnel(config: {
     else begin();
   }
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") { emit("visibility_hidden"); flush(true); }
+    if (document.visibilityState === "hidden") { reportVisual(); emit("visibility_hidden"); flush(true); }
     else { emit("resumed"); if (!suppliedContext) emit("page_visible"); flush(); }
   });
-  window.addEventListener("pagehide", () => flush(true));
+  window.addEventListener("pagehide", () => { reportVisual(); flush(true); });
   window.addEventListener("pageshow", event => { if (event.persisted) { emit("resumed"); flush(); } });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", navigationTiming, { once: true });
   else navigationTiming();
+  window.addEventListener('load', () => setTimeout(navigationTiming, 0), { once: true });
+  try { metric(prefix + 'runtime', performance.now()); } catch { /* optional performance API */ }
+  observe('paint', entries => { for (const entry of entries) if (entry.name === 'first-contentful-paint') metric(prefix + 'fcp', entry.startTime); });
+  observe('largest-contentful-paint', entries => { for (const entry of entries) lcp = entry.startTime; });
+  observesLongTasks = observe('longtask', entries => { for (const entry of entries) blocked += Math.max(0, entry.duration - 50); });
+  try { resourceTimings(performance.getEntriesByType('resource')); } catch { /* optional */ }
+  observe('resource', resourceTimings);
+  // Diagnostics end after two minutes. A late pagehide may still flush the bounded queue.
+  setTimeout(() => { reportVisual(); observers.forEach(observer => observer.disconnect()); }, 120000);
   return api;
 }
 

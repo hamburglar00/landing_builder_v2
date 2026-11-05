@@ -1,3 +1,4 @@
+import { multiSkinGatewayOrigin } from "../multi-skin-origins";
 /** Public origins only; Ganamos+ must not replace the origin of other skins. */
 export function gatewayOriginFor(
   provider: string | null | undefined,
@@ -5,6 +6,8 @@ export function gatewayOriginFor(
   env: Record<string, string | undefined> = process.env,
 ): string | undefined {
   if (provider === "multi_skin") {
+    const origin = multiSkinGatewayOrigin(skinCode, env.MULTI_SKIN_GATEWAY_BASE_DOMAIN);
+    if (origin) return origin;
     return skinCode === "ganamos_plus" && env.GANAMOS_PLUS_GATEWAY_ORIGIN
       ? env.GANAMOS_PLUS_GATEWAY_ORIGIN
       : env.MULTI_SKIN_GATEWAY_ORIGIN;

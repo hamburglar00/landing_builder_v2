@@ -32,10 +32,11 @@ for (const [name, engine] of [["Chromium", chromium], ["WebKit", webkit]]) {
     });
     await page.goto("https://landing.panelbotadmin.com/fixture");
     await page.evaluate(({ landing, factory }) => {
-      window.__ENTRY_FUNNEL_EARLY__ = { started_at: Date.now() - 300, events: [
-        { name: "page_visible", at: Date.now() - 200 }, { name: "name_started", at: Date.now() - 100 },
-        { id: "f0000000-0000-4000-8000-000000000001", name: "cta_clicked", at: Date.now() - 70 },
-        { id: "f0000000-0000-4000-8000-000000000002", name: "entry_error", at: Date.now() - 50, error_code: "network_error" },
+      const now = Date.now();
+      window.__ENTRY_FUNNEL_EARLY__ = { started_at: now - 300, events: [
+        { name: "page_visible", at: now - 200 }, { name: "name_started", at: now - 100 },
+        { id: "f0000000-0000-4000-8000-000000000001", name: "cta_clicked", at: now - 70 },
+        { id: "f0000000-0000-4000-8000-000000000002", name: "entry_error", at: now - 50, error_code: "network_error" },
       ] };
       const install = (0, eval)(factory);
       install({ landingId: landing, template: 7, targetProvider: "ganamos_net" });

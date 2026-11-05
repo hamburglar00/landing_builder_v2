@@ -15,7 +15,7 @@ create table public.landings(id uuid primary key,user_id uuid not null,config js
 grant select on public.landings to service_role;`);
 const migration = await readFile(new URL("../../supabase/migrations/20261030234129_entry_funnel_observability.sql", import.meta.url), "utf8");
 run(migration);
-run(await readFile(new URL("../../supabase/migrations/20261031131638_entry_funnel_chat_diagnostics.sql", import.meta.url), "utf8"));
+run(await readFile(new URL("../../supabase/migrations/20261031132341_entry_funnel_chat_diagnostics.sql", import.meta.url), "utf8"));
 run(await readFile(new URL("../../supabase/migrations/20261031170412_entry_funnel_chat_usable.sql", import.meta.url), "utf8"));
 const id = n => `f0000000-0000-4000-8000-${String(n).padStart(12,"0")}`;
 const landing = id(1), owner = id(2), flow = id(3), foreign = id(4);

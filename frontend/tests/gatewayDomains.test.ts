@@ -1,3 +1,4 @@
+import { MULTI_SKIN_SUBDOMAINS } from "../lib/multi-skin-origins";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { gatewayOriginFor } from "../lib/reyDeAses/gatewayOrigins";
@@ -47,4 +48,14 @@ test("Ganamos+ sends the handoff to its domain and rejects a response on the sha
       if (saved[key] === undefined) delete process.env[key]; else process.env[key] = saved[key];
     }
   }
+});
+
+test('all fourteen Multi Skin destinations resolve to their dedicated subdomain', () => {
+  const domain={...origins,MULTI_SKIN_GATEWAY_BASE_DOMAIN:'casino.example'};
+  for(const [skin,subdomain] of Object.entries(MULTI_SKIN_SUBDOMAINS)) {
+    assert.equal(gatewayOriginFor('multi_skin',skin,domain), 'https://'+subdomain+'.casino.example');
+  }
+  assert.equal(gatewayOriginFor('rey_de_ases','bet30',domain),origins.REY_GATEWAY_ORIGIN);
+  assert.equal(gatewayOriginFor('ases_del_norte','bet30',domain),origins.ASES_DEL_NORTE_GATEWAY_ORIGIN);
+  assert.equal(gatewayOriginFor('ganamos_net','bet30',domain),origins.GANAMOS_NET_GATEWAY_ORIGIN);
 });

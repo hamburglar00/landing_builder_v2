@@ -114,7 +114,8 @@ for (const provider of ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_s
     assert.doesNotMatch(pages[0], /device_id: getOrCreateDeviceId/);
     assert.match(pages[1], /fetchWithEntryRecovery\("\/api\/template7\/start"/);
     assert.match(pages[1], /device_id: getOrCreateDeviceId/);
-    assert.doesNotMatch(pages[1], /client-identity\/bootstrap|<code>lb_cid<\/code>/);
+    // The observer may name the endpoint; classic must never issue its request.
+    assert.doesNotMatch(pages[1], /(?:fetch|__T7_FETCH_JSON__)\(["']\/api\/client-identity\/bootstrap|<code>lb_cid<\/code>/);
   });
 }
 

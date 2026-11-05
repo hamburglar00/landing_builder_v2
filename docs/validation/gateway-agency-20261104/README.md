@@ -1,5 +1,19 @@
 # Gateway por gerencia — 04/11/2026
 
+## Actualización visual de ingreso — 05/11/2026, sólo local
+
+Las capturas de esta carpeta se actualizaron con el nuevo formulario, tarjeta y fondo compartidos; no representan un despliegue nuevo. Se mantienen el logo transparente de cada casino y las acciones de ingresar/crear usuario. Los estilos canónicos viven en `gateway-auth-view.ts` y se sincronizan con los cuatro gateways.
+
+Verificación: 208 pruebas de ingreso/gerencia (52 por gateway), 48 escenarios de navegador de gerencia y 68 de ingreso genérico (17 marcas: tres proveedores y 14 skins; Chromium/WebKit a 320 px y escritorio). Incluye recuperación previa al formulario, credenciales rechazadas/correctas ficticias, mostrar/ocultar contraseña, sesión recuperada sin otro login, enlace no disponible sin formulario, logos, desbordamiento y contraste del CTA. Sin llamadas a casinos ni cambios de cuentas reales. TypeScript aprobado en los cuatro gateways. Evidencia adicional local y menú de vista previa en `landing-builder/.vercel/gateway-auth-review/`.
+
+## Lote posterior: subdominios Multi Skin, sólo local (05/11/2026)
+
+La publicación documentada abajo corresponde al lote anterior. El soporte nuevo de las 14 skins por subdominio, galería y CSP todavía NO está publicado. Dominio definitivo pendiente. Configuración y orden de activación en [decisiones aprobadas](../../DECISIONES_APROBADAS_ATRIO_TEMPLATE7_GATEWAYS.md).
+
+Validación: 52 pruebas compartidas en cada uno de Rey/Ases/NET; 85 seleccionadas en Multi Skin (incluye pase de otra skin, sesión por host y marca del enlace no disponible); 36 de Builder (T7/T8/T9/orígenes/skins efectivas); 20 de Atrio, incluyendo CSP y rechazo de origen/skin/proveedor; 26 escenarios API2 sobre MySQL desechable; 25 de navegador Panel3 a 390/1440 px, con copia exacta, filtro, todos los logos cargados y dominio pendiente. TypeScript aprobado en API2, Panel3, Builder, clásico, Atrio y Multi Skin. Módulos comunes, SDK, catálogo y renderer clásico sincronizados.
+
+Observación fuera de este cambio: al ejecutar adicionalmente `gateway-chat-bootstrap.test.mjs`, siete casos aprobaron y el caso antiguo de bootstrap oculto falló porque espera `prepare_gateway_chat` pero el código actual usa `prepare_cached_gateway_chat`. Ni ese test ni `gateway-chat-session.ts` fueron modificados en este lote. No confundir ese desajuste preexistente con la validación de los nuevos subdominios.
+
 Estado al 05/11/2026: publicación autorizada de Rey, Ases del Norte, Ganamos NET, Ganamos+ y Atrio; migración Atrio aplicada. API2 permanece local en `feature/atrio-integration`; su responsable realiza la activación. Hasta actualizar API2, los enlaces por gerencia muestran «Enlace no disponible». Las pruebas no crean cuentas reales ni ejecutan operaciones monetarias.
 
 ## Publicación verificada — 05/11/2026

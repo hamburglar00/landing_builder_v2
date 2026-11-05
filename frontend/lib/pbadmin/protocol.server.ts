@@ -3,6 +3,7 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
 export type Identity = {
+  intent: "open" | "create" | "link";
   provider: "builder" | "atrio";
   userId: number;
   ownerId: number;
@@ -153,6 +154,30 @@ export async function redeem(
   });
   if (
     identity.provider !== provider ||
+    identity.intent !== "open" ||
+    !Number.isSafeInteger(identity.ownerId) ||
+    identity.ownerId < 1 ||
+    !Number.isSafeInteger(identity.userId) ||
+    identity.userId < 1 ||
+    !(provider === "builder" ? [0] : [0, 3]).includes(identity.role)
+  )
+    throw new AccessError("Identidad no válida.", 403);
+  return identity;
+}
+export async function redeemConnection(
+  provider: Identity["provider"],
+  code: unknown,
+  verifier: unknown,
+) {
+  if (!validCode(code) || !validCode(verifier))
+    throw new AccessError("Solicitud de vinculación no válida.", 400);
+  const identity: Identity = await broker(provider, "redeem", {
+    code,
+    verifier,
+  });
+  if (
+    identity.provider !== provider ||
+    !["create", "link"].includes(identity.intent) ||
     !Number.isSafeInteger(identity.ownerId) ||
     identity.ownerId < 1 ||
     !Number.isSafeInteger(identity.userId) ||

@@ -341,6 +341,7 @@ try {
   await db.from("profiles").insert({ id: defaultsId, role: "admin" });
   process.env.PBADMIN_DEFAULTS_ADMIN_ID = defaultsId;
   const identity = (ownerId, userId = ownerId) => ({
+    intent: "create",
     provider: "builder",
     ownerId,
     userId,
@@ -523,14 +524,12 @@ try {
       name: `Advisor ${i}`,
       slug: `advisor-${i}`,
     }));
-    await db
-      .from("atrio_clients")
-      .insert({
-        atrio_id: advisors[0].id,
-        slug: advisors[0].slug,
-        user_id: result.uid,
-        workspace_currency: "PYG",
-      });
+    await db.from("atrio_clients").insert({
+      atrio_id: advisors[0].id,
+      slug: advisors[0].slug,
+      user_id: result.uid,
+      workspace_currency: "PYG",
+    });
     directory.advisors = advisors;
     directory.agencies = advisors.map((advisor, i) => {
       const agencyId = 10000 + i;
@@ -679,8 +678,40 @@ try {
     await db
       .from("client_subscriptions")
       .insert({ user_id: id, plan_code: "custom", max_landings: 99 });
+    const linkIdentity = { ...identity(103), intent: "link" };
+    await assert.rejects(
+      builder.connect(linkIdentity, "synthetic-grant", {
+        email: "legacy@example.test",
+        password: "wrong",
+      }),
+    );
+    assert.equal(
+      (await db.from("pbadmin_accounts").select("owner_id").eq("owner_id", 103))
+        .data.length,
+      0,
+    );
+    const nativeSession = await builder
+      .sessionClient()
+      .auth.signInWithPassword({
+        email: "legacy@example.test",
+        password: "Only-local-fixture-password-47",
+      });
+    assert.equal(
+      (
+        await builder.connect(linkIdentity, "synthetic-grant", {
+          email: "legacy@example.test",
+          password: "Only-local-fixture-password-47",
+        })
+      ).status,
+      "connected",
+    );
+    assert.equal(
+      (await db.auth.getUser(nativeSession.data.session.access_token)).data.user
+        .id,
+      id,
+    );
     const linked = await builder.provision(
-      { ...identity(103), accountId: id, accountEmail: "legacy@example.test" },
+      { ...identity(103), intent: "open", accountId: id },
       "synthetic-grant",
     );
     assert.equal(linked.uid, id);
@@ -704,16 +735,23 @@ try {
       99,
     );
   });
-  await test("wrong reviewed email cannot take over an existing Builder account", async () => {
+  await test("native admin cannot be linked as a client; one account cannot be claimed by two owners", async () => {
     await assert.rejects(
-      builder.provision(
-        {
-          ...identity(104),
-          accountId: defaultsId,
-          accountEmail: "wrong@example.test",
-        },
-        "synthetic-grant",
-      ),
+      builder.connect({ ...identity(104), intent: "link" }, "synthetic-grant", {
+        email: "defaults@example.test",
+        password: "Only-local-fixture-password-47",
+      }),
+    );
+    await assert.rejects(
+      builder.connect({ ...identity(104), intent: "link" }, "synthetic-grant", {
+        email: "legacy@example.test",
+        password: "Only-local-fixture-password-47",
+      }),
+    );
+    assert.equal(
+      (await db.from("pbadmin_accounts").select("owner_id").eq("owner_id", 104))
+        .data.length,
+      0,
     );
     assert.equal(
       (await db.from("profiles").select("role").eq("id", defaultsId).single())
@@ -747,6 +785,162 @@ try {
     "atrio",
     path.join(atrio, "src"),
   );
+  await test("opening an unlinked account cannot provision Builder or Atrio", async () => {
+    await assert.rejects(
+      builder.provision(
+        { ...identity(999), intent: "open" },
+        "synthetic-grant",
+      ),
+    );
+    await assert.rejects(
+      atrioProvider.provision(
+        { ...identity(999), provider: "atrio", intent: "open" },
+        "synthetic-grant",
+      ),
+    );
+    assert.equal(
+      (await db.from("pbadmin_accounts").select("owner_id").eq("owner_id", 999))
+        .data.length,
+      0,
+    );
+  });
+  await test("native Atrio admin chooses own advisor; preserves profiles and personal passwords", async () => {
+    const nativeAdmin = await create("native-admin@example.test");
+    const nativeAdvisor = await create("native-advisor@example.test");
+    const otherAdvisor = await create("another-advisor@example.test");
+    await db.from("profiles").insert([
+      { id: nativeAdmin, role: "admin", full_name: "Existing admin" },
+      {
+        id: nativeAdvisor,
+        role: "advisor",
+        full_name: "Existing advisor",
+        slug: "existing-advisor",
+        admin_id: nativeAdmin,
+      },
+      {
+        id: otherAdvisor,
+        role: "advisor",
+        full_name: "Other advisor",
+        slug: "other-advisor",
+        admin_id: nativeAdmin,
+      },
+    ]);
+    const subject = { ...identity(301), provider: "atrio", intent: "link" };
+    // Native accounts can already have the integration enabled but no token.
+    // Linking must fill it without replacing other settings or manual controls.
+    await db.from("integration_permissions").insert({profile_id:nativeAdvisor,integration_key:"external_request",enabled:true,config:{customSetting:"preserved"},created_by:nativeAdmin});
+    const credentials = {
+      email: "native-admin@example.test",
+      password: "Only-local-fixture-password-47",
+    };
+    const choice = await atrioProvider.connect(
+      subject,
+      "synthetic-grant",
+      credentials,
+    );
+    assert.equal(choice.status, "choose_advisor");
+    assert.equal(choice.advisors.length, 2);
+    assert.equal(
+      (await db.from("pbadmin_accounts").select("owner_id").eq("owner_id", 301))
+        .data.length,
+      0,
+    );
+    await assert.rejects(
+      atrioProvider.connect(subject, "synthetic-grant", {
+        ...credentials,
+        advisorId: defaultsId,
+      }),
+    );
+    assert.equal(
+      (
+        await atrioProvider.connect(subject, "synthetic-grant", {
+          ...credentials,
+          advisorId: nativeAdvisor,
+        })
+      ).status,
+      "connected",
+    );
+    assert.equal(registrations.at(-1).advisorId, nativeAdvisor);
+    assert.equal(registrations.at(-1).advisorSlug, "existing-advisor");
+    assert.equal(
+      (
+        await db
+          .from("profiles")
+          .select("full_name")
+          .eq("id", nativeAdvisor)
+          .single()
+      ).data.full_name,
+      "Existing advisor",
+    );
+    const token = registrations.at(-1).advisorToken;
+    assert.ok(typeof token === "string" && token.length >= 32);
+    const linkedPermission = (await db.from("integration_permissions").select("config").eq("profile_id",nativeAdvisor).eq("integration_key","external_request").single()).data;
+    assert.equal(linkedPermission.config.customSetting,"preserved");
+    assert.equal((await db.from("quick_starters").select("id").eq("advisor_id",nativeAdvisor)).data.length,3);
+    await atrioProvider.connect(
+      { ...subject, accountId: nativeAdmin },
+      "synthetic-grant",
+      { ...credentials, advisorId: nativeAdvisor },
+    );
+    assert.equal(registrations.at(-1).advisorToken, token);
+    assert.equal(
+      (
+        await atrioProvider
+          .sessionClient()
+          .auth.signInWithPassword({
+            email: "native-advisor@example.test",
+            password: credentials.password,
+          })
+      ).error,
+      null,
+    );
+    const marketingIdentity = {
+      ...subject,
+      userId: 302,
+      role: 3,
+      accountId: nativeAdmin,
+    };
+    await assert.rejects(
+      atrioProvider.connect(
+        { ...marketingIdentity, accountId: null },
+        "synthetic-grant",
+        {
+          email: "another-advisor@example.test",
+          password: credentials.password,
+        },
+      ),
+    );
+    await assert.rejects(
+      atrioProvider.connect(
+        { ...marketingIdentity, accountId: defaultsId },
+        "synthetic-grant",
+        {
+          email: "another-advisor@example.test",
+          password: credentials.password,
+        },
+      ),
+    );
+    assert.equal(
+      (
+        await atrioProvider.connect(marketingIdentity, "synthetic-grant", {
+          email: "another-advisor@example.test",
+          password: credentials.password,
+        })
+      ).status,
+      "connected",
+    );
+    assert.equal(registrations.at(-1).userId, otherAdvisor);
+    await assert.rejects(
+      atrioProvider.connect(
+        { ...marketingIdentity, userId: 303 },
+        "synthetic-grant",
+        {
+          email: "another-advisor@example.test",
+          password: credentials.password,
+        },
+      ),
+    );
+  });
   let atrioAdmin, atrioMarketer;
   await test("marketing can activate first; admin later reuses the administration and gets own advisor", async () => {
     const marketer = await atrioProvider.provision(

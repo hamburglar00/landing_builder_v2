@@ -67,7 +67,7 @@ export function api2Readiness(): "integration_pending" | null {
 }
 
 export function gatewayReadiness(provider: TargetProvider): "integration_pending" | null {
-  if (provider === "multi_skin" && !process.env.MULTI_SKIN_GATEWAY_ORIGIN) return "integration_pending";
+  if (provider === "multi_skin" && !process.env.MULTI_SKIN_GATEWAY_ORIGIN && !process.env.MULTI_SKIN_GATEWAY_BASE_DOMAIN) return "integration_pending";
   if (provider === "ases_del_norte" && !process.env.ASES_DEL_NORTE_GATEWAY_ORIGIN) return "integration_pending";
   if (provider === "ganamos_net" && !process.env.GANAMOS_NET_GATEWAY_ORIGIN) return "integration_pending";
   return null;

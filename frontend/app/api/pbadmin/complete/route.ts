@@ -13,6 +13,7 @@ export async function POST(request: Request) {
     const { code, state } = await request.json();
     const identity = await redeem("builder", code, state);
     const result = await provision(identity, code);
+    if (!result.session) throw new Error("Session not issued");
     // First import is attempted now; the durable API2 reconciliation retries failures.
     let syncPending = false;
     try {

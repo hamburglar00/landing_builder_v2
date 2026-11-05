@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createServer, type Server } from "node:http";
+import http, { createServer, type Server, type RequestOptions, type IncomingMessage } from "node:http";
+import { syncBuiltinESMExports } from "node:module";
 import { once } from "node:events";
 import { destinationFor, environmentFromServer, validateDestination, isPublicAddress, type RevalidationEnvironment } from "../lib/revalidation/catalog.server";
 import { handlePanelRevalidation, handleConstructorRevalidation, type Actor, type RevalidationBackend } from "../lib/revalidation/service.server";
@@ -156,7 +157,7 @@ test("backend requires synthetic local database address and scopes user lookups"
   assert.deepEqual(paths, ["/auth/v1/user", "/rest/v1/profiles", "/rest/v1/landings", "/rest/v1/settings"]);
 });
 
-test("real local HTTP retains classic contract, blocks redirects and sanitizes responses", async () => {
+test("real local HTTP retains classic contract, blocks redirects and sanitizes responses", async (t) => {
   let responseMode: number | "valid" | "invalid" | "error" = "valid";
   let classicCalls = 0, constructorCalls = 0, warmCalls = 0;
   const received: unknown[] = [];
@@ -179,8 +180,19 @@ test("real local HTTP retains classic contract, blocks redirects and sanitizes r
   });
   const close = (server: Server) => new Promise<void>(resolve => { server.close(() => resolve()); server.closeAllConnections(); });
   try {
-    classic.listen(3000, "localhost"); await once(classic, "listening");
-    constructor.listen(3001, "localhost"); await once(constructor, "listening");
+    classic.listen(0, "localhost"); await once(classic, "listening");
+    constructor.listen(0, "localhost"); await once(constructor, "listening");
+    // Keep the production destination checks; only remap the test sockets so
+    // this suite cannot collide with (or send requests to) local preview apps.
+    const request = http.request;
+    t.mock.method(http, "request", ((url: URL, options: RequestOptions, callback: (response: IncomingMessage) => void) => {
+      assert.equal(url.origin === "http://localhost:3000" || url.origin === "http://localhost:3001", true);
+      const address = (url.port === "3000" ? classic : constructor).address();
+      assert.ok(address && typeof address === "object");
+      const target = new URL(url); target.port = String(address.port);
+      return request(target, options, callback);
+    }) as typeof http.request);
+    syncBuiltinESMExports();
     const result = await postRevalidation(destinationFor("local", "classic"), "synthetic", canary);
     assert.deepEqual(result, { ok: true, revalidated: true, warmed: { config: true, page: false, retried: true } });
     assert.deepEqual(received[0], { name: "synthetic", secret: canary }); assert.ok(!JSON.stringify(result).includes(canary));
@@ -190,5 +202,5 @@ test("real local HTTP retains classic contract, blocks redirects and sanitizes r
     assert.deepEqual(await postRevalidation(destinationFor("local", "constructor"), "synthetic", canary), { ok: true, revalidated: true });
     assert.equal(await warmConstructor("local", "synthetic"), true); assert.equal(warmCalls, 1);
     assert.equal(classicCalls, 8);
-  } finally { await close(classic); await close(constructor); }
+  } finally { t.mock.restoreAll(); syncBuiltinESMExports(); await close(classic); await close(constructor); }
 });

@@ -5,6 +5,7 @@ import {
   ensureManagedAuth,
   issueSession,
   reserveAccount,
+  verifyNativeAccount,
 } from "./accounts.server";
 
 export function adminDb() {
@@ -26,7 +27,15 @@ export function sessionClient() {
     { auth: { persistSession: false, autoRefreshToken: false } },
   );
 }
-export async function provision(identity: Identity, code: string) {
+export async function provision(
+  identity: Identity,
+  code: string,
+  connectOnly = false,
+) {
+  if (identity.intent === "open" && !identity.accountId)
+    throw new AccessError(
+      "Primero vinculá o creá tu cuenta desde Extensiones en PBAdmin.",
+    );
   const db = adminDb(),
     account = await reserveAccount(db, identity);
   const uid = account.account_id;
@@ -62,19 +71,17 @@ export async function provision(identity: Identity, code: string) {
       defaultsAdminId = defaultsAdmin.data[0].id;
       // Match create-client: the Auth insert trigger sees an approval before
       // GoTrue finishes applying app_metadata. Retry preserves the reserved UUID.
-      const approval = await db
-        .from("auth_signup_approvals")
-        .upsert(
-          {
-            email,
-            user_id: uid,
-            requested_by: defaultsAdminId,
-            role: "client",
-            created_at: new Date().toISOString(),
-            expires_at: new Date(Date.now() + 300_000).toISOString(),
-          },
-          { onConflict: "email" },
-        );
+      const approval = await db.from("auth_signup_approvals").upsert(
+        {
+          email,
+          user_id: uid,
+          requested_by: defaultsAdminId,
+          role: "client",
+          created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 300_000).toISOString(),
+        },
+        { onConflict: "email" },
+      );
       if (approval.error)
         throw new AccessError(
           "No se pudo preparar el alta del constructor.",
@@ -145,6 +152,37 @@ export async function provision(identity: Identity, code: string) {
   return {
     db,
     uid,
-    session: await issueSession(db, sessionClient(), identity, uid),
+    session: connectOnly
+      ? null
+      : await issueSession(db, sessionClient(), identity, uid),
   };
+}
+
+export async function connect(
+  identity: Identity,
+  code: string,
+  input: { email?: unknown; password?: unknown },
+) {
+  if (identity.intent === "link") {
+    const user = await verifyNativeAccount(
+      sessionClient(),
+      input.email,
+      input.password,
+    );
+    const profile = await adminDb()
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    if (profile.error || profile.data.role !== "client")
+      throw new AccessError("Vinculá una cuenta de cliente del constructor.");
+    if (identity.accountId && identity.accountId !== user.id)
+      throw new AccessError(
+        "Esta administración ya tiene otro constructor vinculado.",
+      );
+    identity = { ...identity, accountId: user.id, accountEmail: user.email! };
+  } else if (identity.intent !== "create")
+    throw new AccessError("Elegí cómo vincular tu cuenta.", 400);
+  await provision(identity, code, true);
+  return { status: "connected" };
 }

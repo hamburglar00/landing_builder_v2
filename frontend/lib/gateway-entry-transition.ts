@@ -91,6 +91,12 @@ function createGatewayEntryTransition(root) {
       milestone("chat_usable",{duration_ms:Math.max(0,Date.now()-frameBoundAt)});return
     }
     if(data.type==="atrio.widget.entry-diagnostic"){
+      // Render/load diagnostics can arrive after the usable composer and welcome.
+      if(data.name==="stage_timing"){
+        if(["chat_dns","chat_connect","chat_tls","chat_ttfb","chat_download","chat_navigation","chat_dom","chat_load","chat_fcp","chat_hydration","chat_visible_to_usable"].includes(data.phase)&&Number.isSafeInteger(data.duration_ms)&&data.duration_ms>=0&&data.duration_ms<=86400000)
+          milestone("stage_timing",{phase:data.phase,duration_ms:data.duration_ms});
+        return
+      }
       if(entryReady)return;
       var details={};
       if(Number.isSafeInteger(data.duration_ms)&&data.duration_ms>=0&&data.duration_ms<=86400000)details.duration_ms=data.duration_ms;else return;

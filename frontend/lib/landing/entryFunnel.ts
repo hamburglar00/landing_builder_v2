@@ -13,6 +13,11 @@ export const ENTRY_FUNNEL_PHASES = [
   "destination_scope", "destination_resolve", "destination_fallback", "destination_total", "identity_bootstrap",
   "builder_context", "atrio_identity", "casino_account", "atrio_link", "gateway_handoff", "entry_finalize", "entry_total",
   "account_lookup", "provider_create", "provider_verify", "account_finalize", "provider_login", "session_confirm",
+  "landing_dom", "landing_load", "landing_fcp", "landing_lcp", "landing_blocked", "landing_runtime",
+  "gateway_dom", "gateway_load", "gateway_fcp", "gateway_lcp", "gateway_blocked", "gateway_runtime",
+  "preparation_dom", "preparation_load", "preparation_fcp", "preparation_lcp", "preparation_blocked", "preparation_runtime",
+  "identity_request", "destination_request", "account_request", "prepare_request", "login_request", "session_request", "chat_session_request",
+  "chat_dns", "chat_connect", "chat_tls", "chat_ttfb", "chat_download", "chat_navigation", "chat_dom", "chat_load", "chat_fcp", "chat_hydration", "chat_visible_to_usable",
 ] as const;
 export const ENTRY_FUNNEL_ERROR_STAGES = ["runtime", "destination", "account", "login", "session", "chat_iframe", "chat_bootstrap", "welcome", "wallet", "chat"] as const;
 export const ENTRY_FUNNEL_ERRORS = [

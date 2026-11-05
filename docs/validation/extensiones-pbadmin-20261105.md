@@ -10,6 +10,9 @@ Revisión posterior de Supabase: RLS activo y sin SELECT de `anon`/`authenticate
 
 ## Comportamiento
 
+- Ajuste posterior del 05/11, **sólo local**: el usuario elige «Ya tengo cuenta» o «Crear cuenta» en PBAdmin. El mapa precargado se eliminó; no se ejecutaron vínculos reales. La galería de gateways adopta proporción 3:4, degradado inferior y animaciones equivalentes al constructor, respetando movimiento reducido.
+- `POST /front/extensions/connect` autentica al usuario PBAdmin, aplica permisos y emite una autorización privada con intención persistida `create`/`link`. El endpoint privado `/api/pbadmin/connect` de cada proveedor verifica credenciales nativas sólo en `link`, vincula o crea de forma idempotente y registra el resultado en API2. Después se abre el autologin normal. El acceso público `open` no puede crear vínculos.
+- Las altas nuevas usan «Ingresar con PBAdmin»; no se solicita ni se copia su contraseña. La contraseña nativa se usa únicamente para la prueba de propiedad y no se persiste. Se cierra sólo la sesión temporal de verificación, conservando las anteriores. Un error nativo 401 se informa como 422 a Panel3 para conservar la sesión PBAdmin. El límite de diez autorizaciones por minuto incluye las ya canjeadas.
 - Panel3: «Extensiones» reemplaza Marketing; el enlace anterior redirige. Administrador de administración: Builder y Atrio. Marketing: Atrio. Cajero: sólo Tracking. Superadmin: conserva Tracking y sus herramientas existentes, sin alta automática de cliente.
 - El acceso desde el hub y «Ingresar con PBAdmin» en ambos logins usa las credenciales exclusivamente en Panel3. Se intercambia un código opaco de 60 segundos, vinculado a PKCE y al navegador; el canje es único, incluso con concurrencia. Las cuentas nativas existentes conservan su contraseña y su ingreso habitual.
 - Builder conserva una cuenta `client` por administración. Cada sesión registra la persona PBAdmin que la abrió. No se comparte la contraseña de PBAdmin ni se convierte al cliente en superadmin del constructor.
@@ -19,11 +22,11 @@ Revisión posterior de Supabase: RLS activo y sin SELECT de `anon`/`authenticate
 - La importación inicial y la reconciliación posterior conservan la configuración del constructor, los workspaces PYG existentes y el botón manual de vinculación. Las nuevas incorporaciones usan ARS. Las bajas limpian el inventario del bot, sin borrar la gerencia ni las landings.
 - URL Post: completar si está vacía; respetar valores existentes y ediciones manuales posteriores, incluso si se vacía. «Usar URL del constructor» restaura expresamente la automática.
 
-## Correspondencias y exclusiones
+## Vinculación explícita y conservación de recursos
 
-Las nueve correspondencias Builder confirmadas están en `api2/app/helpers/extensions.helper.ts`, con owner y UUID exactos. No se infiere un vínculo por coincidencia de email. Se materializan al primer acceso autorizado, no mediante una ejecución masiva.
+El mapa de nueve clientes y las exclusiones por administración se eliminaron por instrucción explícita posterior. El usuario vincula una cuenta nativa demostrando sus credenciales o crea una nueva con identidad PBAdmin. Una cuenta ya vinculada a otra administración no puede apropiarse; tampoco se reemplaza un vínculo existente. No se infiere pertenencia por email y no se borran vínculos reales.
 
-Andres (owner 19) y Golden se mantienen independientes. No se vinculan los Atrio anteriores de Gera, Diana, Bianca–Colo ni Cunia. Los owners 7 y 33 están confirmados pero excluidos; 8 y 18 son candidatos pendientes de revisión y no se les crea una cuenta para eludir esa revisión. Cualquier otra administración con bots Atrio previos sin vínculo aprobado también requiere revisión.
+Un administrador Atrio nativo elige su asesor personal entre los que le pertenecen, o crea uno nuevo. Esta elección precede a la reserva; se conservan chats, slug, token y configuración del asesor existente. Un Marketing vincula su asesor sólo si pertenece al administrador Atrio ya vinculado a la administración PBAdmin. Una administración con bots Atrio previos y sin vínculo no puede crear automáticamente un duplicado: debe usar «Ya tengo cuenta». Las cuentas con MFA verificado requieren revisión; no se omite el segundo factor.
 
 Gera y Diana en las landings de prueba de Golden se conservan. La importación automática no mueve ni modifica esos asesores. Las restricciones globales de unicidad de gerencia/asesor se mantienen: los conflictos quedan en revisión. Los bots sin gerencia y los inventarios que superan los límites actuales del directorio también quedan pendientes; no se inventan asignaciones ni se anuncia una importación completa en esos casos.
 
@@ -54,17 +57,19 @@ Se reutilizan las configuraciones existentes de Supabase, el puente `INTERNAL_CH
 
 Orden de futura activación:
 
-1. Revisar y aplicar `api2/database/migrations/20261104000005_create_extensions.ts`.
+1. Revisar y aplicar `api2/database/migrations/20261104000005_create_extensions.ts`, todavía pendiente de publicación. Ahora incluye `extension_codes.intent` (por defecto `open`).
 2. Las migraciones de identidad de Builder y Atrio ya están aplicadas. No sustituyen las migraciones pendientes de API2.
 3. Las migraciones instalaron el hook `public.pbadmin_check_session` para `authenticator`; la inspección previa confirmó que no sustituía otro hook. Se verificaron las políticas restrictivas, tablas privadas y autorización nativa después de aplicarlas.
-4. Builder/Atrio y la función `create-client` se publican en este lote, con Extensiones apagado. Para activar, preparar secretos/orígenes y comprobar el puente del directorio. Publicar API2 sigue a cargo de su responsable.
-5. Habilitar las banderas, comprobar una administración de prueba y después permitir el primer acceso de las correspondencias aprobadas. Las exclusiones siguen bloqueadas.
+4. La base anterior de Builder/Atrio y `create-client` ya fue publicada con Extensiones apagado. Este ajuste de autoservicio sigue local: publicar sus rutas `/api/pbadmin/connect` y el broker API2/Panel3 coordinadamente, preparar secretos/orígenes y comprobar el puente del directorio. No requiere nuevas migraciones Supabase ni cambios de Edge Functions. Publicar API2 sigue a cargo de su responsable.
+5. Habilitar las banderas y comprobar «Ya tengo cuenta» y «Crear cuenta» con una administración de prueba. La activación no aplica correspondencias masivas.
 
 No borrar tablas de auditoría o reservas para resolver un error. Deshabilitar los accesos nuevos mediante las banderas si hace falta retirar el lote; conservar datos y cuentas creadas. Revisar las sesiones activas antes de un rollback de esquema.
 
 ## Verificación reproducible
 
-Resultado final: 20 escenarios API2/MySQL, 15 con Auth/PostgreSQL/PostgREST reales, 7 en Chromium, 8 de aislamiento PostgreSQL y 25 de regresión del importador/directorio/sincronización. TypeScript de los cuatro proyectos y lint de los módulos nuevos sin errores. Entornos efímeros locales, sin cuentas de producción.
+Validación del lote inicial publicado: 20 escenarios API2/MySQL, 15 con Auth/PostgreSQL/PostgREST reales, 7 en Chromium, 8 de aislamiento PostgreSQL y 25 de regresión del importador/directorio/sincronización. TypeScript de los cuatro proyectos y lint de los módulos nuevos sin errores. Entornos efímeros locales, sin cuentas de producción.
+
+Ajuste de autoservicio y galería del 05/11: 25 escenarios API2/MySQL, 17 con GoTrue/PostgreSQL/PostgREST reales y 22 Chromium; TypeScript de los cuatro proyectos y lint dirigido sin errores. Incluye credenciales nativas inválidas, conservación de contraseña/sesión/configuración, rechazo de otra administración, selección explícita del asesor, alta sin contraseña PBAdmin, rechazo de `open` sin vínculo y presentación móvil/escritorio. No se volvió a ejecutar toda la batería histórica sin cambios de esquema. Capturas en Panel3: `docs/validation/gateways-gallery-20261105/` y `docs/validation/extensions-self-service-20261105/`.
 
 También se compilaron con Turbopack las rutas nuevas de Builder y Atrio (`next build --experimental-build-mode compile --debug-build-paths=...`). Los manifiestos incluyen los endpoints y callbacks esperados. Fue una compilación dirigida, sin prerenderizado completo ni publicación. Builder mantiene el aviso previo de múltiples lockfiles y resuelve correctamente el módulo compartido fuera de `frontend`.
 

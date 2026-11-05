@@ -10,13 +10,14 @@ try {
     grant usage on schema public to anon,authenticated,service_role;
     create table public.landings(id uuid primary key,user_id uuid not null,config jsonb not null);
     grant select on public.landings to service_role;`);
-  for (const name of ["20261030234129_entry_funnel_observability", "20261031131638_entry_funnel_chat_diagnostics", "20261031170412_entry_funnel_chat_usable"]) {
+  for (const name of ["20261030234129_entry_funnel_observability", "20261031132341_entry_funnel_chat_diagnostics", "20261031170412_entry_funnel_chat_usable"]) {
     await db.exec(await readFile(new URL(`../supabase/migrations/${name}.sql`, import.meta.url), "utf8"));
   }
   // Apply the collector-only guard from the preceding T9 migration; unrelated routing tables are outside this fixture.
   await db.exec(`alter table entry_funnel_events drop constraint entry_funnel_events_template_check;
     alter table entry_funnel_events add constraint entry_funnel_events_template_check check(template in (7,8,9));`);
   await db.exec(await readFile(new URL("../supabase/migrations/20261104003407_entry_attempt_timings.sql", import.meta.url), "utf8"));
+  await db.exec(await readFile(new URL("../supabase/migrations/20261105193317_entry_render_timings.sql", import.meta.url), "utf8"));
   const id = n => `f0000000-0000-4000-8000-${String(n).padStart(12,"0")}`;
   await db.query("insert into landings values($1,$2,$3),($4,$5,$6)", [id(1),id(2),{template:"template7"},id(9),id(8),{template:"template9"}]);
   const record = async (events, landing = id(1), template = 7) => {
@@ -47,6 +48,9 @@ try {
     assert.deepEqual(result,{readable:false,callable:false}); checks++;
   }
   assert.equal((await db.query("select event_count from entry_funnel_limits where landing_id=$1",[id(1)])).rows[0].event_count,3); checks++;
+  for(const [n,phase] of ['landing_dom','landing_load','landing_fcp','landing_lcp','landing_blocked','landing_runtime','gateway_dom','preparation_runtime','account_request','identity_request','chat_session_request','chat_dns','chat_ttfb','chat_hydration','chat_fcp','chat_visible_to_usable'].entries()) {
+    assert.equal(await record([{...measured,id:id(100+n),phase}]),true,phase);checks++;
+  }
   await db.exec(await readFile(new URL("./entry-performance-report.sql", import.meta.url), "utf8")); checks++;
   console.log(`Entry attempt PostgreSQL: ${checks} checks passed (old payloads, timings, attempts, T9, dedup, limits, tenant and role isolation).`);
 } finally { await db.close(); }
