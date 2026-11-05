@@ -1,5 +1,12 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Formulario de gateways dentro de la pantalla (05/11/2026)
+
+- Ajustar los cuatro gateways para que ingreso y registro entren sin scroll vertical ni horizontal, conservando margen exterior arriba y a los costados. Espaciado y logo se adaptan a la altura; en ventanas horizontales bajas, marca/ayuda y formulario se distribuyen en dos columnas. No ocultar el desborde del documento para recortar controles ni reducir los inputs por debajo de 16 px o los objetivos táctiles de 44 px.
+- Fondo con degradados orgánicos del color de cada marca hacia negro, sin la cuadrícula anterior. Conservar logos transparentes, proporciones y paletas de proveedor/skin. Cambiar el texto a «Tu plataforma y tu asesor, en el mismo lugar.» y mostrar los CTA de ingreso y registro en mayúsculas, incluidos estados de espera.
+- Implementación compartida en `gateway-auth-view.ts`, `gateway-login-page.ts` y `gateway-agency-page.ts`, sincronizada en los cuatro. Sin cambios de identidad, recuperación, llamadas, creación de cuentas o validación de gerencia; sin migraciones ni funciones Edge.
+- Validación: 480 comprobaciones de navegador aisladas, dos motores, cuatro proveedores, diez tamaños (320×480 a 1920×1080; horizontal desde 568×320), incluyendo errores y registro; márgenes y cero desbordes comprobados. Además, 52 pruebas de ingreso/gerencia y TypeScript por gateway. Publicar Vercel y Worker Ganamos+; API2 y Panel3 siguen locales.
+
 ### Publicación del lote acumulado (05/11/2026, segunda entrega)
 
 - Autorización expresa: hacer commit, push, migrar y desplegar todo lo pendiente de Atrio, Landing Builder (incluido el renderer clásico) y los cuatro gateways, con Ganamos+ también en Cloudflare. Reemplaza las notas de estado «local» de los apartados de este lote; conservar sus decisiones funcionales.
