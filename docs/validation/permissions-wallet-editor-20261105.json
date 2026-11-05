@@ -1,0 +1,42 @@
+{
+  "date": "2026-11-05",
+  "scope": "Clasificación de respuestas, chips legibles y maqueta completa del editor; permisos y recepción del asistente conservados en API2/Panel3 locales.",
+  "production": {
+    "atrio": {
+      "commit": "6cecca8",
+      "deployment": "dpl_9W65pnABVU1ppdqFVT8H53ssi5wS",
+      "url": "https://www.atrio.website",
+      "state": "READY, promovido y HTTP 200 verificado",
+      "previous_deployment": "dpl_Fo9UFRpW7Ce6U14rE6vZehx91TW8",
+      "migration": "20261105222333_separate_load_flow_replies.sql",
+      "migration_applied": true,
+      "edge_functions_changed": false,
+      "migration_compatibility": "load_flow ausente hereda load_status para conservar las preferencias previas. Nueva opción validada en producción mediante lectura SQL. No se modificaron filas históricas.",
+      "security_advisors": "Sin hallazgos nuevos respecto de la lectura previa: cantidades por categoría 9, 12, 24 y 1 sin cambios."
+    },
+    "builder": {
+      "commit": "1fd0bde",
+      "deployment": "dpl_3yX1aDBF4nmukeg29M7sFDqpEuKk",
+      "url": "https://mkt.panelbotadmin.com",
+      "state": "READY, promovido y HTTP 200 verificado",
+      "previous_deployment": "dpl_3XWLCq8rAAqDmhdHn12UtJNnzLGP",
+      "migration_required": false,
+      "edge_functions_changed": false
+    },
+    "gateways": "Los cuatro reciben la implementación única de Atrio; no requieren cambios de código ni un despliegue de sus SDKs o Worker."
+  },
+  "tests": [
+    {"repository": "internal-chat", "command": "node --experimental-strip-types --test tests/api2-reply-classification.test.mjs tests/full-carga-reply-preferences.test.mjs tests/widget-operation-notices.test.mjs", "result": "10/10 PASS"},
+    {"repository": "internal-chat", "command": "node --test tests/full-carga-reply-database.test.mjs", "environment": "ATRIO_REPLY_TEST_CONTAINER apuntó exclusivamente al PostgreSQL descartable creado para esta tarea", "result": "PASS, migración, RLS, concurrencia, idempotencia y preferencias anteriores"},
+    {"repository": "internal-chat", "command": "node tests/widget-operation-notices.browser.mjs", "result": "24/24 PASS: Chromium/WebKit, tres temas y cuatro gateways; tipografía 14 px, altura, textos completos y modales"},
+    {"repository": "landing-builder", "command": "node tests/editor-preview-fit.browser.mjs", "result": "64/64 PASS: Chromium/WebKit, templates 1 a 9, cuatro proveedores y varios tamaños; contenido completo sin desplazamiento interno"},
+    {"repository": "internal-chat y landing-builder/frontend", "command": "npx tsc --noEmit", "result": "PASS"}
+  ],
+  "local_only": {
+    "api2": "docs/validation/permissions-wallet-20261105.json en su repositorio. Sin commit, push, despliegue ni migración de la base real.",
+    "panel3": "docs/validation/permissions-wallet-20261105.json en su repositorio. Sin commit, push ni despliegue.",
+    "required_before_backend_release": "Migración aditiva de permisos y publicación coordinada de API2/Panel3."
+  },
+  "limits": "Las pruebas usan datos sintéticos y proveedores simulados. No se realizaron cargas, premios ni transferencias reales. Los GET públicos verifican disponibilidad y la API de Vercel verifica la versión activa; no equivalen a operaciones financieras reales.",
+  "rollback": "Para la web se conservan los deployments anteriores. La migración de Atrio es compatible con el cliente anterior; no borrar preferencias para revertir la UI. API2 no fue publicado."
+}
