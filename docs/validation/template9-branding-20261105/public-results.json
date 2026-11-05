@@ -1,0 +1,56 @@
+[
+  {
+    "url": "https://mkt.panelbotadmin.com/l/template9",
+    "status": 200,
+    "transparentLogo": true,
+    "navy": true,
+    "blue": true
+  },
+  {
+    "url": "https://mkt.panelbotadmin.com/public-assets/template9/rey_de_ases_logo.webp",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "url": "https://mkt.panelbotadmin.com/public-assets/template9/ases_del_norte_logo.webp",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "url": "https://mkt.panelbotadmin.com/public-assets/template9/ganamos_net_logo.webp",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "url": "https://mkt.panelbotadmin.com/public-assets/template9/ganamos_plus_logo.webp",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "url": "https://landing.panelbotadmin.com/template9",
+    "status": 200,
+    "transparentLogo": true,
+    "navy": true,
+    "blue": true
+  },
+  {
+    "url": "https://landing.panelbotadmin.com/public-assets/template9/rey_de_ases_logo.webp",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "url": "https://landing.panelbotadmin.com/public-assets/template9/ases_del_norte_logo.webp",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "url": "https://landing.panelbotadmin.com/public-assets/template9/ganamos_net_logo.webp",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "url": "https://landing.panelbotadmin.com/public-assets/template9/ganamos_plus_logo.webp",
+    "status": 200,
+    "matches": true
+  }
+]
