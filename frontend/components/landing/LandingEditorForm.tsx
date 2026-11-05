@@ -427,8 +427,8 @@ export function LandingEditorForm({
         <LandingTemplateSection config={config} setConfig={setConfig} />
       )}
 
-      {isTemplate9 && <div className="rounded-xl border border-zinc-800 p-4 text-sm text-zinc-300">El logo y los colores se adaptan a la plataforma seleccionada. La tarjeta conserva el diseño de registro de Plantilla 9.</div>}
-      {["template7", "template8", "template9"].includes(config.template) && <div className="rounded-xl border border-zinc-800 p-4">
+      {isTemplate9 && <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 text-sm text-zinc-300">El logo y los colores se adaptan a la plataforma seleccionada. La tarjeta conserva el diseño de registro de Plantilla 9.</div>}
+      {["template7", "template8", "template9"].includes(config.template) && <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
         <label htmlFor={fieldId("cta-meta-event")} className="block text-sm font-semibold">Evento de Meta al tocar el CTA</label>
         <CustomSelect portal id={fieldId("cta-meta-event")} value={config.ctaMetaEvent === "CompleteRegistration" ? "CompleteRegistration" : "Lead"}
           onChange={value => updateConfig(setConfig, { ctaMetaEvent: value === "CompleteRegistration" ? "CompleteRegistration" : "Lead" })}
