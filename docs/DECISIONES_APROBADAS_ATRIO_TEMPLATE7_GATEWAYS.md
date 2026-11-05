@@ -1,5 +1,13 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Confirmaciones del widget, chips y lenguaje de Builder (05/11/2026)
+
+- Además del mensaje de chat, mostrar «¡Fichas cargadas!» al acreditar una carga y «¡Premio pagado!» al confirmar un pago, con felicitación y sin instrucciones de actualizar en el premio. Adaptar el modal al tema del asesor: Atrio, WhatsApp o plataforma. Cierre con X, Escape o «ENTENDIDO», sin recargar ni ejecutar operaciones.
+- Usar marcadores protegidos del servidor: carga vinculada a su registro confirmado, retiro manual completado con comprobante, o evento exacto `withdrawal_paid` del envío de pago confirmado de API2. `withdraw_success` sólo confirma la creación de una solicitud y NO habilita el modal. No inferir pagos por el texto, un resultado promocional o un estado genérico de éxito.
+- Una sola notificación por operación, incluso cuando se actualiza el comprobante y llega su confirmación en chat. No reactivar modales al abrir el historial o recargar; si el widget está cerrado, esperar a que se abra. Sin consultas nuevas al polling, sin cambios financieros ni modificaciones de API2/Panel3. Aplicación común en Atrio para los cuatro gateways.
+- Chips en mayúsculas, con altura mínima de 44 px y Cargar destacado mediante relleno del color del tema, con texto contrastante. Conservar las etiquetas guardadas, mensajes, acciones y permisos.
+- En el editor de Builder usar «Plataforma» en etiquetas, ayudas y validaciones. Separar «Resumen de gerencias asignadas» de la tarjeta de vista previa: tarjeta independiente debajo, con margen exterior, para cliente y administrador. Conservar la vista nítida de Template 9.
+
 ### Vista previa del editor con margen y Template 9 legible (05/11/2026)
 
 - Dejar margen inferior visible en la tarjeta de vista previa, tanto en el editor de cliente como en el de administrador. Mantener el borde exterior completo y el contenido desplazable para alcanzar el resumen de gerencias, incluso en ventanas bajas.

@@ -1,0 +1,890 @@
+[
+  {
+    "engine": "Chromium",
+    "template": "atrio",
+    "source": "reydeases-gateway",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "layout": {
+      "x": 16,
+      "y": 239.796875,
+      "width": 358,
+      "height": 364.390625,
+      "vw": 390,
+      "vh": 844,
+      "background": "rgb(26, 26, 31)",
+      "button": "rgb(212, 175, 55)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(212, 175, 55)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      }
+    ]
+  },
+  {
+    "engine": "Chromium",
+    "template": "atrio",
+    "source": "ases-gateway",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "layout": {
+      "x": 16,
+      "y": 102.046875,
+      "width": 288,
+      "height": 363.90625,
+      "vw": 320,
+      "vh": 568,
+      "background": "rgb(26, 26, 31)",
+      "button": "rgb(212, 175, 55)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(212, 175, 55)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      }
+    ]
+  },
+  {
+    "engine": "Chromium",
+    "template": "atrio",
+    "source": "ganamos-gateway",
+    "viewport": {
+      "width": 380,
+      "height": 620
+    },
+    "layout": {
+      "x": 16,
+      "y": 128.046875,
+      "width": 348,
+      "height": 363.90625,
+      "vw": 380,
+      "vh": 620,
+      "background": "rgb(26, 26, 31)",
+      "button": "rgb(212, 175, 55)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(212, 175, 55)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      }
+    ]
+  },
+  {
+    "engine": "Chromium",
+    "template": "atrio",
+    "source": "multi-skin-gateway",
+    "viewport": {
+      "width": 560,
+      "height": 320
+    },
+    "layout": {
+      "x": 80,
+      "y": 30.4375,
+      "width": 400,
+      "height": 259.125,
+      "vw": 560,
+      "vh": 320,
+      "background": "rgb(26, 26, 31)",
+      "button": "rgb(212, 175, 55)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(212, 175, 55)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      }
+    ]
+  },
+  {
+    "engine": "Chromium",
+    "template": "whatsapp",
+    "source": "reydeases-gateway",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "layout": {
+      "x": 16,
+      "y": 239.796875,
+      "width": 358,
+      "height": 364.390625,
+      "vw": 390,
+      "vh": 844,
+      "background": "rgb(255, 255, 255)",
+      "button": "rgb(9, 131, 61)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(9, 131, 61)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(255, 255, 255)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(255, 255, 255)"
+      }
+    ]
+  },
+  {
+    "engine": "Chromium",
+    "template": "whatsapp",
+    "source": "ases-gateway",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "layout": {
+      "x": 16,
+      "y": 102.046875,
+      "width": 288,
+      "height": 363.90625,
+      "vw": 320,
+      "vh": 568,
+      "background": "rgb(255, 255, 255)",
+      "button": "rgb(9, 131, 61)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(9, 131, 61)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(255, 255, 255)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(255, 255, 255)"
+      }
+    ]
+  },
+  {
+    "engine": "Chromium",
+    "template": "whatsapp",
+    "source": "ganamos-gateway",
+    "viewport": {
+      "width": 380,
+      "height": 620
+    },
+    "layout": {
+      "x": 16,
+      "y": 128.046875,
+      "width": 348,
+      "height": 363.90625,
+      "vw": 380,
+      "vh": 620,
+      "background": "rgb(255, 255, 255)",
+      "button": "rgb(9, 131, 61)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(9, 131, 61)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(255, 255, 255)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(255, 255, 255)"
+      }
+    ]
+  },
+  {
+    "engine": "Chromium",
+    "template": "whatsapp",
+    "source": "multi-skin-gateway",
+    "viewport": {
+      "width": 560,
+      "height": 320
+    },
+    "layout": {
+      "x": 80,
+      "y": 30.4375,
+      "width": 400,
+      "height": 259.125,
+      "vw": 560,
+      "vh": 320,
+      "background": "rgb(255, 255, 255)",
+      "button": "rgb(9, 131, 61)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(9, 131, 61)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(255, 255, 255)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(255, 255, 255)"
+      }
+    ]
+  },
+  {
+    "engine": "Chromium",
+    "template": "page",
+    "source": "reydeases-gateway",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "layout": {
+      "x": 16,
+      "y": 239.796875,
+      "width": 358,
+      "height": 364.390625,
+      "vw": 390,
+      "vh": 844,
+      "background": "rgb(26, 26, 36)",
+      "button": "rgb(212, 175, 55)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(212, 175, 55)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 36)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 36)"
+      }
+    ]
+  },
+  {
+    "engine": "Chromium",
+    "template": "page",
+    "source": "ases-gateway",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "layout": {
+      "x": 16,
+      "y": 102.046875,
+      "width": 288,
+      "height": 363.90625,
+      "vw": 320,
+      "vh": 568,
+      "background": "rgb(26, 26, 36)",
+      "button": "rgb(54, 168, 235)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(54, 168, 235)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 36)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 36)"
+      }
+    ]
+  },
+  {
+    "engine": "Chromium",
+    "template": "page",
+    "source": "ganamos-gateway",
+    "viewport": {
+      "width": 380,
+      "height": 620
+    },
+    "layout": {
+      "x": 16,
+      "y": 128.046875,
+      "width": 348,
+      "height": 363.90625,
+      "vw": 380,
+      "vh": 620,
+      "background": "rgb(26, 26, 36)",
+      "button": "rgb(176, 44, 240)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(176, 44, 240)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 36)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 36)"
+      }
+    ]
+  },
+  {
+    "engine": "Chromium",
+    "template": "page",
+    "source": "multi-skin-gateway",
+    "viewport": {
+      "width": 560,
+      "height": 320
+    },
+    "layout": {
+      "x": 80,
+      "y": 30.4375,
+      "width": 400,
+      "height": 259.125,
+      "vw": 560,
+      "vh": 320,
+      "background": "rgb(26, 26, 36)",
+      "button": "rgb(124, 52, 232)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(124, 52, 232)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 36)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 36)"
+      }
+    ]
+  },
+  {
+    "engine": "WebKit",
+    "template": "atrio",
+    "source": "reydeases-gateway",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "layout": {
+      "x": 16,
+      "y": 239.8125,
+      "width": 358,
+      "height": 364.375,
+      "vw": 390,
+      "vh": 844,
+      "background": "rgb(26, 26, 31)",
+      "button": "rgb(212, 175, 55)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(212, 175, 55)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      }
+    ]
+  },
+  {
+    "engine": "WebKit",
+    "template": "atrio",
+    "source": "ases-gateway",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "layout": {
+      "x": 16,
+      "y": 102.046875,
+      "width": 288,
+      "height": 363.90625,
+      "vw": 320,
+      "vh": 568,
+      "background": "rgb(26, 26, 31)",
+      "button": "rgb(212, 175, 55)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(212, 175, 55)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      }
+    ]
+  },
+  {
+    "engine": "WebKit",
+    "template": "atrio",
+    "source": "ganamos-gateway",
+    "viewport": {
+      "width": 380,
+      "height": 620
+    },
+    "layout": {
+      "x": 16,
+      "y": 128.046875,
+      "width": 348,
+      "height": 363.90625,
+      "vw": 380,
+      "vh": 620,
+      "background": "rgb(26, 26, 31)",
+      "button": "rgb(212, 175, 55)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(212, 175, 55)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      }
+    ]
+  },
+  {
+    "engine": "WebKit",
+    "template": "atrio",
+    "source": "multi-skin-gateway",
+    "viewport": {
+      "width": 560,
+      "height": 320
+    },
+    "layout": {
+      "x": 80,
+      "y": 30.4375,
+      "width": 400,
+      "height": 259.125,
+      "vw": 560,
+      "vh": 320,
+      "background": "rgb(26, 26, 31)",
+      "button": "rgb(212, 175, 55)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(212, 175, 55)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      }
+    ]
+  },
+  {
+    "engine": "WebKit",
+    "template": "whatsapp",
+    "source": "reydeases-gateway",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "layout": {
+      "x": 16,
+      "y": 239.8125,
+      "width": 358,
+      "height": 364.375,
+      "vw": 390,
+      "vh": 844,
+      "background": "rgb(255, 255, 255)",
+      "button": "rgb(9, 131, 61)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(9, 131, 61)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(255, 255, 255)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(255, 255, 255)"
+      }
+    ]
+  },
+  {
+    "engine": "WebKit",
+    "template": "whatsapp",
+    "source": "ases-gateway",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "layout": {
+      "x": 16,
+      "y": 102.046875,
+      "width": 288,
+      "height": 363.90625,
+      "vw": 320,
+      "vh": 568,
+      "background": "rgb(255, 255, 255)",
+      "button": "rgb(9, 131, 61)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(9, 131, 61)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(255, 255, 255)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(255, 255, 255)"
+      }
+    ]
+  },
+  {
+    "engine": "WebKit",
+    "template": "whatsapp",
+    "source": "ganamos-gateway",
+    "viewport": {
+      "width": 380,
+      "height": 620
+    },
+    "layout": {
+      "x": 16,
+      "y": 128.046875,
+      "width": 348,
+      "height": 363.90625,
+      "vw": 380,
+      "vh": 620,
+      "background": "rgb(255, 255, 255)",
+      "button": "rgb(9, 131, 61)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(9, 131, 61)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(255, 255, 255)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(255, 255, 255)"
+      }
+    ]
+  },
+  {
+    "engine": "WebKit",
+    "template": "whatsapp",
+    "source": "multi-skin-gateway",
+    "viewport": {
+      "width": 560,
+      "height": 320
+    },
+    "layout": {
+      "x": 80,
+      "y": 30.4375,
+      "width": 400,
+      "height": 259.125,
+      "vw": 560,
+      "vh": 320,
+      "background": "rgb(255, 255, 255)",
+      "button": "rgb(9, 131, 61)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(9, 131, 61)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(255, 255, 255)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(255, 255, 255)"
+      }
+    ]
+  },
+  {
+    "engine": "WebKit",
+    "template": "page",
+    "source": "reydeases-gateway",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "layout": {
+      "x": 16,
+      "y": 239.8125,
+      "width": 358,
+      "height": 364.375,
+      "vw": 390,
+      "vh": 844,
+      "background": "rgb(26, 26, 36)",
+      "button": "rgb(212, 175, 55)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(212, 175, 55)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 36)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 36)"
+      }
+    ]
+  },
+  {
+    "engine": "WebKit",
+    "template": "page",
+    "source": "ases-gateway",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "layout": {
+      "x": 16,
+      "y": 102.046875,
+      "width": 288,
+      "height": 363.90625,
+      "vw": 320,
+      "vh": 568,
+      "background": "rgb(26, 26, 36)",
+      "button": "rgb(54, 168, 235)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(54, 168, 235)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 36)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 36)"
+      }
+    ]
+  },
+  {
+    "engine": "WebKit",
+    "template": "page",
+    "source": "ganamos-gateway",
+    "viewport": {
+      "width": 380,
+      "height": 620
+    },
+    "layout": {
+      "x": 16,
+      "y": 128.046875,
+      "width": 348,
+      "height": 363.90625,
+      "vw": 380,
+      "vh": 620,
+      "background": "rgb(26, 26, 36)",
+      "button": "rgb(176, 44, 240)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(176, 44, 240)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 36)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 36)"
+      }
+    ]
+  },
+  {
+    "engine": "WebKit",
+    "template": "page",
+    "source": "multi-skin-gateway",
+    "viewport": {
+      "width": 560,
+      "height": 320
+    },
+    "layout": {
+      "x": 80,
+      "y": 30.4375,
+      "width": 400,
+      "height": 259.125,
+      "vw": 560,
+      "vh": 320,
+      "background": "rgb(26, 26, 36)",
+      "button": "rgb(124, 52, 232)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(124, 52, 232)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 36)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 36)"
+      }
+    ]
+  }
+]

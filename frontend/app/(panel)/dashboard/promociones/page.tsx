@@ -45,7 +45,7 @@ const EMPTY_FORM: FormState = {
   message: "",
   prize: "",
   tickerText: "Sorteo exclusivo",
-  prizeDescription: "en fichas de casino",
+  prizeDescription: "en fichas de la plataforma",
   participationSteps: ["", "", ""],
   ctaLabel: "Quiero participar",
   backgroundImageUrl: "",
@@ -244,7 +244,7 @@ function PromotionMobilePreview({ form }: { form: FormState }) {
   const title = form.title.trim() || "Gana en grande";
   const description = form.message.trim() || "Participa y llevate fichas gratis para jugar sin limite";
   const prize = form.prize.trim() || "$50.000";
-  const prizeDescription = form.prizeDescription.trim() || "en fichas de casino";
+  const prizeDescription = form.prizeDescription.trim() || "en fichas de la plataforma";
   const ctaLabel = form.ctaLabel.trim() || "Quiero participar";
   const steps = form.participationSteps.map((step) => step.trim()).filter(Boolean).slice(0, 3);
   const backgroundImageUrl = form.backgroundImageUrl.trim();
@@ -556,7 +556,7 @@ export default function DashboardPromocionesPage() {
       message: promotion.message,
       prize: promotion.prize,
       tickerText: promotion.ticker_text ?? "Sorteo exclusivo",
-      prizeDescription: promotion.prize_description ?? "en fichas de casino",
+      prizeDescription: promotion.prize_description ?? "en fichas de la plataforma",
       participationSteps: [...(promotion.participation_steps ?? []), "", "", ""].slice(0, 3),
       ctaLabel: promotion.cta_label ?? "Quiero participar",
       backgroundImageUrl: promotion.background_image_url ?? "",
@@ -582,7 +582,7 @@ export default function DashboardPromocionesPage() {
     const messageText = form.message.trim();
     const prize = form.prize.trim();
     const tickerText = form.tickerText.trim() || "Sorteo exclusivo";
-    const prizeDescription = form.prizeDescription.trim() || "en fichas de casino";
+    const prizeDescription = form.prizeDescription.trim() || "en fichas de la plataforma";
     const participationSteps = form.participationSteps.map((step) => step.trim()).filter(Boolean).slice(0, 3);
     const ctaLabel = form.ctaLabel.trim() || "Quiero participar";
     const backgroundImageUrl = form.backgroundImageUrl.trim();
@@ -834,7 +834,7 @@ export default function DashboardPromocionesPage() {
                 value={form.prizeDescription}
                 onChange={(e) => setForm((prev) => ({ ...prev, prizeDescription: e.target.value }))}
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
-                placeholder="en fichas de casino"
+                placeholder="en fichas de la plataforma"
               />
             </label>
             <div className="space-y-1">

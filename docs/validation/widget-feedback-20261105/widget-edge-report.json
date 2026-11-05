@@ -1,0 +1,76 @@
+[
+  {
+    "engine": "Chromium",
+    "template": "atrio",
+    "source": "reydeases-gateway",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "layout": {
+      "x": 16,
+      "y": 239.796875,
+      "width": 358,
+      "height": 364.390625,
+      "vw": 390,
+      "vh": 844,
+      "background": "rgb(26, 26, 31)",
+      "button": "rgb(212, 175, 55)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(212, 175, 55)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      }
+    ]
+  },
+  {
+    "engine": "WebKit",
+    "template": "atrio",
+    "source": "reydeases-gateway",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "layout": {
+      "x": 16,
+      "y": 239.8125,
+      "width": 358,
+      "height": 364.375,
+      "vw": 390,
+      "vh": 844,
+      "background": "rgb(26, 26, 31)",
+      "button": "rgb(212, 175, 55)",
+      "overflow": false
+    },
+    "chips": [
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(212, 175, 55)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      },
+      {
+        "height": 44,
+        "transform": "uppercase",
+        "background": "rgb(26, 26, 31)"
+      }
+    ]
+  }
+]

@@ -83,7 +83,7 @@ export function AtrioManagerDistribution({ landingId, provider, providers, clien
   return <div className="space-y-4">
     <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] p-3">
       <p className="font-medium text-sm">{providers ? "Destinos de Atrio" : `Destinos de ${CASINO_NAMES[provider ?? "rey_de_ases"]}`}</p>
-      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{providers ? "Elegí los bots que participarán. Cada tarjeta usa únicamente los bots de su casino." : "Elegí cada bot que participará en la redirección de la landing."}</p>
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{providers ? "Elegí los bots que participarán. Cada tarjeta usa únicamente los bots de su plataforma." : "Elegí cada bot que participará en la redirección de la landing."}</p>
       <div role="group" aria-label="Modo de reparto" className="mt-3 inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
         {(["weighted_random", "fair"] as const).map((value, index) => <div key={value} className={`inline-flex items-center ${index === 0 ? "rounded-l-lg border-r border-zinc-700" : "rounded-r-lg"} ${mode === value ? "bg-zinc-100 text-zinc-900" : "text-zinc-300"}`}>
           <button type="button" disabled={busy} onClick={() => setMode(value)} aria-pressed={mode === value}
@@ -104,7 +104,7 @@ export function AtrioManagerDistribution({ landingId, provider, providers, clien
       </div>}
       {mode === "fair" && <div role="group" aria-label="Criterio de reparto equitativo" className="mt-3 flex w-fit rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">{(["usage_count", "messages_received"] as const).map((value, index) => <button key={value} type="button" disabled={busy} onClick={() => setCriterion(value)} aria-pressed={criterion === value} className={`cursor-pointer px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-400 ${index === 0 ? "rounded-l-lg border-r border-zinc-700" : "rounded-r-lg"} ${criterion === value ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"}`}>{value === "usage_count" ? "Por contador" : "Chats iniciados"}</button>)}</div>}
     </div>
-    {mixedConfiguration && <p className="text-xs text-amber-300">Había criterios distintos guardados por casino. Al guardar se aplicará el criterio seleccionado a todos los destinos.</p>}
+    {mixedConfiguration && <p className="text-xs text-amber-300">Había criterios distintos guardados por plataforma. Al guardar se aplicará el criterio seleccionado a todos los destinos.</p>}
     {busy && !loaded && <p className="text-xs text-[var(--color-text-muted)]">Consultando bots…</p>}
     {loaded && !configured && <p className="text-xs text-amber-300">Elegí los bots y guardá los cambios de la landing. Las cuentas existentes conservan su destino.</p>}
     {loaded && <div className="space-y-3">
@@ -116,7 +116,7 @@ export function AtrioManagerDistribution({ landingId, provider, providers, clien
         </summary>
         <div className="overflow-x-auto border-t border-[var(--color-border)]">
       <table className="min-w-[600px] w-full text-left text-xs">
-        <thead className="bg-[var(--color-bg-3)] text-[var(--color-text-muted)]"><tr>{["Elegir", "Casino / gerencia", "Bot", "Tipo", "Estado", ...(mode === "weighted_random" ? ["Peso"] : [])].map(label => <th key={label} className="p-3 font-medium">{label}</th>)}</tr></thead>
+        <thead className="bg-[var(--color-bg-3)] text-[var(--color-text-muted)]"><tr>{["Elegir", "Plataforma / gerencia", "Bot", "Tipo", "Estado", ...(mode === "weighted_random" ? ["Peso"] : [])].map(label => <th key={label} className="p-3 font-medium">{label}</th>)}</tr></thead>
         <tbody className="divide-y divide-[var(--color-border-subtle)]">{advisor.connections.map(connection => {
           const selected = destinations.find(row => row.connection_id === connection.connection_id);
           return <tr key={connection.connection_id} className={selected ? "bg-[var(--color-primary-soft-bg)]" : ""}>
@@ -130,7 +130,7 @@ export function AtrioManagerDistribution({ landingId, provider, providers, clien
       </table>
         </div>
       </details>)}
-      {!connections.length && <p className="p-4 text-xs text-[var(--color-text-muted)]">{providers ? "No hay bots de los casinos elegidos vinculados a los asesores del workspace." : "No hay bots de este casino vinculados a los asesores del workspace."}</p>}
+      {!connections.length && <p className="p-4 text-xs text-[var(--color-text-muted)]">{providers ? "No hay bots de las plataformas elegidas vinculados a los asesores del workspace." : "No hay bots de esta plataforma vinculados a los asesores del workspace."}</p>}
     </div>}
     {mixedTypes && <p className="text-xs text-amber-300">Seleccionaste MKT y Full Carga. Las cuentas nuevas se repartirán entre ambas modalidades.</p>}
     {destinations.length === 1 && <p className="text-xs text-[var(--color-text-muted)]">Un bot seleccionado: todos los usuarios nuevos irán a ese destino.</p>}

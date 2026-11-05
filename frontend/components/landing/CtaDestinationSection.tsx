@@ -15,7 +15,7 @@ export function CtaDestinationSection({ config, setConfig }: {
     if (config.ctaDestination !== channel) setConfig(prev => ({ ...prev, ctaDestination: channel }));
   }, [config.template, config.ctaDestination, setConfig]);
   const usesAtrio = ["template7", "template8", "template9"].includes(config.template);
-  const showCasino = config.template === "template7" || config.template === "template9";
+  const showPlatform = config.template === "template7" || config.template === "template9";
   return <div className="space-y-4">
     <div className={`flex items-start gap-3 rounded-xl border p-4 ${usesAtrio ? "border-violet-400/25 bg-violet-400/[0.06]" : "border-emerald-400/25 bg-emerald-400/[0.06]"}`}>
       <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${usesAtrio ? "bg-violet-400/10 text-violet-300" : "bg-emerald-400/10 text-emerald-300"}`}>
@@ -27,8 +27,8 @@ export function CtaDestinationSection({ config, setConfig }: {
         <p className="mt-1 text-xs leading-relaxed text-zinc-400">{usesAtrio ? "El cliente crea su usuario y continúa con su asesor en el chat de Atrio." : "El cliente continúa la conversación por WhatsApp."}</p>
       </div>
     </div>
-    {showCasino && <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] p-4">
-    <label htmlFor="template7-target-provider" className="block text-sm font-semibold">Casino</label>
+    {showPlatform && <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] p-4">
+    <label htmlFor="template7-target-provider" className="block text-sm font-semibold">Plataforma</label>
           <CustomSelect
             portal
             id="template7-target-provider"

@@ -368,7 +368,7 @@ export default function PublicPromotionPage() {
       ]
     : [];
   const tickerText = String(promotion.ticker_text ?? "").trim() || "Sorteo exclusivo";
-  const prizeDescription = String(promotion.prize_description ?? "").trim() || "en fichas de casino";
+  const prizeDescription = String(promotion.prize_description ?? "").trim() || "en fichas de la plataforma";
   const participationSteps = Array.isArray(promotion.participation_steps)
     ? promotion.participation_steps.map((step) => String(step ?? "").trim()).filter(Boolean).slice(0, 3)
     : [];
