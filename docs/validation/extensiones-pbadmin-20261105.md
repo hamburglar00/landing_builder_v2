@@ -4,6 +4,10 @@ Implementación autorizada el 04/11/2026; validación local final el 05/11/2026.
 
 Migraciones productivas aplicadas: Builder `20261105152221_pbadmin_extensions_identity.sql`; Atrio `20261105152220_pbadmin_extensions_identity.sql`. Los nombres locales coinciden con las versiones registradas en Supabase. Función `create-client`: versión 38, con sus dependencias compartidas y autenticación propia existente.
 
+Builder y Atrio publicados y promovidos en Vercel; sus logins nativos responden 200 y los accesos PBAdmin continúan apagados. [Registro de publicación, versiones y comprobaciones públicas](gateway-agency-20261104/README.md#publicación-verificada--05112026).
+
+Revisión posterior de Supabase: RLS activo y sin SELECT de `anon`/`authenticated` en las tres tablas privadas; 69 políticas restrictivas en Builder y 42 en Atrio; hook instalado sin reemplazar otro; sesiones nativas permitidas. Los avisos nuevos del advisor corresponden a las tablas sin políticas públicas, intencionalmente exclusivas del servidor ([RLS sin políticas](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy)), y a las funciones `SECURITY DEFINER` de comprobación de sesión, que sólo validan la identidad de la propia petición y necesitan poder ejecutarse desde el hook y las políticas ([anon](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable), [authenticated](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable)). La reserva de identidades y el vínculo de gerencia siguen siendo exclusivos de `service_role`.
+
 ## Comportamiento
 
 - Panel3: «Extensiones» reemplaza Marketing; el enlace anterior redirige. Administrador de administración: Builder y Atrio. Marketing: Atrio. Cajero: sólo Tracking. Superadmin: conserva Tracking y sus herramientas existentes, sin alta automática de cliente.

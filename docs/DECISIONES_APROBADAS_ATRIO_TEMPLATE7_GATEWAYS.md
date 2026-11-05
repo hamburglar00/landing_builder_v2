@@ -5,6 +5,7 @@
 - El usuario autorizó hacer commit, push y despliegue de todo lo implementado en Landing Builder, Atrio y los cuatro gateways, incluidas las migraciones y funciones necesarias. Esta autorización reemplaza la condición de mantener locales esos proyectos en las entradas anteriores.
 - API2 y Panel3 permanecen exclusivamente en local: sin commit, push, despliegue ni migraciones productivas. No activar Extensiones hasta configurar y publicar ambos extremos. El ingreso `/<agency_id>` muestra «Enlace no disponible» mientras API2 no provea el circuito requerido.
 - Publicar también Ganamos+ en su Cloudflare Worker, además de Vercel. Verificar los dominios públicos sin crear jugadores, vincular clientes excluidos ni ejecutar operaciones financieras.
+- La comprobación productiva detectó que Workers no admite `fetch` con `redirect: "error"`. Usar `manual` en los dos puentes compartidos de ingreso y rechazar toda respuesta no exitosa, incluidos 3xx, sin seguir ubicaciones ni reenviar secretos. Aplicar a los cuatro gateways. Compilar Cloudflare desde un archivo del commit sin archivos de entorno locales; verificar que `next-env.mjs` no incorpore valores y conservar sólo los bindings productivos del Worker.
 
 ### Usuario dentro de la confirmación de Full Carga (05/11/2026, local)
 

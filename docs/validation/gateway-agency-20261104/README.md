@@ -2,6 +2,29 @@
 
 Estado al 05/11/2026: publicación autorizada de Rey, Ases del Norte, Ganamos NET, Ganamos+ y Atrio; migración Atrio aplicada. API2 permanece local en `feature/atrio-integration`; su responsable realiza la activación. Hasta actualizar API2, los enlaces por gerencia muestran «Enlace no disponible». Las pruebas no crean cuentas reales ni ejecutan operaciones monetarias.
 
+## Publicación verificada — 05/11/2026
+
+| Proyecto | Commit de aplicación | Despliegue Vercel listo y promovido | Acceso público |
+| --- | --- | --- | --- |
+| Landing Builder | `89f4e4f` | `dpl_72ctTiaRe1mR89ShwW19eu5ySK8K` | https://mkt.panelbotadmin.com/login |
+| Atrio | `b99c7f1` | `dpl_DESjiEstwQ999tceTK3RsYNQy4SF` | https://www.atrio.website/login |
+| Rey de Ases | `b1f1ef4` | `dpl_9s2dGjYRCPh8VsYjGqcJ7ZM3vvGq` | https://www.reydeases.fun/casino/list/home |
+| Ases del Norte | `f9276c7` | `dpl_GbahH6AYkYjHCNAjYJkJxCGCEcrF` | https://www.asesdelnorte.online/jugadores/home.php |
+| Ganamos NET | `14735a1` | `dpl_HHAEEi1ERj96tuWxeg2bmF3pgUzU` | https://www.ganamosnet.icu/home |
+| Ganamos+ | `a48dbd3` | `dpl_RQhRjybU8vnPDeyTzMBbDvJt6fbk` | https://ganamosnet.global/home |
+
+Ganamos+ también quedó publicado en Cloudflare, Worker `multi-skin-gateway`, versión `1cde6922-84fe-4ac5-87bd-547725c14de7`, para su dominio público y `multi-skin-gateway.meta-ip-collector.workers.dev`.
+
+Se corrigió una incompatibilidad real encontrada en la comprobación pública: Workers no admite `redirect: "error"`. Ambos puentes de ingreso usan `manual` y rechazan las respuestas 3xx sin seguirlas ni reenviar secretos. La corrección y sus pruebas están sincronizadas en los cuatro gateways: 52 pruebas de ingreso/gerencia/rutas por proyecto, más 6 de codificación de consultas del bundle Cloudflare. [Contrato de Request en Workers](https://developers.cloudflare.com/workers/runtime-apis/request/).
+
+La primera compilación Cloudflare incorporó el entorno local; se retiró esa versión y se recompiló desde el archivo limpio del commit. La versión final no contiene valores en `next-env.mjs` de producción y usa únicamente los bindings del Worker, conservados con `--keep-vars`. Para futuros despliegues: extraer `git archive` excluyendo `.env*` y `.dev.vars*`, compilar allí, comprobar que el objeto `production` del manifiesto de entorno está vacío y después desplegar. No publicar directamente una compilación creada con archivos de entorno locales.
+
+Comprobación pública en Chromium a 390 y 1365 px: los cuatro formularios muestran el logo transparente cargado a 220 × 110 px, sin desbordamiento horizontal ni errores de JavaScript. Los health checks responden 200. `/17` devuelve 404 con «Enlace no disponible» y sin formulario en los cuatro, porque API2 conserva su versión anterior. El 401 HTTP del login genérico sin sesión es su contrato existente; la página HTML se muestra correctamente. No se probó un ingreso con credenciales reales ni se crearon jugadores.
+
+Builder y Atrio: login nativo HTTP 200; acceso PBAdmin oculto y `/api/pbadmin/start` HTTP 503 por bandera apagada. La función `create-client` versión 38 rechaza una petición sin autorización con 401. [Resultados públicos](production-results-20261105.json), [Ganamos NET escritorio](production-net-1365.png) y [Ganamos+ móvil](production-plus-390.png).
+
+API2 permanece en `c09680b3` con sus cambios locales; Panel3 en `68bed4c` con los suyos. Este lote no hizo commit, push, migraciones ni despliegue de ninguno de ellos.
+
 ## Comportamiento
 
 `https://<dominio-del-gateway>/<agency_id>` valida el circuito antes de mostrar el formulario. Incluye pertenencia al proveedor del dominio, gerencia activa, único bot Atrio sobre la gerencia **operativa**, token habilitado para escribir, conexión exacta de Atrio y asesor con cuenta habilitada. MKT utiliza `operational_agency_id`; no utiliza la referencia histórica. No se limpiaron las referencias MKT ni se alteraron bots WhatsApp.

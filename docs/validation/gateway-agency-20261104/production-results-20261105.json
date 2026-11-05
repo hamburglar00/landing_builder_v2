@@ -1,0 +1,240 @@
+[
+  {
+    "name": "rey",
+    "width": 390,
+    "url": "https://www.reydeases.fun/casino/list/home",
+    "status": 401,
+    "title": "Ingresar · Rey de Ases",
+    "heading": "Ingresá a tu cuenta",
+    "logo": [
+      {
+        "src": "/rey-de-ases-logo-transparent.optimized.webp",
+        "loaded": true,
+        "width": 220,
+        "height": 110
+      }
+    ],
+    "overflow": false,
+    "hasLogin": true,
+    "errors": []
+  },
+  {
+    "name": "rey",
+    "agencyStatus": 404,
+    "unavailable": true,
+    "hasPassword": 0
+  },
+  {
+    "name": "rey",
+    "width": 1365,
+    "url": "https://www.reydeases.fun/casino/list/home",
+    "status": 401,
+    "title": "Ingresar · Rey de Ases",
+    "heading": "Ingresá a tu cuenta",
+    "logo": [
+      {
+        "src": "/rey-de-ases-logo-transparent.optimized.webp",
+        "loaded": true,
+        "width": 220,
+        "height": 110
+      }
+    ],
+    "overflow": false,
+    "hasLogin": true,
+    "errors": []
+  },
+  {
+    "name": "rey",
+    "health": 200,
+    "body": {
+      "status": "ok",
+      "timestamp": "2026-11-05T15:33:30.532Z"
+    }
+  },
+  {
+    "name": "ases",
+    "width": 390,
+    "url": "https://www.asesdelnorte.online/jugadores/home.php",
+    "status": 401,
+    "title": "Ingresar · Ases del Norte",
+    "heading": "Ingresá a tu cuenta",
+    "logo": [
+      {
+        "src": "/ases-del-norte-transition-logo.optimized.webp",
+        "loaded": true,
+        "width": 220,
+        "height": 110
+      }
+    ],
+    "overflow": false,
+    "hasLogin": true,
+    "errors": []
+  },
+  {
+    "name": "ases",
+    "agencyStatus": 404,
+    "unavailable": true,
+    "hasPassword": 0
+  },
+  {
+    "name": "ases",
+    "width": 1365,
+    "url": "https://www.asesdelnorte.online/jugadores/home.php",
+    "status": 401,
+    "title": "Ingresar · Ases del Norte",
+    "heading": "Ingresá a tu cuenta",
+    "logo": [
+      {
+        "src": "/ases-del-norte-transition-logo.optimized.webp",
+        "loaded": true,
+        "width": 220,
+        "height": 110
+      }
+    ],
+    "overflow": false,
+    "hasLogin": true,
+    "errors": []
+  },
+  {
+    "name": "ases",
+    "health": 200,
+    "body": {
+      "ok": true,
+      "app": "ases-del-norte-gateway",
+      "provider": "ases_del_norte"
+    }
+  },
+  {
+    "name": "net",
+    "width": 390,
+    "url": "https://www.ganamosnet.icu/home",
+    "status": 401,
+    "title": "Ingresar · Ganamos NET",
+    "heading": "Ingresá a tu cuenta",
+    "logo": [
+      {
+        "src": "/ganamos-net-transition-logo.webp",
+        "loaded": true,
+        "width": 220,
+        "height": 110
+      }
+    ],
+    "overflow": false,
+    "hasLogin": true,
+    "errors": []
+  },
+  {
+    "name": "net",
+    "agencyStatus": 404,
+    "unavailable": true,
+    "hasPassword": 0
+  },
+  {
+    "name": "net",
+    "width": 1365,
+    "url": "https://www.ganamosnet.icu/home",
+    "status": 401,
+    "title": "Ingresar · Ganamos NET",
+    "heading": "Ingresá a tu cuenta",
+    "logo": [
+      {
+        "src": "/ganamos-net-transition-logo.webp",
+        "loaded": true,
+        "width": 220,
+        "height": 110
+      }
+    ],
+    "overflow": false,
+    "hasLogin": true,
+    "errors": []
+  },
+  {
+    "name": "net",
+    "health": 200,
+    "body": {
+      "ok": true,
+      "app": "ganamos-net-gateway",
+      "provider": "ganamos_net"
+    }
+  },
+  {
+    "name": "builder",
+    "loginStatus": 200,
+    "hasPassword": 1,
+    "pbadminVisible": false
+  },
+  {
+    "name": "builder",
+    "startStatus": 503
+  },
+  {
+    "name": "atrio",
+    "loginStatus": 200,
+    "hasPassword": 1,
+    "pbadminVisible": false
+  },
+  {
+    "name": "atrio",
+    "startStatus": 503
+  },
+  {
+    "name": "create-client",
+    "unauthorizedStatus": 401,
+    "body": {
+      "error": "Falta encabezado Authorization."
+    }
+  },
+  {
+    "name": "plus",
+    "width": 390,
+    "url": "https://ganamosnet.global/home",
+    "status": 401,
+    "title": "Ingresar · Ganamos+",
+    "heading": "Ingresá a tu cuenta",
+    "logo": [
+      {
+        "src": "/ganamos-plus-logo-transparent.optimized.webp",
+        "loaded": true,
+        "width": 220,
+        "height": 110
+      }
+    ],
+    "overflow": false,
+    "hasLogin": true,
+    "errors": []
+  },
+  {
+    "name": "plus",
+    "agencyStatus": 404,
+    "unavailable": true,
+    "hasPassword": 0
+  },
+  {
+    "name": "plus",
+    "width": 1365,
+    "url": "https://ganamosnet.global/home",
+    "status": 401,
+    "title": "Ingresar · Ganamos+",
+    "heading": "Ingresá a tu cuenta",
+    "logo": [
+      {
+        "src": "/ganamos-plus-logo-transparent.optimized.webp",
+        "loaded": true,
+        "width": 220,
+        "height": 110
+      }
+    ],
+    "overflow": false,
+    "hasLogin": true,
+    "errors": []
+  },
+  {
+    "name": "plus",
+    "health": 200,
+    "body": {
+      "ok": true,
+      "app": "multi-skin-gateway",
+      "skin": "ganamos_plus"
+    }
+  }
+]
