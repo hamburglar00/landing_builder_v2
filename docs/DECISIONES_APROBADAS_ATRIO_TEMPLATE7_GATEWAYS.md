@@ -1,5 +1,11 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Vista previa del editor con margen y Template 9 legible (05/11/2026)
+
+- Dejar margen inferior visible en la tarjeta de vista previa, tanto en el editor de cliente como en el de administrador. Mantener el borde exterior completo y el contenido desplazable para alcanzar el resumen de gerencias, incluso en ventanas bajas.
+- Template 9 usa el ancho disponible como viewport real, sin el doble escalado del editor que achicaba y difuminaba los textos. Mantener el HTML y CSS públicos, el formulario, el pie legal y el aviso de cookies; permitir recorrer su contenido sin ejecutar scripts, altas ni tracking.
+- Conservar la composición propia de las miniaturas de galería y las demás plantillas. Este cambio sólo afecta al editor de Builder; no requiere cambios de gateways, Atrio, renderer clásico, API2, Panel3, migraciones ni funciones Edge.
+
 ### Formulario de gateways dentro de la pantalla (05/11/2026)
 
 - Ajustar los cuatro gateways para que ingreso y registro entren sin scroll vertical ni horizontal, conservando margen exterior arriba y a los costados. Espaciado y logo se adaptan a la altura; en ventanas horizontales bajas, marca/ayuda y formulario se distribuyen en dos columnas. No ocultar el desborde del documento para recortar controles ni reducir los inputs por debajo de 16 px o los objetivos táctiles de 44 px.

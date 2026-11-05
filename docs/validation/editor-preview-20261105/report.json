@@ -1,0 +1,674 @@
+[
+  {
+    "engine": "chromium",
+    "mode": "dashboard/landing",
+    "viewport": {
+      "width": 1366,
+      "height": 635
+    },
+    "provider": "rey_de_ases",
+    "width": 322,
+    "height": 696.828125,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 294,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 322,
+      "overflow": 322
+    },
+    "gap": 32
+  },
+  {
+    "engine": "chromium",
+    "mode": "dashboard/landing",
+    "viewport": {
+      "width": 1366,
+      "height": 635
+    },
+    "provider": "ases_del_norte",
+    "width": 322,
+    "height": 696.828125,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 294,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 322,
+      "overflow": 322
+    },
+    "gap": 32
+  },
+  {
+    "engine": "chromium",
+    "mode": "dashboard/landing",
+    "viewport": {
+      "width": 1366,
+      "height": 635
+    },
+    "provider": "ganamos_net",
+    "width": 322,
+    "height": 696.828125,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 294,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 322,
+      "overflow": 322
+    },
+    "gap": 32
+  },
+  {
+    "engine": "chromium",
+    "mode": "dashboard/landing",
+    "viewport": {
+      "width": 1366,
+      "height": 635
+    },
+    "provider": "multi_skin",
+    "width": 322,
+    "height": 696.828125,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 294,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 322,
+      "overflow": 322
+    },
+    "gap": 32
+  },
+  {
+    "engine": "chromium",
+    "mode": "admin/landings",
+    "viewport": {
+      "width": 1366,
+      "height": 635
+    },
+    "provider": "rey_de_ases",
+    "width": 322,
+    "height": 696.828125,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 294,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 322,
+      "overflow": 322
+    },
+    "gap": 32
+  },
+  {
+    "engine": "chromium",
+    "mode": "admin/landings",
+    "viewport": {
+      "width": 1366,
+      "height": 635
+    },
+    "provider": "ases_del_norte",
+    "width": 322,
+    "height": 696.828125,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 294,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 322,
+      "overflow": 322
+    },
+    "gap": 32
+  },
+  {
+    "engine": "chromium",
+    "mode": "admin/landings",
+    "viewport": {
+      "width": 1366,
+      "height": 635
+    },
+    "provider": "ganamos_net",
+    "width": 322,
+    "height": 696.828125,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 294,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 322,
+      "overflow": 322
+    },
+    "gap": 32
+  },
+  {
+    "engine": "chromium",
+    "mode": "admin/landings",
+    "viewport": {
+      "width": 1366,
+      "height": 635
+    },
+    "provider": "multi_skin",
+    "width": 322,
+    "height": 696.828125,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 294,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 322,
+      "overflow": 322
+    },
+    "gap": 32
+  },
+  {
+    "engine": "chromium",
+    "mode": "dashboard/landing",
+    "viewport": {
+      "width": 1366,
+      "height": 768
+    },
+    "provider": "rey_de_ases",
+    "width": 322,
+    "height": 696.828125,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 294,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 322,
+      "overflow": 322
+    },
+    "gap": 32
+  },
+  {
+    "engine": "chromium",
+    "mode": "admin/landings",
+    "viewport": {
+      "width": 1366,
+      "height": 768
+    },
+    "provider": "rey_de_ases",
+    "width": 322,
+    "height": 696.828125,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 294,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 322,
+      "overflow": 322
+    },
+    "gap": 32
+  },
+  {
+    "engine": "chromium",
+    "mode": "dashboard/landing",
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "provider": "rey_de_ases",
+    "width": 322,
+    "height": 696.828125,
+    "scaled": false,
+    "documentWidth": 1920,
+    "form": {
+      "width": 294,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 322,
+      "overflow": 322
+    },
+    "gap": 60.671875
+  },
+  {
+    "engine": "chromium",
+    "mode": "admin/landings",
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "provider": "rey_de_ases",
+    "width": 322,
+    "height": 696.828125,
+    "scaled": false,
+    "documentWidth": 1920,
+    "form": {
+      "width": 294,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 322,
+      "overflow": 322
+    },
+    "gap": 60.671875
+  },
+  {
+    "engine": "chromium",
+    "mode": "dashboard/landing",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "provider": "rey_de_ases",
+    "width": 366,
+    "height": 792.046875,
+    "scaled": false,
+    "documentWidth": 390,
+    "form": {
+      "width": 326,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 366,
+      "overflow": 366
+    },
+    "gap": null
+  },
+  {
+    "engine": "chromium",
+    "mode": "admin/landings",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "provider": "rey_de_ases",
+    "width": 366,
+    "height": 792.046875,
+    "scaled": false,
+    "documentWidth": 390,
+    "form": {
+      "width": 326,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 366,
+      "overflow": 366
+    },
+    "gap": null
+  },
+  {
+    "engine": "chromium",
+    "mode": "dashboard/landing",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "provider": "rey_de_ases",
+    "width": 296,
+    "height": 640.5625,
+    "scaled": false,
+    "documentWidth": 320,
+    "form": {
+      "width": 268,
+      "fontSize": 16,
+      "title": 22,
+      "viewport": 296,
+      "overflow": 296
+    },
+    "gap": null
+  },
+  {
+    "engine": "chromium",
+    "mode": "admin/landings",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "provider": "rey_de_ases",
+    "width": 296,
+    "height": 640.5625,
+    "scaled": false,
+    "documentWidth": 320,
+    "form": {
+      "width": 268,
+      "fontSize": 16,
+      "title": 22,
+      "viewport": 296,
+      "overflow": 296
+    },
+    "gap": null
+  },
+  {
+    "engine": "webkit",
+    "mode": "dashboard/landing",
+    "viewport": {
+      "width": 1366,
+      "height": 635
+    },
+    "provider": "rey_de_ases",
+    "width": 332,
+    "height": 718.46875,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 304,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 332,
+      "overflow": 332
+    },
+    "gap": 32
+  },
+  {
+    "engine": "webkit",
+    "mode": "dashboard/landing",
+    "viewport": {
+      "width": 1366,
+      "height": 635
+    },
+    "provider": "ases_del_norte",
+    "width": 332,
+    "height": 718.46875,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 304,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 332,
+      "overflow": 332
+    },
+    "gap": 32
+  },
+  {
+    "engine": "webkit",
+    "mode": "dashboard/landing",
+    "viewport": {
+      "width": 1366,
+      "height": 635
+    },
+    "provider": "ganamos_net",
+    "width": 332,
+    "height": 718.46875,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 304,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 332,
+      "overflow": 332
+    },
+    "gap": 32
+  },
+  {
+    "engine": "webkit",
+    "mode": "dashboard/landing",
+    "viewport": {
+      "width": 1366,
+      "height": 635
+    },
+    "provider": "multi_skin",
+    "width": 332,
+    "height": 718.46875,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 304,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 332,
+      "overflow": 332
+    },
+    "gap": 32
+  },
+  {
+    "engine": "webkit",
+    "mode": "admin/landings",
+    "viewport": {
+      "width": 1366,
+      "height": 635
+    },
+    "provider": "rey_de_ases",
+    "width": 332,
+    "height": 718.46875,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 304,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 332,
+      "overflow": 332
+    },
+    "gap": 32
+  },
+  {
+    "engine": "webkit",
+    "mode": "admin/landings",
+    "viewport": {
+      "width": 1366,
+      "height": 635
+    },
+    "provider": "ases_del_norte",
+    "width": 332,
+    "height": 718.46875,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 304,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 332,
+      "overflow": 332
+    },
+    "gap": 32
+  },
+  {
+    "engine": "webkit",
+    "mode": "admin/landings",
+    "viewport": {
+      "width": 1366,
+      "height": 635
+    },
+    "provider": "ganamos_net",
+    "width": 332,
+    "height": 718.46875,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 304,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 332,
+      "overflow": 332
+    },
+    "gap": 32
+  },
+  {
+    "engine": "webkit",
+    "mode": "admin/landings",
+    "viewport": {
+      "width": 1366,
+      "height": 635
+    },
+    "provider": "multi_skin",
+    "width": 332,
+    "height": 718.46875,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 304,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 332,
+      "overflow": 332
+    },
+    "gap": 32
+  },
+  {
+    "engine": "webkit",
+    "mode": "dashboard/landing",
+    "viewport": {
+      "width": 1366,
+      "height": 768
+    },
+    "provider": "rey_de_ases",
+    "width": 332,
+    "height": 718.46875,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 304,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 332,
+      "overflow": 332
+    },
+    "gap": 32
+  },
+  {
+    "engine": "webkit",
+    "mode": "admin/landings",
+    "viewport": {
+      "width": 1366,
+      "height": 768
+    },
+    "provider": "rey_de_ases",
+    "width": 332,
+    "height": 718.46875,
+    "scaled": false,
+    "documentWidth": 1366,
+    "form": {
+      "width": 304,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 332,
+      "overflow": 332
+    },
+    "gap": 32
+  },
+  {
+    "engine": "webkit",
+    "mode": "dashboard/landing",
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "provider": "rey_de_ases",
+    "width": 332,
+    "height": 718.46875,
+    "scaled": false,
+    "documentWidth": 1920,
+    "form": {
+      "width": 304,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 332,
+      "overflow": 332
+    },
+    "gap": 39.046875
+  },
+  {
+    "engine": "webkit",
+    "mode": "admin/landings",
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "provider": "rey_de_ases",
+    "width": 332,
+    "height": 718.46875,
+    "scaled": false,
+    "documentWidth": 1920,
+    "form": {
+      "width": 304,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 332,
+      "overflow": 332
+    },
+    "gap": 39.046875
+  },
+  {
+    "engine": "webkit",
+    "mode": "dashboard/landing",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "provider": "rey_de_ases",
+    "width": 366,
+    "height": 792.046875,
+    "scaled": false,
+    "documentWidth": 390,
+    "form": {
+      "width": 326,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 366,
+      "overflow": 366
+    },
+    "gap": null
+  },
+  {
+    "engine": "webkit",
+    "mode": "admin/landings",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "provider": "rey_de_ases",
+    "width": 366,
+    "height": 792.046875,
+    "scaled": false,
+    "documentWidth": 390,
+    "form": {
+      "width": 326,
+      "fontSize": 17,
+      "title": 24,
+      "viewport": 366,
+      "overflow": 366
+    },
+    "gap": null
+  },
+  {
+    "engine": "webkit",
+    "mode": "dashboard/landing",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "provider": "rey_de_ases",
+    "width": 296,
+    "height": 640.5625,
+    "scaled": false,
+    "documentWidth": 320,
+    "form": {
+      "width": 268,
+      "fontSize": 16,
+      "title": 22,
+      "viewport": 296,
+      "overflow": 296
+    },
+    "gap": null
+  },
+  {
+    "engine": "webkit",
+    "mode": "admin/landings",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "provider": "rey_de_ases",
+    "width": 296,
+    "height": 640.5625,
+    "scaled": false,
+    "documentWidth": 320,
+    "form": {
+      "width": 268,
+      "fontSize": 16,
+      "title": 22,
+      "viewport": 296,
+      "overflow": 296
+    },
+    "gap": null
+  }
+]

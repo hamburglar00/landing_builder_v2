@@ -13,7 +13,7 @@ import {
   UNIQUE_VIOLATION_CODE,
 } from "@/lib/landing/landingsDb";
 import { uploadLandingImage } from "@/lib/landing/upload";
-import { LandingPreview } from "@/components/landing/LandingPreview";
+import { LandingEditorPreview } from "@/components/landing/LandingEditorPreview";
 import { Template6AnalyticsSection } from "@/components/landing/Template6AnalyticsSection";
 import {
   CollapsibleSection,
@@ -894,41 +894,15 @@ export default function AdminLandingEditarPage() {
           />
         )}
       </div>
-      {/* Mobile / tablet: preview al final, con scroll normal */}
-      {landing.landingType !== "external" && <div className="mt-8 w-full max-w-[380px] xl:hidden">
-        <p className="mb-3 text-xs font-medium text-zinc-500">Vista previa</p>
-        <LandingPreview config={landing.config} />
-        <p className="mt-2 w-full text-[11px] text-zinc-500">
-          La vista previa es aproximada. Para una vista certera, abrí el enlace de la landing.
-        </p>
-        <GerenciasAssignmentSummary
-          assignments={assignments}
-          gerencias={gerencias}
-          selectionMode={landing.gerenciaSelectionMode}
-        />
-      </div>}
-      {/* Desktop: columna fija con scroll propio para alcanzar todo el resumen. */}
-      {landing.landingType !== "external" && <aside aria-label="Vista previa y gerencias asignadas" tabIndex={0} className="sticky top-20 hidden max-h-[calc(100dvh-6rem)] w-[360px] self-start overflow-y-auto overscroll-contain rounded-2xl border border-[var(--color-border)] bg-[rgba(11,15,21,0.72)] p-3 shadow-[var(--shadow-card)] xl:block">
-        <div className="mb-2 flex items-center justify-between">
-          <p className="text-xs font-semibold text-[var(--color-text)]">Vista previa</p>
-          <span className="ui-badge">En vivo</span>
-        </div>
-        <div className="flex w-full items-center justify-center overflow-hidden rounded-xl border border-[var(--color-border-subtle)] p-2">
-          <div className="relative h-[397px] w-[224px] shrink-0">
-            <div className="absolute left-1/2 top-0 w-[360px] -translate-x-1/2 origin-top scale-[0.62]">
-              <LandingPreview config={landing.config} />
-            </div>
-          </div>
-        </div>
-        <p className="mt-2 w-full text-[11px] leading-4 text-[var(--color-text-disabled)]">
-          La vista previa es aproximada. Para una vista certera, abrí el enlace de la landing.
-        </p>
-        <GerenciasAssignmentSummary
-          assignments={assignments}
-          gerencias={gerencias}
-          selectionMode={landing.gerenciaSelectionMode}
-        />
-      </aside>}
+      {landing.landingType !== "external" && (
+        <LandingEditorPreview config={landing.config}>
+          <GerenciasAssignmentSummary
+            assignments={assignments}
+            gerencias={gerencias}
+            selectionMode={landing.gerenciaSelectionMode}
+          />
+        </LandingEditorPreview>
+      )}
     </div>
   );
 }
