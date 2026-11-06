@@ -1,0 +1,80 @@
+{
+  "date": "2026-11-06",
+  "scope": "Production configuration and rebuild of existing Builder/Atrio sources; API2 and Panel3 kept local",
+  "configuration": {
+    "apiOrigin": "https://api.asesadmin.com",
+    "panelOrigin": "https://panelbotadmin.com",
+    "secretSource": "Existing API2 APP_KEY validated against an encrypted production record; provider-specific HMAC-SHA256 keys from the local helper",
+    "masterKeyExported": false,
+    "secretsVersioned": false,
+    "providerKeysStoredAsSensitive": true
+  },
+  "deployments": [
+    {
+      "provider": "builder",
+      "previous": "dpl_5ECXs8TbHn7P3Bht7BaGRRJkYdKn",
+      "id": "dpl_CJZSn797uizrKAh4XoRCAs4d7dZv",
+      "url": "landing-builder-v2-k259-eij6204ds-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "target": "production",
+      "autoAssign": false,
+      "alias": [],
+      "createdAt": "2026-11-06T17:43:25.262Z",
+      "publicOrigin": "https://mkt.panelbotadmin.com",
+      "publicVerifiedAt": "2026-11-06T17:50:07.302Z"
+    },
+    {
+      "provider": "atrio",
+      "previous": "dpl_3oiVWFMyVUoogeSoKGavLBAd2aYW",
+      "id": "dpl_2F6RsNw8VBbbi38ozXeQ5fA3r6bh",
+      "url": "internal-chat-mspj97roi-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "target": "production",
+      "autoAssign": false,
+      "alias": [],
+      "createdAt": "2026-11-06T17:43:31.567Z",
+      "publicOrigin": "https://www.atrio.website",
+      "publicVerifiedAt": "2026-11-06T17:50:12.428Z"
+    }
+  ],
+  "smoke": {
+    "checkedAt": "2026-11-06T17:48:40.287Z",
+    "results": [
+      {
+        "provider": "builder",
+        "base": "https://mkt.panelbotadmin.com",
+        "loginStatus": 200,
+        "loginButton": true,
+        "startStatus": 303,
+        "redirectOrigin": "https://panelbotadmin.com",
+        "redirectPath": "/extensiones/autorizar",
+        "privateCookie": true,
+        "wrongKeyStatus": 401,
+        "correctKeyInvalidPayloadStatus": 400
+      },
+      {
+        "provider": "atrio",
+        "base": "https://www.atrio.website",
+        "loginStatus": 200,
+        "loginButton": true,
+        "startStatus": 303,
+        "redirectOrigin": "https://panelbotadmin.com",
+        "redirectPath": "/extensiones/autorizar",
+        "privateCookie": true,
+        "wrongKeyStatus": 401,
+        "correctKeyInvalidPayloadStatus": 400
+      }
+    ]
+  },
+  "validation": {
+    "isolatedAuthPostgresPostgrestScenarios": 17,
+    "result": "pass",
+    "builderDefaultsAdmins": 1,
+    "preexistingDelegatedAccounts": 0,
+    "newProductionAccountsCreated": 0,
+    "migrationsRequired": 0,
+    "edgeFunctionsChanged": 0
+  },
+  "pending": "Publish local API2 config/extensions.ts implementation with the existing APP_KEY; current API2 returns 503 extension_unavailable. No extension variables or private export files need to be supplied by the programmer.",
+  "rollback": "Promote each previous deployment recorded above; it retains the pre-activation environment snapshot."
+}
