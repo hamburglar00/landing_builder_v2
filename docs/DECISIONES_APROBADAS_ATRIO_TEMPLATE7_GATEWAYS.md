@@ -1,5 +1,13 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Corrección del contrato API2 en enlaces por gerencia (06/11/2026)
+
+- El usuario autorizó corregir el bloqueo de `reydeases.fun/286`: API2 devuelve los datos directamente, sin `success: true`; el puente compartido de Atrio exigía ese campo y convertía una respuesta válida en HTTP 503.
+- Aceptar el objeto de datos real conservando todas las comprobaciones de gerencia, plataforma, bot, asesor, cuenta y pertenencia. Rechazar errores HTTP, fallos explícitos, cuerpos inválidos y cualquier identidad distinta. Aplicar la corrección única en Atrio a consulta de destino, ingreso y recuperación de credenciales después del alta.
+- Las pruebas deben representar el contrato real sin el campo inventado, cubrir los cuatro proveedores y comprobar que los errores nunca vinculan cuentas. Verificar los enlaces públicos de los cuatro gateways después de publicar Atrio, incluido Ganamos+ servido por Worker.
+- No modificar el recorrido template → gateway ni agregar consultas. API2 y Panel3 permanecen locales; este ajuste no necesita migraciones ni funciones Edge.
+- Publicado en Atrio con el commit `b088a11`: 94 pruebas y 16 comprobaciones de navegador en los dominios públicos. Los cuatro enlaces de gerencias válidas responden 200; una gerencia de otra plataforma conserva el rechazo. [Evidencia, alcance y reversión](validation/gateway-agency-contract-20261106/README.md).
+
 ### Entrega integral y publicación de API2/Panel3 en Git (05/11/2026)
 
 - El usuario autorizó mantener Builder, Atrio y los cuatro gateways completamente publicados, incluidas funciones y migraciones; además autorizó pull, integración, commit y push de API2 y Panel3. Reemplaza la restricción previa de no subir estos dos repositorios. Su base productiva y despliegue quedan a cargo del programador con la guía de migraciones de API2.
