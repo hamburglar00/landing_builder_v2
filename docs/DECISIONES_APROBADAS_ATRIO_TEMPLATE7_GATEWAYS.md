@@ -1,5 +1,12 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Logos de ingreso un 50 % más grandes (06/11/2026)
+
+- Ampliar los logos de los cuatro gateways a 1,5 veces su tamaño anterior, conservando las proporciones y el ancho disponible en pantallas angostas. Mantener las dimensiones de las tarjetas de ingreso y registro mediante un ajuste del espacio vertical.
+- Conservar margen exterior, controles legibles y ausencia de scroll horizontal/vertical. Comprobar móvil, escritorio y horizontal; usar la presentación compartida y publicar también Ganamos+ en su Worker.
+- Sólo presentación: sin cambios de ingreso, altas, sesiones, API2 ni Panel3.
+- Publicado en los cuatro gateways, incluido Worker Ganamos+: 480 comprobaciones responsive y comparación antes/después sin variaciones de tamaño de tarjeta. [Capturas, versiones y verificación pública](validation/gateway-logo-20261106/README.md).
+
 ### Corrección del contrato API2 en enlaces por gerencia (06/11/2026)
 
 - El usuario autorizó corregir el bloqueo de `reydeases.fun/286`: API2 devuelve los datos directamente, sin `success: true`; el puente compartido de Atrio exigía ese campo y convertía una respuesta válida en HTTP 503.

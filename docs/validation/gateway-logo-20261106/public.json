@@ -1,0 +1,50 @@
+[
+  {
+    "repo": "landing-autologuin",
+    "url": "https://www.reydeases.fun/casino/list/home",
+    "status": 401,
+    "cssMatches": true
+  },
+  {
+    "repo": "landing-autologuin",
+    "url": "https://www.reydeases.fun/286",
+    "status": 200,
+    "cssMatches": true
+  },
+  {
+    "repo": "ases-gateway",
+    "url": "https://www.asesdelnorte.online/jugadores/home.php",
+    "status": 401,
+    "cssMatches": true
+  },
+  {
+    "repo": "ases-gateway",
+    "url": "https://www.asesdelnorte.online/277",
+    "status": 200,
+    "cssMatches": true
+  },
+  {
+    "repo": "ganamos-gateway",
+    "url": "https://www.ganamosnet.icu/home",
+    "status": 401,
+    "cssMatches": true
+  },
+  {
+    "repo": "ganamos-gateway",
+    "url": "https://www.ganamosnet.icu/17",
+    "status": 200,
+    "cssMatches": true
+  },
+  {
+    "repo": "multi-skin-gateway",
+    "url": "https://ganamosnet.global/home",
+    "status": 401,
+    "cssMatches": true
+  },
+  {
+    "repo": "multi-skin-gateway",
+    "url": "https://ganamosnet.global/282",
+    "status": 200,
+    "cssMatches": true
+  }
+]
