@@ -10,7 +10,7 @@ export async function exportMktUsage(db: SupabaseClient) {
     const { data, error } = await db
       .from("gerencia_phones")
       .select(
-        "id,phone,assignment_role,gerencias!inner(gerencia_id,source_type)",
+        "id,phone,assignment_role,gerencias!gerencia_phones_gerencia_id_fkey!inner(gerencia_id,source_type)",
       )
       .eq("kind", "mkt")
       .eq("gerencias.source_type", "pbadmin")
