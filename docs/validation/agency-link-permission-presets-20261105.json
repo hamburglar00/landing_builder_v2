@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-05",
+  "scope": "Restaurar vinculación histórica por Agency ID sin requerir el directorio nuevo de API2.",
+  "cause": "El modal unificado consultaba /api/bots/import -> Atrio /api/gateway/bot-directory -> API2 /api/v1/bot/directory. Ante 404 del directorio no desplegado se bloqueaba incluso el vínculo histórico de WhatsApp.",
+  "behavior": [
+    "Ante el error específico de directorio no publicado, Agency ID ofrece un vínculo explícito con nombre opcional mediante createGerencia y la sesión/RLS existentes.",
+    "Sincroniza sólo esa gerencia mediante sync-phones. No consulta nuevamente el inventario opcional.",
+    "La importación moderna se conserva cuando API2 está disponible; Owner ID no tiene fallback y Atrio mantiene el vínculo manual.",
+    "Los errores de autenticación/transporte no habilitan la alternativa. No se reescriben nombres ni se mueven vínculos de otra cuenta/workspace.",
+    "La actualización manual de teléfonos no informa un fallo por el directorio opcional ausente. Cada respuesta se maneja por separado, conservando otros errores concurrentes."
+  ],
+  "checks": {
+    "unit_contracts": "17/17 PASS (botsImportRoute + botsWorkspace)",
+    "browser": "6/6 PASS, 16 comprobaciones por viewport en Chromium/WebKit a 320/390/1280 px: incluye no fallback en errores gen?ricos ni Owner ID, sincronizaci?n exacta, repetici?n sin escritura y conflicto sin sincronizaci?n.",
+    "typecheck": "PASS",
+    "eslint": "PASS en archivos de lógica modificados",
+    "encoding": "PASS"
+  },
+  "production": {
+    "status": "PENDING",
+    "previous_deployment": "dpl_3yX1aDBF4nmukeg29M7sFDqpEuKk",
+    "migration_required": false,
+    "edge_functions_changed": false
+  },
+  "local_only": [
+    "API2 y Panel3 conservados locales; perfiles y validaciones en docs/validation/permission-presets-20261105.json de cada repositorio."
+  ],
+  "limits": [
+    "HTTP y persistencia de negocio simulados durante las pruebas; no se vincularon gerencias reales.",
+    "La importación completa por Owner ID y los nuevos metadatos siguen dependiendo del lote pendiente de API2."
+  ]
+}

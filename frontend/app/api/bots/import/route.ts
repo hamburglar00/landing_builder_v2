@@ -1,3 +1,7 @@
+import {
+  DIRECTORY_UNAVAILABLE,
+  isDirectoryUnavailable,
+} from "@/lib/bots/import-errors";
 import { persistImport } from "@/lib/bots/persist-import.server";
 import { createClient } from "@supabase/supabase-js";
 import {
@@ -130,6 +134,9 @@ export async function POST(request: Request) {
     if (!upstream.ok)
       return json(
         {
+          ...(isDirectoryUnavailable(upstream.status, payload)
+            ? { code: DIRECTORY_UNAVAILABLE }
+            : {}),
           error:
             typeof payload.error === "string"
               ? payload.error
@@ -142,7 +149,13 @@ export async function POST(request: Request) {
       canAtrio,
     );
     if (input.action === "preview") return json(data);
-    const result = await persistImport(db, uid, input.workspaceCurrency, input.action, data);
+    const result = await persistImport(
+      db,
+      uid,
+      input.workspaceCurrency,
+      input.action,
+      data,
+    );
     if (canAtrio && Array.isArray(payload.warnings))
       result.warnings.push(
         ...payload.warnings.filter(

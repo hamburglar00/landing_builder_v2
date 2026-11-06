@@ -16,6 +16,7 @@ import { CURRENCY_ALL } from "@/lib/currency";
 import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
 import {useClientModulePermissions} from '@/components/clients/ClientModulePermissions';
 import {useBotsWorkspace} from '@/components/bots/useBotsWorkspace';
+import { DIRECTORY_UNAVAILABLE } from "@/lib/bots/import-errors";
 import {BotsManagement,GerenciaActions} from '@/components/bots/BotsManagement';
 import {AtrioBotTable} from '@/components/bots/AtrioBotTable';
 import {WhatsAppInventoryExtras} from '@/components/bots/WhatsAppInventoryExtras';
@@ -380,12 +381,17 @@ export function TelefonosPageContent({
       await Promise.all(requests.slice(offset,offset+4).map(async scope=>{
         const response=await fetch('/api/bots/import',{method:'POST',headers:{Authorization:`Bearer ${data.session!.access_token}`,'Content-Type':'application/json'},
           body:JSON.stringify({action:'refresh',...scope,workspaceCurrency}),signal:AbortSignal.timeout(60000)});
-        const result=await response.json();if(!response.ok||result.warnings?.length)throw Error(result.error||result.warnings?.join(' ')||'No se pudo actualizar el inventario de bots.');
+        const result = await response.json();
+        // Inventory is optional for the existing phone sync. Ignore only this
+        // request's missing endpoint, so other concurrent errors still surface.
+        if (response.status === 503 && result.code === DIRECTORY_UNAVAILABLE) return;
+        if (!response.ok || result.warnings?.length)
+          throw Error(result.error || result.warnings?.join(' ') || 'No se pudo actualizar el inventario de bots.');
       }));
     }
   };
 
-  const handleSync = async (gerenciaId: number | null) => {
+  const handleSync = async (gerenciaId: number | null, refreshInventory = true) => {
     if (!userId || !base) return;
     if (gerenciaId !== null) setSyncingGerenciaId(gerenciaId);
     else setGlobalSyncing(true);
@@ -421,7 +427,10 @@ export function TelefonosPageContent({
         } catch {
           // ignore parse errors and continue normal flow
         }
-        try{await refreshBotInventory(gerenciaId);}catch(e){setError(e instanceof Error?e.message:'No se pudo actualizar el inventario de bots.');}
+        if (refreshInventory) {
+          try { await refreshBotInventory(gerenciaId); }
+          catch (e) { setError(e instanceof Error ? e.message : 'No se pudo actualizar el inventario de bots.'); }
+        }
         await loadData(userId);
       }
     } catch (e) {
@@ -821,7 +830,7 @@ export function TelefonosPageContent({
       />
 
       {unifiedBots&&userId&&<BotsManagement userId={userId} workspace={workspaceCurrency} gerencias={gerencias} isAdmin={isAdmin} canAtrio={canAtrio}
-        onChanged={async()=>{await loadData(userId);bots.reload();}} onImported={async()=>{await handleSync(null);bots.reload();}}/>}
+        onChanged={async()=>{await loadData(userId);bots.reload();}} onImported={async(gerenciaId,refreshInventory)=>{await handleSync(gerenciaId ?? null,refreshInventory);bots.reload();}}/>}
       {unifiedBots&&bots.busy&&<p role="status" className="text-xs text-zinc-400">Actualizando bots de Atrio…</p>}
       {unifiedBots&&bots.error&&<p role="alert" className="text-xs text-amber-300">{bots.error} <button type="button" className="underline" onClick={bots.reload}>Reintentar</button></p>}
       {unifiedBots&&canAtrio&&!!bots.clients.length&&<AtrioWorkspaceActions clients={bots.clients} onChanged={bots.reload}/>}

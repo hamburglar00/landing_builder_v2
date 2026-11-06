@@ -52,6 +52,7 @@ function fixture(t: TestContext) {
   let role = "client",
     canAtrio = true,
     source = directory(),
+    upstreamError: { status: number; error: string } | null = null,
     lookupError = false,
     writeError = false;
   const storedGroups: {
@@ -92,7 +93,9 @@ function fixture(t: TestContext) {
         assert.equal(url.pathname, "/api/gateway/bot-directory");
         assert.equal(body.kind, source.scope.kind);
         assert.equal(body.id, source.scope.id);
-        return json(source);
+        return upstreamError
+          ? json({ error: upstreamError.error }, upstreamError.status)
+          : json(source);
       }
       assert.equal(
         url.origin,
@@ -185,6 +188,9 @@ function fixture(t: TestContext) {
     calls,
     storedGroups,
     storedAdvisors,
+    set upstreamError(value: { status: number; error: string } | null) {
+      upstreamError = value;
+    },
     set role(value: string) {
       role = value;
     },
@@ -297,4 +303,36 @@ test("permission read failure or malformed source fails without database writes;
   assert.equal(result.gerencias, 0);
   assert.equal(result.asesores, 1);
   assert.equal(result.warnings.length, 1);
+});
+
+test("unavailable directory advertises compatibility only for the exact missing-endpoint error and never writes", async (t) => {
+  const f = fixture(t);
+  f.source = { ...directory(), scope: { kind: "agency", id: 10 } };
+  const unavailable =
+    "La importación requiere publicar el nuevo directorio en API2.";
+  for (const upstream of [
+    { status: 503, error: unavailable, expected: "directory_unavailable" },
+    { status: 401, error: unavailable, expected: undefined },
+    { status: 403, error: "Acceso no permitido.", expected: undefined },
+    {
+      status: 503,
+      error: "No se pudo consultar PBAdmin.",
+      expected: undefined,
+    },
+  ]) {
+    f.upstreamError = upstream;
+    const response = await POST(f.request({ kind: "agency", id: 10 }));
+    assert.equal(response.status, 503);
+    assert.equal((await response.json()).code, upstream.expected);
+  }
+  assert.equal(f.storedGroups.length, 0);
+  assert.equal(f.storedAdvisors.length, 0);
+  assert.equal(
+    f.calls.filter(
+      (call) =>
+        call.url.origin === "https://builder.fixture.invalid" &&
+        call.method !== "GET",
+    ).length,
+    0,
+  );
 });

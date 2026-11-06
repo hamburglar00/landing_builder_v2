@@ -14,16 +14,16 @@ const compiled=await build({absWorkingDir:process.cwd(),stdin:{resolveDir:proces
 import React from 'react';import{createRoot}from'react-dom/client';
 import{BotsManagement,GerenciaActions}from'./components/bots/BotsManagement';
 import{AppConfirmProvider}from'./components/ui/AppConfirmDialog';
-window.fixtureWrites=[];window.fixtureChanged=0;
+window.fixtureWrites=[];window.fixtureChanged=0;window.fixtureSync=[];
 const params=new URLSearchParams(location.search);
-createRoot(document.getElementById('root')).render(<AppConfirmProvider><BotsManagement userId="fixture-user" workspace="ARS" gerencias={[]} isAdmin={params.has('admin')} canAtrio={!params.has('no-atrio')} onChanged={async()=>{window.fixtureChanged++}} onImported={async()=>{}}/><GerenciaActions gerencia={{id:1,nombre:'Gerencia fixture',gerencia_id:184,source_type:'pbadmin'}} onChanged={async()=>{}}/></AppConfirmProvider>);
+createRoot(document.getElementById('root')).render(<AppConfirmProvider><BotsManagement userId="fixture-user" workspace="ARS" gerencias={params.has('existing')?[{id:777,gerencia_id:777,source_type:'pbadmin',user_id:'fixture-user',workspace_currency:'ARS',nombre:'Nombre guardado'}]:[]} isAdmin={params.has('admin')} canAtrio={!params.has('no-atrio')} onChanged={async()=>{window.fixtureChanged++}} onImported={async(id,refresh)=>{window.fixtureSync.push({id,refresh})}}/><GerenciaActions gerencia={{id:1,nombre:'Gerencia fixture',gerencia_id:184,source_type:'pbadmin'}} onChanged={async()=>{}}/></AppConfirmProvider>);
 `},bundle:true,write:false,platform:'browser',format:'iife',jsx:'automatic',define:{'process.env':'{}','process.env.NODE_ENV':'"production"'},plugins:[{name:'isolated-persistence',setup(b){
  b.onResolve({filter:/^@\/lib\/(supabaseClient|gerencias\/gerenciasDb|atrio\/atrioDb)$/},args=>({path:args.path,namespace:'fixture'}));
  b.onLoad({filter:/.*/,namespace:'fixture'},args=>({loader:'js',contents:args.path.endsWith('supabaseClient')
  ? 'export const supabase={auth:{getSession:async()=>({data:{session:{access_token:"fixture"}}})}};'
  : args.path.endsWith('atrioDb')
  ? 'export async function createAtrioClient(user,payload){window.fixtureWrites.push({kind:"atrio",user,payload})}'
- : 'export async function createGerencia(user,payload){window.fixtureWrites.push({kind:"manual",user,payload})};export async function updateGerencia(){};export async function deleteGerencia(){};export async function fetchGerenciaWorkGroups(){return []};export async function createGerenciaWorkGroup(){};export async function updateGerenciaWorkGroup(){};export async function deleteGerenciaWorkGroup(){};export function formatGerenciaError(){return "fixture"}'}));
+ : 'export async function createGerencia(user,payload){if(new URLSearchParams(location.search).has("conflict"))throw {code:"23505"};window.fixtureWrites.push({kind:"manual",user,payload})};export async function updateGerencia(){};export async function deleteGerencia(){};export async function fetchGerenciaWorkGroups(){return []};export async function createGerenciaWorkGroup(){};export async function updateGerenciaWorkGroup(){};export async function deleteGerenciaWorkGroup(){};export function formatGerenciaError(){return "fixture"}'}));
 }}]});
 const postcss=require('postcss');
 const css=(await postcss([require('@tailwindcss/postcss')()]).process(await readFile('app/globals.css','utf8'),{from:path.resolve('app/globals.css')})).css;
@@ -43,6 +43,7 @@ for(const [name,engine]of [['Chromium',playwright.chromium],['WebKit',playwright
     if(u.pathname==='/fixture.js')return route.fulfill({contentType:'text/javascript',body:compiled.outputFiles[0].text});
     if(u.pathname==='/api/bots/import'){
      const body=req.postDataJSON();requests.push(body);
+     if (body.id === 777 || body.id === 778) return route.fulfill({status:503,json:{error:body.id===777?'La importación requiere publicar el nuevo directorio en API2.':'Error de transporte',...(body.id===777?{code:'directory_unavailable'}:{})}});
      return route.fulfill({json:body.action==='preview'?{agencies:[{agency_id:body.id,name:'Gerencia fixture',bots:[]}],unassigned:[]}:{gerencias:1,asesores:0,existentes:0,warnings:[]}});
     }
     assert.equal(req.method(),'GET');return route.fulfill({contentType:'text/html',body:html});
@@ -85,6 +86,28 @@ for(const [name,engine]of [['Chromium',playwright.chromium],['WebKit',playwright
    await dialog.waitFor({state:'hidden'});
    assert.deepEqual(await page.evaluate(()=>window.fixtureWrites[1]),{kind:'atrio',user:'fixture-user',payload:{workspaceCurrency:'ARS',slug:'asesor-fixture',atrioId:advisor}});
    await page.getByRole('button',{name:'Vincular Bots',exact:true}).click();
+   await choose('Agency ID · una gerencia');
+   await dialog.getByLabel('Agency ID',{exact:true}).fill('778');
+   await dialog.getByRole('button',{name:'Buscar bots',exact:true}).click();
+   await dialog.getByRole('alert').filter({hasText:'Error de transporte'}).waitFor();
+   assert.equal(await dialog.getByRole('button',{name:'Vincular gerencia',exact:true}).count(),0,'no fallback for arbitrary failures');
+   await choose('Owner ID · todas sus gerencias');
+   await dialog.getByLabel('Owner ID',{exact:true}).fill('777');
+   await dialog.getByRole('button',{name:'Buscar bots',exact:true}).click();
+   await dialog.getByRole('alert').filter({hasText:'por propietario'}).waitFor();
+   assert.equal(await dialog.getByRole('button',{name:'Vincular gerencia',exact:true}).count(),0,'never use an owner ID as an agency');
+   await choose('Agency ID · una gerencia');
+   await dialog.getByLabel('Agency ID',{exact:true}).fill('777');
+   await dialog.getByRole('button',{name:'Buscar bots',exact:true}).click();
+   await dialog.getByRole('button',{name:'Vincular gerencia',exact:true}).waitFor();
+   await dialog.getByLabel('Nombre de la gerencia (opcional)',{exact:true}).fill('Gerencia elegida');
+   await page.screenshot({path:path.join(directory,`${name}-${width}-legacy-agency.png`)});
+   await dialog.getByRole('button',{name:'Vincular gerencia',exact:true}).click();
+   await dialog.waitFor({state:'hidden'});
+   assert.deepEqual(await page.evaluate(()=>window.fixtureWrites[2]),{kind:'manual',user:'fixture-user',payload:{nombre:'Gerencia elegida',source_type:'pbadmin',gerencia_id:777,workspace_currency:'ARS'}});
+   assert.deepEqual(await page.evaluate(()=>window.fixtureSync),[{id:777,refresh:false}]);
+   assert.equal(requests.filter(request=>request.action==='import'&&request.id===777).length,0);
+   await page.getByRole('button',{name:'Vincular Bots',exact:true}).click();
    const trigger=page.getByRole('button',{name:'Vincular mediante',exact:true});
    await trigger.focus();await page.keyboard.press('ArrowDown');
    await page.waitForFunction(()=>document.activeElement?.getAttribute('role')==='option');
@@ -107,10 +130,26 @@ for(const [name,engine]of [['Chromium',playwright.chromium],['WebKit',playwright
    await page.getByRole('button',{name:'Vincular mediante',exact:true}).click();
    await page.getByRole('listbox').waitFor();
    assert.equal(await page.getByRole('option').count(),3);
+   await page.keyboard.press('Escape');
+   for (const scenario of ['existing','conflict']) {
+     await page.goto(`https://modal.invalid/fixture?${scenario}`);
+     await page.getByRole('button',{name:'Vincular Bots',exact:true}).click();
+     await dialog.getByLabel('Agency ID',{exact:true}).fill('777');
+     await dialog.getByRole('button',{name:'Buscar bots',exact:true}).click();
+     await dialog.getByRole('button',{name:'Vincular gerencia',exact:true}).click();
+     if (scenario === 'existing') {
+       await dialog.waitFor({state:'hidden'});
+       assert.deepEqual(await page.evaluate(()=>window.fixtureSync),[{id:777,refresh:false}]);
+     } else {
+       await dialog.getByRole('alert').filter({hasText:'fixture'}).waitFor();
+       assert.deepEqual(await page.evaluate(()=>window.fixtureSync),[],'conflict cannot run phone sync');
+     }
+     assert.deepEqual(await page.evaluate(()=>window.fixtureWrites),[],'existing names and foreign links cannot be overwritten');
+   }
    assert.deepEqual(errors,[]);
-   results.push({browser:name,width,passed:true,checks:['width','input-style','typing-focus','agency','owner-preview','manual-save','atrio-save','keyboard','menu-bounds','edit','admin-permission']});
+   results.push({browser:name,width,passed:true,checks:['width','input-style','typing-focus','agency','owner-preview','manual-save','atrio-save','keyboard','menu-bounds','edit','admin-permission','legacy-agency-link','owner-no-fallback','transport-no-fallback','existing-preserved','conflict-preserved']});
   }finally{await context.close()}
  }}finally{await browser.close()}
 }
 await writeFile(path.join(directory,'results.json'),JSON.stringify({passed:results.length,results},null,2));
-console.log(JSON.stringify({passed:results.length,scenariosPerViewport:11,directory}));
+console.log(JSON.stringify({passed:results.length,scenariosPerViewport:16,directory}));

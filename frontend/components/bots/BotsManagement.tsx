@@ -14,6 +14,10 @@ import {
 import { createAtrioClient } from "@/lib/atrio/atrioDb";
 import type { Gerencia, GerenciaWorkGroup } from "@/lib/gerencias/types";
 import type { ReportingCurrency } from "@/lib/currency";
+import {
+  BotImportError,
+  DIRECTORY_UNAVAILABLE,
+} from "@/lib/bots/import-errors";
 import type { ImportDirectory } from "@/lib/bots/directory";
 import { ModalShell } from "@/components/ui/PanelPrimitives";
 import CustomSelect from "@/components/ui/CustomSelect";
@@ -36,7 +40,10 @@ export function BotsManagement({
   isAdmin: boolean;
   canAtrio: boolean;
   onChanged: () => Promise<void>;
-  onImported: () => Promise<void>;
+  onImported: (
+    gerenciaId?: number,
+    refreshInventory?: boolean,
+  ) => Promise<void>;
 }) {
   const [open, setOpen] = useState(false),
     [mode, setMode] = useState("agency"),
@@ -47,12 +54,14 @@ export function BotsManagement({
     [error, setError] = useState(""),
     [preview, setPreview] = useState<ImportDirectory | null>(null),
     [notice, setNotice] = useState("");
+  const [legacyAgency, setLegacyAgency] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false),
     [groups, setGroups] = useState<GerenciaWorkGroup[]>([]);
   const closeLinkModal = useCallback(() => setOpen(false), []);
   const closeGroupsModal = useCallback(() => setGroupOpen(false), []);
   useEffect(() => {
     setOpen(false);
+    setLegacyAgency(false);
     setPreview(null);
     setNotice("");
     setGroupOpen(false);
@@ -78,7 +87,11 @@ export function BotsManagement({
       signal: AbortSignal.timeout(60000),
     });
     const body = await response.json();
-    if (!response.ok) throw Error(body.error || "No se pudo importar.");
+    if (!response.ok)
+      throw new BotImportError(
+        body.error || "No se pudo importar.",
+        response.status === 503 ? body.code : undefined,
+      );
     return body;
   }
   async function save() {
@@ -86,7 +99,44 @@ export function BotsManagement({
     setError("");
     setNotice("");
     try {
-      if (mode === "manual") {
+      let legacyAgencyId: number | undefined;
+      if (mode === "agency" && legacyAgency) {
+        const agencyId = Number(id);
+        if (!/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(agencyId))
+          throw Error("Ingresá un ID entero positivo.");
+        // Restore the original explicit gerencia link, using the caller's RLS session.
+        // An existing link in another workspace/client must never be moved or overwritten.
+        const existing = gerencias.find(
+          (group) =>
+            group.source_type === "pbadmin" &&
+            group.gerencia_id === agencyId &&
+            (!group.user_id || group.user_id === userId) &&
+            (!group.workspace_currency ||
+              group.workspace_currency === workspace),
+        );
+        if (!existing) {
+          try {
+            await createGerencia(userId, {
+              nombre: name.trim() || `Gerencia #${agencyId}`,
+              source_type: "pbadmin",
+              gerencia_id: agencyId,
+              workspace_currency: workspace,
+            });
+          } catch (error) {
+            throw Error(
+              formatGerenciaError(error, "No se pudo vincular la gerencia."),
+            );
+          }
+        }
+        legacyAgencyId = existing?.id ?? agencyId;
+        setNotice(
+          "Gerencia vinculada. Se sincronizan sus teléfonos de WhatsApp." +
+            (canAtrio
+              ? " Los asesores de Atrio se vinculan desde su opción específica."
+              : ""),
+        );
+        setOpen(false);
+      } else if (mode === "manual") {
         if (!name.trim()) throw Error("Ingresá el nombre de la gerencia.");
         await createGerencia(userId, {
           nombre: name,
@@ -109,13 +159,15 @@ export function BotsManagement({
         setOpen(false);
       }
       await onChanged();
-      if (
+      if (legacyAgencyId !== undefined) await onImported(legacyAgencyId, false);
+      else if (
         preview?.agencies.some((group) =>
           group.bots.some((bot) => bot.channel === "whatsapp"),
         )
       )
         await onImported();
       setPreview(null);
+      setLegacyAgency(false);
       setId("");
       setName("");
       setSlug("");
@@ -167,6 +219,7 @@ export function BotsManagement({
           onClick={() => {
             setError("");
             setPreview(null);
+            setLegacyAgency(false);
             setOpen(true);
           }}
         >
@@ -194,14 +247,20 @@ export function BotsManagement({
         closeDisabled={busy}
         width="sm"
         footer={
-          mode === "manual" || mode === "atrio" || preview ? (
+          mode === "manual" || mode === "atrio" || preview || legacyAgency ? (
             <button
               type="button"
               className="ui-button ui-button-primary"
               disabled={busy}
               onClick={() => void save()}
             >
-              {busy ? "Guardando…" : preview ? "Importar bots" : "Guardar"}
+              {busy
+                ? "Guardando…"
+                : legacyAgency
+                  ? "Vincular gerencia"
+                  : preview
+                    ? "Importar bots"
+                    : "Guardar"}
             </button>
           ) : (
             <button
@@ -214,9 +273,21 @@ export function BotsManagement({
                 try {
                   setPreview(await request("preview"));
                 } catch (e) {
-                  setError(
-                    e instanceof Error ? e.message : "No se pudo consultar.",
-                  );
+                  if (
+                    mode === "agency" &&
+                    e instanceof BotImportError &&
+                    e.code === DIRECTORY_UNAVAILABLE
+                  ) {
+                    setLegacyAgency(true);
+                  } else
+                    setError(
+                      e instanceof BotImportError &&
+                        e.code === DIRECTORY_UNAVAILABLE
+                        ? "La importación por propietario todavía no está disponible. Podés vincular cada gerencia mediante su Agency ID."
+                        : e instanceof Error
+                          ? e.message
+                          : "No se pudo consultar.",
+                    );
                 } finally {
                   setBusy(false);
                 }
@@ -236,7 +307,9 @@ export function BotsManagement({
             value={mode}
             onChange={(value) => {
               setMode(value);
+              setLegacyAgency(false);
               setPreview(null);
+              setName("");
               setId("");
               setError("");
             }}
@@ -245,7 +318,12 @@ export function BotsManagement({
               { value: "owner", label: "Owner ID · todas sus gerencias" },
               { value: "manual", label: "Gerencia manual" },
               ...(canAtrio
-                ? [{ value: "atrio", label: "Vincular asesor de Atrio existente" }]
+                ? [
+                    {
+                      value: "atrio",
+                      label: "Vincular asesor de Atrio existente",
+                    },
+                  ]
                 : []),
             ]}
           />
@@ -266,14 +344,19 @@ export function BotsManagement({
                 placeholder={mode === "atrio" ? "UUID del asesor" : "Ej.: 123"}
                 onChange={(e) => {
                   setId(e.target.value);
+                  setLegacyAgency(false);
                   setPreview(null);
                 }}
               />
             </label>
           )}
-          {mode === "manual" && (
+          {(mode === "manual" || legacyAgency) && (
             <label className="block space-y-1 text-xs text-zinc-400">
-              <span>Nombre de la gerencia</span>
+              <span>
+                {legacyAgency
+                  ? "Nombre de la gerencia (opcional)"
+                  : "Nombre de la gerencia"}
+              </span>
               <input
                 className={field}
                 disabled={busy}
@@ -282,6 +365,18 @@ export function BotsManagement({
                 onChange={(e) => setName(e.target.value)}
               />
             </label>
+          )}
+          {legacyAgency && (
+            <div
+              role="status"
+              className="rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-0)] p-3 text-xs leading-relaxed text-[var(--color-text-soft)]"
+            >
+              Podés vincular esta gerencia y sincronizar sus teléfonos de
+              WhatsApp como antes. El detalle completo de bots todavía no está
+              disponible.
+              {canAtrio &&
+                " Para Atrio, elegí «Vincular asesor de Atrio existente»."}
+            </div>
           )}
           {mode === "atrio" && (
             <label className="block space-y-1 text-xs text-zinc-400">
