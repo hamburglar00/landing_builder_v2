@@ -11,16 +11,21 @@
   ],
   "checks": {
     "unit_contracts": "17/17 PASS (botsImportRoute + botsWorkspace)",
-    "browser": "6/6 PASS, 16 comprobaciones por viewport en Chromium/WebKit a 320/390/1280 px: incluye no fallback en errores gen?ricos ni Owner ID, sincronizaci?n exacta, repetici?n sin escritura y conflicto sin sincronizaci?n.",
+    "browser": "6/6 PASS, 16 comprobaciones por viewport en Chromium/WebKit a 320/390/1280 px: incluye no fallback en errores genéricos ni Owner ID, sincronización exacta, repetición sin escritura y conflicto sin sincronización.",
     "typecheck": "PASS",
     "eslint": "PASS en archivos de lógica modificados",
-    "encoding": "PASS"
+    "encoding": "PASS",
+    "build": "Vercel production build PASS"
   },
   "production": {
-    "status": "PENDING",
+    "status": "READY, promovido y dominio verificado",
     "previous_deployment": "dpl_3yX1aDBF4nmukeg29M7sFDqpEuKk",
     "migration_required": false,
-    "edge_functions_changed": false
+    "edge_functions_changed": false,
+    "commit": "8aa021d",
+    "deployment": "dpl_Fu7CQ5Ww1SAYovXjPi7D9R2Yi4Ez",
+    "url": "https://mkt.panelbotadmin.com",
+    "verification": "Vercel inspect del dominio corresponde al deployment nuevo. Login HTTP 200, import sin sesión HTTP 401 y origen ajeno HTTP 403. La vinculación funcional se probó con transportes simulados; no se escribieron datos reales."
   },
   "local_only": [
     "API2 y Panel3 conservados locales; perfiles y validaciones en docs/validation/permission-presets-20261105.json de cada repositorio."
