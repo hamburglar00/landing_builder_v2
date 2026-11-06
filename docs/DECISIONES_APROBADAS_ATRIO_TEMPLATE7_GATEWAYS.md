@@ -1,5 +1,11 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Entrega integral y publicación de API2/Panel3 en Git (05/11/2026)
+
+- El usuario autorizó mantener Builder, Atrio y los cuatro gateways completamente publicados, incluidas funciones y migraciones; además autorizó pull, integración, commit y push de API2 y Panel3. Reemplaza la restricción previa de no subir estos dos repositorios. Su base productiva y despliegue quedan a cargo del programador con la guía de migraciones de API2.
+- Auditar también las funciones de Builder con imports compartidos. Publicadas `conversions-test` v15 y `whatsapp-cloud-send-message` v4 desde las fuentes existentes; conservar autenticación y configuración productivas. Las aplicaciones ya publicadas y las migraciones actuales no requieren republicaciones sin cambios.
+- El mapa manual de clientes no se restaura: la vinculación continúa siendo explícita por el usuario. No modificar contraseñas, cuentas reales ni operaciones financieras para validar el release.
+
 ### Confirmaciones del widget, chips y lenguaje de Builder (05/11/2026)
 
 - Además del mensaje de chat, mostrar «¡Fichas cargadas!» al acreditar una carga y «¡Premio pagado!» al confirmar un pago, con felicitación y sin instrucciones de actualizar en el premio. Adaptar el modal al tema del asesor: Atrio, WhatsApp o plataforma. Cierre con X, Escape o «ENTENDIDO», sin recargar ni ejecutar operaciones.
