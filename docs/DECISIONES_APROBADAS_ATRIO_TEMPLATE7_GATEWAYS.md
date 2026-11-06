@@ -1109,3 +1109,11 @@ Versiones publicadas, evidencia y referencias de rollback: [publicación de recu
 - El inventario visual opcional no convierte una sincronización válida de teléfonos en un error cuando el endpoint está ausente. Otras fallas se siguen mostrando. Atrio conserva la opción de vincular un asesor existente.
 - El usuario aprobó perfiles iniciales editables Cajero / Asistente, Marketing, Full Carga, Descargas y Personalizado en Panel3. Se muestran dependencias de permisos y se rechazan acciones de crear/editar/eliminar bots sin un tipo elegido en ambos extremos. Los perfiles respetan los permisos delegables; no cambian roles antiguos. Descargas habilita pagar/cancelar explícitamente, ningún perfil habilita retiros de saldo ni transferencias.
 - API2 y Panel3 permanecen locales. La corrección de Builder no requiere migraciones ni funciones Edge; pruebas y publicación en `validation/agency-link-permission-presets-20261105.json`.
+
+
+## 2026-11-05 — Uso de WhatsApp MKT administrado en PBAdmin
+Aprobado por el usuario: los usuarios de marketing eligen en el alta/edición de sus bots MKT WhatsApp entre **WhatsApp publicitario** (default) y **WhatsApp de venta**. API2 es la autoridad después de una importación inicial de las clasificaciones manuales de Builder. La importación compara teléfono y gerencia; preserva ventas actuales, rechaza contradicciones y deja publicitarios los bots sin antecedente. No aplica a Atrio, Full Carga, Ads, Asistente ni teléfonos manuales.
+
+Builder sigue admitiendo el contrato anterior durante el despliegue escalonado, sin sobreescribir clasificaciones manuales. Al recibir `mkt.whatsapp_details` usa el valor explícito y guarda `pbadmin_manager_id`: el campo pasa a verse como administrado en PBAdmin. Se mantienen estado manual activo/inactivo, contadores y restricciones publicitarias de los teléfonos de venta. La sincronización no agrega llamadas al flujo público de creación de usuario/gateway.
+
+Se agrega un endpoint privado de solo lectura, autenticado con el secreto de Extensiones existente, para exportar el snapshot fresco anterior a la migración de API2. Devuelve hashes de teléfonos y clasificaciones; no devuelve contraseñas, tokens ni números en texto plano. API2/Panel3 los despliega el programador con la guía actualizada de nueve migraciones.

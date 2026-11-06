@@ -48,6 +48,7 @@ export async function persistImport(
             role: bot.role,
             active: bot.active,
             phone: bot.phone,
+            ...(bot.whatsapp_usage ? { whatsapp_usage: bot.whatsapp_usage } : {}),
             advisor_id: null,
             advisor_slug: null,
           })),

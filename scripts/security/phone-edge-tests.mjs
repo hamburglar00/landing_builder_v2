@@ -34,6 +34,8 @@ export function edgeHandler(name,api,{historical=false}={}) {
   const compile=source=>ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
   const helper={exports:{}};
   runInNewContext(compile(readFileSync(join(root,'supabase/functions/_shared/phone-administration.ts'),'utf8')),{...helper,URL});
+  const usage = { exports: {} };
+  runInNewContext(compile(readFileSync(join(root, 'supabase/functions/_shared/mkt-whatsapp-usage.ts'), 'utf8')), usage);
   let serve;
   const file=`supabase/functions/${name}/index.ts`;
   const source=historical?execFileSync('git',['show',`d7d57637032b02f93639481d8483b1800ad1bac3:${file}`],{cwd:root,encoding:'utf8',windowsHide:true}):readFileSync(join(root,file),'utf8');
@@ -41,6 +43,7 @@ export function edgeHandler(name,api,{historical=false}={}) {
     exports:{},require:specifier=>{
       if(specifier==='https://esm.sh/@supabase/supabase-js@2')return {createClient:()=>client};
       if(specifier==='../_shared/phone-administration.ts')return helper.exports;
+      if(specifier==='../_shared/mkt-whatsapp-usage.ts')return usage.exports;
       throw Error('Unapproved handler dependency');
     },
     Deno:{serve:fn=>{serve=fn;},env:{get:key=>({SUPABASE_URL:'http://phase1b3.invalid',SERVICE_ROLE_KEY:'synthetic-backend',CRON_SECRET:syntheticCron,ASESADMIN_BASE_URL:'http://vendor.phase1b3.invalid'}[key])}},

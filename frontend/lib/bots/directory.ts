@@ -10,6 +10,7 @@ export type DirectoryBot = {
   role: string;
   active: boolean;
   phone: string | null;
+  whatsapp_usage?: "acquisition" | "follow_up";
   advisor_id: string | null;
   advisor_slug: string | null;
 };
@@ -83,6 +84,7 @@ export function parseImportDirectory(
       typeof bot.active !== "boolean" ||
       typeof bot.name !== "string" ||
       typeof bot.role !== "string" ||
+      (bot.whatsapp_usage !== undefined && (bot.channel !== "whatsapp" || bot.role !== "mkt" || !["acquisition", "follow_up"].includes(bot.whatsapp_usage))) ||
       (bot.phone !== null &&
         (typeof bot.phone !== "string" || !/^\d{3,20}$/.test(bot.phone)))
     )

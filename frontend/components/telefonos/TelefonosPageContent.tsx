@@ -32,6 +32,7 @@ export type GerenciaPhoneRow = {
   usage_count: number;
   kind: string;
   assignment_role?: AssignmentRole | null;
+  pbadmin_manager_id?: number | null;
   comment: string;
   messages_reset_at: string | null;
   last_seen_at: string;
@@ -242,7 +243,7 @@ export function TelefonosPageContent({
     const { data: phones, error: phonesError } = await supabase
       .from("gerencia_phones")
       .select(
-        "id, gerencia_id, phone, status, source_available, usage_count, kind, assignment_role, comment, messages_reset_at, last_seen_at, created_at, updated_at",
+        "id, gerencia_id, phone, status, source_available, usage_count, kind, assignment_role, pbadmin_manager_id, comment, messages_reset_at, last_seen_at, created_at, updated_at",
       )
       .in("gerencia_id", ids)
       .order("gerencia_id", { ascending: true })
@@ -693,6 +694,7 @@ export function TelefonosPageContent({
     row: GerenciaPhoneRow,
     nextRole: AssignmentRole,
   ) => {
+    if (row.pbadmin_manager_id) return;
     const currentRole = getAssignmentRole(row);
     if (currentRole === nextRole) return;
     if (
@@ -1257,6 +1259,7 @@ export function TelefonosPageContent({
                                 </td>
                                 <td className="px-3 py-2">
                                   <select
+                                    disabled={!!p.pbadmin_manager_id}
                                     value={assignmentRole}
                                     onChange={(e) =>
                                       void handleAssignmentRoleChange(
@@ -1281,6 +1284,7 @@ export function TelefonosPageContent({
                                       </option>
                                     ))}
                                   </select>
+                                  {p.pbadmin_manager_id && <p className="mt-1 text-xs text-zinc-400">Se administra en PBAdmin · Bot #{p.pbadmin_manager_id}</p>}
                                 </td>
                                 <td className="px-3 py-2 text-zinc-300">
                                   {p.usage_count}

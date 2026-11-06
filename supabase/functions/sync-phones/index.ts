@@ -1,6 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { authorizePhoneAdministration } from "../_shared/phone-administration.ts";
 
+import { parseMktWhatsappUsage, resolvePhoneUsage, phoneUsageBatches } from "../_shared/mkt-whatsapp-usage.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -21,6 +23,7 @@ type ExternalResponse = {
     whatsapp?: string[];
   };
   mkt?: {
+    whatsapp_details?: unknown;
     whatsapp?: string[];
   };
   assistant?: {
@@ -253,6 +256,15 @@ Deno.serve(async (req) => {
       const mktWhatsapps = json.mkt?.whatsapp ?? [];
       const assistantWhatsapps = json.assistant?.whatsapp ?? [];
 
+      let mktUsage;
+      try {
+        mktUsage = parseMktWhatsappUsage(json.mkt?.whatsapp_details, mktWhatsapps,
+          (phone) => normalizeAndValidatePhone(phone, workspaceCurrency));
+      } catch {
+        // Reject this snapshot before changing any phones, including availability.
+        console.error(`Uso MKT inválido para gerencia ${g.id}; se conserva el estado anterior.`);
+        continue;
+      }
       const phoneKindMap = new Map<string, PhoneKind>();
 
       for (const phone of cargaWhatsapps) {
@@ -281,7 +293,7 @@ Deno.serve(async (req) => {
 
       const { data: existingPhones, error: existingPhonesError } = await supabaseAdmin
         .from("gerencia_phones")
-        .select("phone,status,source_available,assignment_role")
+        .select("phone,status,source_available,assignment_role,pbadmin_manager_id")
         .eq("gerencia_id", g.id);
 
       if (existingPhonesError) {
@@ -294,7 +306,7 @@ Deno.serve(async (req) => {
 
       const existingStateByPhone = new Map<
         string,
-        { status: string; sourceAvailable: boolean; assignmentRole: "acquisition" | "follow_up" }
+        { status: string; sourceAvailable: boolean; assignmentRole: "acquisition" | "follow_up"; managerId: number | null }
       >();
       for (const row of existingPhones ?? []) {
         const phone = normalizeAndValidatePhone(row.phone, workspaceCurrency);
@@ -307,6 +319,7 @@ Deno.serve(async (req) => {
           status: status === "inactive" ? "inactive" : "active",
           sourceAvailable: row.source_available !== false,
           assignmentRole,
+          managerId: row.pbadmin_manager_id ?? null,
         });
       }
 
@@ -319,6 +332,7 @@ Deno.serve(async (req) => {
           gerencia_id: g.id,
           phone,
           kind,
+          ...resolvePhoneUsage(kind, mktUsage.get(phone), existing),
           status,
           source_available: true,
           last_seen_at: nowIso,
@@ -329,23 +343,16 @@ Deno.serve(async (req) => {
       // Para teléfonos ya disponibles preservamos el status manual activo/inactivo.
       // Si antes no estaban disponibles por API y vuelven a aparecer, se reactivan.
       if (syncedRows.length > 0) {
-        const { error: upsertError } = await supabaseAdmin
-          .from("gerencia_phones")
-          .upsert(syncedRows, {
-            onConflict: "gerencia_id,phone",
-          });
-
-        if (upsertError) {
-          console.error(
-            "Error al hacer upsert de gerencia_phones:",
-            upsertError,
-          );
-          continue;
+        let failed = false;
+        for (const batch of phoneUsageBatches(syncedRows, mktUsage)) {
+          const { error: upsertError } = await supabaseAdmin.from("gerencia_phones")
+            .upsert(batch, { onConflict: "gerencia_id,phone" });
+          if (upsertError) { console.error("Error al sincronizar gerencia_phones", upsertError); failed = true; break; }
         }
+        if (failed) continue;
 
         totalActivePhones += syncedRows.filter((row) => {
-          const existing = existingStateByPhone.get(row.phone);
-          return row.status === "active" && existing?.assignmentRole !== "follow_up";
+          return row.status === "active" && row.assignment_role !== "follow_up";
         }).length;
 
         // 3) Marcar como inactivos los que no vinieron en esta llamada.
