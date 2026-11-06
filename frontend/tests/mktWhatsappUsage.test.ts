@@ -1,3 +1,4 @@
+import { authorizeMktUsageExport } from "../lib/pbadmin/mkt-usage-auth.server";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
@@ -94,4 +95,16 @@ test("export paginates past 1000 rows, filters source and kind, and never return
   assert.equal(calls, 4);
   assert.ok(result.entries.every((e) => /^[a-f0-9]{64}$/.test(e.phoneHash)));
   assert.ok(!JSON.stringify(result).includes(rows[0].phone));
+});
+
+test("export authorization is independent of SSO and rejects absent or incorrect keys", () => {
+  const old = process.env.PBADMIN_MKT_USAGE_EXPORT_SECRET;
+  try {
+    delete process.env.PBADMIN_MKT_USAGE_EXPORT_SECRET;
+    assert.throws(() => authorizeMktUsageExport(new Request("https://example.invalid")), (error: any) => error.status === 503);
+    process.env.PBADMIN_MKT_USAGE_EXPORT_SECRET = "synthetic-export-key-32-characters-or-more";
+    assert.throws(() => authorizeMktUsageExport(new Request("https://example.invalid")), (error: any) => error.status === 401);
+    assert.throws(() => authorizeMktUsageExport(new Request("https://example.invalid", {headers:{"x-extension-secret":"wrong"}})), (error: any) => error.status === 401);
+    assert.doesNotThrow(() => authorizeMktUsageExport(new Request("https://example.invalid", {headers:{"x-extension-secret":process.env.PBADMIN_MKT_USAGE_EXPORT_SECRET}})));
+  } finally { if (old === undefined) delete process.env.PBADMIN_MKT_USAGE_EXPORT_SECRET; else process.env.PBADMIN_MKT_USAGE_EXPORT_SECRET = old; }
 });

@@ -8,16 +8,18 @@ Builder `sync-phones` consume metadatos completos y valida contradicciones antes
 ## Importación inicial
 Revisión de solo lectura: 150 MKT WhatsApp en API2; 111 coinciden por teléfono y gerencia, 39 quedan publicitarios por defecto. Seis bots actuales tienen venta; dos registros de venta históricos de Builder no coinciden con bots actuales y se conservan allí. Sin contradicciones. Es un inventario inicial: el programador debe exportar un snapshot fresco antes del paso 9, siguiendo API2 `docs/releases/20261105-deploy.md`.
 
-El endpoint privado `/api/pbadmin/mkt-whatsapp-usage` utiliza el secreto de Extensiones, pagina sin límite de 1000 y devuelve hashes SHA-256, gerencia y uso. El snapshot expira a las 24 h, se valida antes del primer DDL del lote y no se vuelve a importar tras registrar la migración.
+El endpoint privado `/api/pbadmin/mkt-whatsapp-usage` utiliza una clave privada exclusiva de exportación (`PBADMIN_MKT_USAGE_EXPORT_SECRET`), pagina sin límite de 1000 y devuelve hashes SHA-256, gerencia y uso. El snapshot expira a las 24 h, se valida antes del primer DDL del lote y no se vuelve a importar tras registrar la migración.
 
 ## Validación
 - Tipos TypeScript: API2, Panel3, Builder y Atrio; Deno check de sync-phones.
 - API2: contratos públicos/directorio, validación de rol/canal, snapshots contradictorios/vencidos; edición MKT por marketing y regresiones de cambios de canal Atrio.
 - MySQL 8.4 desechable: nueve migraciones en orden, importación por gerencia operativa de compra, default, otros tipos intactos, repetición sin deshacer una edición posterior.
-- Builder: 26 pruebas de sincronización real del handler, importación, compatibilidad, permisos y exportación de más de 1000 registros.
+- Builder: 27 pruebas de sincronización real del handler, importación, compatibilidad, permisos y exportación de más de 1000 registros.
 - PostgreSQL desechable: migración conserva datos; servicio modifica clasificación; JWT de usuario no cambia identidad/uso gestionado; estado manual y usos no gestionados siguen editables.
 - Atrio: 7 pruebas del directorio privado y su whitelist.
 - Panel3: 6 verificaciones Playwright contra el frontend real, anchos 390/1440, edición/payload, campo oculto en Atrio y default en alta. Todas las peticiones de negocio interceptadas; cero escrituras productivas.
 
 ## Publicación
 Migración de Builder `20261106011727_pbadmin_mkt_whatsapp_usage.sql` aplicada (mismo SQL probado). Edge `sync-phones` v31 desplegada, autenticación anterior conservada. API2/Panel3 quedan para el programador. No requiere cambios ni despliegues en gateways.
+
+La exportación funciona antes de habilitar SSO. Su clave ya fue configurada en Vercel y la contraparte está en el archivo privado `.local/builder-mkt-usage-export.env` de API2, excluido de Git. No se habilitó el autologin: falta configurar sus variables cuando el programador despliegue API2.
