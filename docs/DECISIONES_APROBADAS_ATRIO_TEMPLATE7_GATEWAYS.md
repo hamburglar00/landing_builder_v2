@@ -1,5 +1,12 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Acceso directo sin código de landing (06/11/2026)
+
+- Corregir el fallo confirmado del alta por `/286`: la cuenta se creó y Atrio devolvió la identidad, pero Rey rechazó `landing_promo_code = ''` al guardar el vínculo. La ausencia de landing debe llegar como `null` al adaptador de sesión.
+- Normalizar sólo código vacío/ausente en ingreso por gerencia y recuperación manual compartidos por los cuatro gateways; conservar intactos los códigos válidos, la identidad, validaciones y el recorrido template → gateway. Mantener la restricción de la base y no inventar una campaña.
+- Reintentar debe reutilizar la cuenta y el vínculo existentes. No cambiar datos, contraseñas ni crear otro jugador para reparar el incidente. Probar el adaptador real de Rey con PostgreSQL local y publicar también Ganamos+ en Worker. API2/Panel3 no requieren cambios ni migraciones para este arreglo.
+- Publicado en los cuatro gateways y el Worker de Ganamos+, con pruebas de PostgreSQL aisladas y verificación de las páginas públicas. [Pruebas, versiones y reversión](validation/gateway-promo-20261106/README.md).
+
 ### Logos de ingreso un 50 % más grandes (06/11/2026)
 
 - Ampliar los logos de los cuatro gateways a 1,5 veces su tamaño anterior, conservando las proporciones y el ancho disponible en pantallas angostas. Mantener las dimensiones de las tarjetas de ingreso y registro mediante un ajuste del espacio vertical.

@@ -1,0 +1,50 @@
+[
+  {
+    "repo": "landing-autologuin",
+    "project": "prj_ghTDVx014KSQ4ux6W1U9FGwvIkCj",
+    "name": "reydeases-gateway",
+    "repoId": 1409702598,
+    "commit": "db85fe1d4d18e0e222f6b61ba511e90e36189627",
+    "previousDeployment": "dpl_H3p2HUukn1yv6ZjLYcN4tdcG3F59",
+    "deployment": "dpl_7iSJ15qHbUG1bD6dX75rNyJnqjHV",
+    "url": "https://reydeases-gateway-46i9a55oc-juanclouds-projects.vercel.app",
+    "status": "READY",
+    "promoted": true
+  },
+  {
+    "repo": "ases-gateway",
+    "project": "prj_PsQQiZ4g6ASeW3Ai6dwrFqMorqnV",
+    "name": "ases-del-norte-gateway",
+    "repoId": 1414511935,
+    "commit": "19be86a470d28d628f7c699b4ddb9198f9d2cc11",
+    "previousDeployment": "dpl_AGhKhW9o3Mh2p5sdrzdoSmxHh8qU",
+    "deployment": "dpl_Ci9wCm1kKUbMntMk7Tfij8oZWv5G",
+    "url": "https://ases-del-norte-gateway-6rx33gufq-juanclouds-projects.vercel.app",
+    "status": "READY",
+    "promoted": true
+  },
+  {
+    "repo": "ganamos-gateway",
+    "project": "prj_jBlRjXJuYcJGKnFM0L1VhK3ONJyz",
+    "name": "ganamos-net-gateway",
+    "repoId": 1416344852,
+    "commit": "8e79ff96ffb5b8ae7dbbbfd3b909be910d9f4809",
+    "previousDeployment": "dpl_EQ3VW6bJBgwikNDjcV3xoECCP2tN",
+    "deployment": "dpl_Bnj4avpNr7dQvcMR1T2MUiVomY91",
+    "url": "https://ganamos-net-gateway-62tovzn3f-juanclouds-projects.vercel.app",
+    "status": "READY",
+    "promoted": true
+  },
+  {
+    "repo": "multi-skin-gateway",
+    "project": "prj_u6CqFHH6LWEy4z6CIDFXyFUJrk9B",
+    "name": "multi-skin-gateway",
+    "repoId": 1412433825,
+    "commit": "79316edf7343e578dfe55de3d1323f36b9065706",
+    "previousDeployment": "dpl_85PhMCJRvh56CNCkzaJTnsgHw7kW",
+    "deployment": "dpl_3jKrFSgBShDaTvZR9Z3iAp3dJn8m",
+    "url": "https://multi-skin-gateway-mcxu9s7yc-juanclouds-projects.vercel.app",
+    "status": "READY",
+    "promoted": true
+  }
+]

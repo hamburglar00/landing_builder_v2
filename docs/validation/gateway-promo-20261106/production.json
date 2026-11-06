@@ -1,0 +1,30 @@
+[
+  {
+    "repo": "landing-autologuin",
+    "commit": "db85fe1d4d18e0e222f6b61ba511e90e36189627",
+    "deployment": "dpl_7iSJ15qHbUG1bD6dX75rNyJnqjHV",
+    "readyState": "READY",
+    "verifiedAt": "2026-11-06T20:44:23.751Z"
+  },
+  {
+    "repo": "ases-gateway",
+    "commit": "19be86a470d28d628f7c699b4ddb9198f9d2cc11",
+    "deployment": "dpl_Ci9wCm1kKUbMntMk7Tfij8oZWv5G",
+    "readyState": "READY",
+    "verifiedAt": "2026-11-06T20:44:30.522Z"
+  },
+  {
+    "repo": "ganamos-gateway",
+    "commit": "8e79ff96ffb5b8ae7dbbbfd3b909be910d9f4809",
+    "deployment": "dpl_Bnj4avpNr7dQvcMR1T2MUiVomY91",
+    "readyState": "READY",
+    "verifiedAt": "2026-11-06T20:44:34.746Z"
+  },
+  {
+    "repo": "multi-skin-gateway",
+    "commit": "79316edf7343e578dfe55de3d1323f36b9065706",
+    "deployment": "dpl_3jKrFSgBShDaTvZR9Z3iAp3dJn8m",
+    "readyState": "READY",
+    "verifiedAt": "2026-11-06T20:44:38.576Z"
+  }
+]
