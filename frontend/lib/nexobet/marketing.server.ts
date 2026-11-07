@@ -1,7 +1,7 @@
 import "server-only";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { adminDb } from "../pbadmin/provider.server";
-import { syncBuilder } from "../pbadmin/sync.server";
+import { persistImport } from "../bots/persist-import.server";
 import {
   NexoBridgeError,
   uuid,
@@ -46,9 +46,73 @@ export async function marketingOperation(
   if (blocked.error || blocked.data !== false)
     throw new NexoBridgeError("account_unavailable", 403);
 
-  if (operation === "initialize") {
-    await syncBuilder(identity.ownerId, client);
-    return { ready: true, builderId: client };
+  async function syncDirectory() {
+    const advisor = payload.advisor as {
+      id: string;
+      name: string;
+      slug: string;
+      status: string;
+      revision: string;
+    };
+    assert(
+      advisor &&
+        advisor.id === identity.advisorId &&
+        typeof advisor.name === "string" &&
+        advisor.name.length <= 200 &&
+        typeof advisor.slug === "string" &&
+        /^[a-z0-9][a-z0-9_-]{0,80}$/.test(advisor.slug) &&
+        ["disponible", "ausente"].includes(advisor.status) &&
+        typeof advisor.revision === "string" &&
+        Number.isFinite(Date.parse(advisor.revision)),
+      "advisor_unavailable",
+    );
+    const result = await persistImport(
+      db,
+      client,
+      "ARS",
+      "import",
+      {
+        scope: { kind: "owner", id: identity.ownerId },
+        agencies: [],
+        advisors: [advisor],
+        unassigned: identity.connections.map((c) => ({
+          manager_id: c.managerId,
+          name: `Full Carga #${c.managerId}`,
+          agency_id: c.agencyId,
+          owner_id: identity.ownerId,
+          platform: c.platform,
+          channel: "atrio",
+          role: "carga",
+          active: true,
+          phone: null,
+          advisor_id: advisor.id,
+          advisor_slug: advisor.slug,
+        })),
+      },
+      true,
+    );
+    if (result.warnings.length)
+      throw new NexoBridgeError("directory_unavailable", 503);
+    const revision = new Date(advisor.revision).toISOString();
+    const updated = await db
+      .from("atrio_clients")
+      .update({
+        display_name: advisor.name,
+        slug: advisor.slug,
+        atrio_status: advisor.status,
+        directory_revision: revision,
+        directory_synced_at: new Date().toISOString(),
+      })
+      .eq("user_id", client)
+      .eq("atrio_id", advisor.id)
+      .eq("workspace_currency", "ARS")
+      .or(`directory_revision.is.null,directory_revision.lte.${revision}`);
+    if (updated.error) throw new NexoBridgeError("directory_unavailable", 503);
+  }
+
+  if (operation === "initialize" || operation === "directory_changed") {
+    await syncDirectory();
+    return { ready: true, synced: true, builderId: client };
   }
   if (operation === "overview") {
     const page = Math.max(1, Math.min(100000, Number(payload.page) || 1));
@@ -189,7 +253,7 @@ export async function marketingOperation(
         .maybeSingle();
       assert(!ownPixel.error && ownPixel.data, "pixel_unavailable");
     }
-    await syncBuilder(identity.ownerId, client);
+    await syncDirectory();
     const advisor = await db
       .from("atrio_clients")
       .select("id,slug,atrio_id")

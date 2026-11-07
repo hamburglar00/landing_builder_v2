@@ -1,11 +1,5 @@
 import "server-only";
-import {
-  createPrivateKey,
-  createPublicKey,
-  sign,
-  verify,
-  randomUUID,
-} from "node:crypto";
+import { createPublicKey, verify } from "node:crypto";
 import { adminDb } from "../pbadmin/provider.server";
 export const uuid = (value: unknown): value is string =>
   typeof value === "string" &&
@@ -68,51 +62,41 @@ export type NexoBuilderIdentity = {
   advisorId: string | null;
   connections: { platform: number; agencyId: number; managerId: number }[];
 };
+/** Called only after readNexoRequest verifies the NexoBet server signature. */
 export async function nexoIdentity(
-  accountId: string,
+  payload: Record<string, unknown>,
 ): Promise<NexoBuilderIdentity> {
-  const key = process.env.NEXOBET_API2_PRIVATE_KEY,
-    origin = process.env.PBADMIN_EXTENSIONS_API_ORIGIN;
-  if (!key || !origin) throw new NexoBridgeError("integration_pending", 503);
-  const url = new URL("/api/v1/nexobet/bridge", origin);
-  if (url.protocol !== "https:")
-    throw new NexoBridgeError("integration_pending", 503);
-  const body = JSON.stringify({
-      operation: "builder_context",
-      payload: { accountId },
-    }),
-    timestamp = String(Date.now()),
-    nonce = randomUUID();
-  const signature = sign(
-    null,
-    Buffer.from(`${timestamp}.${nonce}.${body}`),
-    createPrivateKey({
-      key: Buffer.from(key, "base64"),
-      format: "der",
-      type: "pkcs8",
-    }),
-  ).toString("base64url");
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-nexobet-key-id": "builder-v1",
-      "x-nexobet-timestamp": timestamp,
-      "x-nexobet-nonce": nonce,
-      "x-nexobet-signature": signature,
-    },
-    body,
-    cache: "no-store",
-    redirect: "error",
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!response.ok) throw new NexoBridgeError("account_unavailable", 403);
-  const identity = await response.json();
+  const identity = payload.scope as NexoBuilderIdentity;
   if (
+    !identity ||
     identity.active !== true ||
+    !Number.isSafeInteger(identity.ownerId) ||
+    identity.ownerId <= 0 ||
+    !Number.isSafeInteger(identity.userId) ||
+    identity.userId <= 0 ||
     !uuid(identity.builderId) ||
-    !uuid(identity.advisorId)
+    !uuid(identity.advisorId) ||
+    !Array.isArray(identity.connections) ||
+    identity.connections.length > 4 ||
+    identity.connections.some(
+      (c) =>
+        ![1, 2, 5, 7].includes(c.platform) ||
+        !Number.isSafeInteger(c.agencyId) ||
+        c.agencyId <= 0 ||
+        !Number.isSafeInteger(c.managerId) ||
+        c.managerId <= 0,
+    ) ||
+    new Set(identity.connections.map((c) => c.platform)).size !==
+      identity.connections.length
   )
-    throw new NexoBridgeError("builder_not_connected", 409);
+    throw new NexoBridgeError("account_unavailable", 403);
+  const { data, error } = await adminDb()
+    .from("pbadmin_accounts")
+    .select("account_id,legacy,ready")
+    .eq("owner_id", identity.ownerId)
+    .eq("account_id", identity.builderId)
+    .maybeSingle();
+  if (error || !data?.ready || data.legacy)
+    throw new NexoBridgeError("account_unavailable", 403);
   return identity;
 }

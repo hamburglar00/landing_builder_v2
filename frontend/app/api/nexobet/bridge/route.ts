@@ -10,12 +10,16 @@ export async function POST(request: Request) {
   try {
     const { operation, payload } = await readNexoRequest(request);
     if (
-      !["overview", "initialize", "save_pixel", "save_landing"].includes(
-        operation,
-      )
+      ![
+        "overview",
+        "initialize",
+        "save_pixel",
+        "save_landing",
+        "directory_changed",
+      ].includes(operation)
     )
       throw new NexoBridgeError("invalid_operation", 422);
-    const identity = await nexoIdentity(payload.accountId);
+    const identity = await nexoIdentity(payload);
     return Response.json(
       await marketingOperation(operation, payload, identity),
       { headers: { "Cache-Control": "no-store" } },
