@@ -1182,3 +1182,16 @@ Se retiran el endpoint privado de exportación y su clave dedicada. El autologin
 - Builder recibe contexto obtenido directamente de API2 y un perfil leído directamente de Atrio por el servidor de NexoBet; valida su vínculo local y conserva edición/publicación/acceso comercial. Se elimina su clave privada de consulta a API2, ahora innecesaria.
 - Rey incorpora un lector firmado exclusivo para NexoBet, con verificación del asesor del registro cifrado. Es una excepción propia del proveedor: no cambia formularios, SDK, login ni comportamiento común de los cuatro gateways. Los demás proveedores conservan sus credenciales en API2; sus despliegues no necesitan modificarse.
 - API2 y Panel3 siguen locales. No hay migraciones ni Edge Functions nuevas para este ajuste. No afirmar mejoras en milisegundos hasta medir operaciones reales después del despliegue de API2.
+
+
+### NexoBet: servicios propios y módulos versionados (07/11/2026)
+
+- El usuario reemplazó expresamente la arquitectura anterior: NexoBet incorpora el chat completo en su propio Supabase y el marketing acotado en su propio servidor. No crea cuentas operativas en Atrio ni clientes de Builder. No copia conversaciones, clientes ni secretos de esos productos. API2 permanece externo y local hasta la publicación del programador.
+- La identidad de acceso y del asesor de NexoBet coincide; el superadmin sólo administra. Se usa cifrado, claves push y bot de Telegram propios. La clave maestra de Atrio permanece intacta.
+- Template 9 y módulos de Atrio se distribuyen como código versionado, con manifiestos, revisión y pruebas antes de actualizar. Los productos conservan publicaciones independientes.
+- Los cuatro gateways admiten ambas bases de chat. La gerencia se resuelve en servidor; el handoff autenticado, la sesión cifrada o el vínculo persistido guardan el backend. No se acepta un origen de chat arbitrario del navegador. Las sesiones anteriores siguen en Atrio y conservan sus marcas, temas, credenciales y enlaces.
+- El ingreso manual sin gerencia recupera exclusivamente identidades existentes después de autenticar en la plataforma. Si hay ambigüedad entre bases, se rechaza. El proceso de template existente no realiza la consulta adicional de propiedad usada en /agency_id.
+- Tema global Violeta real/Turquesa en Configuración del superadmin, sin selector en el ingreso. Se incorporan los logos entregados. Los gateways mantienen obligatoriamente la identidad de cada plataforma.
+- Registro cerrado hasta API2 publicado y correo transaccional comprobado. No se hacen altas reales ni movimientos de dinero como pruebas.
+- Publicado NexoBet con sus 11 migraciones y funciones propias de push/Telegram, más los cuatro gateways en Vercel y Ganamos+ en Worker. La consulta de propiedad usa redirección manual compatible con Cloudflare y sólo acepta `{owned:false}` explícito para conservar Atrio; el lector legado de credenciales de Rey queda limitado a Atrio.
+- Validación al recuperar la sesión: 1.887 pruebas de gateways, TypeScript en los cuatro, 6 pruebas PostgreSQL descartables, prueba real Worker y 6 del adaptador; manifiestos versionados y pruebas de servicios NexoBet aprobados. [Estado, versiones, límites y reversión](../../NexoBet/docs/ENTREGA.md). API2/Panel3 permanecen locales; dominio y correo siguen pendientes.
