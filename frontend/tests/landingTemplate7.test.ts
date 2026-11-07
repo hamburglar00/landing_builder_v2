@@ -13,7 +13,7 @@ import { switchLandingTemplate } from "../lib/landing/templateVariants";
 
 const publicRuntime = buildPublicLandingRuntimeSource();
 
-test("el editor muestra el canal fijo y conserva el selector de casino de Template 7", () => {
+test("el editor muestra el canal fijo y conserva el selector de plataforma de Template 7", () => {
   const props = { setConfig: () => undefined, atrioClients: [] };
   const template7 = renderToStaticMarkup(createElement(CtaDestinationSection, {
     ...props,
@@ -25,12 +25,13 @@ test("el editor muestra el canal fijo y conserva el selector de casino de Templa
   }));
 
   assert.doesNotMatch(template7, /cliente\(s\) Atrio disponibles/);
-  assert.match(template7, /Casino/);
+  assert.match(template7, /Plataforma/);
+  assert.doesNotMatch(template7, /Casino/);
   assert.match(template7, /aria-haspopup="listbox"/);
   assert.doesNotMatch(template7, /<select\b/);
   assert.match(template7, />Atrio</);
   assert.match(template2, />WhatsApp</);
-  assert.doesNotMatch(template2, /Casino|aria-haspopup="listbox"/);
+  assert.doesNotMatch(template2, /Plataforma|aria-haspopup="listbox"/);
 });
 
 test("la plantilla 7 conserva su configuración separada de la 2", () => {
