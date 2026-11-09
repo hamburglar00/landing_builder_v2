@@ -491,7 +491,7 @@ try {
 
       const managed = page.getByRole("row").filter({ hasText: "54 9 3511 23-4567" });
       assert.equal(await managed.locator('td').nth(6).innerText(),'mkt','type comes from the phone sync, not the general inventory');
-      assert.equal(await managed.locator('td').nth(7).innerText(),'WhatsApp de venta','phone usage remains authoritative');
+      assert.equal(await managed.locator('td').nth(7).innerText(),'Ventas','phone usage remains authoritative');
       await managed.getByRole("button", { name: /^Acciones de / }).click();
       assert.equal(await page.getByRole("menuitem", { name: "Cambiar uso…", exact: true }).isDisabled(), true, "managed usage retains PBAdmin ownership");
       await page.keyboard.press("Escape");

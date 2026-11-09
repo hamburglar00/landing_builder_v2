@@ -75,7 +75,7 @@ const numberFormat = new Intl.NumberFormat("es-AR");
 const labels = ["GERENCIA", "ID", "ASESOR", "CANAL", "PLATAFORMA", "BOT", "TIPO", "USO", "ESTADO", "CONTADOR", "CHATS", "HISTÓRICO"];
 const NotApplicable = () => <span className={styles.notApplicable}>N.A.</span>;
 const Separator = () => <div role="separator" className={styles.separator} />;
-const roleLabel = (phone: GerenciaPhoneRow) => phone.assignment_role === "follow_up" ? "WhatsApp de venta" : "WhatsApp publicitario";
+const roleLabel = (phone: GerenciaPhoneRow) => phone.assignment_role === "follow_up" ? "Ventas" : "Publicitario";
 const numeric = (value: number | null | undefined) => value == null ? <NotApplicable /> : numberFormat.format(value);
 const isValidPhone = (phone: string, workspace?: string) => /^[+\d\s().-]+$/.test(phone) && (workspace === "PYG" ? /^595\d{9}$/ : /^549\d{10}$/).test(phone.replace(/\D/g, ""));
 

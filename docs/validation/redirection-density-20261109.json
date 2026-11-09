@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-09",
+  "scope": ["LandingBuilder directory presentation"],
+  "changes": [
+    "Remove the border around the common horizontal-scroll container. Preserve individual agency borders, gaps and expanded-group highlight.",
+    "Reduce body-cell vertical padding from 11 to 7 px per side, retaining the wider header, font size and action targets.",
+    "Use Publicitario and Ventas in the Usage column; acquisition/follow_up values, editing controls and operations are unchanged."
+  ],
+  "verification": {
+    "productionBuildAndTypeScript": "passed",
+    "encodingAndWhitespace": "passed",
+    "browsers": ["chromium", "webkit"],
+    "roles": ["client", "admin"],
+    "viewportWidths": [320, 390, 768, 1280, 1440],
+    "responsiveCases": 20,
+    "observedBodyRowHeight": { "desktop": 48, "mobile": 56 },
+    "mobileActionTargetHeight": 40,
+    "bodyFontSize": 12,
+    "containerBorderWidth": 0,
+    "checks": "Expanded groups, both usage labels, header/body alignment, full single-line text, no text escaping its cell, horizontal overflow contained within the table, no page overflow, no JavaScript errors or business writes."
+  },
+  "migrationsRequired": false,
+  "otherProductsChanged": false,
+  "publicationTarget": {
+    "branch": "main",
+    "project": "landing-builder-v2-k259",
+    "domains": ["constructor.panelbotadmin.com", "mkt.panelbotadmin.com"]
+  },
+  "artifacts": ".vercel/redirection-density-20261109/ (ignored responsive measurements, screenshots and release evidence)"
+}
