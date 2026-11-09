@@ -1,5 +1,13 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Redirección: gerencias separadas, avisos y borrado por lotes (09/11/2026)
+
+- Mantener la tabla compacta con columnas comunes, pero presentar cada gerencia como un bloque separado mediante espacio, borde y esquinas; al desplegarla, resaltar la cabecera y el borde del grupo completo. Redirección va inmediatamente debajo de Landings en ambos menús laterales.
+- Distinguir los teléfonos guardados de los bots del inventario PBAdmin que no tienen número asociado en Builder. Resumen «1 bot sin número» y fila «Bot ID · Sin teléfono», con el nombre técnico en la ayuda. No borrar bots de PBAdmin mediante la acción de eliminar teléfonos ni ocultar el inventario pendiente. Explicar esa diferencia en la confirmación del borrado.
+- El borrado global debe cubrir todo el workspace, incluso otras páginas, con la misma autorización y RLS. Corregir su timeout mediante índices de las referencias al teléfono y una función invoker que borra hasta 25 teléfonos inactivos por llamada. El servidor recorre lotes y devuelve continuación tras su presupuesto temporal; el cliente completa las continuaciones. No informar éxito si falla un lote; reintentar completa los pendientes. Conservar las acciones existentes de las claves foráneas y los teléfonos activos.
+- Usar avisos verdes para resultados exitosos y rojos para errores. Permanecen unos segundos y se desvanecen; no reiniciar el temporizador con la cuenta regresiva de sincronización. Un componente común cubre las acciones de Redirección y los errores de guardado de ambos editores.
+- Alcance exclusivo de LandingBuilder; dos migraciones aditivas de Builder, sin cambios de Atrio, NexoBet, gateways, Worker ni finanzas. Las verificaciones productivas de borrado usan transacciones revertidas. [Validación](validation/redirection-cleanup-20261109.json).
+
 ### Editor cerrado y columnas de Redirección en Builder (09/11/2026)
 
 - Todas las tarjetas colapsables del editor arrancan cerradas en las nueve plantillas, tanto para cliente como para administrador. Ocultar temporalmente Resetear y Exportar JSON, conservando su implementación. Colocar una sola pareja de acciones al pie, alineadas a la derecha: Eliminar landing con papelera roja y Guardar con disquete. Conservar validaciones, borradores, permisos y confirmación de borrado, también en landings externas.

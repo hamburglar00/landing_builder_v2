@@ -34,6 +34,7 @@ import {
   LandingTemplateSection,
 } from "@/components/landing/LandingEditorForm";
 import { PublishTargetSection } from "@/components/landing/PublishTargetSection";
+import { ActionNotice } from "@/components/ui/ActionNotice";
 import { LandingEditorActions } from "@/components/landing/LandingEditorActions";
 import { LandingUrlParametersCard } from "@/components/landing/LandingUrlParametersCard";
 import { LandingMarketCountryField } from "@/components/landing/LandingMarketCountryField";
@@ -525,11 +526,7 @@ export default function DashboardLandingEditarPage() {
     <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start xl:gap-6">
       {/* Columna izquierda: scroll normal */}
       <div className="min-w-0 flex-1 space-y-8 pb-8 xl:pr-4">
-        {saveError && (
-          <p className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-sm text-[var(--color-danger)]" role="alert">
-            {saveError}
-          </p>
-        )}
+        <ActionNotice message={saveError} tone="error" />
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Link
             href="/dashboard/landings"

@@ -34,6 +34,7 @@ try{
  insert into atrio_clients(id,user_id,atrio_id,slug,display_name,workspace_currency)values('${advisor}','${owner}','${advisor}','gera','Gera','ARS');
  insert into conversions_config values('${owner}',true,null,now()),('${other}',false,null,now());`);
  await db.exec(await readFile(new URL('../supabase/migrations/20261109185337_bots_directory_pagination_and_daily_reset.sql',import.meta.url),'utf8'));
+ await db.exec(await readFile(new URL('../supabase/migrations/20261109214729_batch_inactive_workspace_phone_cleanup.sql',import.meta.url),'utf8'));
  await db.query('select cache_atrio_bot_directory($1)',[JSON.stringify([{id:advisor,connections:[{connection_id:owner,agency_id:1,agency_name:'Group 001',active:true,manager_id:1035}]}])]);
  await db.exec(`set role authenticated;select set_config('request.jwt.claim.sub','${owner}',false)`);
  const page=async(n=1,search='',channel='all',active=false,workspace='ARS')=>(await db.query('select read_bots_directory_page($1,$2,$3,$4,$5,true) as data',[workspace,n,search,channel,active])).rows[0].data;
@@ -53,9 +54,14 @@ try{
  const allScope=await page(1,'Foreign secret');assert.equal(allScope.groups[0].atrioBots.length,0,'same agency owned by another client never receives these advisors');checks++;
  await db.query('delete from gerencias where id=122');
  await db.query('select cache_atrio_bot_directory($1)',[JSON.stringify([{id:advisor,connections:[{connection_id:owner,agency_id:1,agency_name:'Group 001',active:true,manager_id:1035}]}])]);
- await db.exec('set role authenticated');
- await db.query('select delete_inactive_workspace_phones($1)',['ARS']);assert.equal((await page()).inactivePhones,0);checks++;
+ await db.exec(`insert into gerencia_phones select 1000+n,121,'549110000'||lpad(n::text,4,'0'),'inactive',false,1,'follow_up',null,null from generate_series(1,52)n;
+ update gerencia_phones set status='inactive' where id in(3,4);set role authenticated`);
+ const batches=[];
+ for(let i=0;i<4;i++)batches.push((await db.query('select delete_inactive_workspace_phone_batch($1) n',['ARS'])).rows[0].n);
+ assert.deepEqual(batches,[25,25,3,0]);assert.equal((await page()).inactivePhones,0);checks+=2;
  await db.exec('reset role');
+ assert.equal((await db.query("select count(*)::int n from gerencia_phones where id in(3,4) and status='inactive'")).rows[0].n,2,'foreign owner and another workspace remain untouched');
+ assert.equal((await db.query("select has_function_privilege('anon','delete_inactive_workspace_phone_batch(text)','execute') allowed")).rows[0].allowed,false);checks+=2;
  await db.query('select cron_reset_phone_operational_daily()');
  const phoneRows=(await db.query('select id,usage_count from gerencia_phones order by id')).rows;
  assert.deepEqual(phoneRows,[{id:1,usage_count:0},{id:3,usage_count:44},{id:4,usage_count:0}]);

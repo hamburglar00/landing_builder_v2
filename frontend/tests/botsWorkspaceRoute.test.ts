@@ -12,6 +12,9 @@ function fixture(t:TestContext){
   process.env.INTERNAL_CHAT_ORIGIN="https://atrio.fixture.invalid";
   process.env.INTERNAL_CHAT_PLAYER_RESOLVE_KEY="synthetic-private-bridge-key";
   let canAtrio=true;
+  let inactive=17;
+  let cleanupFailure=false;
+  let onBatch=()=>{};
   const calls:{url:URL;body:Record<string,unknown>;headers:Headers}[]=[];
   const clients=Array.from({length:253},(_,i)=>({id:uuid(i+10),atrio_id:uuid(i+1000),user_id:owner}));
   t.mock.method(globalThis,"fetch",async(input:RequestInfo|URL,init?:RequestInit)=>{
@@ -28,12 +31,14 @@ function fixture(t:TestContext){
     if(url.pathname==="/api/gateway/manager-destinations/reset"){
       assert.equal(r.headers.get("authorization"),"Bearer synthetic-private-bridge-key");return Response.json({ok:true});
     }
-    if(url.pathname==="/rest/v1/rpc/delete_inactive_workspace_phones"){
-      assert.equal(r.headers.get("authorization"),"Bearer synthetic-user-token");return Response.json(17);
+    if(url.pathname==="/rest/v1/rpc/delete_inactive_workspace_phone_batch"){
+      assert.equal(r.headers.get("authorization"),"Bearer synthetic-user-token");
+      if(cleanupFailure)return Response.json({code:"57014",message:"synthetic timeout"},{status:500});
+      const deleted=Math.min(inactive,25);inactive-=deleted;onBatch();return Response.json(deleted);
     }
     throw Error(`Unexpected synthetic request ${url.pathname}`);
   });
-  return {calls,disable:()=>{canAtrio=false}};
+  return {calls,disable:()=>{canAtrio=false},inactive:(count:number)=>{inactive=count},failCleanup:()=>{cleanupFailure=true},onBatch:(callback:()=>void)=>{onBatch=callback}};
 }
 test("global operations reject foreign origin, missing session and caller-supplied ownership",async t=>{
   const f=fixture(t);
@@ -55,5 +60,31 @@ test("disabled Atrio never contacts the bridge; inactive deletion keeps caller R
   assert.equal(f.calls.some(c=>c.url.origin==="https://atrio.fixture.invalid"),false);
   const response=await POST(request({action:"delete_inactive",workspace:"PYG"}));
   assert.equal(response.status,200);assert.deepEqual(await response.json(),{deleted:17});
-  assert.deepEqual(f.calls.find(c=>c.url.pathname.endsWith("delete_inactive_workspace_phones"))!.body,{p_workspace:"PYG"});
+  assert.deepEqual(f.calls.find(c=>c.url.pathname.endsWith("delete_inactive_workspace_phone_batch"))!.body,{p_workspace:"PYG"});
+});
+
+test("inactive cleanup completes all bounded batches without loading directory pages",async t=>{
+  const f=fixture(t);f.inactive(120);
+  const response=await POST(request({action:"delete_inactive",workspace:"ARS"}));
+  assert.equal(response.status,200);assert.deepEqual(await response.json(),{deleted:120});
+  const batches=f.calls.filter(c=>c.url.pathname.endsWith("delete_inactive_workspace_phone_batch"));
+  assert.equal(batches.length,5);assert.ok(batches.every(c=>c.body.p_workspace==="ARS"));
+  assert.equal(f.calls.some(c=>c.url.pathname==="/rest/v1/gerencias"),false);
+});
+
+test("failed cleanup reports pending work instead of claiming success",async t=>{
+  const f=fixture(t);f.failCleanup();
+  const response=await POST(request({action:"delete_inactive",workspace:"ARS"}));
+  assert.equal(response.status,503);assert.match((await response.json()).error,/completar los pendientes/);
+});
+
+test("slow cleanup returns bounded continuation and retries finish only the remaining phones",async t=>{
+  const f=fixture(t);f.inactive(80);
+  let now=Date.now();t.mock.method(Date,"now",()=>now);f.onBatch(()=>{now+=41000});
+  const results=[];
+  for(let i=0;i<4;i++){
+    const response=await POST(request({action:"delete_inactive",workspace:"ARS"}));
+    assert.equal(response.status,200);results.push(await response.json());
+  }
+  assert.deepEqual(results,[{deleted:25,pending:true},{deleted:25,pending:true},{deleted:25,pending:true},{deleted:5}]);
 });

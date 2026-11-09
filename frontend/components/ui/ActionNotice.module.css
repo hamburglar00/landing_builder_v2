@@ -1,0 +1,9 @@
+.notice { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid; border-radius: 10px; font-size: 13px; line-height: 1.5; animation: disappear 550ms ease 4900ms forwards; }
+.notice[data-tone="success"] { color: #86efac; background: #123524; border-color: #347b4c; }
+.notice[data-tone="error"] { color: #fecaca; background: #3c1c23; border-color: #a34851; }
+.message { flex: 1; min-width: 0; }
+.icon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 20px; width: 20px; height: 20px; border: 1px solid currentColor; border-radius: 50%; font-weight: 700; }
+.close { flex: 0 0 28px; height: 28px; border-radius: 5px; color: inherit; font-size: 20px; }
+.close:hover, .close:focus-visible { background: #ffffff12; }
+@keyframes disappear { to { opacity: 0; transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .notice { animation: none; } }

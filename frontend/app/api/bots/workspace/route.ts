@@ -29,9 +29,16 @@ export async function POST(request: Request) {
     const profile = await db.from("profiles").select("role").eq("id", actor.id).maybeSingle();
     if (profile.error || !["admin", "client"].includes(profile.data?.role)) return json({ error: "Acceso no permitido." }, 403);
     if (input.action === "delete_inactive") {
-      const deleted = await db.rpc("delete_inactive_workspace_phones", { p_workspace: input.workspace });
-      if (deleted.error) throw deleted.error;
-      return json({ deleted: deleted.data });
+      let total = 0;
+      const deadline = Date.now() + 40000;
+      do {
+        const deleted = await db.rpc("delete_inactive_workspace_phone_batch", { p_workspace: input.workspace });
+        if (deleted.error) return json({ error: "No se pudo terminar el borrado. Actualizá los datos y reintentá para completar los pendientes." }, 503);
+        if (!Number.isInteger(deleted.data) || deleted.data < 0 || deleted.data > 25) throw Error("Invalid cleanup response");
+        total += deleted.data;
+        if (deleted.data < 25) return json({ deleted: total });
+      } while (Date.now() < deadline);
+      return json({ deleted: total, pending: true });
     }
     if (input.action === "gerencias") {
       const rows: unknown[] = [];

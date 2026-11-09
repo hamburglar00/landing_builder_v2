@@ -1,0 +1,59 @@
+{
+  "date": "2026-11-09",
+  "scope": [
+    "LandingBuilder"
+  ],
+  "rootCause": {
+    "cleanup": "PostgREST canceled the global DELETE with SQLSTATE 57014 after approximately 8 seconds. Deleting a phone also updates historical availability references. An authenticated rollback probe of the original operation took 21.2 seconds.",
+    "inventory": "The reported mkt_1793925217503_1793925217509 row is PBAdmin manager 1052, inactive and without a phone. It is visual inventory, distinct from the three persisted phone rows."
+  },
+  "changes": {
+    "cleanup": "Three missing phone-reference indexes plus an additive SECURITY INVOKER RPC deleting at most 25 inactive phones per transaction. The API processes bounded calls for up to 40 seconds and returns continuation; the client follows continuations. Every call retains caller JWT, RLS, workspace and inactive-status predicates. Retrying after a partial failure completes remaining phones.",
+    "inventory": "Display Bot ID and Sin teléfono when the source has no number. Keep a known source number visible when pending association. Show separate counts for bots without a number and pending phones, and explain this distinction in the cleanup confirmation. Preserve inventory records and all operations.",
+    "grouping": "One labeled table row group per agency, spaced apart with rounded borders. Expanded agency header and left group border highlighted; full single-line content and compact widths retained.",
+    "navigation": "Redirección immediately follows Landings in both client and administrator sidebars.",
+    "feedback": "Shared ActionNotice: green success and red error, manual dismissal, 4.9 seconds of visibility followed by a 0.55-second fade and removal at 5.5 seconds. Parent countdown rerenders do not restart its timer. Directory actions, management and editor save errors use the component."
+  },
+  "migrations": [
+    {
+      "version": "20261109214153",
+      "name": "index_inactive_phone_delete_dependencies",
+      "project": "fdkjkzpjqfbaavylapun",
+      "applied": true
+    },
+    {
+      "version": "20261109214729",
+      "name": "batch_inactive_workspace_phone_cleanup",
+      "project": "fdkjkzpjqfbaavylapun",
+      "applied": true
+    }
+  ],
+  "verification": {
+    "productionBuildAndTypeScript": "passed",
+    "targetedLint": "passed",
+    "localPostgresAssertions": 36,
+    "workspaceApiTests": 6,
+    "chromiumFunctionalChecks": 64,
+    "webkit": {
+      "groupAndNavigationCases": 4,
+      "noticeLifecycle": true,
+      "totalChecks": 5,
+      "status": "passed"
+    },
+    "browserCoverage": "Actual compiled application with synthetic services, mobile/desktop, both roles; group boundaries, inventory labels, navigation, retained actions, page-2 demand loading, failed/successful cleanup and transient red/green notices.",
+    "rollbackProbe": "14 batch statements under authenticated owner context, each with a 7.5-second statement deadline, reached zero remaining inactive phones. ROLLBACK restored all 308 rows; a follow-up read confirmed they remain. Anonymous EXECUTE is revoked; function remains invoker.",
+    "securityAdvisors": "No findings for the new cleanup function. Existing unrelated findings preserved.",
+    "encodingAndWhitespace": "passed"
+  },
+  "otherProductsChanged": false,
+  "productionBusinessDataDeletedByVerification": false,
+  "publicationTarget": {
+    "branch": "main",
+    "project": "landing-builder-v2-k259",
+    "domains": [
+      "constructor.panelbotadmin.com",
+      "mkt.panelbotadmin.com"
+    ]
+  },
+  "artifacts": ".vercel/redirection-cleanup-20261109/ (ignored screenshots, build log and release evidence)"
+}

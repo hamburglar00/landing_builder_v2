@@ -20,6 +20,7 @@ import {
 } from "@/lib/bots/import-errors";
 import type { ImportDirectory } from "@/lib/bots/directory";
 import { ModalShell } from "@/components/ui/PanelPrimitives";
+import { ActionNotice } from "@/components/ui/ActionNotice";
 import CustomSelect from "@/components/ui/CustomSelect";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import { GerenciaWorkGroupsPanel } from "@/components/gerencias/GerenciaWorkGroupsPanel";
@@ -233,19 +234,8 @@ export function BotsManagement({
           Vincular Bots
         </button>
       </div>
-      {notice && (
-        <p
-          role="status"
-          className="rounded-lg border border-emerald-900/40 bg-emerald-950/20 p-3 text-xs text-emerald-200"
-        >
-          {notice}
-        </p>
-      )}
-      {error && !open && !groupOpen && (
-        <p role="alert" className="text-xs text-red-300">
-          {error}
-        </p>
-      )}
+      <ActionNotice message={notice} />
+      {!open && !groupOpen && <ActionNotice message={error} tone="error" />}
       <ModalShell
         open={open}
         title="Vincular Bots"
@@ -397,11 +387,7 @@ export function BotsManagement({
               />
             </label>
           )}
-          {error && (
-            <p role="alert" className="text-xs text-red-300">
-              {error}
-            </p>
-          )}
+          <ActionNotice message={error} tone="error" />
           {preview && (
             <div className="space-y-3">
               <p className="text-xs text-zinc-300">
@@ -454,11 +440,7 @@ export function BotsManagement({
         onClose={closeGroupsModal}
         closeDisabled={busy}
       >
-        {error && (
-          <p role="alert" className="mb-3 text-xs text-red-300">
-            {error}
-          </p>
-        )}
+        <ActionNotice message={error} tone="error" />
         <GerenciaWorkGroupsPanel
           gerencias={managementGerencias}
           groups={groups}
@@ -613,11 +595,7 @@ export function GerenciaActions({
               />
             </label>
           )}
-          {error && (
-            <p role="alert" className="text-xs text-red-300">
-              {error}
-            </p>
-          )}
+          <ActionNotice message={error} tone="error" />
         </div>
       </ModalShell>
     </>

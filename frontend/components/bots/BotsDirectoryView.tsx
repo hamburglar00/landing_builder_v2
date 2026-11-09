@@ -185,7 +185,7 @@ export function BotsDirectoryView(p: Props) {
       return <>
         <td><NotApplicable /></td><td className={styles.muted}>WhatsApp</td>
         <td className={styles.muted}>{platform ?? <NotApplicable />}</td>
-        <td title={`Bot ${bot.manager_id} · Sin teléfono sincronizado`}><span className={bot.phone ? styles.phoneNumber : undefined}>{bot.phone ? p.formatPhone(bot.phone) : bot.name || `Bot ${bot.manager_id}`}</span></td>
+        <td title={`${bot.name || `Bot ${bot.manager_id}`} · No asociado a un teléfono en Builder`}>{bot.phone ? <span className={styles.phoneNumber}>{p.formatPhone(bot.phone)}</span> : `Bot ${bot.manager_id} · Sin teléfono`}</td>
         <td className={styles.muted}>{bot.role}</td><td className={styles.muted}>{bot.whatsapp_usage ? bot.whatsapp_usage === "follow_up" ? "WhatsApp de venta" : "WhatsApp publicitario" : <NotApplicable />}</td>
         <td><Status tone={bot.active ? "positive" : "neutral"}>{bot.active ? "Activo en PBAdmin" : "Inactivo en PBAdmin"}</Status></td>
         <td><NotApplicable /></td><td><NotApplicable /></td><td><NotApplicable /></td>
@@ -235,12 +235,11 @@ export function BotsDirectoryView(p: Props) {
     <AtrioBotTable entries={p.filteredGroups.flatMap(group => group.atrioBots)} onChanged={p.onAtrioChanged} render={atrioActions => <div className={styles.scroll} tabIndex={0} aria-label="Directorio de bots, desplazamiento horizontal">
       <table className={styles.table} aria-label="Bots por gerencia">
         <thead><tr>{labels.map((label, i) => <th key={label} scope="col" className={i === 1 || i >= 9 ? styles.numeric : undefined} title={label === "CHATS" ? "Atrio: chats iniciados. WhatsApp: mensajes recibidos." : undefined}>{label}</th>)}<th scope="col"><span className="sr-only">Acciones</span></th></tr></thead>
-        <tbody>
-          {!visible.length && <tr><td colSpan={labels.length + 1} className={styles.empty}>{p.loading ? "Cargando bots…" : !counts.all ? "Todavía no hay bots. Usá Vincular Bots para comenzar." : p.onlyActive ? "No hay gerencias con bots activos para mostrar." : "No hay gerencias que coincidan con la búsqueda."}</td></tr>}
+          {!visible.length && <tbody><tr><td colSpan={labels.length + 1} className={styles.empty}>{p.loading ? "Cargando bots…" : !counts.all ? "Todavía no hay bots. Usá Vincular Bots para comenzar." : p.onlyActive ? "No hay gerencias con bots activos para mostrar." : "No hay gerencias que coincidan con la búsqueda."}</td></tr></tbody>}
           {visible.map((group, index) => {
             const phones = p.phones[group.id] ?? [];
             const numbers = new Set(phones.map(phone => phone.phone.replace(/\D/g, "")));
-            const missing = (group.source_type === "manual" ? [] : group.pbadmin_bots ?? []).filter(bot => bot.channel === "whatsapp" && bot.agency_id === group.gerencia_id && (!bot.phone || !numbers.has(bot.phone)));
+            const missing = (group.source_type === "manual" ? [] : group.pbadmin_bots ?? []).filter(bot => bot.channel === "whatsapp" && bot.agency_id === group.gerencia_id && (!bot.phone || !numbers.has(bot.phone.replace(/\D/g, ""))));
             const items: Item[] = [
               ...(p.channel !== "atrio" ? phones.map(phone => ({ kind: "phone" as const, phone })) : []),
               ...(p.channel !== "atrio" ? missing.map(bot => ({ kind: "inventory" as const, bot })) : []),
@@ -249,7 +248,9 @@ export function BotsDirectoryView(p: Props) {
             const single = items.length === 1 ? items[0] : null;
             const agencyId = group.gerencia_id ?? (!group.virtual ? group.id : null);
             const platforms = [...new Set(items.map(item => itemPlatform(item, group)).filter((name): name is string => !!name))];
-            const botSummary = [phones.length ? `${phones.length} ${phones.length === 1 ? "teléfono" : "teléfonos"}` : "", group.atrioBots.length ? `${group.atrioBots.length} ${group.atrioBots.length === 1 ? "bot de Atrio" : "bots de Atrio"}` : "", missing.length ? `${missing.length} sin teléfono sincronizado` : ""].filter(Boolean).join(" · ");
+            const withoutNumber = missing.filter(bot => !bot.phone).length;
+            const pendingPhones = missing.length - withoutNumber;
+            const botSummary = [phones.length ? `${phones.length} ${phones.length === 1 ? "teléfono" : "teléfonos"}` : "", group.atrioBots.length ? `${group.atrioBots.length} ${group.atrioBots.length === 1 ? "bot de Atrio" : "bots de Atrio"}` : "", withoutNumber ? `${withoutNumber} ${withoutNumber === 1 ? "bot sin número" : "bots sin número"}` : "", pendingPhones ? `${pendingPhones} ${pendingPhones === 1 ? "teléfono pendiente" : "teléfonos pendientes"}` : ""].filter(Boolean).join(" · ");
             const expandable = items.length > 1;
             const key = group.uiKey ?? group.id;
             const open = expanded === key;
@@ -262,7 +263,8 @@ export function BotsDirectoryView(p: Props) {
             const usage = phones.reduce((sum, phone) => sum + (Number(phone.usage_count) || 0), connections.reduce((sum, entry) => sum + entry.usage_count, 0));
             const messages = phones.reduce((sum, phone) => sum + (p.metrics[phone.id]?.messagesReceived ?? 0), connections.reduce((sum, entry) => sum + entry.chats_started, 0));
             const historical = phones.reduce((sum, phone) => sum + (p.metrics[phone.id]?.messagesReceivedHistorical ?? 0), connections.reduce((sum, entry) => sum + (entry.chats_started_total ?? entry.chats_started), 0));
-            return <Fragment key={key}>
+            return <tbody key={key} className={styles.group} data-gerencia-group={key} data-expanded={expandable && open} aria-label={`Gerencia ${group.nombre}`}>
+              {index > 0 && <tr className={styles.groupSpacer} aria-hidden="true"><td colSpan={labels.length + 1} /></tr>}
               <tr className={`${styles.parent} ${expandable ? styles.expandable : ""}`} data-stripe={index % 2} data-gerencia={key}
                 onClick={event => { if (expandable && event.currentTarget.contains(event.target as Node) && !(event.target as HTMLElement).closest("button,a,input,select")) toggle(); }}>
                 <td title={group.source_type === "manual" ? "Origen manual" : "Origen PBAdmin"}><span className={styles.name}>{group.nombre}</span></td>
@@ -270,7 +272,7 @@ export function BotsDirectoryView(p: Props) {
                 {single ? cells(single, group) : <>
                   <td><NotApplicable /></td><td className={styles.muted}>{onlyAtrio ? "Atrio" : group.atrioBots.length ? "WhatsApp + Atrio" : "WhatsApp"}</td>
                   <td className={styles.muted}>{platforms.length ? platforms.join(", ") : <NotApplicable />}</td>
-                  <td>{botSummary || <NotApplicable />}</td>
+                  <td title={missing.length ? "Los bots sin número son registros del inventario de PBAdmin, no teléfonos guardados en Builder. Borrar teléfonos inactivos no elimina estos bots." : undefined}>{botSummary || <NotApplicable />}</td>
                   <td><NotApplicable /></td><td><NotApplicable /></td>
                   <td><Status tone={onlyAtrio ? connections.some(entry => entry.active) ? "positive" : "neutral" : unavailable || !activePhones ? "warning" : "positive"}>
                     {onlyAtrio ? connections.some(entry => entry.active) ? "Activo" : "Pendiente / inactivo" : unavailable ? "Sin managers activos" : activePhones ? `${activePhones} ${activePhones === 1 ? "publicitario activo" : "publicitarios activos"}` : "Sin publicitarios activos"}
@@ -286,9 +288,8 @@ export function BotsDirectoryView(p: Props) {
                 <td title={group.nombre}><span aria-hidden="true" className="ml-3 text-zinc-600">└</span><span className="sr-only">Detalle de {group.nombre}, elemento {itemIndex + 1}</span></td><td className={styles.numeric}>{agencyId ?? <NotApplicable />}</td>{cells(item, group)}
                 <td>{item.kind !== "inventory" ? <div className={styles.rowActions}><BotMenu label={`Acciones de ${item.kind === "phone" ? p.formatPhone(item.phone.phone) : item.entry.name}`}>{item.kind === "phone" ? phoneActions(item.phone, group) : atrioActions(item.entry)}</BotMenu></div> : <NotApplicable />}</td>
               </tr>)}
-            </Fragment>;
+            </tbody>;
           })}
-        </tbody>
       </table>
     </div>} />
     <footer className={styles.footer}>

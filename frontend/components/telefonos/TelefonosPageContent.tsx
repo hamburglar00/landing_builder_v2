@@ -10,6 +10,7 @@ import { fetchGerencias, fetchGerenciasForAdmin } from "@/lib/gerencias/gerencia
 import type { PhoneKind } from "@/lib/landing/types";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { ModalShell, PageHeader } from "@/components/ui/PanelPrimitives";
+import { ActionNotice } from "@/components/ui/ActionNotice";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import ModalPortal from "@/components/ui/ModalPortal";
 import { CURRENCY_ALL } from "@/lib/currency";
@@ -158,6 +159,7 @@ export function TelefonosPageContent({
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [syncingGerenciaId, setSyncingGerenciaId] = useState<number | null>(
     null,
   );
@@ -317,6 +319,7 @@ export function TelefonosPageContent({
       if (authError || !user) return;
       setUserId(user.id);
       setError(null);
+      setNotice(null);
       try {
         await loadData(user.id);
       } catch (e) {
@@ -415,6 +418,7 @@ export function TelefonosPageContent({
     if (gerenciaId !== null) setSyncingGerenciaId(gerenciaId);
     else setGlobalSyncing(true);
     setError(null);
+    setNotice(null);
     try {
       const res = await fetch(`${base}/functions/v1/sync-phones`, {
         method: "POST",
@@ -446,11 +450,13 @@ export function TelefonosPageContent({
         } catch {
           // ignore parse errors and continue normal flow
         }
+        let inventoryFailed = false;
         if (refreshInventory) {
           try { await refreshBotInventory(gerenciaId); }
-          catch (e) { setError(e instanceof Error ? e.message : 'No se pudo actualizar el inventario de bots.'); }
+          catch (e) { inventoryFailed = true; setError(e instanceof Error ? e.message : 'No se pudo actualizar el inventario de bots.'); }
         }
         await loadData(userId);
+        if (!inventoryFailed) setNotice("Datos sincronizados.");
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al sincronizar");
@@ -465,6 +471,7 @@ export function TelefonosPageContent({
     if (gerenciaId !== null) setResettingGerenciaId(gerenciaId);
     else setGlobalResetting(true);
     setError(null);
+    setNotice(null);
     try {
       const res = await fetch(`${base}/functions/v1/reset-phone-counters`, {
         method: "POST",
@@ -478,6 +485,7 @@ export function TelefonosPageContent({
         setError(`Reset: ${res.status} â€“ ${text}`);
       } else {
         await loadData(userId);
+        setNotice("Contadores de WhatsApp reiniciados.");
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al reiniciar contadores");
@@ -492,6 +500,7 @@ export function TelefonosPageContent({
     if (gerenciaId !== null) setResettingMessagesGerenciaId(gerenciaId);
     else setGlobalResettingMessages(true);
     setError(null);
+    setNotice(null);
     try {
       const res = await fetch(`${base}/functions/v1/reset-phone-messages`, {
         method: "POST",
@@ -505,6 +514,7 @@ export function TelefonosPageContent({
         setError(`Reset mensajes: ${res.status} - ${text}`);
       } else {
         await loadData(userId);
+        setNotice("Mensajes de WhatsApp reiniciados.");
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al reiniciar mensajes");
@@ -521,6 +531,7 @@ export function TelefonosPageContent({
     setAutoResetDaily(next);
     setAutoResetSaving(true);
     setError(null);
+    setNotice(null);
     try {
       const { error: updateError } = await supabase
         .from("conversions_config")
@@ -533,6 +544,7 @@ export function TelefonosPageContent({
           { onConflict: "user_id" },
         );
       if (updateError) throw updateError;
+      setNotice(next ? "Reinicio automático activado." : "Reinicio automático desactivado.");
     } catch (e) {
       setAutoResetDaily(previous);
       setError(e instanceof Error ? e.message : "Error al actualizar reinicio automatico");
@@ -549,21 +561,29 @@ export function TelefonosPageContent({
       .map((p) => p.id);
     const inactiveCount=unifiedBots?bots.inactivePhones:inactiveIds.length;
     if (inactiveCount === 0) {
-      setError("No hay telefonos inactivos para borrar.");
+      setNotice("No hay teléfonos inactivos para borrar. Los bots de PBAdmin sin número no son teléfonos guardados en Builder.");
       return;
     }
     const ok = await confirmAction({
       title: "Eliminar teléfonos inactivos",
-      description: `Se eliminarán ${inactiveCount} teléfonos inactivos del workspace, incluidas las otras páginas. Esta acción no se puede deshacer.`,
+      description: `Se eliminarán ${inactiveCount} teléfonos inactivos del workspace, incluidas las otras páginas. Los bots de PBAdmin sin número no se eliminan. Esta acción no se puede deshacer.`,
       confirmLabel: "Eliminar teléfonos",
       danger: true,
     });
     if (!ok) return;
     setGlobalDeletingInactive(true);
     setError(null);
+    setNotice(null);
     try {
+      let deletedCount = inactiveCount;
       if(unifiedBots){
-        await requestBotsWorkspace({action:'delete_inactive',workspace:workspaceCurrency});
+        deletedCount = 0;
+        let pending: boolean;
+        do {
+          const result = await requestBotsWorkspace<{deleted: number; pending?: boolean}>({action:'delete_inactive',workspace:workspaceCurrency});
+          deletedCount += result.deleted;
+          pending = result.pending === true;
+        } while (pending);
       }else{
       const { error: deleteError } = await supabase
         .from("gerencia_phones")
@@ -572,6 +592,7 @@ export function TelefonosPageContent({
       if (deleteError) throw deleteError;
       }
       await loadData(userId);
+      setNotice(`Se eliminaron ${deletedCount} teléfonos inactivos.`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al borrar telefonos inactivos");
     } finally {
@@ -585,6 +606,7 @@ export function TelefonosPageContent({
   ) => {
     setSwitchingGerenciaId(gerenciaId);
     setError(null);
+    setNotice(null);
     const previous = gerencias;
     setGerencias((prev) =>
       prev.map((g) =>
@@ -597,6 +619,7 @@ export function TelefonosPageContent({
         .update({ fair_criterion: criterion })
         .eq("id", gerenciaId);
       if (updateError) throw updateError;
+      setNotice("Criterio de reparto guardado.");
     } catch (e) {
       setGerencias(previous);
       setError(
@@ -639,6 +662,7 @@ export function TelefonosPageContent({
     }
     setManualSavingGerenciaId(gerenciaId);
     setManualSaveError(null);
+    setNotice(null);
     try {
       const rows = [{
         gerencia_id: gerenciaId,
@@ -662,6 +686,7 @@ export function TelefonosPageContent({
     }
     setManualPhoneInput((prev) => ({ ...prev, [gerenciaId]: "" }));
     setManualModalGerenciaId(null);
+    setNotice("Teléfono guardado.");
     try {
       await loadData(userId);
     } catch {
@@ -694,6 +719,7 @@ export function TelefonosPageContent({
       }
     }
     setError(null);
+    setNotice(null);
     const { error: updateError } = await supabase
       .from("gerencia_phones")
       .update({ status: nextStatus })
@@ -711,6 +737,7 @@ export function TelefonosPageContent({
         ),
       };
     });
+    setNotice(nextStatus === "active" ? "Teléfono activado." : "Teléfono desactivado.");
   };
 
   const handleAssignmentRoleChange = async (
@@ -734,6 +761,7 @@ export function TelefonosPageContent({
       return;
     }
     setError(null);
+    setNotice(null);
     const { error: updateError } = await supabase
       .from("gerencia_phones")
       .update({ assignment_role: nextRole })
@@ -751,12 +779,14 @@ export function TelefonosPageContent({
         ),
       };
     });
+    setNotice("Uso del teléfono guardado.");
   };
 
   const handleManualCommentSave = async (row: GerenciaPhoneRow, value: string) => {
     const trimmed = value.trim();
     if ((row.comment ?? "") === trimmed) return;
     setError(null);
+    setNotice(null);
     const { error: updateError } = await supabase
       .from("gerencia_phones")
       .update({ comment: trimmed })
@@ -774,6 +804,7 @@ export function TelefonosPageContent({
         ),
       };
     });
+    setNotice("Comentario guardado.");
   };
 
   if (!ready) {
@@ -824,6 +855,7 @@ export function TelefonosPageContent({
 
   return (
     <div className="space-y-6">
+      <ActionNotice message={notice} />
       {backLink && backLabel ? (
         <div className="flex flex-wrap items-center justify-between gap-4">
           <a
@@ -846,8 +878,8 @@ export function TelefonosPageContent({
           onChanged={async () => { await loadData(userId); bots.reload(); }} onImported={async (gerenciaId, refreshInventory) => { await handleSync(gerenciaId ?? null, refreshInventory); bots.reload(); }} />}
         feedback={<>{bots.busy && <p role="status" className="text-xs text-zinc-400">Cargando página de bots...</p>}
           {!bots.busy && bots.projectionPending>0 && <p role="status" className="text-xs text-zinc-400">El directorio de Atrio se está actualizando en segundo plano.</p>}
-          {bots.error && <p role="alert" className="text-xs text-amber-300">{bots.error} <button type="button" className="underline" onClick={bots.reload}>Reintentar</button></p>}
-          {error && <p role="alert" className="ui-alert text-sm text-[var(--color-danger)]">{error}</p>}</>}
+          <ActionNotice message={bots.error} tone="error"><button type="button" className="ml-2 underline" onClick={bots.reload}>Reintentar</button></ActionNotice>
+          <ActionNotice message={error} tone="error" /></>}
         globalSyncing={globalSyncing} canSync={bots.hasPbadmin || canAtrio}
         resettingCounters={globalResetting} resettingMessages={globalResettingMessages} deletingInactive={globalDeletingInactive}
         hasPhoneGroups={bots.counts.whatsapp>0} autoReset={autoResetDaily} autoResetSaving={autoResetSaving}
@@ -885,14 +917,7 @@ export function TelefonosPageContent({
       {unifiedBots&&bots.error&&<p role="alert" className="text-xs text-amber-300">{bots.error} <button type="button" className="underline" onClick={bots.reload}>Reintentar</button></p>}
       {unifiedBots&&canAtrio&&!!bots.clients.length&&<AtrioWorkspaceActions clients={bots.clients} onChanged={bots.reload}/>}
 
-      {error && (
-        <p
-          className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-sm text-[var(--color-danger)]"
-          role="alert"
-        >
-          {error}
-        </p>
-      )}
+      <ActionNotice message={error} tone="error" />
 
       {/* Botones globales */}
       <div className="ui-card p-4">

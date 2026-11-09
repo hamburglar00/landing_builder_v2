@@ -14,6 +14,7 @@ import type { AtrioBotEntry } from "@/lib/bots/workspace";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import { ModalShell } from "@/components/ui/PanelPrimitives";
 import { BotResetIcon } from "./BotActionIcons";
+import { ActionNotice } from "@/components/ui/ActionNotice";
 export const PLATFORM_NAMES: Record<number, string> = {
   1: "Ases del Norte",
   2: "Ganamos NET",
@@ -38,6 +39,7 @@ export function AtrioBotTable({
   const [editing, setEditing] = useState<AtrioBotEntry | null>(null),
     [slug, setSlug] = useState(""),
     [atrioId, setAtrioId] = useState("");
+  const [notice, setNotice] = useState("");
   const closeEditing = useCallback(() => setEditing(null), []);
   async function reset(entry: AtrioBotEntry, metric: BotResetMetric) {
     if (
@@ -50,12 +52,14 @@ export function AtrioBotTable({
       return;
     setBusy(true);
     setError("");
+    setNotice("");
     try {
       await requestManagerDestinations({
         action: "reset",
         clientIds: [entry.client.id],
         metric,
       });
+      setNotice(metric === "usage_count" ? "Asignaciones del asesor reiniciadas." : "Chats del asesor reiniciados.");
       onChanged();
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo reiniciar.");
@@ -74,8 +78,11 @@ export function AtrioBotTable({
     )
       return;
     setBusy(true);
+    setError("");
+    setNotice("");
     try {
       await deleteAtrioClient(entry.client.id);
+      setNotice("Asesor desvinculado de Builder.");
       onChanged();
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo quitar.");
@@ -88,6 +95,8 @@ export function AtrioBotTable({
                         role="menuitem"
                         disabled={busy}
                         onClick={() => {
+                          setError("");
+                          setNotice("");
                           setEditing(entry);
                           setSlug(entry.client.slug);
                           setAtrioId(entry.client.atrio_id);
@@ -122,14 +131,11 @@ export function AtrioBotTable({
   </>;
   return (
     <>
-      {render ? <>{error && <p role="alert" className="text-xs text-red-300">{error}</p>}{render(renderActions)}</> : (
+      <ActionNotice message={notice} />
+      {render ? <>{!editing && <ActionNotice message={error} tone="error" />}{render(renderActions)}</> : (
     <section className="mt-4 space-y-2" aria-label="Bots de Atrio">
       <h3 className="text-xs font-semibold text-zinc-300">Atrio</h3>
-      {error && (
-        <p role="alert" className="text-xs text-red-300">
-          {error}
-        </p>
-      )}
+      {!editing && <ActionNotice message={error} tone="error" />}
       <div className="overflow-x-auto rounded-lg border border-zinc-700">
         <table className="w-full min-w-[760px] text-left text-xs">
           <thead className="bg-zinc-800/80 text-zinc-300">
@@ -234,12 +240,15 @@ export function AtrioBotTable({
             onClick={async () => {
               if (!editing) return;
               setBusy(true);
+              setError("");
+              setNotice("");
               try {
                 await updateAtrioClient(editing.client.id, {
                   slug,
                   atrioId,
                 });
                 setEditing(null);
+                setNotice("Vínculo guardado.");
                 onChanged();
               } catch (e) {
                 setError(
@@ -272,11 +281,7 @@ export function AtrioBotTable({
               onChange={(event) => setAtrioId(event.target.value)}
             />
           </label>
-          {error && (
-            <p role="alert" className="text-xs text-red-300">
-              {error}
-            </p>
-          )}
+          <ActionNotice message={error} tone="error" />
         </div>
       </ModalShell>
     </>

@@ -7,6 +7,7 @@ import {
 } from "@/lib/atrio/managerDestinations";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import { BotResetIcon } from "./BotActionIcons";
+import { ActionNotice } from "@/components/ui/ActionNotice";
 export function AtrioWorkspaceActions({
   clients,
   onChanged,
@@ -24,6 +25,7 @@ export function AtrioWorkspaceActions({
     inFlight = useRef(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   async function reset(metric: BotResetMetric) {
     if (inFlight.current || !(hasClients ?? !!clients.length)) return;
     inFlight.current = true;
@@ -38,6 +40,7 @@ export function AtrioWorkspaceActions({
         return;
       setBusy(true);
       setError("");
+      setNotice("");
       if(onReset)await onReset(metric);
       else for (let index = 0; index < clients.length; index += 100)
         await requestManagerDestinations({
@@ -47,6 +50,7 @@ export function AtrioWorkspaceActions({
             .slice(index, index + 100)
             .map((client) => client.id),
         });
+      setNotice(metric === "usage_count" ? "Asignaciones de Atrio reiniciadas." : "Chats de Atrio reiniciados.");
     } catch {
       setError(
         "No se pudo completar el reinicio. Actualizá los datos antes de volver a intentarlo.",
@@ -77,10 +81,7 @@ export function AtrioWorkspaceActions({
   </>;
   return <div className="space-y-2">
     {render ? render(actions) : <details className="w-fit rounded-lg border border-zinc-800 px-3 py-2 text-xs text-zinc-400"><summary className="cursor-pointer">Métricas de Atrio</summary><div className="mt-3 flex flex-wrap gap-3">{actions}</div></details>}
-      {error && (
-        <p role="alert" className="text-xs text-red-300">
-          {error}
-        </p>
-      )}
+      <ActionNotice message={notice} />
+      <ActionNotice message={error} tone="error" />
   </div>;
 }

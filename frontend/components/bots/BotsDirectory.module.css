@@ -20,13 +20,26 @@
 [aria-checked="true"] > .switch::after { background: var(--color-primary-contrast); transform: translateX(12px); }
 .bulk { margin-left: auto; }
 .scroll { overflow-x: auto; max-width: 100%; border: 1px solid #2a363d; border-radius: 12px; scrollbar-width: thin; scrollbar-color: #3a4c54 #0e151a; }
-.table { width: max-content; min-width: 100%; table-layout: auto; border-collapse: collapse; color: #eef3ee; font-size: 12px; }
+.table { width: max-content; min-width: 100%; table-layout: auto; border-collapse: separate; border-spacing: 0; color: #eef3ee; font-size: 12px; }
 .table thead th { padding: 13px 8px; text-align: left; white-space: nowrap; background: #16211a; border-bottom: 1px solid #2c4a1e; color: #9de865; font-size: 11px; font-weight: 700; letter-spacing: .06em; line-height: 1.5; }
 .table td { padding: 11px 8px; border-top: 1px solid #222e35; line-height: 1.5; vertical-align: middle; text-align: left; white-space: nowrap; }
 .table .numeric { text-align: left; font-variant-numeric: tabular-nums; }
 .table tbody .parent[data-stripe="0"] { background: #131b20; }
 .table tbody .parent[data-stripe="1"] { background: #18232a; }
 .table tbody .child { background: #0e151a; }
+.table .groupSpacer td { height: 12px; padding: 0; border: 0; background: var(--color-bg-0); }
+.group .parent td { border-top: 1px solid #3b5148; }
+.group .parent td:first-child { border-top-left-radius: 8px; }
+.group .parent td:last-child { border-top-right-radius: 8px; }
+.group tr:not(.groupSpacer) td:first-child { border-left: 2px solid #3b5148; }
+.group tr:not(.groupSpacer) td:last-child { border-right: 1px solid #3b5148; }
+.group tr:last-child td { border-bottom: 1px solid #3b5148; }
+.group tr:last-child td:first-child { border-bottom-left-radius: 8px; }
+.group tr:last-child td:last-child { border-bottom-right-radius: 8px; }
+.table .group[data-expanded="true"] .parent { background: #1c352b; }
+.group[data-expanded="true"] tr:not(.groupSpacer) td:first-child { border-left-color: #93d568; }
+.group[data-expanded="true"] .name { color: #c5f4a1; }
+.table .group[data-expanded="true"] .child { background: #111f20; }
 .table tbody .expandable { cursor: pointer; }
 .table tbody .expandable:hover { background: #1e2d34; box-shadow: none; }
 .table tbody .parent:hover, .table tbody .child:hover { box-shadow: none; }

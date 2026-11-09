@@ -232,7 +232,12 @@ async function fixture(width, role = "client", enabled = true, fillers = 0) {
         const body=request.postDataJSON();localCalls.push({workspaceAction:body.action,...body});
         if(body.action==="gerencias")return json({gerencias:groups});
         if(body.action==="reset_atrio"){localCalls.push({managerAction:"reset",metric:body.metric,clientIds:clients.map(c=>c.id)});return json({ok:true})}
-        if(body.action==="delete_inactive"){writes.push({path:"/rest/v1/gerencia_phones",method:"DELETE",filter:"workspace:ARS"});return json({deleted:phones.filter(p=>p.status!=="active").length})}
+        if(body.action==="delete_inactive"){
+          writes.push({path:"/rest/v1/gerencia_phones",method:"DELETE",filter:"workspace:ARS"});
+          const deleted=phones.filter(p=>p.status!=="active").length;
+          for(let i=phones.length-1;i>=0;i--)if(phones[i].status!=="active")phones.splice(i,1);
+          return json({deleted});
+        }
       }
       if (url.pathname === "/api/atrio/manager-destinations") {
         localCalls.push(url.pathname);
@@ -440,6 +445,8 @@ try {
       console.log(`${engineName} ${width}: verifying presentation and current actions`);
       await page.screenshot({ path: new URL(`${engineName}-initial-${width}.png`, screenshots).pathname.replace(/^\/C:/, "C:"), fullPage: true });
       assert.equal(await page.locator('aside nav a[href="/dashboard/bots"]').count(), 1);
+      const navigation=await page.locator('aside nav a').evaluateAll(links=>links.map(link=>link.getAttribute('href')));
+      assert.equal(navigation[navigation.indexOf('/dashboard/landings')+1],'/dashboard/bots');
       assert.equal(await page.locator("table").count(), 1);
       assert.equal(await page.locator("thead").count(), 1);
       assert.equal(await page.getByText("Métricas de Atrio", { exact: true }).count(), 0);
@@ -457,7 +464,12 @@ try {
       const group = row(page, "Gerencia uno");
       await group.getByText("Gerencia uno", { exact: true }).click();
       await page.getByText("Bot 1045", { exact: true }).waitFor();
-      await page.getByText("Bot desconectado", { exact: true }).waitFor();
+      await page.getByText("Bot 99 · Sin teléfono", { exact: true }).waitFor();
+      assert.equal(await page.getByText("Bot desconectado",{exact:true}).count(),0);
+      assert.equal(await page.locator('tbody[data-gerencia-group]').count(),4);
+      const card=page.locator('tbody[data-expanded="true"]');
+      assert.equal(await card.count(),1);
+      assert.equal(await card.locator('tr[data-gerencia] td').first().evaluate(el=>getComputedStyle(el).borderLeftColor),'rgb(147, 213, 104)');
       const expanded = group.getByRole("button", { name: "Ver detalle" });
       assert.equal(await expanded.getAttribute("aria-expanded"), "true");
       await geometry(page, width);
@@ -705,6 +717,35 @@ try {
     checks++;
     assert.deepEqual(actions.errors, []);
   } finally { await actions.context.close(); }
+
+  const feedback = await fixture(1280);
+  try {
+    const {page}=feedback;
+    await page.goto(base+'/dashboard/bots');await row(page,'Solo Atrio').waitFor();
+    await page.clock.install();
+    await page.route('**/api/bots/workspace',route=>route.request().postDataJSON().action==='delete_inactive'
+      ? route.fulfill({status:503,json:{error:'No se pudo terminar el borrado.'}}):route.fallback());
+    await openMenu(page,'Acciones de los bots');
+    await page.getByRole('menuitem',{name:'Borrar teléfonos inactivos…',exact:true}).click();
+    await page.getByRole('dialog').getByRole('button',{name:'Eliminar teléfonos',exact:true}).click();
+    const failure=page.getByRole('alert').filter({hasText:'No se pudo terminar el borrado.'});await failure.waitFor();
+    assert.equal(await failure.evaluate(el=>getComputedStyle(el).color),'rgb(254, 202, 202)');
+    await page.clock.runFor(100);
+    await page.clock.fastForward(3000);assert.equal(await failure.count(),1,'notice survives countdown rerenders');
+    await page.clock.fastForward(2600);await failure.waitFor({state:'hidden'});
+    await page.unroute('**/api/bots/workspace');
+    await openMenu(page,'Acciones de los bots');
+    await page.getByRole('menuitem',{name:'Borrar teléfonos inactivos…',exact:true}).click();
+    await page.getByRole('dialog').getByRole('button',{name:'Eliminar teléfonos',exact:true}).click();
+    const success=page.getByRole('status').filter({hasText:/Se eliminaron .*teléfonos inactivos/});await success.waitFor();
+    assert.equal(await success.evaluate(el=>getComputedStyle(el).color),'rgb(134, 239, 172)');
+    await page.clock.runFor(100);
+    await page.clock.fastForward(5600);await success.waitFor({state:'hidden'});
+    await row(page,'Gerencia uno').getByRole('button',{name:'Ver detalle',exact:true}).click();
+    await page.getByText('Bot 99 · Sin teléfono',{exact:true}).waitFor();
+    assert.equal(await page.getByText('54 9 1100 00-0204',{exact:true}).count(),0,'inactive phone is removed; inventory remains separate');
+    assert.deepEqual(feedback.errors,[]);checks++;
+  }finally{await feedback.context.close();}
 
   for (const [role, enabled] of [["client", false], ["admin", true]]) {
     const f = await fixture(1280, role, enabled);
