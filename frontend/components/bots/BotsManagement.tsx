@@ -23,6 +23,7 @@ import { ModalShell } from "@/components/ui/PanelPrimitives";
 import CustomSelect from "@/components/ui/CustomSelect";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import { GerenciaWorkGroupsPanel } from "@/components/gerencias/GerenciaWorkGroupsPanel";
+import { requestBotsWorkspace } from "@/lib/bots/workspaceRequest";
 const field =
   "h-10 w-full rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-0)] px-3 text-sm text-[var(--color-text-strong)] outline-none placeholder:text-zinc-500 focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-soft-bg)] disabled:opacity-50";
 export function BotsManagement({
@@ -57,6 +58,7 @@ export function BotsManagement({
   const [legacyAgency, setLegacyAgency] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false),
     [groups, setGroups] = useState<GerenciaWorkGroup[]>([]);
+  const [managementGerencias,setManagementGerencias]=useState<Gerencia[]>(gerencias);
   const closeLinkModal = useCallback(() => setOpen(false), []);
   const closeGroupsModal = useCallback(() => setGroupOpen(false), []);
   useEffect(() => {
@@ -106,7 +108,10 @@ export function BotsManagement({
           throw Error("Ingresá un ID entero positivo.");
         // Restore the original explicit gerencia link, using the caller's RLS session.
         // An existing link in another workspace/client must never be moved or overwritten.
-        const existing = gerencias.find(
+        const lookup=await supabase.from("gerencias").select("id,user_id,source_type,gerencia_id,workspace_currency")
+          .eq("user_id",userId).eq("workspace_currency",workspace).eq("source_type","pbadmin").eq("gerencia_id",agencyId).maybeSingle();
+        if(lookup.error)throw lookup.error;
+        const existing = [lookup.data].filter((row):row is NonNullable<typeof row>=>!!row).find(
           (group) =>
             group.source_type === "pbadmin" &&
             group.gerencia_id === agencyId &&
@@ -199,6 +204,8 @@ export function BotsManagement({
             onClick={async () => {
               setError("");
               try {
+                const metadata=await requestBotsWorkspace<{gerencias:Gerencia[]}>({action:"gerencias",workspace});
+                setManagementGerencias(metadata.gerencias);
                 setGroups(await fetchGerenciaWorkGroups(userId, workspace));
                 setGroupOpen(true);
               } catch (e) {
@@ -453,7 +460,7 @@ export function BotsManagement({
           </p>
         )}
         <GerenciaWorkGroupsPanel
-          gerencias={gerencias}
+          gerencias={managementGerencias}
           groups={groups}
           saving={busy}
           onCreate={(name, ids) =>
@@ -476,9 +483,11 @@ export function BotsManagement({
 export function GerenciaActions({
   gerencia,
   onChanged,
+  menuItem = false,
 }: {
   gerencia: Gerencia;
   onChanged: () => Promise<void>;
+  menuItem?: boolean;
 }) {
   const confirm = useAppConfirm(),
     [open, setOpen] = useState(false),
@@ -492,7 +501,8 @@ export function GerenciaActions({
     <>
       <button
         type="button"
-        className="ml-auto rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-300"
+        role={menuItem ? "menuitem" : undefined}
+        className={menuItem ? undefined : "ml-auto rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-300"}
         onClick={() => {
           setName(gerencia.nombre);
           setId(String(gerencia.gerencia_id ?? ""));

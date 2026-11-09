@@ -15,8 +15,10 @@ import ModalPortal from "@/components/ui/ModalPortal";
 import { CURRENCY_ALL } from "@/lib/currency";
 import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
 import {useClientModulePermissions} from '@/components/clients/ClientModulePermissions';
-import {useBotsWorkspace} from '@/components/bots/useBotsWorkspace';
+import {usePagedBotsWorkspace} from '@/components/bots/usePagedBotsWorkspace';
+import {requestBotsWorkspace} from '@/lib/bots/workspaceRequest';
 import { DIRECTORY_UNAVAILABLE } from "@/lib/bots/import-errors";
+import { BotsDirectoryView } from "@/components/bots/BotsDirectoryView";
 import {BotsManagement,GerenciaActions} from '@/components/bots/BotsManagement';
 import {AtrioBotTable} from '@/components/bots/AtrioBotTable';
 import {WhatsAppInventoryExtras} from '@/components/bots/WhatsAppInventoryExtras';
@@ -177,8 +179,17 @@ export function TelefonosPageContent({
   const [channelFilter,setChannelFilter]=useState<'all'|'whatsapp'|'atrio'>('all');
   const permissions=useClientModulePermissions();
   const canAtrio=unifiedBots&&(isAdmin||permissions.show_atrio);
-  const bots=useBotsWorkspace(userId,workspaceCurrency,isAdmin,canAtrio&&!isAllCurrencies,gerencias);
   const [showOnlyActiveGerencias, setShowOnlyActiveGerencias] = useState(false);
+  const bots=usePagedBotsWorkspace({enabled:unifiedBots&&!isAllCurrencies,userId,workspace:workspaceCurrency,canAtrio,
+    search:gerenciaSearch,channel:channelFilter,onlyActive:showOnlyActiveGerencias,onData(data){
+      setGerencias(data.groups.filter(group=>!group.virtual));
+      const phones:Record<number,GerenciaPhoneRow[]>={};
+      for(const phone of data.phones)(phones[phone.gerencia_id]??=[]).push(phone);
+      setPhonesByGerencia(phones);
+      setPhoneMetricsById(Object.fromEntries(data.metrics.map(metric=>[metric.gerencia_phone_id,{
+        messagesReceived:Number(metric.messages_received)||0,messagesReceivedHistorical:Number(metric.messages_received_historical)||0,calculatedAt:metric.calculated_at,
+      }])));
+    }});
   const [nextSyncCountdown, setNextSyncCountdown] = useState<string>("--:--");
   const [manualPhoneInput, setManualPhoneInput] = useState<Record<number, string>>({});
   const [manualSavingGerenciaId, setManualSavingGerenciaId] = useState<number | null>(null);
@@ -226,6 +237,7 @@ export function TelefonosPageContent({
       setAutoResetDaily(false);
     }
 
+    if(unifiedBots){await bots.load(uid);return;}
     const listRaw = isAdmin
       ? await fetchGerenciasForAdmin(uid, workspaceCurrency, unifiedBots)
       : await fetchGerencias(uid, workspaceCurrency, unifiedBots);
@@ -283,13 +295,18 @@ export function TelefonosPageContent({
       };
     }
     setPhoneMetricsById(metricsById);
-  }, [isAdmin, workspaceCurrency, unifiedBots]);
+  }, [isAdmin, workspaceCurrency, unifiedBots, bots.load]);
 
   const getActivePhonesCount = useCallback(() => {
+    if(unifiedBots){
+      const pageActive=bots.phones.filter(p=>p.status==='active'&&getAssignmentRole(p)==='acquisition').length;
+      const localActive=Object.values(phonesByGerencia).flat().filter(p=>p.status==='active'&&getAssignmentRole(p)==='acquisition').length;
+      return bots.activePhones-pageActive+localActive;
+    }
     return Object.values(phonesByGerencia).reduce((acc, list) => {
       return acc + list.filter((p) => p.status === "active" && getAssignmentRole(p) === "acquisition").length;
     }, 0);
-  }, [phonesByGerencia]);
+  }, [phonesByGerencia,unifiedBots,bots.activePhones,bots.phones]);
 
   useEffect(() => {
     const init = async () => {
@@ -368,7 +385,8 @@ export function TelefonosPageContent({
 
   const refreshBotInventory = async (gerenciaId: number | null) => {
     if(!unifiedBots)return;
-    const selected=gerencias.filter(g=>g.source_type!=='manual'&&(gerenciaId===null?(!isAdmin||(g.user_id??userId)===userId):g.id===gerenciaId));
+    const sourceGroups=gerenciaId===null?(await requestBotsWorkspace<{gerencias:Gerencia[]}>({action:'gerencias',workspace:workspaceCurrency,inventory:true})).gerencias:gerencias;
+    const selected=sourceGroups.filter(g=>g.source_type!=='manual'&&(gerenciaId===null?(!isAdmin||(g.user_id??userId)===userId):g.id===gerenciaId));
     const scopes=new Map<string,{kind:'owner'|'agency';id:number;targetUserId?:string}>();
     for(const group of selected){
       const owners=[...new Set((group.pbadmin_bots??[]).map(bot=>bot.owner_id).filter((id):id is number=>Number.isSafeInteger(id)&&Number(id)>0))];
@@ -529,13 +547,14 @@ export function TelefonosPageContent({
       .flat()
       .filter((p) => p.status !== "active")
       .map((p) => p.id);
-    if (inactiveIds.length === 0) {
+    const inactiveCount=unifiedBots?bots.inactivePhones:inactiveIds.length;
+    if (inactiveCount === 0) {
       setError("No hay telefonos inactivos para borrar.");
       return;
     }
     const ok = await confirmAction({
       title: "Eliminar teléfonos inactivos",
-      description: `Se eliminarán ${inactiveIds.length} teléfonos inactivos de la base de datos. Esta acción no se puede deshacer.`,
+      description: `Se eliminarán ${inactiveCount} teléfonos inactivos del workspace, incluidas las otras páginas. Esta acción no se puede deshacer.`,
       confirmLabel: "Eliminar teléfonos",
       danger: true,
     });
@@ -543,11 +562,15 @@ export function TelefonosPageContent({
     setGlobalDeletingInactive(true);
     setError(null);
     try {
+      if(unifiedBots){
+        await requestBotsWorkspace({action:'delete_inactive',workspace:workspaceCurrency});
+      }else{
       const { error: deleteError } = await supabase
         .from("gerencia_phones")
         .delete()
         .in("id", inactiveIds);
       if (deleteError) throw deleteError;
+      }
       await loadData(userId);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al borrar telefonos inactivos");
@@ -763,7 +786,7 @@ export function TelefonosPageContent({
 
   const normalizedGerenciaSearch = gerenciaSearch.trim().toLowerCase();
   const normalizedPhoneSearch = onlyDigits(gerenciaSearch);
-  const displayGerencias:BotGerencia[]=unifiedBots?bots.groups:gerencias.map(g=>({...g,atrioBots:[]}));
+  const displayGerencias:BotGerencia[]=unifiedBots?bots.groups.map(group=>({...group,...gerencias.find(g=>g.id===group.id),atrioBots:group.atrioBots})):gerencias.map(g=>({...g,atrioBots:[]}));
   const gerenciaHasActivePhone = (g: BotGerencia) =>
     (channelFilter!=='atrio'&&(phonesByGerencia[g.id] ?? []).some(
       (p) => p.status === "active" && p.source_available !== false,
@@ -811,6 +834,31 @@ export function TelefonosPageContent({
           </a>
         </div>
       ) : null}
+      {unifiedBots ? <BotsDirectoryView
+        groups={displayGerencias} filteredGroups={displayGerencias} phones={phonesByGerencia} metrics={phoneMetricsById}
+        page={bots.page} total={bots.total} counts={bots.counts} loading={bots.busy} onPage={bots.setPage}
+        clients={bots.clients} isAdmin={isAdmin} canAtrio={canAtrio}
+        search={gerenciaSearch} onSearch={setGerenciaSearch} channel={channelFilter} onChannel={setChannelFilter}
+        onlyActive={showOnlyActiveGerencias} onOnlyActive={() => setShowOnlyActiveGerencias(value => !value)} activeCount={bots.activeCount}
+        filterKey={`${workspaceCurrency}:${gerenciaSearch}:${channelFilter}:${showOnlyActiveGerencias}`}
+        countdown={nextSyncCountdown} metricsTime={phoneMetricsLabel}
+        management={userId && <BotsManagement userId={userId} workspace={workspaceCurrency} gerencias={gerencias} isAdmin={isAdmin} canAtrio={canAtrio}
+          onChanged={async () => { await loadData(userId); bots.reload(); }} onImported={async (gerenciaId, refreshInventory) => { await handleSync(gerenciaId ?? null, refreshInventory); bots.reload(); }} />}
+        feedback={<>{bots.busy && <p role="status" className="text-xs text-zinc-400">Cargando página de bots...</p>}
+          {!bots.busy && bots.projectionPending>0 && <p role="status" className="text-xs text-zinc-400">El directorio de Atrio se está actualizando en segundo plano.</p>}
+          {bots.error && <p role="alert" className="text-xs text-amber-300">{bots.error} <button type="button" className="underline" onClick={bots.reload}>Reintentar</button></p>}
+          {error && <p role="alert" className="ui-alert text-sm text-[var(--color-danger)]">{error}</p>}</>}
+        globalSyncing={globalSyncing} canSync={bots.hasPbadmin || canAtrio}
+        resettingCounters={globalResetting} resettingMessages={globalResettingMessages} deletingInactive={globalDeletingInactive}
+        hasPhoneGroups={bots.counts.whatsapp>0} autoReset={autoResetDaily} autoResetSaving={autoResetSaving}
+        syncingId={syncingGerenciaId} resettingId={resettingGerenciaId} resettingMessagesId={resettingMessagesGerenciaId} switchingId={switchingGerenciaId}
+        onSyncAll={() => { if (bots.hasPbadmin) void handleSync(null); else bots.reload(); }}
+        onResetAtrio={async metric=>{await requestBotsWorkspace({action:'reset_atrio',workspace:workspaceCurrency,metric});}}
+        onSync={handleSync} onReset={handleReset} onResetMessages={handleResetMessages} onAutoReset={handleAutoResetToggle} onDeleteInactive={handleDeleteInactive}
+        onFairCriterion={handleFairCriterionChange} onStatus={handleManualStatusToggle} onUsage={handleAssignmentRoleChange} onComment={handleManualCommentSave}
+        onAddPhone={id => { setManualSaveError(null); setManualModalGerenciaId(id); }}
+        onGerenciaChanged={async () => { if (userId) await loadData(userId); bots.reload(); }} onAtrioChanged={bots.reload} formatPhone={formatPhone}
+      /> : <>
       <PageHeader
         eyebrow="Operación"
         title={title}
@@ -1327,6 +1375,8 @@ export function TelefonosPageContent({
           })}
         </div>
       )}
+
+      </>}
 
       {manualModalGerenciaId !== null && (
         <ModalPortal>

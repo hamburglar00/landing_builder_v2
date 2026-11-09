@@ -1,4 +1,5 @@
-export type DestinationClient = { id: string; user_id: string; workspace_currency: string; atrio_id: string };
+import { isSameOriginRequest } from "@/lib/http/sameOrigin";
+export type DestinationClient = { id: string; user_id: string; workspace_currency: string; atrio_id: string; bot_directory?: unknown };
 export type DestinationLanding = { id: string; user_id: string; workspace_currency: string; config: unknown };
 export type DestinationBackend = {
   authenticate(token: string): Promise<boolean>;
@@ -7,6 +8,7 @@ export type DestinationBackend = {
   workspaceClients(token: string, owner: string, workspace: string): Promise<DestinationClient[]>;
   call(action: "directory" | "configuration" | "configure" | "reset", input: object): Promise<unknown>;
   assign(token: string, landingId: string, clientIds: string[]): Promise<void>;
+  cacheDirectory?(token: string, clients: DestinationClient[], result: unknown): Promise<boolean>;
 };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const providers = ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_skin"];
@@ -15,7 +17,7 @@ const json = (body: object, status = 200) => Response.json(body, { status, heade
 export async function handleManagerDestinations(request: Request, backend: DestinationBackend) {
   try {
     if (request.method !== "POST") return json({ error: "Método no permitido." }, 405);
-    if (request.headers.get("origin") && request.headers.get("origin") !== new URL(request.url).origin) return json({ error: "Origen no permitido." }, 403);
+    if (!isSameOriginRequest(request)) return json({ error: "Origen no permitido." }, 403);
     const token = request.headers.get("authorization")?.match(/^Bearer (.+)$/)?.[1];
     if (!token || !await backend.authenticate(token)) return json({ error: "Sesión no válida." }, 401);
     if (request.headers.get("content-type")?.split(";")[0].trim() !== "application/json") return json({ error: "Solicitud no válida." }, 415);
@@ -29,7 +31,9 @@ export async function handleManagerDestinations(request: Request, backend: Desti
       const ids = [...new Set<string>(input.clientIds)];
       const clients = await backend.clients(token, ids);
       if (clients.length !== ids.length || clients.some(client => !uuid.test(client.atrio_id))) return json({ error: "No tenés acceso a estos asesores." }, 403);
-      return json(await backend.call(input.action, { advisor_ids: [...new Set(clients.map(client => client.atrio_id))], ...(input.action === "reset" ? { metric: input.metric } : {}) }) as object);
+      const result=await backend.call(input.action, { advisor_ids: [...new Set(clients.map(client => client.atrio_id))], ...(input.action === "reset" ? { metric: input.metric } : {}) }) as object;
+      const directoryChanged=input.action==="directory"&&backend.cacheDirectory?await backend.cacheDirectory(token,clients,result):false;
+      return json(input.action==="directory"?{...result,directoryChanged}:result);
     }
     if (!["configuration", "configurations", "configure"].includes(input.action) || !uuid.test(input.landingId)) return json({ error: "Destino no válido." }, 400);
     const requestedProviders: string[] = input.action === "configurations" ? input.targetProviders : [input.targetProvider];

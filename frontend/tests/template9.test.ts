@@ -38,10 +38,10 @@ test("Template 9 has independent defaults/drafts and keeps the Atrio channel", (
   assert.equal(switchLandingTemplate(edited, "template2").ctaDestination, "whatsapp");
 });
 
-test("Template 9 permission uses the existing single-platform entry capability", () => {
-  const hidden = renderToStaticMarkup(createElement(LandingTemplateSection, { config, setConfig() {}, allowTemplate7: false }));
+test("Template 9 permission uses the global Atrio capability", () => {
+  const hidden = renderToStaticMarkup(createElement(LandingTemplateSection, { config, setConfig() {}, allowAtrio: false }));
   assert.doesNotMatch(hidden, /value="template9"/);
-  const visible = renderToStaticMarkup(createElement(LandingTemplateSection, { config, setConfig() {}, allowTemplate7: true }));
+  const visible = renderToStaticMarkup(createElement(LandingTemplateSection, { config, setConfig() {}, allowAtrio: true }));
   assert.match(visible, /value="template9"/);
   const preview = renderToStaticMarkup(createElement(LandingPreview, { config }));
   assert.match(preview, /iframe/);

@@ -37,6 +37,16 @@ test("directory denies IDs filtered out by actor ownership", async () => {
   assert.equal(response.status, 403); assert.equal(contacted, false);
 });
 
+test("directory projection refresh is restricted to the clients validated by ownership",async()=>{
+  const cached:unknown[]=[];
+  const deps=backend({call:async()=>({advisors:[]}),cacheDirectory:async(token,clients,result)=>{cached.push({token,clients,result});return true;}});
+  const response=await handleManagerDestinations(request({action:"directory",clientIds:[ids.client]}),deps);
+  assert.equal(response.status,200);assert.deepEqual(await response.json(),{advisors:[],directoryChanged:true});
+  assert.deepEqual(cached,[{token:"test",clients:[client],result:{advisors:[]}}]);
+  const denied=await handleManagerDestinations(request({action:"directory",clientIds:[ids.client]}),{...deps,clients:async()=>[]});
+  assert.equal(denied.status,403);assert.equal(cached.length,1);
+});
+
 test("metric resets derive advisor scope from owned clients and cannot reset another actor", async () => {
   calls.length = 0;
   const payload = { action: "reset", clientIds: [ids.client], metric: "messages_received", advisor_ids: [ids.otherAdvisor] };

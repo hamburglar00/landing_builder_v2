@@ -146,15 +146,15 @@ export async function fetchLandingById(
   return data ? rowToLanding(data as LandingRow) : null;
 }
 
-/** Permiso administrado por superadmin; sin fila, Template 7 permanece oculto. */
-export async function fetchTemplate7Permission(userId: string): Promise<boolean> {
+/** One administrator-controlled capability covers every Atrio template. */
+export async function fetchAtrioTemplatePermission(userId: string): Promise<boolean> {
   const { data, error } = await supabase
-    .from("client_template_permissions")
-    .select("template7_enabled")
+    .from("client_module_permissions")
+    .select("show_atrio")
     .eq("user_id", userId)
     .maybeSingle();
   if (error) throw error;
-  return data?.template7_enabled === true;
+  return data?.show_atrio === true;
 }
 
 /**
@@ -312,9 +312,3 @@ export async function deleteLanding(landingId: string): Promise<void> {
 
 /** Código de error Postgres por violación de restricción única. */
 export const UNIQUE_VIOLATION_CODE = "23505";
-
-export async function fetchTemplate8Permission(userId: string): Promise<boolean> {
-  const { data, error } = await supabase.from("client_template_permissions").select("template8_enabled").eq("user_id", userId).maybeSingle();
-  if (error) throw error;
-  return data?.template8_enabled === true;
-}

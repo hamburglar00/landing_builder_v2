@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import {
   buildAtrioUrl,
   updateAtrioClient,
@@ -14,7 +14,8 @@ import {
 import type { AtrioBotEntry } from "@/lib/bots/workspace";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import { ModalShell } from "@/components/ui/PanelPrimitives";
-const PLATFORM_NAMES: Record<number, string> = {
+import { BotResetIcon } from "./BotActionIcons";
+export const PLATFORM_NAMES: Record<number, string> = {
   1: "Ases del Norte",
   2: "Ganamos NET",
   3: "Juga y Gana",
@@ -26,9 +27,11 @@ const PLATFORM_NAMES: Record<number, string> = {
 export function AtrioBotTable({
   entries,
   onChanged,
+  render,
 }: {
   entries: AtrioBotEntry[];
   onChanged: () => void;
+  render?: (actions: (entry: AtrioBotEntry) => ReactNode) => ReactNode;
 }) {
   const confirm = useAppConfirm(),
     [error, setError] = useState(""),
@@ -36,6 +39,7 @@ export function AtrioBotTable({
   const [editing, setEditing] = useState<AtrioBotEntry | null>(null),
     [slug, setSlug] = useState(""),
     [atrioId, setAtrioId] = useState("");
+  const closeEditing = useCallback(() => setEditing(null), []);
   async function reset(entry: AtrioBotEntry, metric: BotResetMetric) {
     if (
       !(await confirm({
@@ -80,7 +84,65 @@ export function AtrioBotTable({
       setBusy(false);
     }
   }
+  const renderActions = (entry: AtrioBotEntry) => <>
+                      <a
+                        role="menuitem"
+                        href={buildAtrioUrl(entry.client.slug)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-emerald-300"
+                      >
+                        Abrir asesor
+                      </a>
+                      {entry.connection && (
+                        <a
+                        role="menuitem"
+                          href={`${buildAtrioUrl(entry.client.slug)}/bot/${entry.connection.manager_id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Abrir chat del bot
+                        </a>
+                      )}
+                      <button
+                        role="menuitem"
+                        disabled={busy}
+                        onClick={() => {
+                          setEditing(entry);
+                          setSlug(entry.client.slug);
+                          setAtrioId(entry.client.atrio_id);
+                        }}
+                      >
+                        Editar vínculo
+                      </button>
+                      {render && <div role="separator" className="my-1 h-px bg-[#26323a]" />}
+                      <button
+                        role="menuitem"
+                        disabled={busy || !entry.connection}
+                        onClick={() => void reset(entry, "usage_count")}
+                      >
+                        <BotResetIcon />Reiniciar asignaciones del asesor
+                      </button>
+                      <button
+                        role="menuitem"
+                        disabled={busy || !entry.connection}
+                        onClick={() => void reset(entry, "messages_received")}
+                      >
+                        <BotResetIcon />Reiniciar chats del asesor
+                      </button>
+                      {render && <div role="separator" className="my-1 h-px bg-[#26323a]" />}
+                      <button
+                        role="menuitem"
+                        disabled={busy}
+                        onClick={() => void remove(entry)}
+                        className="text-red-300" data-danger="true"
+                      >
+                        Quitar asesor
+                      </button>
+  </>;
   return (
+    <>
+      {render ? <>{error && <p role="alert" className="text-xs text-red-300">{error}</p>}{render(renderActions)}</> : (
     <section className="mt-4 space-y-2" aria-label="Bots de Atrio">
       <h3 className="text-xs font-semibold text-zinc-300">Atrio</h3>
       {error && (
@@ -170,54 +232,7 @@ export function AtrioBotTable({
                     <summary className="cursor-pointer text-zinc-300">
                       Administrar
                     </summary>
-                    <div className="mt-2 flex flex-col items-start gap-2 whitespace-nowrap text-zinc-400">
-                      <a
-                        href={buildAtrioUrl(entry.client.slug)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-emerald-300"
-                      >
-                        Abrir asesor
-                      </a>
-                      {entry.connection && (
-                        <a
-                          href={`${buildAtrioUrl(entry.client.slug)}/bot/${entry.connection.manager_id}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Abrir chat del bot
-                        </a>
-                      )}
-                      <button
-                        disabled={busy}
-                        onClick={() => {
-                          setEditing(entry);
-                          setSlug(entry.client.slug);
-                          setAtrioId(entry.client.atrio_id);
-                        }}
-                      >
-                        Editar vínculo
-                      </button>
-                      <button
-                        disabled={busy || !entry.connection}
-                        onClick={() => void reset(entry, "usage_count")}
-                      >
-                        Reiniciar asignaciones del asesor
-                      </button>
-                      <button
-                        disabled={busy || !entry.connection}
-                        onClick={() => void reset(entry, "messages_received")}
-                      >
-                        Reiniciar chats del asesor
-                      </button>
-                      <button
-                        disabled={busy}
-                        onClick={() => void remove(entry)}
-                        className="text-red-300"
-                      >
-                        Quitar asesor
-                      </button>
-                    </div>
+                    {renderActions(entry)}
                   </details>
                 </td>
               </tr>
@@ -225,10 +240,12 @@ export function AtrioBotTable({
           </tbody>
         </table>
       </div>
+    </section>
+      )}
       <ModalShell
         open={!!editing}
         title="Editar vínculo de Atrio"
-        onClose={() => setEditing(null)}
+        onClose={closeEditing}
         closeDisabled={busy}
         footer={
           <button
@@ -282,6 +299,6 @@ export function AtrioBotTable({
           )}
         </div>
       </ModalShell>
-    </section>
+    </>
   );
 }

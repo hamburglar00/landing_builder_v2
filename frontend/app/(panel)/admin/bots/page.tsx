@@ -6,8 +6,8 @@ const Bots = dynamic(
     import("@/components/telefonos/TelefonosPageContent").then(
       (module) => module.TelefonosPageContent,
     ),
-  { loading: () => <DashboardSkeleton title="Cargando bots…" /> },
+  { loading: () => <DashboardSkeleton title="Cargando redirección…" /> },
 );
 export default function AdminBotsPage() {
-  return <Bots title="BOTS" unifiedBots isAdmin />;
+  return <Bots title="Redirección" unifiedBots isAdmin />;
 }

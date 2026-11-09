@@ -23,11 +23,29 @@ function backend(): DestinationBackend {
     },
     async clients(token, ids) {
       if (!actor || !ids.length) return [];
-      let query = scoped(token).from("atrio_clients").select("id,user_id,workspace_currency,atrio_id").in("id", ids);
+      let query = scoped(token).from("atrio_clients").select("id,user_id,workspace_currency,atrio_id,bot_directory").in("id", ids);
       if (actor.role !== "admin") query = query.eq("user_id", actor.id);
       const result = await query;
       if (result.error) throw result.error;
       return result.data || [];
+    },
+    async cacheDirectory(token,clients,result){
+      const rows=(result as {advisors?:{id:string;connections:Record<string,unknown>[]}[]})?.advisors;
+      if(!Array.isArray(rows))throw Error("Invalid directory");
+      const fields=["connection_id","advisor_id","advisor_slug","advisor_name","manager_id","agency_id","agency_name","target_provider","manager_type","active","verified_at"];
+      const metadata=(values:Record<string,unknown>[])=>values.map(row=>Object.fromEntries(fields.map(key=>[key,row[key]??null])))
+        .sort((a,b)=>String(a.connection_id).localeCompare(String(b.connection_id)));
+      let changed=false;
+      for(const client of clients){
+        const advisor=rows.find(row=>row.id===client.atrio_id);
+        if(!advisor)continue;
+        const next=metadata(advisor.connections),previous=Array.isArray(client.bot_directory)?metadata(client.bot_directory):null;
+        if(JSON.stringify(next)===JSON.stringify(previous))continue;
+        const update=await scoped(token).from("atrio_clients").update({bot_directory:next}).eq("id",client.id);
+        if(update.error)throw update.error;
+        changed=true;
+      }
+      return changed;
     },
     async landing(token, id) {
       if (!actor) return null;

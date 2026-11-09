@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabaseClient";
 import ConstructorSetupGuide from "@/components/onboarding/ConstructorSetupGuide";
 import { RouteProgress } from "@/components/ui/RouteProgress";
 import { LandingBuilderLogo } from "@/components/brand/LandingBuilderLogo";
+import { RedirectionIcon } from "@/components/ui/RedirectionIcon";
 import { CurrencyScopeSelector } from "@/components/currency/CurrencyScope";
 import { AppConfirmProvider } from "@/components/ui/AppConfirmDialog";
 import { ClientModulePermissionsContext } from "@/components/clients/ClientModulePermissions";
@@ -610,7 +611,6 @@ export default function DashboardLayout({
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-4 md:block">
           <div className="min-w-0 pr-2 md:pr-0">
             <LandingBuilderLogo />
-            <p className="mt-1 text-[9px] text-[var(--color-text-disabled)]">Constructor de landings</p>
           </div>
           <button
             type="button"
@@ -725,11 +725,8 @@ export default function DashboardLayout({
                 : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
             }`}
           >
-            <NavIcon
-              variant="telefonos"
-              active={Boolean(pathname?.startsWith("/dashboard/bots"))}
-            />
-            <span>BOTS</span>
+            <RedirectionIcon className="h-4 w-4 shrink-0" />
+            <span>REDIRECCIÓN</span>
           </Link>
 
           <Link

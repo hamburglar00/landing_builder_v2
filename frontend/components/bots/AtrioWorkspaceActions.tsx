@@ -1,24 +1,31 @@
 "use client";
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import type { AtrioClient } from "@/lib/atrio/atrioDb";
 import {
   requestManagerDestinations,
   type BotResetMetric,
 } from "@/lib/atrio/managerDestinations";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
+import { BotResetIcon } from "./BotActionIcons";
 export function AtrioWorkspaceActions({
   clients,
   onChanged,
+  render,
+  onReset,
+  hasClients,
 }: {
   clients: AtrioClient[];
   onChanged: () => void;
+  render?: (actions: ReactNode) => ReactNode;
+  onReset?: (metric: BotResetMetric) => Promise<void>;
+  hasClients?: boolean;
 }) {
   const confirm = useAppConfirm(),
     inFlight = useRef(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   async function reset(metric: BotResetMetric) {
-    if (inFlight.current || !clients.length) return;
+    if (inFlight.current || !(hasClients ?? !!clients.length)) return;
     inFlight.current = true;
     try {
       if (
@@ -31,7 +38,8 @@ export function AtrioWorkspaceActions({
         return;
       setBusy(true);
       setError("");
-      for (let index = 0; index < clients.length; index += 100)
+      if(onReset)await onReset(metric);
+      else for (let index = 0; index < clients.length; index += 100)
         await requestManagerDestinations({
           action: "reset",
           metric,
@@ -49,32 +57,30 @@ export function AtrioWorkspaceActions({
       onChanged();
     }
   }
-  return (
-    <div className="space-y-2">
-      <details className="w-fit rounded-lg border border-zinc-800 px-3 py-2 text-xs text-zinc-400">
-        <summary className="cursor-pointer">Métricas de Atrio</summary>
-        <div className="mt-3 flex flex-wrap gap-3">
+  const actions = <>
           <button
             type="button"
-            disabled={busy || !clients.length}
+            role={render ? "menuitem" : undefined}
+            disabled={busy || !(hasClients ?? !!clients.length)}
             onClick={() => void reset("usage_count")}
           >
-            Reiniciar asignaciones de Atrio
+            <BotResetIcon />Reiniciar asignaciones de Atrio
           </button>
           <button
             type="button"
-            disabled={busy || !clients.length}
+            role={render ? "menuitem" : undefined}
+            disabled={busy || !(hasClients ?? !!clients.length)}
             onClick={() => void reset("messages_received")}
           >
-            Reiniciar chats de Atrio
+            <BotResetIcon />Reiniciar chats de Atrio
           </button>
-        </div>
-      </details>
+  </>;
+  return <div className="space-y-2">
+    {render ? render(actions) : <details className="w-fit rounded-lg border border-zinc-800 px-3 py-2 text-xs text-zinc-400"><summary className="cursor-pointer">Métricas de Atrio</summary><div className="mt-3 flex flex-wrap gap-3">{actions}</div></details>}
       {error && (
         <p role="alert" className="text-xs text-red-300">
           {error}
         </p>
       )}
-    </div>
-  );
+  </div>;
 }

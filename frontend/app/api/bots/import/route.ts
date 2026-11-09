@@ -4,6 +4,7 @@ import {
 } from "@/lib/bots/import-errors";
 import { persistImport } from "@/lib/bots/persist-import.server";
 import { createClient } from "@supabase/supabase-js";
+import { isSameOriginRequest } from "@/lib/http/sameOrigin";
 import {
   parseImportDirectory,
   visibleImportDirectory,
@@ -16,10 +17,7 @@ const json = (body: object, status = 200) =>
   Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 export async function POST(request: Request) {
   try {
-    if (
-      request.headers.get("origin") &&
-      request.headers.get("origin") !== new URL(request.url).origin
-    )
+    if (!isSameOriginRequest(request))
       return json({ error: "Origen no permitido." }, 403);
     const token = request.headers
       .get("authorization")

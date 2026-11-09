@@ -1,4 +1,5 @@
 import type { TargetProvider } from "../landing/types";
+import { isSameOriginRequest } from "@/lib/http/sameOrigin";
 
 export type ManagerRouteRequest = { landingId: string; atrioClientId: string; targetProvider: TargetProvider; connectionId?: string };
 type Landing = { id: string; user_id: string; workspace_currency: string };
@@ -16,7 +17,7 @@ const json = (data: unknown, status = 200) => Response.json(data, { status, head
 export async function handleManagerRoute(request: Request, backend: ManagerRouteBackend) {
   try {
     if (request.method !== "POST") return json({ error: "Método no permitido." }, 405);
-    if (request.headers.get("origin") && request.headers.get("origin") !== new URL(request.url).origin) return json({ error: "Origen no permitido." }, 403);
+    if (!isSameOriginRequest(request)) return json({ error: "Origen no permitido." }, 403);
     const token = request.headers.get("authorization")?.match(/^Bearer (.+)$/)?.[1];
     if (!token || !await backend.authenticate(token)) return json({ error: "Sesión no válida." }, 401);
     if (request.headers.get("content-type")?.split(";")[0].trim() !== "application/json") return json({ error: "Solicitud no válida." }, 415);

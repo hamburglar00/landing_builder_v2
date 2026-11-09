@@ -8,8 +8,7 @@ import type { Landing, LandingThemeConfig } from "@/lib/landing/types";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import {
   fetchLandingById,
-  fetchTemplate7Permission,
-  fetchTemplate8Permission,
+  fetchAtrioTemplatePermission,
   updateLanding,
   deleteLanding,
   UNIQUE_VIOLATION_CODE,
@@ -182,8 +181,7 @@ export default function DashboardLandingEditarPage() {
   const [showPreview, setShowPreview] = useState(true);
   const [urlBase, setUrlBase] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string | null>(null);
-  const [template8Enabled, setTemplate8Enabled] = useState(false);
-  const [template7Enabled, setTemplate7Enabled] = useState(false);
+  const [atrioEnabled, setAtrioEnabled] = useState(false);
   const [pixelOptions, setPixelOptions] = useState<Array<{ pixel_id: string; comment: string }>>([]);
   const [atrioClients, setAtrioClients] = useState<AtrioClient[]>([]);
   const [pageDrafts, setPageDrafts] = useState<Record<string, ManagerDestinationDraft>>({});
@@ -212,7 +210,7 @@ export default function DashboardLandingEditarPage() {
           fetchLandingAtrioAssignments(id),
           getSettings(),
           supabase.from("profiles").select("nombre").eq("id", user.id).maybeSingle(),
-          fetchTemplate7Permission(user.id),
+          fetchAtrioTemplatePermission(user.id),
         ]);
         if (!found) {
           router.replace("/dashboard");
@@ -236,8 +234,7 @@ export default function DashboardLandingEditarPage() {
         setShowPreview(settings.show_client_landing_preview ?? true);
         setUrlBase(settings.url_base ?? null);
         setClientName(profile.data?.nombre ?? null);
-        setTemplate7Enabled(canUseTemplate7);
-        setTemplate8Enabled(await fetchTemplate8Permission(user.id));
+        setAtrioEnabled(canUseTemplate7);
         const { data: pixels } = await supabase
           .from("conversions_pixel_configs")
           .select("pixel_id,comment")
@@ -275,11 +272,10 @@ export default function DashboardLandingEditarPage() {
     if (!landing) return;
     if (saving) return;
     setSaveError(null);
-    if (landing.config.template === "template8" && !(await fetchTemplate8Permission(userId ?? ""))) { setSaveError("Plantilla 8 no está habilitada para esta cuenta."); return; }
-    if (["template7", "template9"].includes(landing.config.template)) {
+    if (["template7", "template8", "template9"].includes(landing.config.template)) {
       try {
-        if (!(await fetchTemplate7Permission(userId ?? ""))) {
-          setSaveError("Esta plantilla de ingreso no está habilitada para esta cuenta.");
+        if (!(await fetchAtrioTemplatePermission(userId ?? ""))) {
+          setSaveError("Atrio no está habilitado para esta cuenta.");
           return;
         }
       } catch {
@@ -655,7 +651,8 @@ export default function DashboardLandingEditarPage() {
         {landing.landingType !== "external" && (
           <>
             <LandingUrlParametersCard landingName={landing.name} />
-            <LandingTemplateSection config={landing.config} setConfig={setConfig} allowTemplate7={template7Enabled} allowTemplate8={template8Enabled} />
+            <CtaDestinationSection config={landing.config} setConfig={setConfig} allowAtrio={atrioEnabled} />
+            <LandingTemplateSection config={landing.config} setConfig={setConfig} allowAtrio={atrioEnabled} />
           </>
         )}
 
@@ -696,11 +693,6 @@ export default function DashboardLandingEditarPage() {
               config={landing.config}
               setConfig={setConfig}
               workspaceCurrency={landing.workspaceCurrency}
-            />
-            <CtaDestinationSection
-              config={landing.config}
-              setConfig={setConfig}
-              atrioClients={atrioClients}
             />
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1">

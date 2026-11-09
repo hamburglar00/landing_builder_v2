@@ -20,6 +20,8 @@ import {
 } from "@/lib/landing/templateVariants";
 import ModalPortal from "@/components/ui/ModalPortal";
 import CustomSelect from "@/components/ui/CustomSelect";
+import { templateChannel, templatesForChannel } from "@/lib/landing/channels";
+import { CtaDestinationSection } from "./CtaDestinationSection";
 
 interface LandingEditorFormProps {
   config: LandingThemeConfig;
@@ -151,13 +153,11 @@ const TEMPLATE5_LIVE_DEFAULTS: LandingTemplate5LiveConfig = {
 export function LandingTemplateSection({
   config,
   setConfig,
-  allowTemplate7 = true,
-  allowTemplate8 = true,
+  allowAtrio = true,
 }: {
   config: LandingThemeConfig;
   setConfig: React.Dispatch<React.SetStateAction<LandingThemeConfig>>;
-  allowTemplate7?: boolean;
-  allowTemplate8?: boolean;
+  allowAtrio?: boolean;
 }) {
   return (
     <CollapsibleSection title="Plantilla" defaultOpen>
@@ -166,7 +166,7 @@ export function LandingTemplateSection({
           Elegí la plantilla de layout que define qué secciones se configuran.
         </p>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-3">
-          {TEMPLATE_OPTIONS.filter((opt) => (allowTemplate7 || !["template7", "template9"].includes(opt.value)) && (allowTemplate8 || opt.value !== "template8")).map((opt) => (
+          {templatesForChannel(TEMPLATE_OPTIONS, templateChannel(config.template), allowAtrio).map((opt) => (
             <label
               key={opt.value}
               className="flex flex-1 cursor-pointer items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-800"
@@ -185,12 +185,9 @@ export function LandingTemplateSection({
             </label>
           ))}
         </div>
-        {!allowTemplate8 && config.template === "template8" ? (
-          <p className="text-xs text-amber-300" role="alert">Plantilla 8 ya no está habilitada para esta cuenta. Elegí otra plantilla para guardar cambios.</p>
-        ) : null}
-        {!allowTemplate7 && ["template7", "template9"].includes(config.template) ? (
+        {!allowAtrio && templateChannel(config.template) === "atrio" ? (
           <p className="text-xs text-amber-300" role="alert">
-            Esta plantilla de ingreso ya no está habilitada para esta cuenta. Elegí otra plantilla para guardar cambios.
+            Atrio no está habilitado para esta cuenta. Elegí el canal WhatsApp para guardar cambios.
           </p>
         ) : null}
       </div>
@@ -424,7 +421,7 @@ export function LandingEditorForm({
       }}
     >
       {showTemplateSection && (
-        <LandingTemplateSection config={config} setConfig={setConfig} />
+        <><CtaDestinationSection config={config} setConfig={setConfig} /><LandingTemplateSection config={config} setConfig={setConfig} /></>
       )}
 
       {isTemplate9 && <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 text-sm text-zinc-300">El logo y los colores se adaptan a la plataforma seleccionada. La tarjeta conserva el diseño de registro de Plantilla 9.</div>}

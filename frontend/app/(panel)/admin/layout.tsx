@@ -1,4 +1,5 @@
 "use client";
+import { RedirectionIcon } from "@/components/ui/RedirectionIcon";
 
 import { useEffect, useState, type MouseEvent } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -640,11 +641,8 @@ export default function AdminLayout({
                 : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
             }`}
           >
-            <NavIcon
-              variant="telefonos"
-              active={Boolean(pathname?.startsWith("/admin/bots"))}
-            />
-            <span>BOTS</span>
+            <RedirectionIcon className="h-4 w-4 shrink-0" />
+            <span>REDIRECCIÓN</span>
           </Link>
 
           <Link

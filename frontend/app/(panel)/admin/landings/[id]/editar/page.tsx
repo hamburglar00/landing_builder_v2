@@ -644,6 +644,7 @@ export default function AdminLandingEditarPage() {
         {landing.landingType !== "external" && (
           <>
             <LandingUrlParametersCard landingName={landing.name} />
+            <CtaDestinationSection config={landing.config} setConfig={setConfig} />
             <LandingTemplateSection config={landing.config} setConfig={setConfig} />
           </>
         )}
@@ -685,11 +686,6 @@ export default function AdminLandingEditarPage() {
               config={landing.config}
               setConfig={setConfig}
               workspaceCurrency={landing.workspaceCurrency}
-            />
-            <CtaDestinationSection
-              config={landing.config}
-              setConfig={setConfig}
-              atrioClients={atrioClients}
             />
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1">Pixel ID <span className="text-red-400">*</span></label>

@@ -6,6 +6,7 @@ type DirectoryAdvisor = {
   slug: string;
   status: "disponible" | "ausente";
   revision: string;
+  connections?: unknown[];
 };
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -61,17 +62,17 @@ Deno.serve(async (request) => {
     }
   }
 
-  let clientsQuery = supabase
-    .from("atrio_clients")
-    .select("atrio_id");
-  if (immediateSync) clientsQuery = clientsQuery.eq("atrio_id", body!.advisor_id!);
-  const { data: clients, error: clientsError } = await clientsQuery
-    .order("atrio_id", { ascending: true });
-  if (clientsError) return json({ error: "directory_sync_unavailable" }, 503);
-
-  const linkedIds = new Set(
-    (clients ?? []).map((row) => String(row.atrio_id)).filter((id) => UUID_PATTERN.test(id)),
-  );
+  const linkedIds = new Set<string>();
+  let cursor: string | null = null;
+  do {
+    let clientsQuery = supabase.from("atrio_clients").select("id,atrio_id").order("id").limit(500);
+    if (immediateSync) clientsQuery = clientsQuery.eq("atrio_id", body!.advisor_id!);
+    if (cursor) clientsQuery = clientsQuery.gt("id", cursor);
+    const { data: clients, error: clientsError } = await clientsQuery;
+    if (clientsError) return json({ error: "directory_sync_unavailable" }, 503);
+    for(const row of clients ?? [])if(UUID_PATTERN.test(String(row.atrio_id)))linkedIds.add(String(row.atrio_id));
+    cursor=clients?.length===500?String(clients[clients.length-1].id):null;
+  } while(cursor);
   const ids = immediateSync
     ? linkedIds.has(body!.advisor_id!) ? [body!.advisor_id!] : []
     : [...linkedIds];
@@ -95,6 +96,13 @@ Deno.serve(async (request) => {
       { p_advisors: advisors },
     );
     if (applyError) return json({ error: "directory_sync_unavailable" }, 503);
+    // Older Atrio deployments omit connections. Keep the previous projection
+    // until the matching metadata endpoint has been published.
+    const snapshots = advisors.filter(advisor => Array.isArray(advisor.connections));
+    if (snapshots.length) {
+      const cached = await supabase.rpc("cache_atrio_bot_directory", { p_advisors: snapshots });
+      if (cached.error) return json({ error: "directory_sync_unavailable" }, 503);
+    }
     updated += Number(applied ?? 0);
   }
 

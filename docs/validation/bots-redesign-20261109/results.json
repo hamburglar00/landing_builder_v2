@@ -1,0 +1,26 @@
+{
+  "status": "passed",
+  "scope": "Redireccion, canal del editor y permiso global de Atrio",
+  "build": "passed",
+  "contracts": 29,
+  "workspaceAndDestinationContracts": 28,
+  "templateContracts": 23,
+  "browser": {
+    "chromium": 63,
+    "webkit": 63
+  },
+  "postgresAssertions": {
+    "directoryAndWhatsappDaily": 33,
+    "globalAtrioPermission": 17,
+    "atrioDailyFourProviders": 15
+  },
+  "atrioPrivateContractTests": 4,
+  "dispatcherRetryScenarios": 5,
+  "nexobetMarketingTests": 14,
+  "marketingPinnedFiles": 24,
+  "gatewaySdkCopies": 4,
+  "productionMutations": false,
+  "committed": false,
+  "pushed": false,
+  "deployed": false
+}

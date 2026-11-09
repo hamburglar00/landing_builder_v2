@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { build } from "esbuild";
-import { chromium } from "playwright";
+import { chromium, webkit } from "playwright";
 import { createRequire } from "node:module";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -22,7 +22,7 @@ async function main() {
   ].map(([manager, provider, advisor], i) => ({ connection_id:id(i+100), advisor_id:clients[Number(advisor)].atrio_id, advisor_slug:clients[Number(advisor)].slug, advisor_name:null,
     manager_id:manager, agency_id:manager, agency_name:`Gerencia ${manager}`, target_provider:provider, manager_type:"mkt", active:true, verified_at:null, usage_count:0, chats_started:0, messages_received:0 }));
   const advisors = clients.map(client => ({id:client.atrio_id,slug:client.slug,name:client.slug,connections:connections.filter(connection=>connection.advisor_id===client.atrio_id)}));
-  let landing: any, pools: Record<string, any> = {}, operations: any[] = [], actorMode = "dashboard";
+  let landing: any, pools: Record<string, any> = {}, operations: any[] = [], actorMode = "dashboard", allowAtrio=true;
   const reset = () => {
     landing = {id:id(1),userId:id(2),workspaceCurrency:"ARS",landingType:"internal",publishTarget:"constructor",externalDomain:"",name:"Nueva-landing-fixture",pixelId:"123456",landingTag:"EDITOR8",comment:"Isolated editor E2E",
       gerenciaSelectionMode:"weighted_random",gerenciaFairCriterion:"usage_count",atrioSelectionMode:"weighted_random",atrioFairCriterion:"usage_count",phoneMode:"random",phoneKind:"mkt",phoneIntervalStartHour:null,phoneIntervalEndHour:null,postUrl:"",config:{...DEFAULT_CONFIG}};
@@ -56,7 +56,8 @@ async function main() {
       else if(url.pathname==="/fixture/publish") {operations.push({action:"publish"});response=Response.json({ok:true});}
       else if(url.pathname==="/editor.js")response=new Response(javascript,{headers:{"Content-Type":"text/javascript"}});
       else if(url.pathname==="/editor.css")response=new Response(css,{headers:{"Content-Type":"text/css"}});
-      else if(url.pathname.startsWith("/dashboard/")||url.pathname.startsWith("/admin/"))response=new Response(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/editor.css"></head><body><div id="root"></div><script>window.fixture=${JSON.stringify({id:id(1),owner:id(2),actor:actorMode==="admin"?id(3):id(2),clients,mode:actorMode})}</script><script src="/editor.js"></script></body></html>`,{headers:{"Content-Type":"text/html"}});
+      else if(["/brand/atrio/icon.svg","/whatsapp-icon.png"].includes(url.pathname))response=new Response(await readFile(path.join(root,"public",url.pathname)),{headers:{"Content-Type":url.pathname.endsWith("svg")?"image/svg+xml":"image/png"}});
+      else if(url.pathname.startsWith("/dashboard/")||url.pathname.startsWith("/admin/"))response=new Response(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/editor.css"></head><body><div id="root"></div><script>window.fixture=${JSON.stringify({id:id(1),owner:id(2),actor:actorMode==="admin"?id(3):id(2),clients,mode:actorMode,allowAtrio})}</script><script src="/editor.js"></script></body></html>`,{headers:{"Content-Type":"text/html"}});
       else throw Error(`Unexpected local request: ${url.pathname}`);
       res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));
     }catch(error){res.writeHead(500);res.end(String(error));}
@@ -69,7 +70,7 @@ async function main() {
       navigation:`const router={push(value){window.fixtureDestination=value},replace(value){window.fixtureDestination=value}};export const useRouter=()=>router;export const useParams=()=>({id:window.fixture.id});export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);`,
       link:`import React from 'react';export default function Link({href,prefetch,...props}){return <a href={href} {...props}/>}`,
       supabase:`const query=table=>{let single=false;const q=new Proxy({},{get(_,key){if(key==='then')return resolve=>{const values={profiles:{id:window.fixture.owner,nombre:'editor-test',role:window.fixture.mode==='admin'?'admin':'client'},landings:{user_id:window.fixture.owner},settings:{id:1,url_base:location.origin,show_client_landing_preview:false},client_template_permissions:{template7_enabled:true,template8_enabled:true}};resolve({data:single?(values[table]??null):[],error:null})};return()=>{if(key==='single'||key==='maybeSingle')single=true;return q}}});return q};export const supabase={from:query,auth:{getUser:async()=>({data:{user:{id:window.fixture.actor}},error:null}),getSession:async()=>({data:{session:{access_token:'fixture-token'}},error:null})}};`,
-      landings:`export const UNIQUE_VIOLATION_CODE='23505';export const fetchLandingById=async()=>fetch('/fixture/landing').then(r=>r.json());export const fetchTemplate7Permission=async()=>true;export const fetchTemplate8Permission=async()=>true;export async function updateLanding(id,payload){const response=await fetch('/fixture/landing',{method:'POST',body:JSON.stringify({id,payload})});if(!response.ok)throw Error('Fixture save failed')}export const deleteLanding=async()=>{throw Error('No deletion in this test')};`,
+      landings:`export const UNIQUE_VIOLATION_CODE='23505';export const fetchLandingById=async()=>fetch('/fixture/landing').then(r=>r.json());export const fetchAtrioTemplatePermission=async()=>window.fixture.allowAtrio!==false;export async function updateLanding(id,payload){const response=await fetch('/fixture/landing',{method:'POST',body:JSON.stringify({id,payload})});if(!response.ok)throw Error('Fixture save failed')}export const deleteLanding=async()=>{throw Error('No deletion in this test')};`,
       gerencias:`export const fetchGerencias=async()=>[];export const fetchGerenciasForAdmin=async()=>[];export const fetchGerenciaWorkGroups=async()=>[];export const fetchLandingGerencias=async()=>[];export const setLandingGerencias=async()=>{};export const assertLandingGerenciasWorkspaceCompatible=async()=>{};`,
       atrio:`export const fetchAtrioClients=async()=>window.fixture.clients;export const fetchLandingAtrioAssignments=async()=>[];export const setLandingAtrioAssignments=async()=>{};`,
       publish:`export async function publishLandingChanges(){const response=await fetch('/fixture/publish',{method:'POST'});if(!response.ok)throw Error('Fixture publish failed');return {revalidated:true}}`,
@@ -83,7 +84,7 @@ async function main() {
     }}]});
     javascript=bundle.outputFiles[0].text;
     const cssPath=path.join(root,"app/globals.css");css=(await require("postcss")([require("@tailwindcss/postcss")()]).process(await readFile(cssPath,"utf8"),{from:cssPath})).css;
-    browser=await chromium.launch({headless:true});
+    browser=await (process.env.EDITOR_TEST_BROWSER==="webkit"?webkit:chromium).launch({headless:true});
     const results=[];
     for(const mode of ["dashboard","admin"]) {
       reset();actorMode=mode;
@@ -95,7 +96,19 @@ async function main() {
       try { await page.locator('input[value="template1"]').waitFor({timeout:10000}); }
       catch { throw Error(JSON.stringify({mode,errors,body:(await page.locator("body").innerText()).slice(0,1200),redirect:await page.evaluate(()=>(window as any).fixtureDestination)})); }
       await page.locator('input[value="Nueva-landing-fixture"]').fill("editor8test");
+      await page.getByRole('group',{name:'Canal de atención'}).getByRole('button',{name:'Atrio',exact:true}).click();
+      assert.equal(await page.locator('input[value="template1"]').count(),0);
       await page.locator('input[value="template8"]').check();
+      const channel=page.getByRole("group",{name:"Canal de atención"});
+      await channel.getByRole("button",{name:"WhatsApp",exact:true}).click();
+      assert.equal(await page.locator('input[name="landing-template"]').count(),6);
+      await channel.getByRole("button",{name:"Atrio",exact:true}).click();
+      assert.equal(await page.locator('input[value="template8"]').isChecked(),true,"channel switch restores the chosen layout");
+      assert.equal(await page.locator('input[name="landing-template"]').count(),3);
+      assert.equal(await page.getByText("Canal de atención",{exact:true}).count(),0,"Tracking no longer duplicates channel selection");
+      const channelBox=await page.getByRole("region",{name:"Canal de la landing"}).boundingBox();
+      const templateBox=await page.getByRole("button",{name:"Plantilla",exact:true}).boundingBox();
+      assert.ok(channelBox&&templateBox&&channelBox.y<templateBox.y,"channel card precedes templates");
       const skinCard = page.getByRole("heading",{name:"Tarjeta 2",exact:true}).locator("..");
       await skinCard.getByRole("button",{name:"Página de Multi Skin de tarjeta 2",exact:true}).click();
       await page.getByRole("option").first().waitFor();
@@ -107,7 +120,7 @@ async function main() {
       assert.equal(landing.config.template,"template1","Reading the editor must not persist its draft");
       assert.equal(await page.getByRole("group",{name:"Modo de reparto"}).count(),1);
       assert.equal(await page.getByText("Redirección por página",{exact:true}).count(),0);
-      assert.equal(operations.filter(value=>value.action==="directory").length,1);
+      assert.equal(operations.filter(value=>value.action==="directory").length,3,"one directory read per Atrio mount, including channel switches");
       assert.equal(operations.filter(value=>value.action==="configure"||value.action==="assign"||value.action==="save").length,0);
       for(const manager of [1035,1040,1041,1044])await page.getByRole("checkbox",{name:`Seleccionar bot ${manager}`,exact:true}).check();
       if(mode==="dashboard") {
@@ -143,6 +156,7 @@ async function main() {
     await context.route("**/*",route=>new URL(route.request().url()).origin===origin?route.continue():route.abort());
     await page.goto(`${origin}/dashboard/landing/${id(1)}/editar`);
     await page.locator('input[value="Nueva-landing-fixture"]').fill("editor7test");
+    await page.getByRole('group',{name:'Canal de atención'}).getByRole('button',{name:'Atrio',exact:true}).click();
     await page.locator('input[value="template7"]').check();
     await page.getByRole("button",{name:"Redirección",exact:true}).click();await page.getByText("gera",{exact:true}).click();
     await page.getByRole("checkbox",{name:"Seleccionar bot 1035",exact:true}).check();
@@ -151,6 +165,33 @@ async function main() {
     assert.equal(landing.config.template,"template7");assert.equal(pools.rey_de_ases.mode,"fixed");assert.equal(Object.keys(pools).length,1);
     results.push({mode:"dashboard-template7",firstSave:true,oneDirectoryRead:true,threeProviderPools:false,restoredSelection:false});
     await context.close();
+    for(const enabled of [true,false]){
+      reset();allowAtrio=enabled;
+      if(!enabled)landing.config={...DEFAULT_CONFIG,template:"template8",ctaDestination:"atrio"};
+      const mobile=await browser.newContext({viewport:{width:390,height:850}}),page=await mobile.newPage();
+      const errors:string[]=[];page.on("pageerror",error=>errors.push(error.message));
+      await mobile.route("**/*",route=>new URL(route.request().url()).origin===origin?route.continue():route.abort());
+      await page.goto(`${origin}/dashboard/landing/${id(1)}/editar`);
+      const channel=page.getByRole("region",{name:"Canal de la landing"});await channel.waitFor();
+      const atrio=channel.getByRole("button",{name:"Atrio",exact:true}),whatsapp=channel.getByRole("button",{name:"WhatsApp",exact:true});
+      if(enabled){
+        assert.equal(await page.locator('input[name="landing-template"]').count(),6);
+        await atrio.click();assert.equal(await page.locator('input[name="landing-template"]').count(),3);
+        await page.locator('input[value="template9"]').check();
+        await whatsapp.click();await atrio.click();assert.equal(await page.locator('input[value="template9"]').isChecked(),true);
+      }else{
+        assert.equal(await atrio.isDisabled(),true);assert.equal(await page.locator('input[name="landing-template"]').count(),0);
+        await page.getByRole("button",{name:"Guardar",exact:true}).first().click();
+        await page.getByText("Atrio no está habilitado para esta cuenta.",{exact:true}).waitFor();
+        assert.equal(operations.some(operation=>operation.action==="save"),false);
+        await whatsapp.click();assert.equal(await page.locator('input[name="landing-template"]').count(),6);
+      }
+      assert.equal(await channel.locator('img').count(),2);
+      assert.ok(await channel.locator('img').evaluateAll(images=>images.every(image=>(image as HTMLImageElement).naturalWidth>0)),"original channel logos load");
+      await channel.screenshot({path:`test-results/template8/channel-${enabled?"enabled":"disabled"}-mobile.png`});
+      assert.deepEqual(errors,[]);results.push({mode:`mobile-atrio-${enabled?"enabled":"disabled"}`,channelPermission:true});
+      await mobile.close();
+    }
     await writeFile("test-results/template8/editor-results.json",JSON.stringify(results,null,2));console.log(JSON.stringify(results));
   }finally{await browser?.close();await new Promise<void>(done=>server.close(()=>done()));}
 }
