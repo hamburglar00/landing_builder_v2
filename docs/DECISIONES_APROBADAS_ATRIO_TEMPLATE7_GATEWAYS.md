@@ -1307,3 +1307,14 @@ Se retiran el endpoint privado de exportación y su clave dedicada. El autologin
 - El usuario de acceso no es el nombre confirmado de la gerencia. Hasta verificarla, indicarlo explícitamente; luego usar su identificador confirmado hasta disponer de nombre autoritativo. Añadir marcas originales sutiles junto al nombre de plataforma; Multi Skin reúne Ganamos+ y Bet30.
 - Alinear campos en tarjetas paralelas considerando el alto de títulos y descripciones; en móvil se apilan. Los regresos llevan flecha y destino explícito, con aspecto de botón.
 - Avanzar con componentes reales, contratos simulados y PostgreSQL descartable; agrupar la entrega de integración al programador. Los cambios propios de NexoBet se publican independientemente. Sin despliegue de API2 no se certifican credenciales, activación ni operación financiera real. Este lote no modifica ni publica API2, Panel3, Atrio ni gateways.
+
+### Panel3: configuración inicial y marcas de Extensiones (09/11/2026)
+
+- «Comenzar ya» se ofrece sólo en la sidebar, inmediatamente antes del pie con usuario y logout, también en el menú móvil y colapsado. Reutilizar un solo formulario global y reemplazar el cohete del acceso por un icono de inicio, para distinguirlo de LandingBuilder.
+- Al ingresar sin bots configurados, abrir el formulario centrado automáticamente. Consultar el listado autorizado existente, contando también bots pausados; un error o respuesta desconocida no equivale a cero bots. Conservar permisos, avance y reintentos; no crear bots ni cuentas al abrir el aviso. Una cuenta nueva sin bots queda cubierta por la misma condición. No volver a abrir por cada navegación si se cierra durante la visita.
+- En Extensiones, «Ya tengo cuenta» de Atrio y LandingBuilder usa la misma variante secundaria que Ver Tracking y Ver gateways. Mostrar «LandingBuilder» todo junto y los SVG originales de ambas marcas, también en los diálogos de vinculación. Conservar proveedores internos, tokens, cuentas y rutas. Entrega local de Panel3, sin publicación ni cambios de API2.
+
+### Contención del texto en columnas (09/11/2026)
+
+- Regla general: ningún texto de una columna puede invadir la siguiente. Permitir saltos de línea y corte de valores largos, acotar bloques interiores y conservar el texto completo; usar desplazamiento dentro de la tabla cuando sea necesario. No solucionar el solapamiento ocultando la explicación.
+- Corrección inicial en todas las tablas propias de NexoBet, incluido el estado de Conexiones junto a Último control. Verificar límites geométricos de cada texto con descripciones y usuarios extensos, ambos temas, móvil y escritorio.
