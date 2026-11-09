@@ -1,0 +1,452 @@
+{
+  "results": [
+    {
+      "engine": "chromium",
+      "product": "builder",
+      "width": 320,
+      "motion": "no-preference",
+      "mode": "success"
+    },
+    {
+      "engine": "chromium",
+      "product": "builder",
+      "width": 320,
+      "motion": "no-preference",
+      "mode": "expired"
+    },
+    {
+      "engine": "chromium",
+      "product": "builder",
+      "width": 320,
+      "motion": "no-preference",
+      "mode": "network"
+    },
+    {
+      "engine": "chromium",
+      "product": "builder",
+      "width": 320,
+      "motion": "no-preference",
+      "mode": "session"
+    },
+    {
+      "engine": "chromium",
+      "product": "builder",
+      "width": 320,
+      "motion": "reduce",
+      "mode": "success"
+    },
+    {
+      "engine": "chromium",
+      "product": "builder",
+      "width": 320,
+      "motion": "reduce",
+      "mode": "expired"
+    },
+    {
+      "engine": "chromium",
+      "product": "builder",
+      "width": 320,
+      "motion": "reduce",
+      "mode": "network"
+    },
+    {
+      "engine": "chromium",
+      "product": "builder",
+      "width": 320,
+      "motion": "reduce",
+      "mode": "session"
+    },
+    {
+      "engine": "chromium",
+      "product": "builder",
+      "width": 1365,
+      "motion": "no-preference",
+      "mode": "success"
+    },
+    {
+      "engine": "chromium",
+      "product": "builder",
+      "width": 1365,
+      "motion": "no-preference",
+      "mode": "expired"
+    },
+    {
+      "engine": "chromium",
+      "product": "builder",
+      "width": 1365,
+      "motion": "no-preference",
+      "mode": "network"
+    },
+    {
+      "engine": "chromium",
+      "product": "builder",
+      "width": 1365,
+      "motion": "no-preference",
+      "mode": "session"
+    },
+    {
+      "engine": "chromium",
+      "product": "builder",
+      "width": 1365,
+      "motion": "reduce",
+      "mode": "success"
+    },
+    {
+      "engine": "chromium",
+      "product": "builder",
+      "width": 1365,
+      "motion": "reduce",
+      "mode": "expired"
+    },
+    {
+      "engine": "chromium",
+      "product": "builder",
+      "width": 1365,
+      "motion": "reduce",
+      "mode": "network"
+    },
+    {
+      "engine": "chromium",
+      "product": "builder",
+      "width": 1365,
+      "motion": "reduce",
+      "mode": "session"
+    },
+    {
+      "engine": "chromium",
+      "product": "atrio",
+      "width": 320,
+      "motion": "no-preference",
+      "mode": "success"
+    },
+    {
+      "engine": "chromium",
+      "product": "atrio",
+      "width": 320,
+      "motion": "no-preference",
+      "mode": "expired"
+    },
+    {
+      "engine": "chromium",
+      "product": "atrio",
+      "width": 320,
+      "motion": "no-preference",
+      "mode": "network"
+    },
+    {
+      "engine": "chromium",
+      "product": "atrio",
+      "width": 320,
+      "motion": "no-preference",
+      "mode": "session"
+    },
+    {
+      "engine": "chromium",
+      "product": "atrio",
+      "width": 320,
+      "motion": "reduce",
+      "mode": "success"
+    },
+    {
+      "engine": "chromium",
+      "product": "atrio",
+      "width": 320,
+      "motion": "reduce",
+      "mode": "expired"
+    },
+    {
+      "engine": "chromium",
+      "product": "atrio",
+      "width": 320,
+      "motion": "reduce",
+      "mode": "network"
+    },
+    {
+      "engine": "chromium",
+      "product": "atrio",
+      "width": 320,
+      "motion": "reduce",
+      "mode": "session"
+    },
+    {
+      "engine": "chromium",
+      "product": "atrio",
+      "width": 1365,
+      "motion": "no-preference",
+      "mode": "success"
+    },
+    {
+      "engine": "chromium",
+      "product": "atrio",
+      "width": 1365,
+      "motion": "no-preference",
+      "mode": "expired"
+    },
+    {
+      "engine": "chromium",
+      "product": "atrio",
+      "width": 1365,
+      "motion": "no-preference",
+      "mode": "network"
+    },
+    {
+      "engine": "chromium",
+      "product": "atrio",
+      "width": 1365,
+      "motion": "no-preference",
+      "mode": "session"
+    },
+    {
+      "engine": "chromium",
+      "product": "atrio",
+      "width": 1365,
+      "motion": "reduce",
+      "mode": "success"
+    },
+    {
+      "engine": "chromium",
+      "product": "atrio",
+      "width": 1365,
+      "motion": "reduce",
+      "mode": "expired"
+    },
+    {
+      "engine": "chromium",
+      "product": "atrio",
+      "width": 1365,
+      "motion": "reduce",
+      "mode": "network"
+    },
+    {
+      "engine": "chromium",
+      "product": "atrio",
+      "width": 1365,
+      "motion": "reduce",
+      "mode": "session"
+    },
+    {
+      "engine": "webkit",
+      "product": "builder",
+      "width": 320,
+      "motion": "no-preference",
+      "mode": "success"
+    },
+    {
+      "engine": "webkit",
+      "product": "builder",
+      "width": 320,
+      "motion": "no-preference",
+      "mode": "expired"
+    },
+    {
+      "engine": "webkit",
+      "product": "builder",
+      "width": 320,
+      "motion": "no-preference",
+      "mode": "network"
+    },
+    {
+      "engine": "webkit",
+      "product": "builder",
+      "width": 320,
+      "motion": "no-preference",
+      "mode": "session"
+    },
+    {
+      "engine": "webkit",
+      "product": "builder",
+      "width": 320,
+      "motion": "reduce",
+      "mode": "success"
+    },
+    {
+      "engine": "webkit",
+      "product": "builder",
+      "width": 320,
+      "motion": "reduce",
+      "mode": "expired"
+    },
+    {
+      "engine": "webkit",
+      "product": "builder",
+      "width": 320,
+      "motion": "reduce",
+      "mode": "network"
+    },
+    {
+      "engine": "webkit",
+      "product": "builder",
+      "width": 320,
+      "motion": "reduce",
+      "mode": "session"
+    },
+    {
+      "engine": "webkit",
+      "product": "builder",
+      "width": 1365,
+      "motion": "no-preference",
+      "mode": "success"
+    },
+    {
+      "engine": "webkit",
+      "product": "builder",
+      "width": 1365,
+      "motion": "no-preference",
+      "mode": "expired"
+    },
+    {
+      "engine": "webkit",
+      "product": "builder",
+      "width": 1365,
+      "motion": "no-preference",
+      "mode": "network"
+    },
+    {
+      "engine": "webkit",
+      "product": "builder",
+      "width": 1365,
+      "motion": "no-preference",
+      "mode": "session"
+    },
+    {
+      "engine": "webkit",
+      "product": "builder",
+      "width": 1365,
+      "motion": "reduce",
+      "mode": "success"
+    },
+    {
+      "engine": "webkit",
+      "product": "builder",
+      "width": 1365,
+      "motion": "reduce",
+      "mode": "expired"
+    },
+    {
+      "engine": "webkit",
+      "product": "builder",
+      "width": 1365,
+      "motion": "reduce",
+      "mode": "network"
+    },
+    {
+      "engine": "webkit",
+      "product": "builder",
+      "width": 1365,
+      "motion": "reduce",
+      "mode": "session"
+    },
+    {
+      "engine": "webkit",
+      "product": "atrio",
+      "width": 320,
+      "motion": "no-preference",
+      "mode": "success"
+    },
+    {
+      "engine": "webkit",
+      "product": "atrio",
+      "width": 320,
+      "motion": "no-preference",
+      "mode": "expired"
+    },
+    {
+      "engine": "webkit",
+      "product": "atrio",
+      "width": 320,
+      "motion": "no-preference",
+      "mode": "network"
+    },
+    {
+      "engine": "webkit",
+      "product": "atrio",
+      "width": 320,
+      "motion": "no-preference",
+      "mode": "session"
+    },
+    {
+      "engine": "webkit",
+      "product": "atrio",
+      "width": 320,
+      "motion": "reduce",
+      "mode": "success"
+    },
+    {
+      "engine": "webkit",
+      "product": "atrio",
+      "width": 320,
+      "motion": "reduce",
+      "mode": "expired"
+    },
+    {
+      "engine": "webkit",
+      "product": "atrio",
+      "width": 320,
+      "motion": "reduce",
+      "mode": "network"
+    },
+    {
+      "engine": "webkit",
+      "product": "atrio",
+      "width": 320,
+      "motion": "reduce",
+      "mode": "session"
+    },
+    {
+      "engine": "webkit",
+      "product": "atrio",
+      "width": 1365,
+      "motion": "no-preference",
+      "mode": "success"
+    },
+    {
+      "engine": "webkit",
+      "product": "atrio",
+      "width": 1365,
+      "motion": "no-preference",
+      "mode": "expired"
+    },
+    {
+      "engine": "webkit",
+      "product": "atrio",
+      "width": 1365,
+      "motion": "no-preference",
+      "mode": "network"
+    },
+    {
+      "engine": "webkit",
+      "product": "atrio",
+      "width": 1365,
+      "motion": "no-preference",
+      "mode": "session"
+    },
+    {
+      "engine": "webkit",
+      "product": "atrio",
+      "width": 1365,
+      "motion": "reduce",
+      "mode": "success"
+    },
+    {
+      "engine": "webkit",
+      "product": "atrio",
+      "width": 1365,
+      "motion": "reduce",
+      "mode": "expired"
+    },
+    {
+      "engine": "webkit",
+      "product": "atrio",
+      "width": 1365,
+      "motion": "reduce",
+      "mode": "network"
+    },
+    {
+      "engine": "webkit",
+      "product": "atrio",
+      "width": 1365,
+      "motion": "reduce",
+      "mode": "session"
+    }
+  ]
+}

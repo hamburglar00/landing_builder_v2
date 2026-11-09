@@ -1,0 +1,198 @@
+{
+  "syntheticOnly": true,
+  "realAuthPosts": 0,
+  "results": [
+    {
+      "engine": "chromium",
+      "origin": "https://constructor.panelbotadmin.com",
+      "width": 320,
+      "motion": "no-preference",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "chromium",
+      "origin": "https://constructor.panelbotadmin.com",
+      "width": 320,
+      "motion": "reduce",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "chromium",
+      "origin": "https://constructor.panelbotadmin.com",
+      "width": 1365,
+      "motion": "no-preference",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "chromium",
+      "origin": "https://constructor.panelbotadmin.com",
+      "width": 1365,
+      "motion": "reduce",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "chromium",
+      "origin": "https://mkt.panelbotadmin.com",
+      "width": 320,
+      "motion": "no-preference",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "chromium",
+      "origin": "https://mkt.panelbotadmin.com",
+      "width": 320,
+      "motion": "reduce",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "chromium",
+      "origin": "https://mkt.panelbotadmin.com",
+      "width": 1365,
+      "motion": "no-preference",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "chromium",
+      "origin": "https://mkt.panelbotadmin.com",
+      "width": 1365,
+      "motion": "reduce",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "chromium",
+      "origin": "https://www.atrio.website",
+      "width": 320,
+      "motion": "no-preference",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "chromium",
+      "origin": "https://www.atrio.website",
+      "width": 320,
+      "motion": "reduce",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "chromium",
+      "origin": "https://www.atrio.website",
+      "width": 1365,
+      "motion": "no-preference",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "chromium",
+      "origin": "https://www.atrio.website",
+      "width": 1365,
+      "motion": "reduce",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "webkit",
+      "origin": "https://constructor.panelbotadmin.com",
+      "width": 320,
+      "motion": "no-preference",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "webkit",
+      "origin": "https://constructor.panelbotadmin.com",
+      "width": 320,
+      "motion": "reduce",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "webkit",
+      "origin": "https://constructor.panelbotadmin.com",
+      "width": 1365,
+      "motion": "no-preference",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "webkit",
+      "origin": "https://constructor.panelbotadmin.com",
+      "width": 1365,
+      "motion": "reduce",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "webkit",
+      "origin": "https://mkt.panelbotadmin.com",
+      "width": 320,
+      "motion": "no-preference",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "webkit",
+      "origin": "https://mkt.panelbotadmin.com",
+      "width": 320,
+      "motion": "reduce",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "webkit",
+      "origin": "https://mkt.panelbotadmin.com",
+      "width": 1365,
+      "motion": "no-preference",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "webkit",
+      "origin": "https://mkt.panelbotadmin.com",
+      "width": 1365,
+      "motion": "reduce",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "webkit",
+      "origin": "https://www.atrio.website",
+      "width": 320,
+      "motion": "no-preference",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "webkit",
+      "origin": "https://www.atrio.website",
+      "width": 320,
+      "motion": "reduce",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "webkit",
+      "origin": "https://www.atrio.website",
+      "width": 1365,
+      "motion": "no-preference",
+      "status": 200,
+      "requestsBlocked": 1
+    },
+    {
+      "engine": "webkit",
+      "origin": "https://www.atrio.website",
+      "width": 1365,
+      "motion": "reduce",
+      "status": 200,
+      "requestsBlocked": 1
+    }
+  ]
+}
