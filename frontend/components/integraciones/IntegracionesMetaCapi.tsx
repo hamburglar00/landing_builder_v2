@@ -293,6 +293,30 @@ export default function IntegracionesMetaCapi() {
   const [quickComment, setQuickComment] = useState("");
   const [quickCurrency, setQuickCurrency] = useState("ARS");
   const [quickErr, setQuickErr] = useState<string | null>(null);
+  const [quickTestCode, setQuickTestCode] = useState("");
+  const [needsTestCode, setNeedsTestCode] = useState(false);
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [connectionResult, setConnectionResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const connectionVersion = useRef(0);
+  const testConnection = async () => {
+    if (needsTestCode && !quickTestCode.trim()) {
+      setConnectionResult({ ok: false, message: "Ingresá el código que muestra Meta en Probar eventos para completar la prueba." }); return;
+    }
+    const version = ++connectionVersion.current;
+    setTestingConnection(true); setConnectionResult(null);
+    try {
+      const { data } = await supabase.auth.getSession();
+      const response = await fetch("/api/meta/connection", { method: "POST", headers: {
+        "Content-Type": "application/json", Authorization: `Bearer ${data.session?.access_token ?? ""}`,
+      }, body: JSON.stringify({ pixelId: quickPixelId, token: quickToken, ...(quickTestCode.trim() ? { testEventCode: quickTestCode.trim() } : {}) }) });
+      const result = await response.json();
+      if (version === connectionVersion.current) {
+        if (result.code === "meta_test_code_required") setNeedsTestCode(true);
+        setConnectionResult({ ok: response.ok && result.connected === true, message: result.message || "Meta no confirmó la conexión." });
+      }
+    } catch { if (version === connectionVersion.current) setConnectionResult({ ok: false, message: "No pudimos conectar. Volvé a intentar." }); }
+    finally { setTestingConnection(false); }
+  };
 
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState<PixelEditDraft | null>(null);
@@ -704,6 +728,10 @@ export default function IntegracionesMetaCapi() {
   }, [loadAll]);
 
   const openQuickModal = useCallback(() => {
+    connectionVersion.current++;
+    setNeedsTestCode(false);
+    setConnectionResult(null);
+    setQuickTestCode("");
     setQuickPixelId("");
     setQuickToken("");
     setQuickComment("");
@@ -1947,11 +1975,14 @@ export default function IntegracionesMetaCapi() {
 
       {quickOpen && (
         <ModalPortal>
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-3" onInput={event => {
+          connectionVersion.current++; setConnectionResult(null);
+          if (["pixelId", "token"].includes((event.target as HTMLInputElement).name)) { setNeedsTestCode(false); setQuickTestCode(""); }
+        }}>
           <div className="w-full max-w-xl rounded-xl border border-zinc-700 bg-zinc-900 p-4">
             <h3 className="text-sm font-semibold text-zinc-100">Añadir pixel</h3>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <input value={quickPixelId} onChange={(e) => setQuickPixelId(e.target.value.replace(/\D/g, ""))} placeholder="Pixel ID" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
+              <input name="pixelId" value={quickPixelId} onChange={(e) => setQuickPixelId(e.target.value.replace(/\D/g, ""))} placeholder="Pixel ID" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
               <CustomSelect
                 label="Moneda default CAPI del pixel"
                 value={quickCurrency}
@@ -1964,12 +1995,16 @@ export default function IntegracionesMetaCapi() {
                 buttonClassName="h-9 px-3 text-sm"
               />
               <input value={quickComment} onChange={(e) => setQuickComment(e.target.value)} placeholder="Identificación (opcional)" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
-              <input value={quickToken} onChange={(e) => setQuickToken(e.target.value)} placeholder="Access token" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
+              <input name="token" type="password" autoComplete="off" value={quickToken} onChange={(e) => setQuickToken(e.target.value)} placeholder="Access token" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
+              {needsTestCode ? <input value={quickTestCode} maxLength={100} autoComplete="off" onChange={event => setQuickTestCode(event.target.value)} placeholder="Código de Probar eventos de Meta" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" /> : null}
             </div>
+            <p className="mt-2 text-xs text-zinc-400">{needsTestCode ? "Administrador de eventos de Meta → seleccioná este píxel → Probar eventos → copiá el código TEST… y volvé a probar." : "Comprobá el envío a Meta con el ID y el token. La prueba es automática."}</p>
+            {connectionResult ? <p role={connectionResult.ok ? "status" : "alert"} className={`mt-2 text-xs ${connectionResult.ok ? "text-emerald-300" : "text-red-400"}`}>{connectionResult.message}</p> : null}
             {quickErr && <p className="mt-2 text-xs text-red-400">{quickErr}</p>}
             <div className="mt-4 flex justify-end gap-2">
-              <button type="button" onClick={() => setQuickOpen(false)} className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300">Cancelar</button>
-              <button disabled={saving} type="button" onClick={() => void handleQuickSave()} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-900 disabled:opacity-60">Guardar</button>
+              <button type="button" disabled={saving || testingConnection} onClick={() => void testConnection()} className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 disabled:opacity-60">{testingConnection ? "Probando…" : "Probar conexión"}</button>
+              <button type="button" onClick={() => { connectionVersion.current++; setConnectionResult(null); setQuickOpen(false); }} className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300">Cancelar</button>
+              <button disabled={saving || testingConnection} type="button" onClick={() => void handleQuickSave()} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-900 disabled:opacity-60">Guardar</button>
             </div>
           </div>
         </div>

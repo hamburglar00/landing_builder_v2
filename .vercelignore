@@ -1,2 +1,3 @@
 vercel-deploy.log
 *.log
+.local

@@ -1147,32 +1147,32 @@ export function TelefonosPageContent({
                       </div>
                     ) : null}
                     <div className="overflow-x-auto rounded-lg border border-zinc-700">
-                      <table className="min-w-[980px] text-left text-sm md:min-w-full">
-                        <thead className="bg-zinc-800/80">
+                      <table className="w-full whitespace-nowrap text-left text-[13px]">
+                        <thead className="bg-zinc-800/80 text-xs">
                           <tr>
-                            <th className="px-3 py-2 font-medium text-zinc-300">
+                            <th className="px-2 py-2 font-medium text-zinc-300">
                               Teléfono
                             </th>
-                            <th className="px-3 py-2 font-medium text-zinc-300">
+                            <th className="px-2 py-2 font-medium text-zinc-300">
                               Estado
                             </th>
-                            <th className="px-3 py-2 font-medium text-zinc-300">
+                            <th className="px-2 py-2 font-medium text-zinc-300">
                               Tipo
                             </th>
-                            <th className="px-3 py-2 font-medium text-zinc-300">
+                            <th className="px-2 py-2 font-medium text-zinc-300">
                               Uso
                             </th>
-                            <th className="px-3 py-2 font-medium text-zinc-300">
+                            <th className="px-2 py-2 font-medium text-zinc-300">
                               Contador
                             </th>
-                            <th className="px-3 py-2 font-medium text-zinc-300">
-                              Mensajes recibidos
+                            <th className="px-2 py-2 font-medium text-zinc-300" title="Mensajes recibidos" aria-label="Mensajes recibidos">
+                              Mensajes
                             </th>
-                            <th className="px-3 py-2 font-medium text-zinc-300">
-                              Mensajes recibidos históricos
+                            <th className="px-2 py-2 font-medium text-zinc-300" title="Mensajes recibidos históricos" aria-label="Mensajes recibidos históricos">
+                              Históricos
                             </th>
-                            <th className="px-3 py-2 font-medium text-zinc-300">
-                              {(g.source_type ?? "pbadmin") === "manual" ? "Comentario" : "Última sincronización"}
+                            <th className="px-2 py-2 font-medium text-zinc-300" title={(g.source_type ?? "pbadmin") === "manual" ? "Comentario" : "Última sincronización"} aria-label={(g.source_type ?? "pbadmin") === "manual" ? "Comentario" : "Última sincronización"}>
+                              {(g.source_type ?? "pbadmin") === "manual" ? "Comentario" : "Última sync."}
                             </th>
                           </tr>
                         </thead>
@@ -1200,8 +1200,8 @@ export function TelefonosPageContent({
                                 key={p.id}
                                 className="bg-zinc-950/40"
                               >
-                                <td className="px-3 py-2">
-                                  <span className="inline-flex items-center gap-2 font-mono text-zinc-200">
+                                <td className="px-2 py-2">
+                                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap font-mono text-zinc-200">
                                     {formatPhone(p.phone)}
                                     <a
                                       href={`https://wa.me/${p.phone.replace(/\D/g, "")}`}
@@ -1220,13 +1220,13 @@ export function TelefonosPageContent({
                                     </a>
                                   </span>
                                 </td>
-                                <td className="px-3 py-2">
-                                  <div className="flex items-center gap-2">
+                                <td className="px-2 py-2">
+                                  <div className="flex items-center gap-1.5">
                                     {canTogglePhoneStatus ? (
                                       <button
                                         type="button"
                                         onClick={() => void handleManualStatusToggle(p)}
-                                        className={`relative inline-flex h-3 w-5 items-center rounded-full transition ${
+                                        className={`relative inline-flex h-3 w-5 shrink-0 items-center rounded-full transition ${
                                           p.status === "active" ? "bg-emerald-500/70" : "bg-zinc-700"
                                         }`}
                                         title={
@@ -1254,11 +1254,12 @@ export function TelefonosPageContent({
                                     </span>
                                   </div>
                                 </td>
-                                <td className="px-3 py-2 text-zinc-300">
+                                <td className="px-2 py-2 text-zinc-300">
                                   {PHONE_KIND_LABELS[p.kind as PhoneKind] ?? p.kind}
                                 </td>
-                                <td className="px-3 py-2">
+                                <td className="px-2 py-2">
                                   <select
+                                    aria-label={`Uso de ${formatPhone(p.phone)}`}
                                     disabled={!!p.pbadmin_manager_id}
                                     value={assignmentRole}
                                     onChange={(e) =>
@@ -1284,18 +1285,17 @@ export function TelefonosPageContent({
                                       </option>
                                     ))}
                                   </select>
-                                  {p.pbadmin_manager_id && <p className="mt-1 text-xs text-zinc-400">Se administra en PBAdmin · Bot #{p.pbadmin_manager_id}</p>}
                                 </td>
-                                <td className="px-3 py-2 text-zinc-300">
+                                <td className="px-2 py-2 text-zinc-300">
                                   {p.usage_count}
                                 </td>
-                                <td className="px-3 py-2 text-zinc-300">
+                                <td className="px-2 py-2 text-zinc-300">
                                   {phoneMetricsById[p.id]?.messagesReceived ?? 0}
                                 </td>
-                                <td className="px-3 py-2 text-zinc-300">
+                                <td className="px-2 py-2 text-zinc-300">
                                   {phoneMetricsById[p.id]?.messagesReceivedHistorical ?? 0}
                                 </td>
-                                <td className="px-3 py-2 text-xs text-zinc-500">
+                                <td className="px-2 py-2 text-xs text-zinc-500">
                                   {(g.source_type ?? "pbadmin") === "manual" ? (
                                     <input
                                       type="text"

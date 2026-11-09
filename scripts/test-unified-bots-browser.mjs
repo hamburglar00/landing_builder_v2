@@ -10,7 +10,7 @@ const browser = await chromium.launch();
 const id = "92000000-0000-4000-8000-000000000001",
   advisor = "92000000-0000-4000-8000-000000000003";
 const screenshots = new URL(
-  "../docs/validation/unified-bots-20261104/",
+  "../docs/validation/bots-table-20261107/",
   import.meta.url,
 );
 await mkdir(screenshots, { recursive: true });
@@ -141,7 +141,8 @@ async function fixture(width, role = "client", enabled = true) {
     source_available: true,
     usage_count: 5,
     kind: "mkt",
-    assignment_role: "acquisition",
+    assignment_role: "follow_up",
+    pbadmin_manager_id: 99,
     comment: "",
     messages_reset_at: null,
     last_seen_at: "2026-11-04T10:00:00Z",
@@ -150,7 +151,9 @@ async function fixture(width, role = "client", enabled = true) {
   };
   const phones = [
     phone,
-    { ...phone, id: 2, gerencia_id: 20, phone: "5493511234568" },
+    { ...phone, id: 2, gerencia_id: 20, phone: "5493511234568", pbadmin_manager_id: null },
+    { ...phone, id: 3, phone: "5491100000203", assignment_role: "acquisition", pbadmin_manager_id: 100 },
+    { ...phone, id: 4, phone: "5491100000204", status: "inactive", source_available: false, assignment_role: "acquisition", pbadmin_manager_id: 100 },
   ];
   const localCalls = [],
     writes = [],
@@ -310,7 +313,7 @@ async function fixture(width, role = "client", enabled = true) {
   return { context, page, localCalls, writes, errors, phones };
 }
 try {
-  for (const width of [1280, 390]) {
+  for (const width of [1348, 1280, 390]) {
     const f = await fixture(width);
     try {
       await f.page.goto(base + "/dashboard/bots");
@@ -333,6 +336,41 @@ try {
         .click();
       await f.page.getByText("Bot 1045 · Full Carga").waitFor();
       await f.page.getByText("Bot desconectado", { exact: false }).waitFor();
+      checks++;
+      const table = f.page.locator("table").filter({ has: f.page.locator("thead th").getByText("Uso", { exact: true }) });
+      await table.getByRole("combobox").first().waitFor();
+      assert.equal(await table.getByRole("combobox").count(), 3);
+      assert.equal(await table.getByRole("combobox").first().inputValue(), "follow_up");
+      for (const select of await table.getByRole("combobox").all()) {
+        assert.equal(await select.isDisabled(), true, "PBAdmin retains ownership of managed usage");
+      }
+      assert.equal(await f.page.getByText(/Se administra en PBAdmin/).count(), 0);
+      const geometry = await table.evaluate((element) => {
+        const container = element.parentElement;
+        const textRects = [];
+        for (const cell of element.querySelectorAll("th,td")) {
+          const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+          while (walker.nextNode()) {
+            const node = walker.currentNode;
+            if (!node.textContent.trim() || node.parentElement.closest("select")) continue;
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            textRects.push({ text: node.textContent.trim(), lines: range.getClientRects().length });
+          }
+        }
+        return {
+          containerWidth: container.clientWidth,
+          tableWidth: element.getBoundingClientRect().width,
+          documentWidth: document.documentElement.scrollWidth,
+          textRects,
+        };
+      });
+      assert.ok(geometry.textRects.every(({ lines }) => lines <= 1), "phones, states, dates and headers stay on one line: " + JSON.stringify(geometry.textRects));
+      assert.ok(geometry.documentWidth <= width, "table overflow stays inside its scroll container");
+      if (width >= 1280) {
+        assert.ok(geometry.tableWidth <= geometry.containerWidth + 1, "all columns fit desktop: " + JSON.stringify(geometry));
+      }
+      await table.screenshot({ path: new URL(`table-${width}.png`, screenshots).pathname.replace(/^\/C:/, "C:") });
       checks++;
       const search = f.page.getByRole("textbox", {
         name: "Buscar gerencia, bot, asesor o teléfono",
@@ -478,7 +516,7 @@ try {
       await f.page.evaluate(() => window.scrollTo(0, 0));
       await f.page.screenshot({
         path: new URL(
-          width === 390 ? "mobile.png" : "desktop.png",
+          `page-${width}.png`,
           screenshots,
         ).pathname.replace(/^\/C:/, "C:"),
         fullPage: true,

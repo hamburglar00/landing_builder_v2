@@ -1,5 +1,19 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### NexoBet: alta temporal sin correo y revisión de UI (07/11/2026)
+
+- El usuario autorizó habilitar su alta de cliente de prueba en la web publicada de NexoBet mientras se prepara el correo. La excepción se limita a emails exactos configurados en servidor; no se publica la lista ni se desactiva globalmente la confirmación de Supabase.
+- Se conserva contraseña de al menos diez caracteres, rol cliente, suspensión, pertenencia, pago y activación real. No confirmar ni cambiar la contraseña de una cuenta existente mediante un reintento de registro.
+- Desde el alta se ofrece una vista privada de la UI con datos ficticios y controles deshabilitados, únicamente para clientes autorizados con sesión confirmada. No habilita el inbox operativo ni crea gerencias, bots o pagos.
+- Vaciar la lista o configurar correo listo desactiva el bypass y cierra la vista de prueba en producción. La cuenta de prueba existente conserva su identidad. Publicación limitada a NexoBet; API2/Panel3 y los cuatro gateways no requieren cambios para esta excepción.
+
+### Continuidad funcional de NexoBet: instalación y push (07/11/2026, local)
+
+- El usuario ratificó que NexoBet conserva todas las funciones operativas de Atrio y los gateways, incluida PWA, push y detección de instalación; de Landing incorpora crear/editar/publicar landings, Meta Pixel/CAPI, tabla de conversiones y estadísticas, con servicios y datos propios.
+- El receptor canónico de acuses de push debe aceptar NexoBet además de Atrio y el propio origen del worker. Conservar el endpoint exacto `/api/push/received`, sin parámetros/fragmentos/credenciales, y la comprobación firmada del mensaje y destinatario. Sincronizado en los cuatro gateways dentro del mismo lote y cubierto por pruebas.
+- El botón de push del asesor sólo informa estado activo después de guardar la suscripción. La corrección única de Atrio se comparte con NexoBet; una falla conserva el intento manual disponible.
+- Trabajo exclusivamente local, sin publicación ni modificaciones de API2/Panel3. Una publicación posterior debe incluir los cuatro gateways y el Worker de Ganamos+; al definir dominio propio de NexoBet, actualizar antes la lista canónica de destinos. Alcance y pendientes: `../NexoBet/docs/COBERTURA_FUNCIONAL.md`.
+
 ### Acceso directo sin código de landing (06/11/2026)
 
 - Corregir el fallo confirmado del alta por `/286`: la cuenta se creó y Atrio devolvió la identidad, pero Rey rechazó `landing_promo_code = ''` al guardar el vínculo. La ausencia de landing debe llegar como `null` al adaptador de sesión.
@@ -1144,6 +1158,13 @@ El usuario pidió volver al procedimiento de migrar y desplegar, sin archivos pr
 
 Se retiran el endpoint privado de exportación y su clave dedicada. El autologin sigue con su configuración independiente pendiente del despliegue de API2; no es un requisito para importar estos usos. El programador ejecuta el lote de nueve migraciones y despliega API2 y Panel3. Si se edita manualmente un uso en Builder antes del despliegue, actualizar la captura incorporada antes de aplicar; después la autoridad es PBAdmin.
 
+### Tabla de WhatsApp y clasificación MKT (07/11/2026)
+
+- El usuario pidió retirar la leyenda «Se administra en PBAdmin · Bot #…» y compactar la tabla de Bots para conservar teléfonos completos, estados, métricas y fechas en una línea. Se reducen espacios y se abrevian encabezados, conservando sus nombres completos accesibles. En teléfonos se permite desplazamiento horizontal dentro de la tabla.
+- Se conserva la autoridad de PBAdmin sobre el uso de los bots vinculados; retirar la leyenda no habilita su edición en Builder. Los teléfonos manuales mantienen sus controles.
+- El usuario autorizó corregir API2 sólo en local: su consulta pública omitía `whatsapp_usage`, por lo que el serializador devolvía el default publicitario. Seleccionar `id` y `whatsapp_usage` exclusivamente para MKT WhatsApp, sin modificar filtros de publicación ni suscripciones. No requiere migración ni repetir la importación inicial. El programador publica API2; Builder refleja el uso guardado en la siguiente sincronización.
+- Validación y entrega: [tabla y clasificación MKT](validation/bots-table-mkt-20261107.md). No requiere cambios en Panel3, funciones Edge ni gateways.
+
 ### Alta guiada de gateway e instalación interna de Atrio (06/11/2026)
 
 - Aprobado «COMENZAR YA» en PBAdmin: modal responsive de tres pasos para plataforma/tipo/nombre, gerencia y cuenta de Atrio. Permite elegir una gerencia libre o darla de alta dentro del mismo recorrido, probar la conexión y crear un bot Full Carga o MKT con canal Atrio. Guarda los registros normales; conserva permisos, cupos, categorías y unicidad de gerencia Atrio. Full Carga usa PBAdmin Wallet automáticamente.
@@ -1195,3 +1216,41 @@ Se retiran el endpoint privado de exportación y su clave dedicada. El autologin
 - Registro cerrado hasta API2 publicado y correo transaccional comprobado. No se hacen altas reales ni movimientos de dinero como pruebas.
 - Publicado NexoBet con sus 11 migraciones y funciones propias de push/Telegram, más los cuatro gateways en Vercel y Ganamos+ en Worker. La consulta de propiedad usa redirección manual compatible con Cloudflare y sólo acepta `{owned:false}` explícito para conservar Atrio; el lector legado de credenciales de Rey queda limitado a Atrio.
 - Validación al recuperar la sesión: 1.887 pruebas de gateways, TypeScript en los cuatro, 6 pruebas PostgreSQL descartables, prueba real Worker y 6 del adaptador; manifiestos versionados y pruebas de servicios NexoBet aprobados. [Estado, versiones, límites y reversión](../../NexoBet/docs/ENTREGA.md). API2/Panel3 permanecen locales; dominio y correo siguen pendientes.
+
+### NexoBet: alta centrada y obligatoria (07/11/2026)
+
+- El usuario pidió primer paso sólo nombre; segundo email, contraseña y repetir contraseña, con mínimo de ocho caracteres según su decisión anterior. Conservar los datos al retroceder, sin persistir contraseñas en el navegador.
+- Registro y primera activación aparecen en un modal centrado sobre el dashboard completo desenfocado e inerte. No hay X, omisión ni cierre por Escape/clic afuera; se conserva el foco. Se retira el enlace de exploración que permitía abandonar el alta. Una cuenta creada retoma su paso pendiente; no se pide otra vez su contraseña.
+- Se mantienen validación de email y excepción temporal exacta de prueba, permisos, pagos y condiciones de activación. Los clientes ya activos conservan la posibilidad de agregar plataformas. Este cambio vive sólo en NexoBet, sin cambios de API2, Panel3 ni los cuatro gateways.
+
+### NexoBet: dominio, estética y cierre operativo (07/11/2026)
+
+- Dominio definitivo comunicado por el usuario: `https://nexobet.fun`, ya vinculado a Vercel. Actualizar origen principal, callbacks de Auth y push; conservar compatibilidad del alias anterior. El correo sigue pendiente de SMTP; no desactivar confirmación global ni borrar la identidad de prueba.
+- Todas las listas abiertas, opciones seleccionadas y focos siguen la paleta global. Atrio es referencia de las cinco pestañas, inbox, etiquetas, ficha de contacto, acciones, respuestas rápidas, chips, guardar/editar/cancelar/borrar y modales. Guía permanente en `NexoBet/design-system/README.md`. Las esperas usan el símbolo animado de NexoBet con movimiento reducido.
+- Configuración de implementación: interruptor on/off del superadmin; al activarlo aparece importe y guardado. Después se puede editar, volver a guardar o cancelar. Conservar pago único, permisos y verificación de capacidades de API2.
+- Agregar resumen de ingresos/egresos de billetera con estética propia, a partir del ledger existente y scope inmutable del cliente. No sumar sólo la página visible ni modificar saldos.
+- Meta Pixel/CAPI comparte código canónico de Builder distribuido con manifiestos, sincronización y pruebas. Botón Probar conexión: diferenciar lectura del píxel de envío CAPI; usar el código real de Probar eventos para pruebas de eventos, sin inventarlo ni generar conversiones productivas de comprobación. Credenciales sólo en servidor y fuera de logs/Git.
+- El usuario autorizó publicar el ajuste pendiente de PWA/push de nuestro lado en los cuatro gateways, incluido Worker Ganamos+. La lista estricta de receptores agrega `nexobet.fun` y conserva Atrio/alias anterior; prueba firmada, ruta exacta y pertenencia permanecen obligatorias.
+- Se deben prever promociones reclamables: importe fijo en fichas o porcentaje de la próxima carga, con API2 como autoridad. Investigar y reutilizar contratos existentes, con unicidad, idempotencia y estados confirmados; no inferir una acreditación por mostrar o reclamar una promoción. Los cambios de API2 autorizados para este lote son locales, pequeños y paralelos a operaciones ya existentes; no habilitan producción ni rediseñar el motor financiero.
+
+### Meta: Probar conexión sin pedir un código al cliente (08/11/2026)
+
+- El usuario pidió que el CTA funcione inicialmente sólo con ID del píxel y token. Se verificó contra Graph v25.0: el código real facilitado y uno generado devolvieron HTTP 200 con `events_received: 1`; también pasó la prueba final del comprobador generando el código en servidor sin recibirlo del cliente. Esta decisión sustituye la condición anterior de exigir siempre un código real.
+- La implementación canónica compartida con NexoBet prueba envío CAPI mediante `ConnectionTest`, siempre con `test_event_code` y código automático generado en servidor. No usa lectura de metadatos como prueba suficiente de escritura; no registra Lead, CompleteRegistration ni Purchase de comprobación ni escribe conversiones propias.
+- El formulario muestra resultado de la prueba. Sólo si Meta rechaza explícitamente el código automático aparece el campo del código real y la guía: Administrador de eventos → píxel → Probar eventos. Un token inválido o una caída de Meta no obliga a buscar ese código.
+- La aceptación del código generado es evidencia empírica del endpoint actual, sin prometer que sea un contrato oficial permanente ni que certifique atribución de campañas. Mantener el fallback, errores filtrados, límite de intentos, aislamiento y protección de credenciales; cambiar ID/token invalida el estado y elimina el código anterior. Sin cambios en API2 ni gateways.
+
+### Soporte humano, Telegram y Finanzas de NexoBet (08/11/2026)
+
+- El usuario pidió «nombre - soporte» en las burbujas enviadas por una persona, visibles para jugador y asesor. Atrio lo aplica exclusivamente a Full Carga; MKT conserva su presentación. NexoBet utiliza el nombre de alta, editable junto con su foto en el perfil. Usar el origen persistido del mensaje; no inferir autor humano por texto ni atribuir respuestas automáticas a soporte.
+- La mejora del widget vive en los componentes únicos de Atrio usados por Rey, Ases del Norte, Ganamos NET y Ganamos+. NexoBet consume la versión revisada con su adaptador de alcance. Mantener marca, paleta, hora, recibos, adjuntos y copiado de los cuatro proveedores.
+- NexoBet ofrece vincular su Telegram desde un modal del dashboard. Conexión confirmada por el servidor; abrir el enlace no basta. No volver a mostrarlo mientras esté vinculado. Posponer por cuenta durante dos horas, también después de recargar; evitar superposición con otros diálogos y conservar los ajustes de notificaciones existentes.
+- Finanzas de NexoBet se nutre de PBAdmin sin cambiar bajo ningún punto de vista su lógica financiera. Billeteras por gerencia, historial con fecha/hora, importe, titular e identificadores bancarios disponibles. Transferir y retirar delegan al controlador existente de PBAdmin con el actor real y alcance verificado. Sin cambios de motor, schema financiero, reservas, comisiones, saldos ni webhooks. API2 sigue local para el programador; sin pruebas monetarias reales.
+
+### Mejoras compartidas entre productos (08/11/2026)
+
+- El usuario pidió avanzar con ideas reutilizables entre NexoBet, Builder y Atrio y guardar los cambios de Atrio/Builder en sus repositorios remotos. Cada idea compartida se registra como un lote con productos afectados, fuente común y excepciones; no finalizar una mejora con un producto de ese alcance omitido.
+- Meta/marketing tiene fuente en Builder y revisa ambos formularios y adaptadores de Builder/NexoBet. Chat tiene fuente en Atrio y revisa Atrio/NexoBet y los cuatro gateways cuando usan su widget. Conservar excepciones aprobadas como firma de soporte sólo Full Carga en Atrio y en todos los chats de NexoBet.
+- Mantener una implementación común versionada cuando sea posible, sincronizarla después de revisar diferencias y verificar los adaptadores propios. No mezclar cuentas, conversaciones, bases, configuraciones privadas ni secretos.
+- Cada entrega registra pruebas, commit/push y publicación por producto como estados separados. Se pueden registrar ideas nuevas durante una verificación; si cambian el código del lote, repetir las pruebas afectadas antes de cerrar. Procedimiento permanente en `NexoBet/docs/MODULOS_COMPARTIDOS.md`, enlazado desde los tres `AGENTS.md`.
+- API2/Panel3 conservan su autorización previa y publicación por el programador. Esta organización no amplía permisos financieros ni modifica la lógica de PBAdmin.
