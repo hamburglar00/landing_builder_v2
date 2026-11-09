@@ -1,0 +1,366 @@
+{
+  "simulatedBrowserApi": true,
+  "realInstalls": 0,
+  "results": [
+    {
+      "repo": "landing-autologuin",
+      "engine": "chromium",
+      "mode": "accepted",
+      "origin": "https://reydeases-gateway.vercel.app"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "chromium",
+      "mode": "dismissed",
+      "origin": "https://reydeases-gateway.vercel.app"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "chromium",
+      "mode": "error",
+      "origin": "https://reydeases-gateway.vercel.app"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "chromium",
+      "mode": "late",
+      "origin": "https://reydeases-gateway.vercel.app"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "chromium",
+      "mode": "ios",
+      "origin": "https://reydeases-gateway.vercel.app"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "chromium",
+      "mode": "replaced",
+      "origin": "https://reydeases-gateway.vercel.app"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "chromium",
+      "mode": "accepted",
+      "origin": "https://ases-del-norte-gateway.vercel.app"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "chromium",
+      "mode": "dismissed",
+      "origin": "https://ases-del-norte-gateway.vercel.app"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "chromium",
+      "mode": "error",
+      "origin": "https://ases-del-norte-gateway.vercel.app"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "chromium",
+      "mode": "late",
+      "origin": "https://ases-del-norte-gateway.vercel.app"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "chromium",
+      "mode": "ios",
+      "origin": "https://ases-del-norte-gateway.vercel.app"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "chromium",
+      "mode": "replaced",
+      "origin": "https://ases-del-norte-gateway.vercel.app"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "chromium",
+      "mode": "accepted",
+      "origin": "https://ganamos-net-gateway.vercel.app"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "chromium",
+      "mode": "dismissed",
+      "origin": "https://ganamos-net-gateway.vercel.app"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "chromium",
+      "mode": "error",
+      "origin": "https://ganamos-net-gateway.vercel.app"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "chromium",
+      "mode": "late",
+      "origin": "https://ganamos-net-gateway.vercel.app"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "chromium",
+      "mode": "ios",
+      "origin": "https://ganamos-net-gateway.vercel.app"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "chromium",
+      "mode": "replaced",
+      "origin": "https://ganamos-net-gateway.vercel.app"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "accepted",
+      "origin": "https://ganamosnet.global"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "dismissed",
+      "origin": "https://ganamosnet.global"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "error",
+      "origin": "https://ganamosnet.global"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "late",
+      "origin": "https://ganamosnet.global"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "ios",
+      "origin": "https://ganamosnet.global"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "replaced",
+      "origin": "https://ganamosnet.global"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "accepted",
+      "origin": "https://multi-skin-gateway.vercel.app"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "dismissed",
+      "origin": "https://multi-skin-gateway.vercel.app"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "error",
+      "origin": "https://multi-skin-gateway.vercel.app"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "late",
+      "origin": "https://multi-skin-gateway.vercel.app"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "ios",
+      "origin": "https://multi-skin-gateway.vercel.app"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "replaced",
+      "origin": "https://multi-skin-gateway.vercel.app"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "webkit",
+      "mode": "accepted",
+      "origin": "https://reydeases-gateway.vercel.app"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "webkit",
+      "mode": "dismissed",
+      "origin": "https://reydeases-gateway.vercel.app"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "webkit",
+      "mode": "error",
+      "origin": "https://reydeases-gateway.vercel.app"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "webkit",
+      "mode": "late",
+      "origin": "https://reydeases-gateway.vercel.app"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "webkit",
+      "mode": "ios",
+      "origin": "https://reydeases-gateway.vercel.app"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "webkit",
+      "mode": "replaced",
+      "origin": "https://reydeases-gateway.vercel.app"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "webkit",
+      "mode": "accepted",
+      "origin": "https://ases-del-norte-gateway.vercel.app"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "webkit",
+      "mode": "dismissed",
+      "origin": "https://ases-del-norte-gateway.vercel.app"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "webkit",
+      "mode": "error",
+      "origin": "https://ases-del-norte-gateway.vercel.app"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "webkit",
+      "mode": "late",
+      "origin": "https://ases-del-norte-gateway.vercel.app"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "webkit",
+      "mode": "ios",
+      "origin": "https://ases-del-norte-gateway.vercel.app"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "webkit",
+      "mode": "replaced",
+      "origin": "https://ases-del-norte-gateway.vercel.app"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "webkit",
+      "mode": "accepted",
+      "origin": "https://ganamos-net-gateway.vercel.app"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "webkit",
+      "mode": "dismissed",
+      "origin": "https://ganamos-net-gateway.vercel.app"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "webkit",
+      "mode": "error",
+      "origin": "https://ganamos-net-gateway.vercel.app"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "webkit",
+      "mode": "late",
+      "origin": "https://ganamos-net-gateway.vercel.app"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "webkit",
+      "mode": "ios",
+      "origin": "https://ganamos-net-gateway.vercel.app"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "webkit",
+      "mode": "replaced",
+      "origin": "https://ganamos-net-gateway.vercel.app"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "accepted",
+      "origin": "https://ganamosnet.global"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "dismissed",
+      "origin": "https://ganamosnet.global"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "error",
+      "origin": "https://ganamosnet.global"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "late",
+      "origin": "https://ganamosnet.global"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "ios",
+      "origin": "https://ganamosnet.global"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "replaced",
+      "origin": "https://ganamosnet.global"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "accepted",
+      "origin": "https://multi-skin-gateway.vercel.app"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "dismissed",
+      "origin": "https://multi-skin-gateway.vercel.app"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "error",
+      "origin": "https://multi-skin-gateway.vercel.app"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "late",
+      "origin": "https://multi-skin-gateway.vercel.app"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "ios",
+      "origin": "https://multi-skin-gateway.vercel.app"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "replaced",
+      "origin": "https://multi-skin-gateway.vercel.app"
+    }
+  ]
+}

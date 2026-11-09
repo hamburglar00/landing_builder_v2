@@ -71,6 +71,10 @@ for (const [engine, launcher] of process.argv.includes("--quick")
       const sdk = await source(repo, "public/gateway-app-sdk.js", origin);
       const client = await source(repo, "public/gateway-client.js", origin);
       const css = await source(repo, "public/gateway-client.css", origin);
+      if (publicCheck) {
+        await source(repo, "public/atrio-push-delivery.js", origin);
+        await source(repo, "public/gateway-sw.js", origin);
+      }
       const names = [
         "closeNotice",
         "createNotice",

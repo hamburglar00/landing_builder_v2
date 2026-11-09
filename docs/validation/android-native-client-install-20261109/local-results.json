@@ -1,0 +1,246 @@
+{
+  "simulatedBrowserApi": true,
+  "realInstalls": 0,
+  "results": [
+    {
+      "repo": "landing-autologuin",
+      "engine": "chromium",
+      "mode": "accepted"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "chromium",
+      "mode": "dismissed"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "chromium",
+      "mode": "error"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "chromium",
+      "mode": "late"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "chromium",
+      "mode": "ios"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "chromium",
+      "mode": "replaced"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "chromium",
+      "mode": "accepted"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "chromium",
+      "mode": "dismissed"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "chromium",
+      "mode": "error"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "chromium",
+      "mode": "late"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "chromium",
+      "mode": "ios"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "chromium",
+      "mode": "replaced"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "chromium",
+      "mode": "accepted"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "chromium",
+      "mode": "dismissed"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "chromium",
+      "mode": "error"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "chromium",
+      "mode": "late"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "chromium",
+      "mode": "ios"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "chromium",
+      "mode": "replaced"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "accepted"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "dismissed"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "error"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "late"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "ios"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "chromium",
+      "mode": "replaced"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "webkit",
+      "mode": "accepted"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "webkit",
+      "mode": "dismissed"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "webkit",
+      "mode": "error"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "webkit",
+      "mode": "late"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "webkit",
+      "mode": "ios"
+    },
+    {
+      "repo": "landing-autologuin",
+      "engine": "webkit",
+      "mode": "replaced"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "webkit",
+      "mode": "accepted"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "webkit",
+      "mode": "dismissed"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "webkit",
+      "mode": "error"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "webkit",
+      "mode": "late"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "webkit",
+      "mode": "ios"
+    },
+    {
+      "repo": "ases-gateway",
+      "engine": "webkit",
+      "mode": "replaced"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "webkit",
+      "mode": "accepted"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "webkit",
+      "mode": "dismissed"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "webkit",
+      "mode": "error"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "webkit",
+      "mode": "late"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "webkit",
+      "mode": "ios"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "engine": "webkit",
+      "mode": "replaced"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "accepted"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "dismissed"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "error"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "late"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "ios"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "engine": "webkit",
+      "mode": "replaced"
+    }
+  ]
+}
