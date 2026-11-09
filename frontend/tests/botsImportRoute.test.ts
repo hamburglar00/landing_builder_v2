@@ -63,6 +63,7 @@ function fixture(t: TestContext) {
     nombre: string;
     workspace_currency: string;
     pbadmin_bots?: unknown;
+    pbadmin_bots_synced_at?: string | null;
     usage_count: number;
   }[] = [];
   const storedAdvisors: {
@@ -70,6 +71,7 @@ function fixture(t: TestContext) {
     user_id: string;
     workspace_currency: string;
     pbadmin_bots?: unknown;
+    pbadmin_bots_synced_at?: string | null;
   }[] = [];
   const calls: {
     url: URL;
@@ -119,7 +121,12 @@ function fixture(t: TestContext) {
         if (method === "GET")
           return json(
             storedGroups.filter(
-              (g) => g.user_id === owner && g.workspace_currency === "ARS",
+              (g) =>
+                g.user_id === owner &&
+                g.workspace_currency === "ARS" &&
+                (!url.searchParams.has("id") ||
+                  g.id ===
+                    Number(url.searchParams.get("id")?.replace("eq.", ""))),
             ),
           );
         if (writeError)
@@ -134,15 +141,26 @@ function fixture(t: TestContext) {
               g.id === Number(url.searchParams.get("id")?.replace("eq.", "")) &&
               g.user_id === owner,
           );
-          if (row) Object.assign(row, body);
-          return json(null);
+          const previous = url.searchParams.get("pbadmin_bots_synced_at");
+          const matches =
+            !!row &&
+            (!previous ||
+              (row.pbadmin_bots_synced_at ?? null) ===
+                (previous === "is.null" ? null : previous.slice(3)));
+          if (row && matches) Object.assign(row, body);
+          return json(matches ? [{ id: row!.id }] : []);
         }
       }
       if (url.pathname === "/rest/v1/atrio_clients") {
         if (method === "GET")
           return json(
             storedAdvisors.filter(
-              (a) => a.user_id === owner && a.workspace_currency === "ARS",
+              (a) =>
+                a.user_id === owner &&
+                a.workspace_currency === "ARS" &&
+                (!url.searchParams.has("atrio_id") ||
+                  a.atrio_id ===
+                    url.searchParams.get("atrio_id")?.replace("eq.", "")),
             ),
           );
         if (method === "POST") {
@@ -156,8 +174,14 @@ function fixture(t: TestContext) {
                 url.searchParams.get("atrio_id")?.replace("eq.", "") &&
               a.user_id === owner,
           );
-          if (row) Object.assign(row, body);
-          return json(null);
+          const previous = url.searchParams.get("pbadmin_bots_synced_at");
+          const matches =
+            !!row &&
+            (!previous ||
+              (row.pbadmin_bots_synced_at ?? null) ===
+                (previous === "is.null" ? null : previous.slice(3)));
+          if (row && matches) Object.assign(row, body);
+          return json(matches ? [{ atrio_id: row!.atrio_id }] : []);
         }
       }
       throw Error(`Unexpected transport: ${method} ${url.pathname}`);

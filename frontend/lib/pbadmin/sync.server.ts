@@ -3,6 +3,7 @@ import { AccessError, origin } from "./protocol.server";
 import { parseImportDirectory } from "../bots/directory";
 import { persistImport } from "../bots/persist-import.server";
 import { reconcileSessions } from "./accounts.server";
+import { updateScopedInventory } from "../bots/scoped-inventory.server";
 
 // These advisors belong to the existing test setup. Never move or rewrite them.
 const excluded = new Set([
@@ -170,17 +171,17 @@ export async function syncBuilder(ownerId: number, accountId: string) {
       )
     )
       continue;
-    const result = await db
-      .from("gerencias")
-      .update({
-        pbadmin_bots: row.pbadmin_bots.filter(
-          (b: { owner_id?: number }) => b.owner_id !== ownerId,
-        ),
-        pbadmin_bots_synced_at: new Date().toISOString(),
-      })
-      .eq("id", row.id)
-      .eq("user_id", accountId);
-    if (result.error)
+    const error = await updateScopedInventory({
+      db,
+      table: "gerencias",
+      key: "id",
+      id: row.id,
+      uid: accountId,
+      currency: row.workspace_currency,
+      scope: data.scope,
+      bots: [],
+    });
+    if (error)
       throw new AccessError("Hay cambios pendientes en el inventario.", 503);
   }
   for (const row of advisors.data) {
@@ -193,17 +194,17 @@ export async function syncBuilder(ownerId: number, accountId: string) {
       )
     )
       continue;
-    const result = await db
-      .from("atrio_clients")
-      .update({
-        pbadmin_bots: row.pbadmin_bots.filter(
-          (b: { owner_id?: number }) => b.owner_id !== ownerId,
-        ),
-        pbadmin_bots_synced_at: new Date().toISOString(),
-      })
-      .eq("atrio_id", row.atrio_id)
-      .eq("user_id", accountId);
-    if (result.error)
+    const error = await updateScopedInventory({
+      db,
+      table: "atrio_clients",
+      key: "atrio_id",
+      id: row.atrio_id,
+      uid: accountId,
+      currency: row.workspace_currency,
+      scope: data.scope,
+      bots: [],
+    });
+    if (error)
       throw new AccessError("Hay cambios pendientes en el inventario.", 503);
   }
   return {

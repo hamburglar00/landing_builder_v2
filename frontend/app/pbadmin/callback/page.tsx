@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { PbadminConnectionScreen } from "@/components/brand/PbadminConnectionScreen";
 export default function Callback() {
   const started = useRef(false);
   const [error, setError] = useState("");
@@ -33,26 +34,13 @@ export default function Callback() {
       );
     })().catch((e) =>
       setError(
-        e instanceof Error ? e.message : "No se pudo completar el acceso.",
+        e instanceof TypeError
+          ? "Se interrumpió la conexión. Volvé a intentar."
+          : e instanceof Error
+            ? e.message
+            : "No se pudo completar el acceso.",
       ),
     );
   }, []);
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-950 p-6 text-white">
-      <div className="max-w-md space-y-4 rounded-xl border border-slate-700 bg-slate-900 p-8">
-        <h1 className="text-xl font-semibold">Tu constructor</h1>
-        <p role={error ? "alert" : "status"}>
-          {error || "Preparando tu cuenta y tus bots…"}
-        </p>
-        {error && (
-          <a
-            className="inline-block rounded-lg bg-violet-600 px-4 py-2"
-            href="/api/pbadmin/start"
-          >
-            Volver a ingresar con PBAdmin
-          </a>
-        )}
-      </div>
-    </main>
-  );
+  return <PbadminConnectionScreen error={error} />;
 }

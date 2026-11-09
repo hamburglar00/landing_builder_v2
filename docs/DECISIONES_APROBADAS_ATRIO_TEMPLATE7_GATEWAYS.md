@@ -1318,3 +1318,11 @@ Se retiran el endpoint privado de exportación y su clave dedicada. El autologin
 
 - Regla general: ningún texto de una columna puede invadir la siguiente. Permitir saltos de línea y corte de valores largos, acotar bloques interiores y conservar el texto completo; usar desplazamiento dentro de la tabla cuando sea necesario. No solucionar el solapamiento ocultando la explicación.
 - Corrección inicial en todas las tablas propias de NexoBet, incluido el estado de Conexiones junto a Último control. Verificar límites geométricos de cada texto con descripciones y usuarios extensos, ambos temas, móvil y escritorio.
+
+### Conexión desde PBAdmin e inventario por administración (09/11/2026)
+
+- Al abrir Atrio o LandingBuilder desde Extensiones de PBAdmin, mostrar el logo original del destino animado y «Conectando con…» durante el ingreso. Evitar la tarjeta genérica anterior, respetar movimiento reducido y ofrecer reintento ante error. Mantener el canje de acceso de un solo uso, cookies, permisos y destinos; no añadir una espera artificial. No enviar el código de ingreso como Referer al cargar el logo.
+- Vincular una cuenta existente de LandingBuilder sincroniza los bots de la administración vinculada y conserva los de otras administraciones. Un asesor compartido mantiene ambos inventarios; actualizar o retirar un bot de la administración actual no borra los de otra. Conservar workspaces ARS/PYG, nombres manuales, landings, credenciales y configuración existente. Proteger también actualizaciones concurrentes. No requiere migración de base.
+- Extensiones de Panel3 usa un icono de piezas para distinguirlo del cohete de LandingBuilder. El cambio queda local, junto al lote previo de onboarding, para publicación por el programador.
+- La instalación automática sin intervención fue una consulta: este lote no cambia invitaciones ni instalación de la PWA.
+- Alcance: callbacks privados de PBAdmin en Atrio/Builder e inventario de Builder. NexoBet tiene ingreso propio; el chat, widget, SDK y los cuatro gateways no cambian. API2 permanece sin modificaciones ni publicación. Los cambios locales de otras tareas se excluyen del despliegue.

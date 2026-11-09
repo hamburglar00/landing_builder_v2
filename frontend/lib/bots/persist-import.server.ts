@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { importDirectory, type ImportDirectory } from "./directory";
+import { updateScopedInventory } from "./scoped-inventory.server";
 export async function persistImport(
   db: SupabaseClient,
   uid: string,
@@ -48,7 +49,9 @@ export async function persistImport(
             role: bot.role,
             active: bot.active,
             phone: bot.phone,
-            ...(bot.whatsapp_usage ? { whatsapp_usage: bot.whatsapp_usage } : {}),
+            ...(bot.whatsapp_usage
+              ? { whatsapp_usage: bot.whatsapp_usage }
+              : {}),
             advisor_id: null,
             advisor_slug: null,
           })),
@@ -56,13 +59,17 @@ export async function persistImport(
       };
       const existingId = groups.get(group.agency_id);
       if (existingId !== undefined) {
-        const result = await db
-          .from("gerencias")
-          .update(snapshot)
-          .eq("id", existingId)
-          .eq("user_id", uid)
-          .eq("workspace_currency", currency);
-        if (result.error) failedWrite(result.error);
+        const error = await updateScopedInventory({
+          db,
+          table: "gerencias",
+          key: "id",
+          id: existingId,
+          uid,
+          currency,
+          scope: data.scope,
+          bots: snapshot.pbadmin_bots,
+        });
+        if (error) failedWrite(error);
         return "existing";
       }
       if (action === "refresh") return "existing";
@@ -97,13 +104,17 @@ export async function persistImport(
         pbadmin_bots_synced_at: new Date().toISOString(),
       };
       if (advisors.has(advisor.id)) {
-        const result = await db
-          .from("atrio_clients")
-          .update(snapshot)
-          .eq("atrio_id", advisor.id)
-          .eq("user_id", uid)
-          .eq("workspace_currency", currency);
-        if (result.error) failedWrite(result.error);
+        const error = await updateScopedInventory({
+          db,
+          table: "atrio_clients",
+          key: "atrio_id",
+          id: advisor.id,
+          uid,
+          currency,
+          scope: data.scope,
+          bots: snapshot.pbadmin_bots,
+        });
+        if (error) failedWrite(error);
         return "existing";
       }
       if (action === "refresh") return "existing";

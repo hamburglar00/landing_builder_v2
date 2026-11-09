@@ -518,6 +518,49 @@ try {
     assert.equal(row.nombre, "Custom display");
     assert.deepEqual(row.pbadmin_bots, []);
   });
+  await test("link and owner sync retain bots from other administrations, including a shared advisor", async () => {
+    const advisorId = randomUUID(), absentAdvisor = randomUUID();
+    const foreign = { ...bot, manager_id: 99001, owner_id: 202, agency_id: 802, channel: "atrio", phone: null, advisor_id: advisorId, advisor_slug: "shared-advisor" };
+    const bulkyForeign = Array.from({length:100},(_,i)=>({...foreign,manager_id:100000+i,name:`Foreign administration bot ${i}`}));
+    const stale = { ...foreign, manager_id: 99002, owner_id: 101 };
+    const incoming = { ...foreign, manager_id: 99003, owner_id: 101, agency_id: 502 };
+    await db.from("atrio_clients").insert([
+      { atrio_id: advisorId, slug: "shared-advisor", user_id: result.uid, workspace_currency: "ARS", pbadmin_bots: [foreign, ...bulkyForeign, stale] },
+      { atrio_id: absentAdvisor, slug: "absent-advisor", user_id: result.uid, workspace_currency: "ARS", pbadmin_bots: [{...foreign,advisor_id:absentAdvisor}, {...stale,advisor_id:absentAdvisor}] },
+    ]);
+    await db.from("gerencias").insert({id: 9501, gerencia_id: 9501, nombre: "Keep my display name", user_id:result.uid,workspace_currency:"PYG",source_type:"pbadmin",pbadmin_bots:[{...bot,manager_id:99004,agency_id:9501,owner_id:202}]});
+    directory = {scope:{kind:"owner",id:101},agencies:[{agency_id:502,name:"Agency linked to owner 101",platform:7,bots:[incoming]}],advisors:[{id:advisorId,name:"Shared advisor",slug:"shared-advisor"}],unassigned:[]};
+    assert.equal((await sync.syncBuilder(101,result.uid)).complete,true);
+    const current = (await db.from("atrio_clients").select("*").eq("atrio_id",advisorId).single()).data;
+    assert.deepEqual(current.pbadmin_bots.map(b=>b.manager_id).sort((a,b)=>a-b),[99001,99003,...bulkyForeign.map(b=>b.manager_id)]);
+    assert.deepEqual(current.pbadmin_bots.find(b=>b.owner_id===202),foreign);
+    const absent = (await db.from("atrio_clients").select("*").eq("atrio_id",absentAdvisor).single()).data;
+    assert.deepEqual(absent.pbadmin_bots.map(b=>b.manager_id),[99001]);
+    const untouched = (await db.from("gerencias").select("*").eq("id",9501).single()).data;
+    assert.equal(untouched.nombre,"Keep my display name");assert.equal(untouched.workspace_currency,"PYG");assert.equal(untouched.pbadmin_bots[0].owner_id,202);
+    const originalFetch = globalThis.fetch;
+    const scoped = await bundle(path.join(root,"frontend/lib/bots/scoped-inventory.server.ts"),"scoped",path.join(root,"frontend"));
+    let concurrent = false;
+    incoming.name = "Owner 101 updated again";
+    globalThis.fetch = async (input, init) => {
+      const url = new URL(input instanceof Request ? input.url : String(input));
+      const method = init?.method || (input instanceof Request ? input.method : "GET");
+      if(url.pathname.endsWith("/atrio_clients")) assert.ok(url.href.length<2048,"large inventories must not be encoded in a conditional write URL");
+      if (!concurrent && method === "PATCH" && url.pathname.endsWith("/atrio_clients") && url.searchParams.get("atrio_id") === `eq.${advisorId}`) {
+        concurrent = true;
+        assert.equal(await scoped.updateScopedInventory({db,table:"atrio_clients",key:"atrio_id",id:advisorId,uid:result.uid,currency:"ARS",scope:{kind:"owner",id:202},bots:[foreign,...bulkyForeign,{...foreign,manager_id:99005,name:"Concurrent bot from owner 202"}]}),null);
+      }
+      return originalFetch(input,init);
+    };
+    try {assert.equal((await sync.syncBuilder(101,result.uid)).complete,true);} finally {globalThis.fetch=originalFetch;}
+    assert.equal(concurrent,true);
+    const after = (await db.from("atrio_clients").select("pbadmin_bots").eq("atrio_id",advisorId).single()).data;
+    assert.deepEqual(after.pbadmin_bots.map(b=>b.manager_id).sort((a,b)=>a-b),[99001,99003,99005,...bulkyForeign.map(b=>b.manager_id)]);
+    assert.equal(after.pbadmin_bots.find(b=>b.manager_id===99003).name,incoming.name);
+    await db.from("atrio_clients").delete().in("atrio_id",[advisorId,absentAdvisor]);
+    await db.from("gerencias").delete().eq("id",9501);
+    directory.agencies=[];directory.advisors=[];
+  });
   await test("batched imports preserve complete advisor inventories without duplicates across currencies", async () => {
     const advisors = Array.from({ length: 201 }, (_, i) => ({
       id: randomUUID(),
