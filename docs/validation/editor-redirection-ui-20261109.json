@@ -36,7 +36,38 @@
       "frontend/test-results/template8/{chromium,webkit}/editor-results.json (ignored local artifacts)",
       ".vercel/editor-table-ui-20261109/screenshots/ (ignored local browser screenshots)"
     ],
-    "productionWritesFromTests": false
+    "productionWritesFromTests": false,
+    "productionUi": {
+      "chromiumCases": 4,
+      "roles": [
+        "client",
+        "admin"
+      ],
+      "widths": [
+        1280,
+        390
+      ],
+      "businessServices": "synthetic",
+      "productionBusinessWrites": 0
+    },
+    "productionEditorAssets": [
+      {
+        "route": "/dashboard/landing/92000000-0000-4000-8000-000000000099/editar",
+        "status": 200,
+        "assets": 16,
+        "footerActions": true,
+        "trashIcon": true,
+        "saveIcon": true
+      },
+      {
+        "route": "/admin/landings/92000000-0000-4000-8000-000000000099/editar",
+        "status": 200,
+        "assets": 16,
+        "footerActions": true,
+        "trashIcon": true,
+        "saveIcon": true
+      }
+    ]
   },
   "release": {
     "branch": "main",
@@ -46,6 +77,30 @@
       "constructor.panelbotadmin.com",
       "mkt.panelbotadmin.com"
     ],
-    "status": "Pending commit/push and automatic production deployment verification."
+    "status": "Production verified",
+    "codeCommit": "a9cd34b157d56d50d654965e137b6b618d0c3638",
+    "push": "origin/main confirmed",
+    "deployment": {
+      "id": "dpl_DQfSRVzmFGjBvn7oWWKZKxymWcc9",
+      "state": "READY",
+      "url": "landing-builder-v2-k259-840kxrt28-juanclouds-projects.vercel.app",
+      "sha": "a9cd34b157d56d50d654965e137b6b618d0c3638",
+      "created": 1794256605246
+    },
+    "domainAliases": [
+      {
+        "domain": "constructor.panelbotadmin.com",
+        "deployment": "dpl_DQfSRVzmFGjBvn7oWWKZKxymWcc9",
+        "url": "landing-builder-v2-k259-840kxrt28-juanclouds-projects.vercel.app"
+      },
+      {
+        "domain": "mkt.panelbotadmin.com",
+        "deployment": "dpl_DQfSRVzmFGjBvn7oWWKZKxymWcc9",
+        "url": "landing-builder-v2-k259-840kxrt28-juanclouds-projects.vercel.app"
+      }
+    ],
+    "verifiedAt": "2026-11-09T20:37:37.998Z",
+    "previousProductionCommit": "332d4f27055ee86179ae9750050a6929cf2f50bc",
+    "migrationsRequired": false
   }
 }
