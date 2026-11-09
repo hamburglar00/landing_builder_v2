@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { LandingBuilderLogo } from "@/components/brand/LandingBuilderLogo";
 import {
   CURRENCY_ALL,
   REPORTING_CURRENCIES,
@@ -209,13 +210,8 @@ function WorkspaceSwitchOverlay({
           transition.fading ? "translate-y-2 scale-95 opacity-0" : "translate-y-0 scale-100 opacity-100"
         }`}
       >
-        <div className="panel-brand-mark flex h-16 w-16 items-center justify-center rounded-2xl text-xl font-black shadow-[0_0_34px_rgba(163,230,53,0.18)]">
-          PB
-        </div>
-        <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
-          Panel Bot Admin
-        </p>
-        <h2 className="mt-2 text-2xl font-black text-[var(--color-text-strong)]">
+        <LandingBuilderLogo variant="vertical" className="h-auto w-48 max-w-full" />
+        <h2 className="mt-6 text-2xl font-black text-[var(--color-text-strong)]">
           Cambiando de workspace
         </h2>
         {transition.target ? (

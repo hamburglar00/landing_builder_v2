@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, type SetStateAction } from "react";
+import Image from "next/image";
 import type { AtrioClient } from "@/lib/atrio/atrioDb";
 import type { LandingThemeConfig, TargetProvider } from "@/lib/landing/types";
 import CustomSelect from "@/components/ui/CustomSelect";
@@ -18,8 +19,15 @@ export function CtaDestinationSection({ config, setConfig }: {
   const showPlatform = config.template === "template7" || config.template === "template9";
   return <div className="space-y-4">
     <div className={`flex items-start gap-3 rounded-xl border p-4 ${usesAtrio ? "border-violet-400/25 bg-violet-400/[0.06]" : "border-emerald-400/25 bg-emerald-400/[0.06]"}`}>
-      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${usesAtrio ? "bg-violet-400/10 text-violet-300" : "bg-emerald-400/10 text-emerald-300"}`}>
-        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/><path d="M8 10h8M8 14h5"/></svg>
+      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${usesAtrio ? "bg-[#1A1A1F]" : "bg-emerald-400/10"}`}>
+        <Image
+          src={usesAtrio ? "/brand/atrio/icon.svg" : "/whatsapp-icon.png"}
+          alt={usesAtrio ? "Atrio" : "WhatsApp"}
+          width={32}
+          height={32}
+          className={usesAtrio ? "h-8 w-8" : "h-6 w-6"}
+          unoptimized
+        />
       </span>
       <div>
         <p className="text-xs text-zinc-400">Canal de atención</p>

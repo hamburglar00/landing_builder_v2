@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Politica de privacidad | PanelBot Admin",
+  title: "Politica de privacidad | LandingBuilder",
   description:
-    "Politica de privacidad de PanelBot Admin para el uso del panel, landings, integraciones publicitarias y WhatsApp Cloud API.",
+    "Politica de privacidad de LandingBuilder para el uso del panel, landings, integraciones publicitarias y WhatsApp Cloud API.",
   robots: {
     index: true,
     follow: true,
   },
 };
 
-const updatedAt = "11 de agosto de 2026";
+const updatedAt = "9 de noviembre de 2026";
 
 const sections = [
   {
     title: "1. Responsable y alcance",
     body: [
-      "Esta politica describe como PanelBot Admin trata informacion relacionada con el uso del panel, landings, integraciones publicitarias, WhatsApp Cloud API, webhooks y servicios asociados.",
+      "Esta politica describe como LandingBuilder trata informacion relacionada con el uso del panel, landings, integraciones publicitarias, WhatsApp Cloud API, webhooks y servicios asociados.",
       "El servicio es utilizado por clientes que configuran sus propios canales, gerencias, telefonos de contacto, pixels publicitarios e integraciones. Cada cliente es responsable por la informacion que carga y por el uso que realiza de las herramientas.",
     ],
   },
@@ -40,7 +40,7 @@ const sections = [
     title: "4. WhatsApp Cloud API y comunicaciones",
     body: [
       "Cuando se utiliza WhatsApp Cloud API, podemos recibir y almacenar eventos enviados por Meta, incluyendo identificadores de mensajes, numero de telefono del usuario, nombre de perfil, contenido del mensaje recibido, estado de mensajes enviados, referral o datos asociados a anuncios Click-to-WhatsApp cuando Meta los entregue.",
-      "Esta informacion se usa para responder consultas, asignar un telefono de atencion, generar codigos de seguimiento, registrar el recorrido comercial y permitir que el cliente de PanelBot Admin gestione sus metricas.",
+      "Esta informacion se usa para responder consultas, asignar un telefono de atencion, generar codigos de seguimiento, registrar el recorrido comercial y permitir que el cliente de LandingBuilder gestione sus metricas.",
     ],
   },
   {
@@ -60,7 +60,7 @@ const sections = [
   {
     title: "7. Derechos y solicitudes",
     body: [
-      "Las personas pueden solicitar acceso, rectificacion, actualizacion o eliminacion de sus datos cuando corresponda. En muchos casos, las solicitudes deben dirigirse al comercio o cliente que utiliza PanelBot Admin como responsable directo de la relacion comercial.",
+      "Las personas pueden solicitar acceso, rectificacion, actualizacion o eliminacion de sus datos cuando corresponda. En muchos casos, las solicitudes deben dirigirse al comercio o cliente que utiliza LandingBuilder como responsable directo de la relacion comercial.",
       "Para consultas relacionadas con privacidad o datos tratados por la plataforma, se puede escribir a privacidad@panelbotadmin.com.",
     ],
   },
@@ -78,7 +78,7 @@ export default function PrivacyPolicyPage() {
       <article className="mx-auto max-w-4xl">
         <header className="border-b border-zinc-800 pb-8">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-lime-300">
-            PanelBot Admin
+            LandingBuilder
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-50 sm:text-4xl">
             Politica de privacidad

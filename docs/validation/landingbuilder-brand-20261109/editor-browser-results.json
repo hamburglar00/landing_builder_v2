@@ -1,0 +1,581 @@
+{
+  "passed": 72,
+  "results": [
+    {
+      "engine": "chromium",
+      "template": 1,
+      "width": 320,
+      "height": 720,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 2,
+      "width": 320,
+      "height": 720,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 3,
+      "width": 320,
+      "height": 720,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 4,
+      "width": 320,
+      "height": 720,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 5,
+      "width": 320,
+      "height": 720,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 6,
+      "width": 320,
+      "height": 720,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 7,
+      "width": 320,
+      "height": 720,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 8,
+      "width": 320,
+      "height": 720,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 9,
+      "width": 320,
+      "height": 720,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 1,
+      "width": 390,
+      "height": 844,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 2,
+      "width": 390,
+      "height": 844,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 3,
+      "width": 390,
+      "height": 844,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 4,
+      "width": 390,
+      "height": 844,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 5,
+      "width": 390,
+      "height": 844,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 6,
+      "width": 390,
+      "height": 844,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 7,
+      "width": 390,
+      "height": 844,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 8,
+      "width": 390,
+      "height": 844,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 9,
+      "width": 390,
+      "height": 844,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 1,
+      "width": 768,
+      "height": 1024,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 2,
+      "width": 768,
+      "height": 1024,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 3,
+      "width": 768,
+      "height": 1024,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 4,
+      "width": 768,
+      "height": 1024,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 5,
+      "width": 768,
+      "height": 1024,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 6,
+      "width": 768,
+      "height": 1024,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 7,
+      "width": 768,
+      "height": 1024,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 8,
+      "width": 768,
+      "height": 1024,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 9,
+      "width": 768,
+      "height": 1024,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 1,
+      "width": 1440,
+      "height": 900,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 2,
+      "width": 1440,
+      "height": 900,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 3,
+      "width": 1440,
+      "height": 900,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 4,
+      "width": 1440,
+      "height": 900,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 5,
+      "width": 1440,
+      "height": 900,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 6,
+      "width": 1440,
+      "height": 900,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 7,
+      "width": 1440,
+      "height": 900,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 8,
+      "width": 1440,
+      "height": 900,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "template": 9,
+      "width": 1440,
+      "height": 900,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 1,
+      "width": 320,
+      "height": 720,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 2,
+      "width": 320,
+      "height": 720,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 3,
+      "width": 320,
+      "height": 720,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 4,
+      "width": 320,
+      "height": 720,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 5,
+      "width": 320,
+      "height": 720,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 6,
+      "width": 320,
+      "height": 720,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 7,
+      "width": 320,
+      "height": 720,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 8,
+      "width": 320,
+      "height": 720,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 9,
+      "width": 320,
+      "height": 720,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 1,
+      "width": 390,
+      "height": 844,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 2,
+      "width": 390,
+      "height": 844,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 3,
+      "width": 390,
+      "height": 844,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 4,
+      "width": 390,
+      "height": 844,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 5,
+      "width": 390,
+      "height": 844,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 6,
+      "width": 390,
+      "height": 844,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 7,
+      "width": 390,
+      "height": 844,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 8,
+      "width": 390,
+      "height": 844,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 9,
+      "width": 390,
+      "height": 844,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 1,
+      "width": 768,
+      "height": 1024,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 2,
+      "width": 768,
+      "height": 1024,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 3,
+      "width": 768,
+      "height": 1024,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 4,
+      "width": 768,
+      "height": 1024,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 5,
+      "width": 768,
+      "height": 1024,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 6,
+      "width": 768,
+      "height": 1024,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 7,
+      "width": 768,
+      "height": 1024,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 8,
+      "width": 768,
+      "height": 1024,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 9,
+      "width": 768,
+      "height": 1024,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 1,
+      "width": 1440,
+      "height": 900,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 2,
+      "width": 1440,
+      "height": 900,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 3,
+      "width": 1440,
+      "height": 900,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 4,
+      "width": 1440,
+      "height": 900,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 5,
+      "width": 1440,
+      "height": 900,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 6,
+      "width": 1440,
+      "height": 900,
+      "logo": "WhatsApp",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 7,
+      "width": 1440,
+      "height": 900,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 8,
+      "width": 1440,
+      "height": 900,
+      "logo": "Atrio",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "template": 9,
+      "width": 1440,
+      "height": 900,
+      "logo": "Atrio",
+      "status": "passed"
+    }
+  ]
+}

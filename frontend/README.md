@@ -1,8 +1,10 @@
-## Landing Builder – Documentación técnica
+## LandingBuilder – Documentación técnica
 
 Este proyecto es un **builder de landings multi‑tenant** para clientes y administradores, construido con **Next.js (App Router)** en el frontend y **Supabase** (Postgres + Auth + Edge Functions) en el backend.
 
 La página **Admin → Documentación** muestra el contenido de este archivo para facilitar el mantenimiento futuro.
+
+La identidad del producto y sus recursos locales se documentan en `docs/IDENTIDAD_LANDINGBUILDER.md`, desde la raíz del repositorio. El editor identifica las plantillas 1–6 con el logo de WhatsApp y las 7–9 con el logo original de Atrio.
 
 ---
 

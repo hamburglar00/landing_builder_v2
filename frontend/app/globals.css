@@ -4,8 +4,8 @@
   color-scheme: dark;
 
   /* Premium charcoal surfaces */
-  --color-bg-0: #07090d;
-  --color-bg-1: #0b0f15;
+  --color-bg-0: #0a0f12;
+  --color-bg-1: #0e1418;
   --color-bg-2: #10161f;
   --color-bg-3: #151d28;
   --color-bg-raised: #19222e;
@@ -21,12 +21,12 @@
   --color-text-disabled: #8792a2;
 
   /* Brand is intentionally reserved for primary action and selection */
-  --color-primary: #a3e635;
-  --color-primary-hover: #b7ef50;
-  --color-primary-press: #8fce24;
-  --color-primary-contrast: #101605;
-  --color-primary-soft-bg: rgba(163, 230, 53, 0.09);
-  --color-primary-soft-border: rgba(163, 230, 53, 0.25);
+  --color-primary: #8ee04e;
+  --color-primary-hover: #a2e76c;
+  --color-primary-press: #7bce3b;
+  --color-primary-contrast: #0b1410;
+  --color-primary-soft-bg: rgba(142, 224, 78, 0.09);
+  --color-primary-soft-border: rgba(142, 224, 78, 0.25);
 
   --color-info: #38bdf8;
   --color-success: #34d399;
@@ -34,7 +34,7 @@
   --color-danger: #fb7185;
   --color-danger-hover: #f43f5e;
 
-  --color-ring-primary: rgba(163, 230, 53, 0.38);
+  --color-ring-primary: rgba(142, 224, 78, 0.38);
   --color-ring-neutral: rgba(148, 163, 184, 0.25);
 
   --radius-control: 0.7rem;
@@ -147,7 +147,7 @@ body {
 }
 
 ::selection {
-  background: rgba(163, 230, 53, 0.25);
+  background: rgba(142, 224, 78, 0.25);
   color: var(--color-text-strong);
 }
 
@@ -175,7 +175,7 @@ a {
   min-width: 0;
   width: 100%;
   background:
-    radial-gradient(circle at 84% -12%, rgba(163, 230, 53, 0.055), transparent 28rem),
+    radial-gradient(circle at 84% -12%, rgba(142, 224, 78, 0.055), transparent 28rem),
     radial-gradient(circle at 32% 112%, rgba(56, 189, 248, 0.035), transparent 32rem),
     var(--color-bg-0);
 }
@@ -195,29 +195,9 @@ a {
 
 .panel-sidebar {
   background:
-    linear-gradient(180deg, rgba(16, 22, 31, 0.98), rgba(8, 11, 16, 0.985)),
+    linear-gradient(180deg, rgba(14, 20, 24, 0.98), rgba(10, 15, 18, 0.985)),
     var(--color-bg-1);
   box-shadow: 14px 0 50px rgba(0, 0, 0, 0.12);
-}
-
-.panel-brand-mark {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(163, 230, 53, 0.24);
-  background:
-    linear-gradient(145deg, rgba(163, 230, 53, 0.2), rgba(163, 230, 53, 0.045)),
-    var(--color-bg-2);
-  color: var(--color-primary);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 8px 24px rgba(0, 0, 0, 0.24);
-}
-
-.panel-brand-mark::after {
-  position: absolute;
-  inset: 0;
-  content: "";
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 42%);
 }
 
 .panel-sidebar-nav {
@@ -306,8 +286,8 @@ a {
 }
 
 .panel-shell :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):focus {
-  border-color: rgba(163, 230, 53, 0.55);
-  box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.09);
+  border-color: rgba(142, 224, 78, 0.55);
+  box-shadow: 0 0 0 3px rgba(142, 224, 78, 0.09);
   outline: none;
 }
 
@@ -338,7 +318,7 @@ a {
 }
 
 .panel-shell tbody tr:hover {
-  box-shadow: inset 2px 0 0 rgba(163, 230, 53, 0.2);
+  box-shadow: inset 2px 0 0 rgba(142, 224, 78, 0.2);
 }
 
 /* Normalize legacy panel surfaces while screens migrate to primitives. */
@@ -473,14 +453,14 @@ a {
   color: var(--color-primary-contrast);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    0 8px 24px rgba(163, 230, 53, 0.1);
+    0 8px 24px rgba(142, 224, 78, 0.1);
 }
 
 .ui-button-primary:hover:not(:disabled) {
   background: var(--color-primary-hover);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    0 10px 30px rgba(163, 230, 53, 0.16);
+    0 10px 30px rgba(142, 224, 78, 0.16);
 }
 
 .ui-button-secondary {
@@ -581,9 +561,9 @@ a {
 }
 
 .ui-tab[data-active="true"] {
-  background: rgba(163, 230, 53, 0.1);
+  background: rgba(142, 224, 78, 0.1);
   color: var(--color-primary);
-  box-shadow: inset 0 0 0 1px rgba(163, 230, 53, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(142, 224, 78, 0.16);
 }
 
 .ui-alert {

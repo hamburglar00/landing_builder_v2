@@ -1,5 +1,12 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Identidad de LandingBuilder (09/11/2026)
+
+- El usuario renombra «PANEL BOT ADMIN» a «LandingBuilder» y aporta su kit de marca. Incorporar el kit al proyecto y usar su logo de cohete, colores, íconos e imagen social en el panel, ingreso, metadatos e instalación.
+- El canal del editor debe mostrar el logo de WhatsApp en las plantillas 1–6 y el logo de Atrio en las 7–9, reemplazando el globo genérico. Reutilizar el recurso WhatsApp de Builder y copiar exactamente el SVG canónico de Atrio; una implementación para administrador y cliente, sin cambiar los canales ni el recorrido público. NexoBet conserva su canal e identidad propios.
+- Fuente canónica: `frontend/assets/landingbuilder`; integración en [Identidad de LandingBuilder](IDENTIDAD_LANDINGBUILDER.md). Alcance exclusivo de Builder: NexoBet conserva su marca y se revisa con el sincronizador de marketing; Atrio, landings de clientes, Sorteos Golden y los cuatro gateways conservan sus identidades. No cambia el módulo compartido ni requiere sincronizar SDK/Worker.
+- PBAdmin sigue siendo el nombre del proveedor externo; conservar ingreso, integraciones, dominios, UUID, tokens y claves existentes. El usuario solicita commit/push del lote el 09/11/2026; entrega Git en `fix/template7-session-reentry`, publicación pendiente. [Validación](validation/landingbuilder-brand-20261109.md).
+
 ### NexoBet: alta temporal sin correo y revisión de UI (07/11/2026)
 
 - El usuario autorizó habilitar su alta de cliente de prueba en la web publicada de NexoBet mientras se prepara el correo. La excepción se limita a emails exactos configurados en servidor; no se publica la lista ni se desactiva globalmente la confirmación de Supabase.

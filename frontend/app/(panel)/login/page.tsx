@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { LandingBuilderLogo } from "@/components/brand/LandingBuilderLogo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -49,15 +50,11 @@ export default function LoginPage() {
 
   return (
     <div className="panel-shell relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-8 sm:px-6">
-      <div className="grid min-w-0 w-full max-w-5xl overflow-hidden rounded-[1.5rem] border border-[var(--color-border)] bg-[rgba(11,15,21,0.86)] shadow-[var(--shadow-raised)] backdrop-blur-xl lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
+      <div className="grid min-w-0 w-full max-w-5xl overflow-hidden rounded-[1.5rem] border border-[var(--color-border)] bg-[var(--color-bg-1)] shadow-[var(--shadow-raised)] backdrop-blur-xl lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
         <section className="relative hidden min-h-[620px] overflow-hidden border-r border-[var(--color-border-subtle)] p-10 lg:flex lg:flex-col lg:justify-between">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(163,230,53,0.13),transparent_32rem),linear-gradient(145deg,rgba(255,255,255,0.025),transparent_48%)]" />
-          <div className="relative z-10 flex items-center gap-3">
-            <div className="panel-brand-mark flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold">PB</div>
-            <div>
-              <p className="text-xs font-semibold tracking-[0.13em] text-[var(--color-text-strong)]">PANEL BOT ADMIN</p>
-              <p className="mt-0.5 text-[10px] text-[var(--color-text-muted)]">Constructor de landings</p>
-            </div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(142,224,78,0.13),transparent_32rem),linear-gradient(145deg,rgba(255,255,255,0.025),transparent_48%)]" />
+          <div className="relative z-10">
+            <LandingBuilderLogo className="h-auto w-64 max-w-full" />
           </div>
 
           <div className="relative z-10 max-w-md">
@@ -81,13 +78,7 @@ export default function LoginPage() {
         <section className="flex min-h-[560px] min-w-0 items-center p-5 sm:p-10 lg:p-12">
           <div className="mx-auto min-w-0 w-full max-w-sm">
             <div className="mb-8 lg:hidden">
-              <div className="flex items-center gap-3">
-                <div className="panel-brand-mark flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold">PB</div>
-                <div>
-                  <p className="text-xs font-semibold tracking-[0.12em] text-[var(--color-text-strong)]">PANEL BOT ADMIN</p>
-                  <p className="mt-0.5 text-[10px] text-[var(--color-text-muted)]">Constructor de landings</p>
-                </div>
-              </div>
+              <LandingBuilderLogo className="h-auto w-64 max-w-full" />
             </div>
 
             <p className="ui-page-eyebrow">Bienvenido</p>

@@ -8,6 +8,7 @@ import { PbadminSessionGuard } from "@/components/pbadmin-session-guard";
 import { supabase } from "@/lib/supabaseClient";
 import ConstructorSetupGuide from "@/components/onboarding/ConstructorSetupGuide";
 import { RouteProgress } from "@/components/ui/RouteProgress";
+import { LandingBuilderLogo } from "@/components/brand/LandingBuilderLogo";
 import { CurrencyScopeSelector } from "@/components/currency/CurrencyScope";
 import { AppConfirmProvider } from "@/components/ui/AppConfirmDialog";
 import { ClientModulePermissionsContext } from "@/components/clients/ClientModulePermissions";
@@ -607,16 +608,9 @@ export default function DashboardLayout({
         }`}
       >
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-4 md:block">
-          <div className="flex items-center gap-3">
-            <div className="panel-brand-mark flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold">
-              PB
-            </div>
-            <div>
-              <h2 className="text-[10px] font-semibold tracking-[0.17em] text-[var(--color-text-strong)]">
-                PANEL BOT ADMIN
-              </h2>
-              <p className="mt-0.5 text-[9px] text-[var(--color-text-disabled)]">Constructor de landings</p>
-            </div>
+          <div className="min-w-0 pr-2 md:pr-0">
+            <LandingBuilderLogo />
+            <p className="mt-1 text-[9px] text-[var(--color-text-disabled)]">Constructor de landings</p>
           </div>
           <button
             type="button"
