@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-09",
+  "scope": ["LandingBuilder"],
+  "correction": "The general PBAdmin manager inventory was incorrectly being rendered as extra WhatsApp rows. It is not the authoritative phone JSON. Remove all such rows, regardless of manager status or whether the inventory includes a number.",
+  "canonicalPhoneSource": {
+    "sync": "supabase/functions/sync-phones/index.ts",
+    "endpoint": "/api/v1/agency/{id}/random-contact",
+    "typedFields": ["load.whatsapp", "ads.whatsapp", "mkt.whatsapp", "assistant.whatsapp"],
+    "persistedPool": "gerencia_phones",
+    "usageMetadata": "mkt.whatsapp_details; existing validation and manual status/usage rules preserved"
+  },
+  "changes": [
+    "WhatsApp entries and row totals come only from valid persisted phone numbers. No manager names, IDs, pending-phone placeholders or general inventory counts are inserted.",
+    "Remove the old WhatsAppInventoryExtras renderer and its reference. General inventory may still enrich platform metadata for an existing phone; its role, active flag or number cannot replace the synchronized phone data.",
+    "Guard malformed historical phone values, including technical strings containing otherwise valid digits. Keep the existing AR 549/13-digit and PY 595/12-digit formats.",
+    "Preserve valid phone history, manual states, type, usage, metrics, actions, paged loading, cleanup and the separate Atrio directory. Remove the obsolete inventory explanation from phone cleanup feedback."
+  ],
+  "verification": {
+    "productionBuildAndTypeScript": "passed",
+    "targetedLint": "passed",
+    "encodingAndWhitespace": "passed",
+    "syncAndWorkspaceUnitTests": 14,
+    "chromiumFunctionalChecks": 64,
+    "webkitPhoneSourceCases": 4,
+    "browserCoverage": "Both roles, mobile/desktop, actual compiled application with synthetic services. An inactive manager without a phone and an active manager with a valid number in general inventory both stay out of WhatsApp rows. A malformed persisted value stays out of rows and visible totals. The synchronized phone type/usage wins over conflicting inventory metadata. Atrio entries and all current actions remain available.",
+    "liveUpstreamCalledByVerification": false,
+    "productionBusinessWrites": false
+  },
+  "migrationsRequired": false,
+  "edgeFunctionChanges": false,
+  "otherProductsChanged": false,
+  "publicationTarget": {
+    "branch": "main",
+    "project": "landing-builder-v2-k259",
+    "domains": ["constructor.panelbotadmin.com", "mkt.panelbotadmin.com"]
+  },
+  "artifacts": ".vercel/whatsapp-phone-source-20261109/ (ignored local browser screenshots and production evidence)"
+}

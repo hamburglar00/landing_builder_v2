@@ -22,7 +22,6 @@ import { DIRECTORY_UNAVAILABLE } from "@/lib/bots/import-errors";
 import { BotsDirectoryView } from "@/components/bots/BotsDirectoryView";
 import {BotsManagement,GerenciaActions} from '@/components/bots/BotsManagement';
 import {AtrioBotTable} from '@/components/bots/AtrioBotTable';
-import {WhatsAppInventoryExtras} from '@/components/bots/WhatsAppInventoryExtras';
 import {AtrioWorkspaceActions} from '@/components/bots/AtrioWorkspaceActions';
 import {botSearchText,type BotGerencia} from '@/lib/bots/workspace';
 
@@ -561,12 +560,12 @@ export function TelefonosPageContent({
       .map((p) => p.id);
     const inactiveCount=unifiedBots?bots.inactivePhones:inactiveIds.length;
     if (inactiveCount === 0) {
-      setNotice("No hay teléfonos inactivos para borrar. Los bots de PBAdmin sin número no son teléfonos guardados en Builder.");
+      setNotice("No hay teléfonos inactivos para borrar.");
       return;
     }
     const ok = await confirmAction({
       title: "Eliminar teléfonos inactivos",
-      description: `Se eliminarán ${inactiveCount} teléfonos inactivos del workspace, incluidas las otras páginas. Los bots de PBAdmin sin número no se eliminan. Esta acción no se puede deshacer.`,
+      description: `Se eliminarán ${inactiveCount} teléfonos inactivos del workspace, incluidas las otras páginas. Esta acción no se puede deshacer.`,
       confirmLabel: "Eliminar teléfonos",
       danger: true,
     });
@@ -1390,7 +1389,6 @@ export function TelefonosPageContent({
                         </tbody>
                       </table>
                     </div>
-                    {unifiedBots&&<WhatsAppInventoryExtras gerencia={g} phones={phones}/>}
                     </>}
                     {unifiedBots&&channelFilter!=='whatsapp'&&!!g.atrioBots.length&&<AtrioBotTable entries={g.atrioBots} onChanged={bots.reload}/>}
                   </div>

@@ -56,7 +56,7 @@ async function fixture(width, role = "client", enabled = true, fillers = 0) {
       source_type: "pbadmin",
       workspace_currency: "ARS",
       user_id: id,
-      pbadmin_bots: [bot],
+      pbadmin_bots: [{...bot,role:"ads"},{...bot,manager_id:991,name:"mkt_inventory_only",active:true,phone:"5491100000777"}],
     },
     {
       id: 20,
@@ -156,6 +156,7 @@ async function fixture(width, role = "client", enabled = true, fillers = 0) {
     { ...phone, id: 2, gerencia_id: 20, phone: "5493511234568", pbadmin_manager_id: null },
     { ...phone, id: 3, phone: "5491100000203", assignment_role: "acquisition", pbadmin_manager_id: 100 },
     { ...phone, id: 4, phone: "5491100000204", status: "inactive", source_available: false, assignment_role: "acquisition", pbadmin_manager_id: 100 },
+    { ...phone, id: 5, phone: "mkt_5493511234567", status: "inactive", source_available: false, usage_count: 999 },
   ];
   for(let i=0;i<fillers;i++)groups.push({id:100+i,nombre:`ZZ Gerencia ${String(i).padStart(2,"0")}`,gerencia_id:100+i,source_type:"pbadmin",workspace_currency:"ARS",user_id:id,pbadmin_bots:[]});
   const offPageClient="92000000-0000-4000-8000-000000000006";
@@ -464,8 +465,15 @@ try {
       const group = row(page, "Gerencia uno");
       await group.getByText("Gerencia uno", { exact: true }).click();
       await page.getByText("Bot 1045", { exact: true }).waitFor();
-      await page.getByText("Bot 99 · Sin teléfono", { exact: true }).waitFor();
+      assert.equal(await page.getByText("Bot 99 · Sin teléfono", { exact: true }).count(),0);
       assert.equal(await page.getByText("Bot desconectado",{exact:true}).count(),0);
+      assert.equal(await group.locator('td').nth(5).innerText(),'3 teléfonos · 1 bot de Atrio');
+      const phoneRows=page.locator('tbody[data-expanded="true"] tr').filter({has:page.getByText('WhatsApp',{exact:true})});
+      assert.equal(await phoneRows.count(),3,'only synchronized valid phone rows are rendered');
+      const whatsappValues=await phoneRows.locator('td:nth-child(6)').allTextContents();
+      assert.ok(whatsappValues.every(value=>/^54 9 \d{4} \d{2}-\d{4}$/.test(value)));
+      assert.equal(await page.getByText('54 9 1100 00-0777',{exact:true}).count(),0,'a valid number in general inventory cannot create a phone row');
+      assert.equal(await group.locator('td').nth(9).innerText(),'17','invalid stored phone is excluded from visible totals');
       assert.equal(await page.locator('tbody[data-gerencia-group]').count(),4);
       const card=page.locator('tbody[data-expanded="true"]');
       assert.equal(await card.count(),1);
@@ -482,6 +490,8 @@ try {
       checks++;
 
       const managed = page.getByRole("row").filter({ hasText: "54 9 3511 23-4567" });
+      assert.equal(await managed.locator('td').nth(6).innerText(),'mkt','type comes from the phone sync, not the general inventory');
+      assert.equal(await managed.locator('td').nth(7).innerText(),'WhatsApp de venta','phone usage remains authoritative');
       await managed.getByRole("button", { name: /^Acciones de / }).click();
       assert.equal(await page.getByRole("menuitem", { name: "Cambiar uso…", exact: true }).isDisabled(), true, "managed usage retains PBAdmin ownership");
       await page.keyboard.press("Escape");
@@ -742,8 +752,8 @@ try {
     await page.clock.runFor(100);
     await page.clock.fastForward(5600);await success.waitFor({state:'hidden'});
     await row(page,'Gerencia uno').getByRole('button',{name:'Ver detalle',exact:true}).click();
-    await page.getByText('Bot 99 · Sin teléfono',{exact:true}).waitFor();
-    assert.equal(await page.getByText('54 9 1100 00-0204',{exact:true}).count(),0,'inactive phone is removed; inventory remains separate');
+    assert.equal(await page.getByText('Bot 99 · Sin teléfono',{exact:true}).count(),0);
+    assert.equal(await page.getByText('54 9 1100 00-0204',{exact:true}).count(),0,'inactive phone is removed without recreating rows from inventory');
     assert.deepEqual(feedback.errors,[]);checks++;
   }finally{await feedback.context.close();}
 

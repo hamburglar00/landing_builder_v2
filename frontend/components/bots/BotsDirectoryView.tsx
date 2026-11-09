@@ -3,7 +3,6 @@
 import { Fragment, useCallback, useState, type ReactNode } from "react";
 import type { GerenciaPhoneRow } from "@/components/telefonos/TelefonosPageContent";
 import type { AtrioBotEntry, BotGerencia } from "@/lib/bots/workspace";
-import type { DirectoryBot } from "@/lib/bots/directory";
 import type { AtrioClient } from "@/lib/atrio/atrioDb";
 import { CASINO_NAMES, managerTypeLabel } from "@/lib/atrio/managerDestinations";
 import { ModalShell } from "@/components/ui/PanelPrimitives";
@@ -17,7 +16,7 @@ import styles from "./BotsDirectory.module.css";
 
 type Channel = "all" | "whatsapp" | "atrio";
 type Metric = { messagesReceived: number; messagesReceivedHistorical: number; calculatedAt: string };
-type Item = { kind: "phone"; phone: GerenciaPhoneRow } | { kind: "atrio"; entry: AtrioBotEntry } | { kind: "inventory"; bot: DirectoryBot };
+type Item = { kind: "phone"; phone: GerenciaPhoneRow } | { kind: "atrio"; entry: AtrioBotEntry };
 type Props = {
   groups: BotGerencia[];
   filteredGroups: BotGerencia[];
@@ -78,6 +77,7 @@ const NotApplicable = () => <span className={styles.notApplicable}>N.A.</span>;
 const Separator = () => <div role="separator" className={styles.separator} />;
 const roleLabel = (phone: GerenciaPhoneRow) => phone.assignment_role === "follow_up" ? "WhatsApp de venta" : "WhatsApp publicitario";
 const numeric = (value: number | null | undefined) => value == null ? <NotApplicable /> : numberFormat.format(value);
+const isValidPhone = (phone: string, workspace?: string) => /^[+\d\s().-]+$/.test(phone) && (workspace === "PYG" ? /^595\d{9}$/ : /^549\d{10}$/).test(phone.replace(/\D/g, ""));
 
 function phoneInventory(phone: GerenciaPhoneRow, group: BotGerencia) {
   const inventory = (group.pbadmin_bots ?? []).filter(bot => bot.channel === "whatsapp" && bot.agency_id === group.gerencia_id);
@@ -87,7 +87,7 @@ function phoneInventory(phone: GerenciaPhoneRow, group: BotGerencia) {
 }
 function itemPlatform(item: Item, group: BotGerencia): string | null {
   if (item.kind === "atrio") return item.entry.connection ? CASINO_NAMES[item.entry.connection.target_provider] : PLATFORM_NAMES[item.entry.inventory?.platform ?? 0] ?? null;
-  const bot = item.kind === "inventory" ? item.bot : phoneInventory(item.phone, group);
+  const bot = phoneInventory(item.phone, group);
   return PLATFORM_NAMES[bot?.platform ?? 0] ?? null;
 }
 
@@ -180,17 +180,6 @@ export function BotsDirectoryView(p: Props) {
         <td className={styles.numeric}>{numeric(connection?.chats_started_total ?? connection?.chats_started ?? (inventory ? null : 0))}</td>
       </>;
     }
-    if (item.kind === "inventory") {
-      const { bot } = item;
-      return <>
-        <td><NotApplicable /></td><td className={styles.muted}>WhatsApp</td>
-        <td className={styles.muted}>{platform ?? <NotApplicable />}</td>
-        <td title={`${bot.name || `Bot ${bot.manager_id}`} · No asociado a un teléfono en Builder`}>{bot.phone ? <span className={styles.phoneNumber}>{p.formatPhone(bot.phone)}</span> : `Bot ${bot.manager_id} · Sin teléfono`}</td>
-        <td className={styles.muted}>{bot.role}</td><td className={styles.muted}>{bot.whatsapp_usage ? bot.whatsapp_usage === "follow_up" ? "WhatsApp de venta" : "WhatsApp publicitario" : <NotApplicable />}</td>
-        <td><Status tone={bot.active ? "positive" : "neutral"}>{bot.active ? "Activo en PBAdmin" : "Inactivo en PBAdmin"}</Status></td>
-        <td><NotApplicable /></td><td><NotApplicable /></td><td><NotApplicable /></td>
-      </>;
-    }
     const { phone } = item;
     const metrics = p.metrics[phone.id];
     return <>
@@ -237,20 +226,15 @@ export function BotsDirectoryView(p: Props) {
         <thead><tr>{labels.map((label, i) => <th key={label} scope="col" className={i === 1 || i >= 9 ? styles.numeric : undefined} title={label === "CHATS" ? "Atrio: chats iniciados. WhatsApp: mensajes recibidos." : undefined}>{label}</th>)}<th scope="col"><span className="sr-only">Acciones</span></th></tr></thead>
           {!visible.length && <tbody><tr><td colSpan={labels.length + 1} className={styles.empty}>{p.loading ? "Cargando bots…" : !counts.all ? "Todavía no hay bots. Usá Vincular Bots para comenzar." : p.onlyActive ? "No hay gerencias con bots activos para mostrar." : "No hay gerencias que coincidan con la búsqueda."}</td></tr></tbody>}
           {visible.map((group, index) => {
-            const phones = p.phones[group.id] ?? [];
-            const numbers = new Set(phones.map(phone => phone.phone.replace(/\D/g, "")));
-            const missing = (group.source_type === "manual" ? [] : group.pbadmin_bots ?? []).filter(bot => bot.channel === "whatsapp" && bot.agency_id === group.gerencia_id && (!bot.phone || !numbers.has(bot.phone.replace(/\D/g, ""))));
+            const phones = (p.phones[group.id] ?? []).filter(phone => isValidPhone(phone.phone, group.workspace_currency));
             const items: Item[] = [
               ...(p.channel !== "atrio" ? phones.map(phone => ({ kind: "phone" as const, phone })) : []),
-              ...(p.channel !== "atrio" ? missing.map(bot => ({ kind: "inventory" as const, bot })) : []),
               ...(p.channel !== "whatsapp" ? group.atrioBots.map(entry => ({ kind: "atrio" as const, entry })) : []),
             ];
             const single = items.length === 1 ? items[0] : null;
             const agencyId = group.gerencia_id ?? (!group.virtual ? group.id : null);
             const platforms = [...new Set(items.map(item => itemPlatform(item, group)).filter((name): name is string => !!name))];
-            const withoutNumber = missing.filter(bot => !bot.phone).length;
-            const pendingPhones = missing.length - withoutNumber;
-            const botSummary = [phones.length ? `${phones.length} ${phones.length === 1 ? "teléfono" : "teléfonos"}` : "", group.atrioBots.length ? `${group.atrioBots.length} ${group.atrioBots.length === 1 ? "bot de Atrio" : "bots de Atrio"}` : "", withoutNumber ? `${withoutNumber} ${withoutNumber === 1 ? "bot sin número" : "bots sin número"}` : "", pendingPhones ? `${pendingPhones} ${pendingPhones === 1 ? "teléfono pendiente" : "teléfonos pendientes"}` : ""].filter(Boolean).join(" · ");
+            const botSummary = [phones.length ? `${phones.length} ${phones.length === 1 ? "teléfono" : "teléfonos"}` : "", group.atrioBots.length ? `${group.atrioBots.length} ${group.atrioBots.length === 1 ? "bot de Atrio" : "bots de Atrio"}` : ""].filter(Boolean).join(" · ");
             const expandable = items.length > 1;
             const key = group.uiKey ?? group.id;
             const open = expanded === key;
@@ -258,7 +242,7 @@ export function BotsDirectoryView(p: Props) {
             const connections = group.atrioBots.flatMap(entry => entry.connection ? [entry.connection] : []);
             const activePhones = phones.filter(phone => phone.status === "active" && phone.assignment_role !== "follow_up").length;
             const unavailable = phones.length > 0 && group.source_type !== "manual" && phones.every(phone => phone.source_available === false);
-            const onlyAtrio = group.virtual || (!phones.length && !missing.length && !!group.atrioBots.length);
+            const onlyAtrio = group.virtual || (!phones.length && !!group.atrioBots.length);
             const unknown = onlyAtrio && !connections.length && group.atrioBots.some(entry => entry.inventory);
             const usage = phones.reduce((sum, phone) => sum + (Number(phone.usage_count) || 0), connections.reduce((sum, entry) => sum + entry.usage_count, 0));
             const messages = phones.reduce((sum, phone) => sum + (p.metrics[phone.id]?.messagesReceived ?? 0), connections.reduce((sum, entry) => sum + entry.chats_started, 0));
@@ -272,7 +256,7 @@ export function BotsDirectoryView(p: Props) {
                 {single ? cells(single, group) : <>
                   <td><NotApplicable /></td><td className={styles.muted}>{onlyAtrio ? "Atrio" : group.atrioBots.length ? "WhatsApp + Atrio" : "WhatsApp"}</td>
                   <td className={styles.muted}>{platforms.length ? platforms.join(", ") : <NotApplicable />}</td>
-                  <td title={missing.length ? "Los bots sin número son registros del inventario de PBAdmin, no teléfonos guardados en Builder. Borrar teléfonos inactivos no elimina estos bots." : undefined}>{botSummary || <NotApplicable />}</td>
+                  <td>{botSummary || <NotApplicable />}</td>
                   <td><NotApplicable /></td><td><NotApplicable /></td>
                   <td><Status tone={onlyAtrio ? connections.some(entry => entry.active) ? "positive" : "neutral" : unavailable || !activePhones ? "warning" : "positive"}>
                     {onlyAtrio ? connections.some(entry => entry.active) ? "Activo" : "Pendiente / inactivo" : unavailable ? "Sin managers activos" : activePhones ? `${activePhones} ${activePhones === 1 ? "publicitario activo" : "publicitarios activos"}` : "Sin publicitarios activos"}
@@ -284,9 +268,9 @@ export function BotsDirectoryView(p: Props) {
                   {expandable && <button type="button" className={styles.iconButton} aria-label="Ver detalle" aria-expanded={open} onClick={event => { event.stopPropagation(); toggle(); }}><svg className={styles.chevron} aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg></button>}
                 </div></td>
               </tr>
-              {expandable && open && items.map((item, itemIndex) => <tr key={item.kind === "phone" ? `phone:${item.phone.id}` : item.kind === "inventory" ? `inventory:${item.bot.manager_id}` : `atrio:${item.entry.client.id}:${item.entry.connection?.connection_id ?? item.entry.inventory?.manager_id ?? "pending"}`} className={styles.child}>
+              {expandable && open && items.map((item, itemIndex) => <tr key={item.kind === "phone" ? `phone:${item.phone.id}` : `atrio:${item.entry.client.id}:${item.entry.connection?.connection_id ?? item.entry.inventory?.manager_id ?? "pending"}`} className={styles.child}>
                 <td title={group.nombre}><span aria-hidden="true" className="ml-3 text-zinc-600">└</span><span className="sr-only">Detalle de {group.nombre}, elemento {itemIndex + 1}</span></td><td className={styles.numeric}>{agencyId ?? <NotApplicable />}</td>{cells(item, group)}
-                <td>{item.kind !== "inventory" ? <div className={styles.rowActions}><BotMenu label={`Acciones de ${item.kind === "phone" ? p.formatPhone(item.phone.phone) : item.entry.name}`}>{item.kind === "phone" ? phoneActions(item.phone, group) : atrioActions(item.entry)}</BotMenu></div> : <NotApplicable />}</td>
+                <td><div className={styles.rowActions}><BotMenu label={`Acciones de ${item.kind === "phone" ? p.formatPhone(item.phone.phone) : item.entry.name}`}>{item.kind === "phone" ? phoneActions(item.phone, group) : atrioActions(item.entry)}</BotMenu></div></td>
               </tr>)}
             </tbody>;
           })}
