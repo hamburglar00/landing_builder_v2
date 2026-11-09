@@ -29,6 +29,12 @@ Las pruebas locales del lote están en [el informe funcional](bots-redesign-2026
 - Atrio código: `531874ea6c4da80440cfc2f2404affdb3426b394`, pusheado a `fix/atrio-inbox-validation`.
 - Atrio despliegue productivo READY y promovido: `dpl_HcfnhywCk51hkVYPMQJxyKtNbR8r`, `https://internal-chat-hp44nhq6g-juanclouds-projects.vercel.app`.
 - Endpoint público privado de Atrio: 401 con credencial inválida; 400 con la credencial exclusiva y un array vacío inválido. No se pidió reiniciar ningún asesor.
-- Builder: entrega de código a `main` y verificación de los dos dominios en curso. El registro final se completa al comprobar el despliegue.
+- Builder código: `0c49f828941a295d3adaae13c19ce4e5ef77fa09`, comiteado y pusheado a `main`.
+- Builder despliegue productivo READY: `dpl_5WxiM6DkH45ct2zKZ4m8eMzGzFLk`, `https://landing-builder-v2-k259-mce77obq5-juanclouds-projects.vercel.app`. Ambos alias públicos apuntan a ese despliegue: `constructor.panelbotadmin.com` y `mkt.panelbotadmin.com`.
+- En los dos dominios, `/dashboard/bots` responde HTTP 200 y conserva LandingBuilder. Las cuatro rutas privadas responden 401 sin sesión con origen válido y 403 con origen ajeno: 16 comprobaciones reales sin escrituras de negocio.
+- La pantalla compilada publicada pasó otras 63 comprobaciones Chromium, con todos los servicios operativos interceptados y datos sintéticos. El editor publicado también pasó en móvil: logos, tarjeta Canal antes de Plantilla, seis opciones de WhatsApp, tres de Atrio, retorno a la selección previa y Tracking sin canal. No se crearon ni modificaron cuentas, landings o contadores productivos para esos recorridos.
+- Los cinco hosts públicos (los cuatro gateways Vercel y Ganamos+ en Worker) conservan su formulario protegido HTTP 401 sin sesión y sirven el SDK canónico con HTTP 200 y hash coincidente. Atrio `/login` y `/embed/warm` responden HTTP 200. No se republican gateways ni Worker en este lote.
+- Dry-run final de ambos Supabase: bases al día, sin migraciones pendientes. Los WARN de advisors permanecen idénticos al estado previo; las dos tablas exclusivas de servidor agregan INFO de [RLS sin políticas](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy), consistente con sus GRANT/REVOKE comprobados.
+- Publicación completa. Los commits documentales posteriores conservan exactamente el código productivo de este lote; se comprueba también el despliegue de la última revisión de `main`.
 
 Los artefactos privados de operación se mantienen en `.vercel/redirection-release-20261109/` de cada proyecto, fuera de Git. No incorporan secretos al informe ni al commit. Los dominios de Builder son `constructor.panelbotadmin.com` y `mkt.panelbotadmin.com`; un Preview no acredita producción.

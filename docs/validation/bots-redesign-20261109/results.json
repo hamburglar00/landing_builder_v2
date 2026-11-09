@@ -19,8 +19,20 @@
   "nexobetMarketingTests": 14,
   "marketingPinnedFiles": 24,
   "gatewaySdkCopies": 4,
-  "productionMutations": false,
-  "committed": false,
-  "pushed": false,
-  "deployed": false
+  "committed": true,
+  "pushed": true,
+  "deployed": true,
+  "productionSchemaChanges": true,
+  "productionMetadataReconciliation": true,
+  "productionBusinessMutations": false,
+  "productionBrowserChecks": 63,
+  "productionEditorChannel": "passed",
+  "commits": {
+    "builder": "0c49f828941a295d3adaae13c19ce4e5ef77fa09",
+    "atrio": "531874ea6c4da80440cfc2f2404affdb3426b394"
+  },
+  "deployments": {
+    "builder": "dpl_5WxiM6DkH45ct2zKZ4m8eMzGzFLk",
+    "atrio": "dpl_HcfnhywCk51hkVYPMQJxyKtNbR8r"
+  }
 }

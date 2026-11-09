@@ -78,14 +78,14 @@ Capturas con datos ficticios: [escritorio](bots-redesign-20261109/chromium-initi
 
 ## Entrega
 
-Implementación local para revisión, sin commit/push/publicación ni mutaciones de las bases productivas. El servidor compilado queda en `http://127.0.0.1:3137`; las pruebas usaron servicios sintéticos y PostgreSQL descartable. Para usar la consulta nueva con datos reales se requieren las migraciones y el despliegue coordinado indicados abajo; no se agrega una descarga completa como fallback.
+El usuario autorizó después commit/push, migraciones y publicación integral. El lote quedó publicado en Builder y Atrio: [registro de producción, commits y comprobaciones](redirection-production-20261109.md). Las pruebas funcionales usan servicios sintéticos y PostgreSQL descartable; la comprobación productiva adicional lee páginas y valida scope/permisos, sin reiniciar contadores reales. No se agrega una descarga completa como fallback.
 
-Orden de activación, después de revisar este lote:
+Procedimiento de activación aplicado y documentado en el registro productivo:
 
 1. Atrio: aplicar `20261109185343_builder_daily_reset_and_directory_projection.sql` y publicar su endpoint privado de reinicio diario y metadatos. Conservar su única implementación para los cuatro proveedores; no modificar ni publicar SDK/Worker.
 2. Builder: aplicar `20261109185337_bots_directory_pagination_and_daily_reset.sql` y `20261109191054_atrio_channel_global_template_permission.sql`.
 3. Desplegar `sync-atrio-directory` y `reset-bots-daily`. El segundo reutiliza `ATRIO_DIRECTORY_ORIGIN` y recibe una clave exclusiva `ATRIO_DAILY_RESET_KEY`, validada como `BUILDER_DAILY_RESET_KEY` en el endpoint privado de Atrio. Generar esta credencial sólo para el reinicio diario; no reutilizar ni copiar claves generales de otros productos. Conservar la configuración Supabase/cron existente y no imprimir valores ni exponerlos al navegador.
 4. Ejecutar la reconciliación de metadatos y comprobar la proyección de todos los asesores vinculados antes de habilitar la pantalla paginada. No calcular métricas de todos ellos durante esa carga. Confirmar cron de medianoche y dispatcher por minuto, con cola/acuse recuperables.
-5. Publicar Builder desde `main` y verificar en ambos dominios las páginas 1/2, búsqueda, permisos y acciones generales. Publicar/verificar Atrio por separado. Esta entrega local no certifica esos despliegues futuros.
+5. Publicar Builder desde `main` y verificar en ambos dominios las páginas 1/2, búsqueda, permisos y acciones generales. Publicar/verificar Atrio por separado. Los despliegues y sus verificaciones constan en el registro enlazado.
 
 NexoBet conserva su canal, permisos, contadores y módulo de marketing fijado; estos adaptadores privados de Builder no forman parte de su copia. API2/Panel3 no cambian. Evidencias del canal: [Atrio habilitado en móvil](bots-redesign-20261109/canal-atrio-mobile.png) y [permiso deshabilitado](bots-redesign-20261109/canal-whatsapp-mobile.png).
