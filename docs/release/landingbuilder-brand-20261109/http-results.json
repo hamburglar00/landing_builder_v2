@@ -1,0 +1,163 @@
+{
+  "checkedAt": "2026-11-09T16:55:25.999Z",
+  "codeCommit": "c54ac2f534d75495395c9cd3f5ce78502cdabf85",
+  "deployment": "dpl_6C5WHw5VLU253EAViQpBk4h8QPwt",
+  "hosts": [
+    {
+      "host": "constructor.panelbotadmin.com",
+      "status": 200,
+      "title": "LandingBuilder",
+      "oldNameAbsent": true,
+      "manifest": {
+        "name": "LandingBuilder",
+        "short_name": "LandingBuilder",
+        "theme_color": "#0A0F12"
+      },
+      "assets": [
+        {
+          "asset": "favicon.ico",
+          "status": 200,
+          "sha256": "bbf876b33766309c4a31d9303afcff9bce0c0147beb80e7ffb64630f2ca955a0"
+        },
+        {
+          "asset": "favicon.svg",
+          "status": 200,
+          "sha256": "b5c1d82edc201793d72457646cfc278d63066f521e426f9ba27011f54b51c7f9"
+        },
+        {
+          "asset": "favicon-16x16.png",
+          "status": 200,
+          "sha256": "00245942ce1b91bf3d121ae53e0e36f1495ed82dd4ab61e8b6133e2f421562e3"
+        },
+        {
+          "asset": "favicon-32x32.png",
+          "status": 200,
+          "sha256": "681ce8d3947e0cd7fd04ffc5ac8ca9267311ae408d4f3e3757801d5f5404ffd5"
+        },
+        {
+          "asset": "apple-touch-icon.png",
+          "status": 200,
+          "sha256": "019285742fe339b8439aa245a1b04382b4bb1553bfed7332fb0e82763ef87df4"
+        },
+        {
+          "asset": "icon-192.png",
+          "status": 200,
+          "sha256": "f6ba83715094134b156ebab690c53558a7e61aed35c3e097ec10cb487979ae8f"
+        },
+        {
+          "asset": "icon-512.png",
+          "status": 200,
+          "sha256": "2cca00cadc278ea27e569f2009266225e36dc20c952d95225d08cd6e6777af8e"
+        },
+        {
+          "asset": "icon-maskable-512.png",
+          "status": 200,
+          "sha256": "b23f64a0a36a878b3c9261c4ef326241b6469f542c0f349eeb561d42c12d0064"
+        },
+        {
+          "asset": "brand/landingbuilder/landingbuilder-logo-dark.svg",
+          "status": 200,
+          "sha256": "2b5a949ec812e98efe6527fbaf95b8091cc307e0005b9179c918f234d7d5232a"
+        },
+        {
+          "asset": "brand/landingbuilder/landingbuilder-logo-vertical-dark.svg",
+          "status": 200,
+          "sha256": "8a104853fe4719d39983528e9e3caa243f551c0755a01134c299a30a179b4056"
+        },
+        {
+          "asset": "brand/landingbuilder/og-image.png",
+          "status": 200,
+          "sha256": "603976d479906fe1b2f7578d3ce7823e72abd7a34b2870bea13fa47b610e2a9e"
+        },
+        {
+          "asset": "brand/atrio/icon.svg",
+          "status": 200,
+          "sha256": "a4ac98f5814477472b21c35770b23bdb416a354b3be1075942aab3a91c20964d"
+        },
+        {
+          "asset": "whatsapp-icon.png",
+          "status": 200,
+          "sha256": "4def2fe5444dbe07df170938d45664945d591fb682594ec50bf36237d7f0943b"
+        }
+      ]
+    },
+    {
+      "host": "mkt.panelbotadmin.com",
+      "status": 200,
+      "title": "LandingBuilder",
+      "oldNameAbsent": true,
+      "manifest": {
+        "name": "LandingBuilder",
+        "short_name": "LandingBuilder",
+        "theme_color": "#0A0F12"
+      },
+      "assets": [
+        {
+          "asset": "favicon.ico",
+          "status": 200,
+          "sha256": "bbf876b33766309c4a31d9303afcff9bce0c0147beb80e7ffb64630f2ca955a0"
+        },
+        {
+          "asset": "favicon.svg",
+          "status": 200,
+          "sha256": "b5c1d82edc201793d72457646cfc278d63066f521e426f9ba27011f54b51c7f9"
+        },
+        {
+          "asset": "favicon-16x16.png",
+          "status": 200,
+          "sha256": "00245942ce1b91bf3d121ae53e0e36f1495ed82dd4ab61e8b6133e2f421562e3"
+        },
+        {
+          "asset": "favicon-32x32.png",
+          "status": 200,
+          "sha256": "681ce8d3947e0cd7fd04ffc5ac8ca9267311ae408d4f3e3757801d5f5404ffd5"
+        },
+        {
+          "asset": "apple-touch-icon.png",
+          "status": 200,
+          "sha256": "019285742fe339b8439aa245a1b04382b4bb1553bfed7332fb0e82763ef87df4"
+        },
+        {
+          "asset": "icon-192.png",
+          "status": 200,
+          "sha256": "f6ba83715094134b156ebab690c53558a7e61aed35c3e097ec10cb487979ae8f"
+        },
+        {
+          "asset": "icon-512.png",
+          "status": 200,
+          "sha256": "2cca00cadc278ea27e569f2009266225e36dc20c952d95225d08cd6e6777af8e"
+        },
+        {
+          "asset": "icon-maskable-512.png",
+          "status": 200,
+          "sha256": "b23f64a0a36a878b3c9261c4ef326241b6469f542c0f349eeb561d42c12d0064"
+        },
+        {
+          "asset": "brand/landingbuilder/landingbuilder-logo-dark.svg",
+          "status": 200,
+          "sha256": "2b5a949ec812e98efe6527fbaf95b8091cc307e0005b9179c918f234d7d5232a"
+        },
+        {
+          "asset": "brand/landingbuilder/landingbuilder-logo-vertical-dark.svg",
+          "status": 200,
+          "sha256": "8a104853fe4719d39983528e9e3caa243f551c0755a01134c299a30a179b4056"
+        },
+        {
+          "asset": "brand/landingbuilder/og-image.png",
+          "status": 200,
+          "sha256": "603976d479906fe1b2f7578d3ce7823e72abd7a34b2870bea13fa47b610e2a9e"
+        },
+        {
+          "asset": "brand/atrio/icon.svg",
+          "status": 200,
+          "sha256": "a4ac98f5814477472b21c35770b23bdb416a354b3be1075942aab3a91c20964d"
+        },
+        {
+          "asset": "whatsapp-icon.png",
+          "status": 200,
+          "sha256": "4def2fe5444dbe07df170938d45664945d591fb682594ec50bf36237d7f0943b"
+        }
+      ]
+    }
+  ]
+}

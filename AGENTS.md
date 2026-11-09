@@ -1,5 +1,7 @@
 # Decisiones de producto
 
+Producción de Builder: Vercel usa la rama `main`, proyecto `landing-builder-v2-k259`, raíz `frontend`. Los dominios del panel son `constructor.panelbotadmin.com` y `mkt.panelbotadmin.com`. Para entregar un lote productivo, integrar los cambios revisados en `main`, hacer push y comprobar el despliegue READY y los dominios. Un push a una rama de trabajo genera Preview y no acredita publicación en producción. Conservar la versión ya publicada al sincronizar la rama.
+
 Marketing compartido con NexoBet: después de cambiar Template 9, marcas/recursos o Meta, revisar ambos productos. `node scripts/sync-nexobet-marketing.mjs` detecta diferencias del módulo fijado; `--update` actualiza la copia después de revisarlas. Seguir `../NexoBet/docs/MODULOS_COMPARTIDOS.md`, probar los dos proyectos y publicarlos por separado. No copiar secretos ni asumir que un deploy de Builder actualiza NexoBet.
 
 Cada mejora compartida se trabaja como un lote: registrar productos afectados, fuente canónica y excepciones; sincronizar y verificar cada producto. Registrar commit/push y publicación por separado. No cerrar el lote con un producto del alcance pendiente; indicar las dependencias externas. Chat compartido revisa Atrio y NexoBet, además de los cuatro gateways cuando usan el widget. Procedimiento en `../NexoBet/docs/MODULOS_COMPARTIDOS.md`.

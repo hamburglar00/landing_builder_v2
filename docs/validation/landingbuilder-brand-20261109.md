@@ -2,7 +2,7 @@
 
 Alcance: panel de Builder; kit original incorporado en `frontend/assets/landingbuilder`. Recursos públicos y comportamiento compartido revisados con NexoBet, que conserva su identidad. Fuente canónica y excepciones: [identidad](../IDENTIDAD_LANDINGBUILDER.md).
 
-Estado: implementado y validado localmente; entrega por commit/push solicitada por el usuario el 09/11/2026. Publicación pendiente.
+Estado: implementado, validado y publicado en producción el 09/11/2026, desde `main`. Código `c54ac2f534d75495395c9cd3f5ce78502cdabf85`, despliegue READY `dpl_6C5WHw5VLU253EAViQpBk4h8QPwt`. [Registro de publicación](../release/landingbuilder-brand-20261109.md).
 
 ## Cambios
 
@@ -30,4 +30,4 @@ Evidencia: [panel](landingbuilder-brand-20261109/brand-browser-results.json), [7
 
 Builder es la única aplicación modificada y la fuente canónica del ajuste del editor. NexoBet se revisó y verificó por separado; conserva su canal e identidad propios, y su módulo de marketing permanece en 1.2.0. Atrio sólo aporta una copia exacta de su ícono; no se modificó su implementación. Las cuatro plataformas/gateways, Ganamos+ Worker y el renderer público no requieren cambios ni publicación para esta presentación del panel. API2 y Panel3 conservan su estado.
 
-Entrega Git de Builder: rama `fix/template7-session-reentry`, remoto `origin`, mensaje del lote `feat(branding): adopt LandingBuilder identity and channel logos` (hash en el historial Git). Publicación de Builder: pendiente; la entrega en Git se registra por separado del despliegue. NexoBet, Atrio y los cuatro gateways no requieren commit/push ni publicación por este lote. No hay migraciones ni dependencias externas para usar los nuevos recursos.
+Entrega Git de Builder: commit de código `c54ac2f534d75495395c9cd3f5ce78502cdabf85`, publicado primero en la rama de trabajo y luego integrado por avance directo y pusheado a `origin/main`. Publicación: Vercel Production READY `dpl_6C5WHw5VLU253EAViQpBk4h8QPwt`, fuente Git `main`; ambos dominios del panel devuelven la nueva marca y los recursos coinciden por SHA-256. La documentación posterior registra esta publicación y no cambia el código de aplicación. NexoBet, Atrio y los cuatro gateways no requieren commit/push ni publicación por este lote. No hubo migraciones ni dependencias externas para usar los nuevos recursos.

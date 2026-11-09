@@ -1,0 +1,198 @@
+{
+  "results": [
+    {
+      "engine": "chromium",
+      "page": "login",
+      "width": 320,
+      "height": 720,
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "page": "admin",
+      "width": 320,
+      "height": 720,
+      "sidebar": "passed",
+      "workspace": "passed"
+    },
+    {
+      "engine": "chromium",
+      "page": "dashboard",
+      "width": 320,
+      "height": 720,
+      "sidebar": "passed",
+      "workspace": "passed"
+    },
+    {
+      "engine": "chromium",
+      "page": "login",
+      "width": 390,
+      "height": 844,
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "page": "admin",
+      "width": 390,
+      "height": 844,
+      "sidebar": "passed",
+      "workspace": "passed"
+    },
+    {
+      "engine": "chromium",
+      "page": "dashboard",
+      "width": 390,
+      "height": 844,
+      "sidebar": "passed",
+      "workspace": "passed"
+    },
+    {
+      "engine": "chromium",
+      "page": "login",
+      "width": 768,
+      "height": 1024,
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "page": "admin",
+      "width": 768,
+      "height": 1024,
+      "sidebar": "passed",
+      "workspace": "passed"
+    },
+    {
+      "engine": "chromium",
+      "page": "dashboard",
+      "width": 768,
+      "height": 1024,
+      "sidebar": "passed",
+      "workspace": "passed"
+    },
+    {
+      "engine": "chromium",
+      "page": "login",
+      "width": 1440,
+      "height": 900,
+      "status": "passed"
+    },
+    {
+      "engine": "chromium",
+      "page": "admin",
+      "width": 1440,
+      "height": 900,
+      "sidebar": "passed",
+      "workspace": "passed"
+    },
+    {
+      "engine": "chromium",
+      "page": "dashboard",
+      "width": 1440,
+      "height": 900,
+      "sidebar": "passed",
+      "workspace": "passed"
+    },
+    {
+      "engine": "chromium",
+      "page": "metadata-privacy-assets",
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "page": "login",
+      "width": 320,
+      "height": 720,
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "page": "admin",
+      "width": 320,
+      "height": 720,
+      "sidebar": "passed",
+      "workspace": "passed"
+    },
+    {
+      "engine": "webkit",
+      "page": "dashboard",
+      "width": 320,
+      "height": 720,
+      "sidebar": "passed",
+      "workspace": "passed"
+    },
+    {
+      "engine": "webkit",
+      "page": "login",
+      "width": 390,
+      "height": 844,
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "page": "admin",
+      "width": 390,
+      "height": 844,
+      "sidebar": "passed",
+      "workspace": "passed"
+    },
+    {
+      "engine": "webkit",
+      "page": "dashboard",
+      "width": 390,
+      "height": 844,
+      "sidebar": "passed",
+      "workspace": "passed"
+    },
+    {
+      "engine": "webkit",
+      "page": "login",
+      "width": 768,
+      "height": 1024,
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "page": "admin",
+      "width": 768,
+      "height": 1024,
+      "sidebar": "passed",
+      "workspace": "passed"
+    },
+    {
+      "engine": "webkit",
+      "page": "dashboard",
+      "width": 768,
+      "height": 1024,
+      "sidebar": "passed",
+      "workspace": "passed"
+    },
+    {
+      "engine": "webkit",
+      "page": "login",
+      "width": 1440,
+      "height": 900,
+      "status": "passed"
+    },
+    {
+      "engine": "webkit",
+      "page": "admin",
+      "width": 1440,
+      "height": 900,
+      "sidebar": "passed",
+      "workspace": "passed"
+    },
+    {
+      "engine": "webkit",
+      "page": "dashboard",
+      "width": 1440,
+      "height": 900,
+      "sidebar": "passed",
+      "workspace": "passed"
+    },
+    {
+      "engine": "webkit",
+      "page": "metadata-privacy-assets",
+      "status": "passed"
+    }
+  ]
+}
