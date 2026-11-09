@@ -5,19 +5,21 @@ import { readFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 const workspace = fileURLToPath(new URL("../../", import.meta.url));
-const atrio = path.join(workspace, "internal-chat");
+const product = process.argv.includes("--nexobet") ? "NexoBet" : "internal-chat";
+const atrio = path.join(workspace, product);
 const require = createRequire(new URL("../frontend/package.json", import.meta.url));
 const { build } = require("esbuild");
 const appRequire = createRequire(path.join(atrio, "package.json"));
 const { chromium, webkit } = require(path.join(process.env.APPDATA, "npm/node_modules/playwright"));
-const output = fileURLToPath(new URL("../.vercel/validation-contextual-install/", import.meta.url));
+const output = fileURLToPath(new URL(`../.vercel/validation-contextual-install-${product}/`, import.meta.url));
 await mkdir(output, { recursive: true });
 const cssFile = path.join(atrio, "src/app/globals.css");
-const chatCss = (await appRequire("postcss")([appRequire("@tailwindcss/postcss")({ base: atrio })]).process(await readFile(cssFile, "utf8"), { from: cssFile })).css;
-const bundle = await build({ absWorkingDir: atrio, stdin: { resolveDir: atrio, loader: "tsx", contents: 'import React from "react";import{createRoot}from"react-dom/client";import{ClientChatShell}from"./src/components/client-chat-shell";createRoot(document.getElementById("root")).render(<ClientChatShell {...window.fixtureProps}/>);' }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env": "{}", "process.env.NODE_ENV": '"production"' }, plugins: [{ name: "no-database", setup(b) {
+let chatCss = (await appRequire("postcss")([appRequire("@tailwindcss/postcss")({ base: atrio })]).process(await readFile(cssFile, "utf8"), { from: cssFile })).css;
+const bundle = await build({ absWorkingDir: atrio, stdin: { resolveDir: atrio, loader: "tsx", contents: 'import React from "react";import{createRoot}from"react-dom/client";import{ClientChatShell}from"./src/components/client-chat-shell";createRoot(document.getElementById("root")).render(<ClientChatShell {...window.fixtureProps}/>);' }, bundle: true, write: false, outfile: "chat.js", platform: "browser", format: "iife", jsx: "automatic", define: { "process.env": "{}", "process.env.NODE_ENV": '"production"' }, plugins: [{ name: "no-database", setup(b) {
   b.onResolve({ filter: /^@\/lib\/supabase\/anon$/ }, () => ({ path: "anon", namespace: "fixture" }));
   b.onLoad({ filter: /.*/, namespace: "fixture" }, () => ({ contents: 'export function createAnonSupabaseClient(){return {}}' }));
 } }] });
+chatCss += bundle.outputFiles.find(file => file.path.endsWith(".css"))?.text || "";
 const configs = [["landing-autologuin", "reydeases-gateway"], ["ases-gateway", "ases-del-norte-gateway"], ["ganamos-gateway", "ganamos-gateway"], ["multi-skin-gateway", "multi-skin-gateway"]];
 const checks = [];
 const TWO_HOURS = 2 * 60 * 60 * 1000;
@@ -31,6 +33,15 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
       const css = await readFile(path.join(root, "public/gateway-client.css"), "utf8");
       const sdk = await readFile(path.join(root, "public/gateway-app-sdk.js"), "utf8");
       const context = await browser.newContext({ viewport: { width: 390, height: 844 }, userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile" });
+      // Keep installation/reminder HTTP fixtures independent of OS service workers.
+      // The separate deferred-app checker verifies worker registration and push.
+      await context.addInitScript(() => {
+        const worker = { pushManager: { getSubscription: async () => null } };
+        Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: {
+          register: async () => worker, ready: Promise.resolve(worker), controller: null,
+          getRegistration: async () => worker, addEventListener() {}, removeEventListener() {}
+        } });
+      });
       const page = await context.newPage(), errors = [];
       page.setDefaultTimeout(15000);
       page.on("pageerror", error => errors.push(error.message));
@@ -55,6 +66,7 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
           if (url.pathname === "/chat.js") return route.fulfill({ contentType: "text/javascript; charset=utf-8", body: bundle.outputFiles[0].text });
           if (url.pathname === "/api/gateway/chat" && route.request().method() === "POST") {
             const body = route.request().postDataJSON();
+            if (body.action === "visible_entry") return route.fulfill({ json: { messages, walletReady: true, walletRequestCompleted: true, entryDiagnostics: [] } });
             if (body.action === "message") { const message = msg("cliente", body.content); messages.push(message); return route.fulfill({ json: { message } }); }
           }
           return route.fulfill({ json: { ok: true, messages, profile } });
@@ -94,16 +106,19 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
       await page.screenshot({ path: path.join(output, `${engine}-${repo}-offer.png`) });
       await chat.getByRole("button", { name: "Instalar app", exact: true }).click();
       await page.getByRole("dialog").waitFor();
-      assert.equal(await page.locator(".gateway-app-notice-copy").innerText(), await page.evaluate(() => window.GatewayApp.installationInstructions("ios")));
+      assert.equal(await page.locator(".gateway-app-notice-copy").first().innerText(), await page.evaluate(() => window.GatewayApp.installationInstructions("ios")));
       assert.deepEqual(await page.locator(".gateway-app-notice-actions button").allTextContents(), ["Entendido", "Recordármelo después"]);
       await page.getByRole("button", { name: "Recordármelo después", exact: true }).click();
       await page.reload();
       await chat.getByPlaceholder("Escribi un mensaje...").waitFor();
       await page.waitForFunction(() => !!window.GatewayApp);
       await page.waitForTimeout(300); assert.equal(await offer.count(), 0, "Dismissal survives reload");
-      // Another invitation of the same type must respect the postponed window.
+      // A fresh advisor invitation must arrive even when an older one was postponed.
       messages.push({ ...msg("asesor", "Instructivo enviado por el asesor", { source: "install_instructions_rpc" }), type: "instrucciones_instalacion" });
-      await page.waitForTimeout(1500);
+      await page.getByRole("dialog").waitFor();
+      assert.equal(await page.locator(".gateway-app-notice-copy").first().innerText(), "Instructivo enviado por el asesor");
+      await page.getByRole("button", { name: "Recordármelo después", exact: true }).click();
+      await page.waitForTimeout(300);
       assert.equal(await page.getByRole("dialog").count(), 0);
       now += TWO_HOURS + 1000;
       await page.clock.setFixedTime(now);
@@ -115,7 +130,7 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
       assert.equal(await page.getByRole("dialog").count(), 0, "Wait for the new turn's reply");
       messages.push(msg("asesor", "Hola, te respondo"));
       await page.getByRole("dialog").waitFor();
-      assert.equal(await page.locator(".gateway-app-notice-copy").innerText(), "Instructivo enviado por el asesor");
+      assert.equal(await page.locator(".gateway-app-notice-copy").first().innerText(), "Instructivo enviado por el asesor");
       await page.getByRole("button", { name: "Recordármelo después", exact: true }).click();
       await page.reload();
       await chat.getByPlaceholder("Escribi un mensaje...").waitFor();

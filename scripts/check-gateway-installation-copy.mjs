@@ -14,7 +14,8 @@ for(const repo of ['landing-autologuin','ases-gateway','ganamos-gateway','multi-
  function visit(node){if(ts.isFunctionDeclaration(node)&&node.name?.text==='showInstallNotice')fn=node;ts.forEachChild(node,visit)}visit(ast);assert.ok(fn);
  for(const platform of ['ios','android','desktop']){
   const body=window.GatewayApp.installationInstructions(platform);assert.equal(body,sqlCopy(platform));
-  const notices=[];const bindings={appFeaturesInitialized:true,standalone:false,app:{...window.GatewayApp,canInstall:()=>false},invitationStorageKey:invitation=>invitation.id,storageGet:()=>null,localStorage:{},platform:()=>platform,createNotice:value=>notices.push(value),notice:{dataset:{}}};
+  // Copy contract only; native-client-install covers the actual DOM and actions.
+  const notices=[];const bindings={appFeaturesInitialized:true,standalone:false,app:{...window.GatewayApp,canInstall:()=>false},invitationStorageKey:invitation=>invitation.id,storageGet:()=>null,localStorage:{},platform:()=>platform,createNotice:value=>{notices.push(value);return false},notice:{dataset:{}}};
   const code=ts.transpileModule(fn.getText(ast)+';return showInstallNotice',{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
   const show=new Function(...Object.keys(bindings),code)(...Object.values(bindings));
   await show(false);await show(true,{id:'invitation-fixture',title:'INSTALAR',body});

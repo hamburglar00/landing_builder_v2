@@ -117,7 +117,7 @@ for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "mu
             const source = await page.evaluate(() => window.GatewayApp.canInstall());
             assert.equal(source, true);
             await signal({ type: "atrio.widget.request-install" });
-            await page.getByRole("button", { name: "Instalar", exact: true }).click();
+            await page.getByRole("button", { name: "Instalar app", exact: true }).click();
             assert.equal((await page.evaluate(() => window.calls)).filter((x) => x === "native-install").length, 1);
           }
           await page.evaluate(() => {
