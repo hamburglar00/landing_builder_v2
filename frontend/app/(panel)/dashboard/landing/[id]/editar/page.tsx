@@ -34,6 +34,7 @@ import {
   LandingTemplateSection,
 } from "@/components/landing/LandingEditorForm";
 import { PublishTargetSection } from "@/components/landing/PublishTargetSection";
+import { LandingEditorActions } from "@/components/landing/LandingEditorActions";
 import { LandingUrlParametersCard } from "@/components/landing/LandingUrlParametersCard";
 import { LandingMarketCountryField } from "@/components/landing/LandingMarketCountryField";
 import {
@@ -539,24 +540,7 @@ export default function DashboardLandingEditarPage() {
             </span>
             <span>Volver al listado</span>
           </Link>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => void handleDelete()}
-              disabled={deleting}
-              className="ui-button ui-button-danger"
-            >
-              {deleting ? "Eliminando..." : "Eliminar landing"}
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleSave()}
-              disabled={saving}
-              className="ui-button ui-button-primary"
-            >
-              {saving ? "Guardando…" : "Guardar"}
-            </button>
-          </div>
+
         </div>
         <PageHeader
           eyebrow="Editor"
@@ -687,7 +671,7 @@ export default function DashboardLandingEditarPage() {
           </section>
         )}
 
-        <CollapsibleSection title="Tracking" defaultOpen>
+        <CollapsibleSection title="Tracking">
           <div className="space-y-3">
             <LandingMarketCountryField
               config={landing.config}
@@ -881,6 +865,7 @@ export default function DashboardLandingEditarPage() {
             }}
           />
         )}
+        <LandingEditorActions onDelete={() => void handleDelete()} onSave={() => void handleSave()} deleting={deleting} saving={saving} />
       </div>
 
       {showPreview && landing.landingType !== "external" && (

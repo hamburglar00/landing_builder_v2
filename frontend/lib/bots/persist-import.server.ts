@@ -42,6 +42,7 @@ export async function persistImport(
           .filter((bot) => bot.channel === "whatsapp")
           .map((bot) => ({
             manager_id: bot.manager_id,
+            platform: group.platform,
             name: bot.name,
             agency_id: bot.agency_id,
             owner_id: bot.owner_id,

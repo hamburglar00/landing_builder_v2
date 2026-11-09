@@ -20,10 +20,10 @@
 [aria-checked="true"] > .switch::after { background: var(--color-primary-contrast); transform: translateX(12px); }
 .bulk { margin-left: auto; }
 .scroll { overflow-x: auto; max-width: 100%; border: 1px solid #2a363d; border-radius: 12px; scrollbar-width: thin; scrollbar-color: #3a4c54 #0e151a; }
-.table { width: 100%; min-width: 1260px; table-layout: fixed; border-collapse: collapse; color: #eef3ee; font-size: 12px; }
-.table thead th { padding: 13px 12px; text-align: left; background: #16211a; border-bottom: 1px solid #2c4a1e; color: #9de865; font-size: 11px; font-weight: 700; letter-spacing: .06em; line-height: 1.5; overflow-wrap: normal; word-break: normal; }
-.table td { padding: 11px 12px; border-top: 1px solid #222e35; line-height: 1.5; vertical-align: middle; overflow-wrap: anywhere; }
-.table .numeric { text-align: right; font-variant-numeric: tabular-nums; }
+.table { width: max-content; min-width: 100%; table-layout: auto; border-collapse: collapse; color: #eef3ee; font-size: 12px; }
+.table thead th { padding: 13px 12px; text-align: left; white-space: nowrap; background: #16211a; border-bottom: 1px solid #2c4a1e; color: #9de865; font-size: 11px; font-weight: 700; letter-spacing: .06em; line-height: 1.5; }
+.table td { padding: 11px 12px; border-top: 1px solid #222e35; line-height: 1.5; vertical-align: middle; text-align: left; white-space: nowrap; }
+.table .numeric { text-align: left; font-variant-numeric: tabular-nums; }
 .table tbody .parent[data-stripe="0"] { background: #131b20; }
 .table tbody .parent[data-stripe="1"] { background: #18232a; }
 .table tbody .child { background: #0e151a; }
@@ -34,7 +34,7 @@
 .secondary { display: block; margin-top: 1px; font-size: 11px; color: #81918d; }
 .muted { color: #a3ada7; }
 .phoneNumber { white-space: nowrap; font-variant-numeric: tabular-nums; }
-.dash { display: block; text-align: center; color: #5e6a64; }
+.notApplicable { color: #81918d; }
 .status { display: inline-flex; align-items: baseline; gap: 7px; font-size: 11px; }
 .dot { display: inline-block; flex: 0 0 auto; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .positive { color: #cde9d5; }
@@ -43,7 +43,7 @@
 .warning .dot { color: #f2b35b; }
 .neutral { color: #8a958f; }
 .neutral .dot { color: #4a565c; }
-.rowActions { display: flex; justify-content: flex-end; align-items: center; gap: 3px; }
+.rowActions { display: flex; justify-content: flex-start; align-items: center; gap: 3px; }
 .iconButton { display: inline-flex; width: 30px; height: 32px; align-items: center; justify-content: center; border-radius: 7px; color: #a3ada7; font-size: 20px; line-height: 1; }
 .iconButton:hover, .iconButton[aria-expanded="true"] { background: #26363c; color: #eef3ee; }
 .chevron { width: 14px; height: 14px; transition: transform 150ms; }

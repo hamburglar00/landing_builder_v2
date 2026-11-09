@@ -73,12 +73,24 @@ type Props = {
 };
 
 const numberFormat = new Intl.NumberFormat("es-AR");
-const labels = ["GERENCIA", "ASESOR", "CANAL", "BOT", "TIPO", "USO", "ESTADO", "CONTADOR", "CHATS INICIADOS", "HISTÓRICO"];
-const widths = [164, 112, 104, 172, 56, 156, 160, 92, 108, 92, 72];
-const Dash = () => <span className={styles.dash}>–</span>;
+const labels = ["GERENCIA", "ID", "ASESOR", "CANAL", "PLATAFORMA", "BOT", "TIPO", "USO", "ESTADO", "CONTADOR", "CHATS", "HISTÓRICO"];
+const widths = [180, 72, 140, 104, 156, 172, 96, 158, 190, 96, 80, 100, 72];
+const NotApplicable = () => <span className={styles.notApplicable}>N.A.</span>;
 const Separator = () => <div role="separator" className={styles.separator} />;
 const roleLabel = (phone: GerenciaPhoneRow) => phone.assignment_role === "follow_up" ? "WhatsApp de venta" : "WhatsApp publicitario";
-const numeric = (value: number | null | undefined) => value == null ? <Dash /> : numberFormat.format(value);
+const numeric = (value: number | null | undefined) => value == null ? <NotApplicable /> : numberFormat.format(value);
+
+function phoneInventory(phone: GerenciaPhoneRow, group: BotGerencia) {
+  const inventory = (group.pbadmin_bots ?? []).filter(bot => bot.channel === "whatsapp" && bot.agency_id === group.gerencia_id);
+  return phone.pbadmin_manager_id
+    ? inventory.find(bot => bot.manager_id === phone.pbadmin_manager_id)
+    : inventory.find(bot => bot.phone?.replace(/\D/g, "") === phone.phone.replace(/\D/g, ""));
+}
+function itemPlatform(item: Item, group: BotGerencia): string | null {
+  if (item.kind === "atrio") return item.entry.connection ? CASINO_NAMES[item.entry.connection.target_provider] : PLATFORM_NAMES[item.entry.inventory?.platform ?? 0] ?? null;
+  const bot = item.kind === "inventory" ? item.bot : phoneInventory(item.phone, group);
+  return PLATFORM_NAMES[bot?.platform ?? 0] ?? null;
+}
 
 function Status({ children, tone = "neutral", title }: { children: ReactNode; tone?: "positive" | "warning" | "neutral"; title?: string }) {
   return <span className={`${styles.status} ${styles[tone]}`} title={title}><span aria-hidden="true" className={styles.dot} />{children}</span>;
@@ -150,16 +162,19 @@ export function BotsDirectoryView(p: Props) {
     </>;
   }
 
-  function cells(item: Item) {
+  function cells(item: Item, group: BotGerencia) {
+    const platform = itemPlatform(item, group);
     if (item.kind === "atrio") {
       const { entry } = item;
       const connection = entry.connection;
       const inventory = entry.inventory;
       return <>
-        <td><span>{entry.name}</span><span className={styles.secondary}>/{entry.client.slug}</span></td>
+        <td title={`Asesor: ${entry.name} · /${entry.client.slug}`}>{entry.name}</td>
         <td className={styles.muted}>Atrio</td>
-        <td>{connection || inventory ? <><span>Bot {connection?.manager_id ?? inventory?.manager_id} · {connection ? managerTypeLabel(connection.manager_type) : inventory?.role === "mkt" ? "MKT" : inventory?.role === "carga" ? "Full Carga" : inventory?.role}</span><span className={styles.secondary}>{connection ? CASINO_NAMES[connection.target_provider] : PLATFORM_NAMES[inventory?.platform ?? 0] ?? inventory?.name}</span></> : <span className={styles.muted}>Sin bots vinculados</span>}</td>
-        <td><Dash /></td><td><Dash /></td>
+        <td className={styles.muted}>{platform ?? <NotApplicable />}</td>
+        <td>{connection || inventory ? `Bot ${connection?.manager_id ?? inventory?.manager_id}` : <span className={styles.muted}>Sin bots vinculados</span>}</td>
+        <td className={styles.muted}>{connection ? managerTypeLabel(connection.manager_type) : inventory ? inventory.role === "mkt" ? "MKT" : inventory.role === "carga" ? "Full Carga" : inventory.role : <NotApplicable />}</td>
+        <td><NotApplicable /></td>
         <td><Status tone={connection?.active ? "positive" : "neutral"}>{connection ? connection.active ? "Activo" : "Inactivo" : inventory ? "Pendiente de vinculación" : "Pendiente"}</Status></td>
         <td className={styles.numeric}>{numeric(connection?.usage_count ?? (inventory ? null : 0))}</td>
         <td className={styles.numeric}>{numeric(connection?.chats_started ?? (inventory ? null : 0))}</td>
@@ -169,23 +184,25 @@ export function BotsDirectoryView(p: Props) {
     if (item.kind === "inventory") {
       const { bot } = item;
       return <>
-        <td><Dash /></td><td className={styles.muted}>WhatsApp</td>
-        <td><span className={bot.phone ? styles.phoneNumber : undefined}>{bot.phone ? p.formatPhone(bot.phone) : bot.name || `Bot ${bot.manager_id}`}</span><span className={styles.secondary}>Bot {bot.manager_id} · Sin teléfono sincronizado</span></td>
-        <td className={styles.muted}>{bot.role}</td><td className={styles.muted}>{bot.whatsapp_usage ? bot.whatsapp_usage === "follow_up" ? "WhatsApp de venta" : "WhatsApp publicitario" : <Dash />}</td>
+        <td><NotApplicable /></td><td className={styles.muted}>WhatsApp</td>
+        <td className={styles.muted}>{platform ?? <NotApplicable />}</td>
+        <td title={`Bot ${bot.manager_id} · Sin teléfono sincronizado`}><span className={bot.phone ? styles.phoneNumber : undefined}>{bot.phone ? p.formatPhone(bot.phone) : bot.name || `Bot ${bot.manager_id}`}</span></td>
+        <td className={styles.muted}>{bot.role}</td><td className={styles.muted}>{bot.whatsapp_usage ? bot.whatsapp_usage === "follow_up" ? "WhatsApp de venta" : "WhatsApp publicitario" : <NotApplicable />}</td>
         <td><Status tone={bot.active ? "positive" : "neutral"}>{bot.active ? "Activo en PBAdmin" : "Inactivo en PBAdmin"}</Status></td>
-        <td><Dash /></td><td><Dash /></td><td><Dash /></td>
+        <td><NotApplicable /></td><td><NotApplicable /></td><td><NotApplicable /></td>
       </>;
     }
     const { phone } = item;
     const metrics = p.metrics[phone.id];
     return <>
-      <td><Dash /></td><td className={styles.muted}>WhatsApp</td>
+      <td><NotApplicable /></td><td className={styles.muted}>WhatsApp</td>
+      <td className={styles.muted}>{platform ?? <NotApplicable />}</td>
       <td><span className={styles.phoneNumber}>{p.formatPhone(phone.phone)}</span></td>
       <td className={styles.muted}>{phone.kind === "assistant" ? "asistente" : phone.kind}</td>
       <td className={styles.muted}>{roleLabel(phone)}</td>
-      <td><Status tone={phone.source_available === false || phone.status !== "active" ? "neutral" : "positive"}
+      <td><Status tone={phone.source_available === false ? "warning" : phone.status !== "active" ? "neutral" : "positive"}
         title={[phone.last_seen_at ? `Última sincronización: ${new Date(phone.last_seen_at).toLocaleString("es-AR")}` : "", phone.comment ? `Comentario: ${phone.comment}` : ""].filter(Boolean).join(" · ")}>
-        {phone.source_available === false ? "No disponible" : phone.status === "active" ? "Activo" : phone.status === "inactive" ? "Inactivo" : phone.status}
+        {phone.source_available === false ? "Sin managers activos" : phone.status === "active" ? "Activo" : phone.status === "inactive" ? "Inactivo" : phone.status}
       </Status></td>
       <td className={styles.numeric}>{numeric(phone.usage_count)}</td><td className={styles.numeric}>{numeric(metrics?.messagesReceived ?? 0)}</td><td className={styles.numeric}>{numeric(metrics?.messagesReceivedHistorical ?? 0)}</td>
     </>;
@@ -219,9 +236,9 @@ export function BotsDirectoryView(p: Props) {
     <AtrioBotTable entries={p.filteredGroups.flatMap(group => group.atrioBots)} onChanged={p.onAtrioChanged} render={atrioActions => <div className={styles.scroll} tabIndex={0} aria-label="Directorio de bots, desplazamiento horizontal">
       <table className={styles.table} aria-label="Bots por gerencia">
         <colgroup>{widths.map((width, i) => <col key={i} style={{ width }} />)}</colgroup>
-        <thead><tr>{labels.map((label, i) => <th key={label} scope="col" className={i >= 7 ? styles.numeric : undefined} title={label === "CHATS INICIADOS" ? "Atrio: chats iniciados. WhatsApp: mensajes recibidos." : undefined}>{label}</th>)}<th scope="col"><span className="sr-only">Acciones</span></th></tr></thead>
+        <thead><tr>{labels.map((label, i) => <th key={label} scope="col" className={i === 1 || i >= 9 ? styles.numeric : undefined} title={label === "CHATS" ? "Atrio: chats iniciados. WhatsApp: mensajes recibidos." : undefined}>{label}</th>)}<th scope="col"><span className="sr-only">Acciones</span></th></tr></thead>
         <tbody>
-          {!visible.length && <tr><td colSpan={11} className={styles.empty}>{p.loading ? "Cargando bots…" : !counts.all ? "Todavía no hay bots. Usá Vincular Bots para comenzar." : p.onlyActive ? "No hay gerencias con bots activos para mostrar." : "No hay gerencias que coincidan con la búsqueda."}</td></tr>}
+          {!visible.length && <tr><td colSpan={labels.length + 1} className={styles.empty}>{p.loading ? "Cargando bots…" : !counts.all ? "Todavía no hay bots. Usá Vincular Bots para comenzar." : p.onlyActive ? "No hay gerencias con bots activos para mostrar." : "No hay gerencias que coincidan con la búsqueda."}</td></tr>}
           {visible.map((group, index) => {
             const phones = p.phones[group.id] ?? [];
             const numbers = new Set(phones.map(phone => phone.phone.replace(/\D/g, "")));
@@ -232,6 +249,9 @@ export function BotsDirectoryView(p: Props) {
               ...(p.channel !== "whatsapp" ? group.atrioBots.map(entry => ({ kind: "atrio" as const, entry })) : []),
             ];
             const single = items.length === 1 ? items[0] : null;
+            const agencyId = group.gerencia_id ?? (!group.virtual ? group.id : null);
+            const platforms = [...new Set(items.map(item => itemPlatform(item, group)).filter((name): name is string => !!name))];
+            const botSummary = [phones.length ? `${phones.length} ${phones.length === 1 ? "teléfono" : "teléfonos"}` : "", group.atrioBots.length ? `${group.atrioBots.length} ${group.atrioBots.length === 1 ? "bot de Atrio" : "bots de Atrio"}` : "", missing.length ? `${missing.length} sin teléfono sincronizado` : ""].filter(Boolean).join(" · ");
             const expandable = items.length > 1;
             const key = group.uiKey ?? group.id;
             const open = expanded === key;
@@ -247,11 +267,13 @@ export function BotsDirectoryView(p: Props) {
             return <Fragment key={key}>
               <tr className={`${styles.parent} ${expandable ? styles.expandable : ""}`} data-stripe={index % 2} data-gerencia={key}
                 onClick={event => { if (expandable && event.currentTarget.contains(event.target as Node) && !(event.target as HTMLElement).closest("button,a,input,select")) toggle(); }}>
-                <td title={group.source_type === "manual" ? "Origen manual" : "Origen PBAdmin"}><span className={styles.name}>{group.nombre}</span><span className={styles.secondary}>{group.gerencia_id ? `ID ${group.gerencia_id}` : group.source_type === "manual" ? "Manual" : "Sin gerencia vinculada"}</span></td>
-                {single ? cells(single) : <>
-                  <td><Dash /></td><td className={styles.muted}>{onlyAtrio ? "Atrio" : group.atrioBots.length ? "WhatsApp + Atrio" : "WhatsApp"}</td>
-                  <td>{phones.length > 0 ? <span>{phones.length} {phones.length === 1 ? "teléfono" : "teléfonos"}</span> : <Dash />}{group.atrioBots.length > 0 && <span className={styles.secondary}>{group.atrioBots.length} {group.atrioBots.length === 1 ? "bot de Atrio" : "bots de Atrio"}</span>}{missing.length > 0 && <span className={styles.secondary}>{missing.length} sin teléfono sincronizado</span>}</td>
-                  <td><Dash /></td><td><Dash /></td>
+                <td title={group.source_type === "manual" ? "Origen manual" : "Origen PBAdmin"}><span className={styles.name}>{group.nombre}</span></td>
+                <td className={styles.numeric}>{agencyId ?? <NotApplicable />}</td>
+                {single ? cells(single, group) : <>
+                  <td><NotApplicable /></td><td className={styles.muted}>{onlyAtrio ? "Atrio" : group.atrioBots.length ? "WhatsApp + Atrio" : "WhatsApp"}</td>
+                  <td className={styles.muted}>{platforms.length ? platforms.join(", ") : <NotApplicable />}</td>
+                  <td>{botSummary || <NotApplicable />}</td>
+                  <td><NotApplicable /></td><td><NotApplicable /></td>
                   <td><Status tone={onlyAtrio ? connections.some(entry => entry.active) ? "positive" : "neutral" : unavailable || !activePhones ? "warning" : "positive"}>
                     {onlyAtrio ? connections.some(entry => entry.active) ? "Activo" : "Pendiente / inactivo" : unavailable ? "Sin managers activos" : activePhones ? `${activePhones} ${activePhones === 1 ? "publicitario activo" : "publicitarios activos"}` : "Sin publicitarios activos"}
                   </Status></td>
@@ -263,8 +285,8 @@ export function BotsDirectoryView(p: Props) {
                 </div></td>
               </tr>
               {expandable && open && items.map((item, itemIndex) => <tr key={item.kind === "phone" ? `phone:${item.phone.id}` : item.kind === "inventory" ? `inventory:${item.bot.manager_id}` : `atrio:${item.entry.client.id}:${item.entry.connection?.connection_id ?? item.entry.inventory?.manager_id ?? "pending"}`} className={styles.child}>
-                <td><span aria-hidden="true" className="ml-3 text-zinc-600">└</span><span className="sr-only">Detalle de {group.nombre}, elemento {itemIndex + 1}</span></td>{cells(item)}
-                <td>{item.kind !== "inventory" ? <div className={styles.rowActions}><BotMenu label={`Acciones de ${item.kind === "phone" ? p.formatPhone(item.phone.phone) : item.entry.name}`}>{item.kind === "phone" ? phoneActions(item.phone, group) : atrioActions(item.entry)}</BotMenu></div> : <Dash />}</td>
+                <td title={group.nombre}><span aria-hidden="true" className="ml-3 text-zinc-600">└</span><span className="sr-only">Detalle de {group.nombre}, elemento {itemIndex + 1}</span></td><td className={styles.numeric}>{agencyId ?? <NotApplicable />}</td>{cells(item, group)}
+                <td>{item.kind !== "inventory" ? <div className={styles.rowActions}><BotMenu label={`Acciones de ${item.kind === "phone" ? p.formatPhone(item.phone.phone) : item.entry.name}`}>{item.kind === "phone" ? phoneActions(item.phone, group) : atrioActions(item.entry)}</BotMenu></div> : <NotApplicable />}</td>
               </tr>)}
             </Fragment>;
           })}

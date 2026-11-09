@@ -11,7 +11,7 @@ const browser = await (engineName === "webkit" ? webkit : chromium).launch();
 const id = "92000000-0000-4000-8000-000000000001",
   advisor = "92000000-0000-4000-8000-000000000003";
 const screenshots = new URL(
-  "../docs/validation/bots-redesign-20261109/",
+  process.env.BOTS_TEST_ARTIFACT_DIR || "../docs/validation/bots-redesign-20261109/",
   import.meta.url,
 );
 await mkdir(screenshots, { recursive: true });
@@ -36,6 +36,7 @@ async function fixture(width, role = "client", enabled = true, fillers = 0) {
     "synthetic",
   ].join(".");
   const bot = {
+    platform: 5,
     manager_id: 99,
     name: "Bot desconectado",
     agency_id: 10,
@@ -126,7 +127,7 @@ async function fixture(width, role = "client", enabled = true, fillers = 0) {
             ...connection,
             connection_id: advisor,
             manager_id: 1046,
-            agency_id: 30,
+            agency_id: 1035,
             agency_name: "Solo Atrio",
             active: false,
           },
@@ -405,10 +406,11 @@ async function geometry(page, width) {
     const headers = [...table.querySelectorAll("th")].map(cell => cell.getBoundingClientRect());
     const overflow = [];
     for (const tr of table.querySelectorAll("tbody tr")) {
-      if (tr.cells.length !== 11) continue;
+      if (tr.cells.length !== 13) continue;
       [...tr.cells].forEach((cell, index) => {
         const bounds = cell.getBoundingClientRect();
         if (Math.abs(bounds.left - headers[index].left) > 1) overflow.push("misaligned cell");
+        if(getComputedStyle(cell).textAlign!=="left"||getComputedStyle(cell).whiteSpace!=="nowrap")overflow.push("inconsistent alignment or wrapping");
         const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
         while (walker.nextNode()) {
           const node = walker.currentNode;
@@ -420,7 +422,7 @@ async function geometry(page, width) {
     }
     return { headers: headers.length, overflow, page: document.documentElement.scrollWidth, scrollable: table.parentElement.scrollWidth > table.parentElement.clientWidth };
   });
-  assert.equal(result.headers, 11);
+  assert.equal(result.headers, 13);
   assert.deepEqual(result.overflow, [], "all text stays inside its column");
   assert.ok(result.page <= width, "horizontal scroll belongs to table, not page");
   if (width <= 1280) assert.equal(result.scrollable, true);
@@ -442,12 +444,19 @@ try {
       assert.equal(await page.locator("thead").count(), 1);
       assert.equal(await page.getByText("Métricas de Atrio", { exact: true }).count(), 0);
       assert.equal(await row(page, "Solo Atrio").getByRole("button", { name: "Ver detalle" }).count(), 0, "one Atrio bot stays in one row");
-      assert.equal(await row(page, "Solo Atrio").getByText("Bot 1046 · Full Carga", { exact: true }).count(), 1);
+      const soloCells=row(page,"Solo Atrio").locator("td");
+      assert.equal(await soloCells.nth(0).innerText(),"Solo Atrio");
+      assert.equal(await soloCells.nth(1).innerText(),"1035");
+      assert.equal(await soloCells.nth(4).innerText(),"Multi Skin");
+      assert.equal(await soloCells.nth(5).innerText(),"Bot 1046");
+      assert.equal(await soloCells.nth(6).innerText(),"Full Carga");
+      assert.equal(await soloCells.nth(7).innerText(),"N.A.");
+      assert.equal(await page.getByRole("columnheader",{name:"CHATS",exact:true}).count(),1);
       checks++;
 
       const group = row(page, "Gerencia uno");
       await group.getByText("Gerencia uno", { exact: true }).click();
-      await page.getByText("Bot 1045 · Full Carga", { exact: true }).waitFor();
+      await page.getByText("Bot 1045", { exact: true }).waitFor();
       await page.getByText("Bot desconectado", { exact: true }).waitFor();
       const expanded = group.getByRole("button", { name: "Ver detalle" });
       assert.equal(await expanded.getAttribute("aria-expanded"), "true");
@@ -465,6 +474,9 @@ try {
       assert.equal(await page.getByRole("menuitem", { name: "Cambiar uso…", exact: true }).isDisabled(), true, "managed usage retains PBAdmin ownership");
       await page.keyboard.press("Escape");
       const unavailable = page.getByRole("row").filter({ hasText: "54 9 1100 00-0204" });
+      assert.equal(await unavailable.getByText("Sin managers activos",{exact:true}).count(),1);
+      assert.equal(await unavailable.getByText("No disponible",{exact:true}).count(),0);
+      assert.equal(await unavailable.locator("td").nth(8).evaluate(el=>getComputedStyle(el.firstElementChild).color),"rgb(242, 194, 122)");
       await unavailable.getByRole("button", { name: /^Acciones de / }).click();
       assert.equal(await page.getByRole("menuitem", { name: "Activar teléfono", exact: true }).isDisabled(), true);
       await page.keyboard.press("Escape");

@@ -2,17 +2,25 @@
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { build } from "esbuild";
-import { chromium, webkit } from "playwright";
+import { chromium, webkit, type Page } from "playwright";
 import { createRequire } from "node:module";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { handleManagerDestinations, type DestinationBackend } from "../lib/atrio/managerDestinations.server";
 import { DEFAULT_CONFIG } from "../lib/landing/mocks";
 
+async function expand(page: Page, title: string) {
+  const button=page.getByRole("button",{name:title,exact:true});
+  await button.waitFor();
+  if(await button.getAttribute("aria-expanded")==="false")await button.click();
+}
+
 // Render the actual client/admin editor pages. Only authentication, storage and
 // external services are synthetic; destination requests use the real HTTP handler.
 async function main() {
   const root = process.cwd();
+  const outputDirectory=path.join("test-results/template8",process.env.EDITOR_TEST_BROWSER||"chromium");
+  await mkdir(outputDirectory,{recursive:true});
   const require = createRequire(path.join(root, "package.json"));
   const id = (n: number) => `b0000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
   const clients = ["gera", "diana"].map((slug, i) => ({ id:id(i+10), atrio_id:id(i+20), user_id:id(2), workspace_currency:"ARS", slug, usage_count:0 }));
@@ -70,11 +78,11 @@ async function main() {
       navigation:`const router={push(value){window.fixtureDestination=value},replace(value){window.fixtureDestination=value}};export const useRouter=()=>router;export const useParams=()=>({id:window.fixture.id});export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);`,
       link:`import React from 'react';export default function Link({href,prefetch,...props}){return <a href={href} {...props}/>}`,
       supabase:`const query=table=>{let single=false;const q=new Proxy({},{get(_,key){if(key==='then')return resolve=>{const values={profiles:{id:window.fixture.owner,nombre:'editor-test',role:window.fixture.mode==='admin'?'admin':'client'},landings:{user_id:window.fixture.owner},settings:{id:1,url_base:location.origin,show_client_landing_preview:false},client_template_permissions:{template7_enabled:true,template8_enabled:true}};resolve({data:single?(values[table]??null):[],error:null})};return()=>{if(key==='single'||key==='maybeSingle')single=true;return q}}});return q};export const supabase={from:query,auth:{getUser:async()=>({data:{user:{id:window.fixture.actor}},error:null}),getSession:async()=>({data:{session:{access_token:'fixture-token'}},error:null})}};`,
-      landings:`export const UNIQUE_VIOLATION_CODE='23505';export const fetchLandingById=async()=>fetch('/fixture/landing').then(r=>r.json());export const fetchAtrioTemplatePermission=async()=>window.fixture.allowAtrio!==false;export async function updateLanding(id,payload){const response=await fetch('/fixture/landing',{method:'POST',body:JSON.stringify({id,payload})});if(!response.ok)throw Error('Fixture save failed')}export const deleteLanding=async()=>{throw Error('No deletion in this test')};`,
+      landings:`export const UNIQUE_VIOLATION_CODE='23505';export const fetchLandingById=async()=>fetch('/fixture/landing').then(r=>r.json());export const fetchAtrioTemplatePermission=async()=>window.fixture.allowAtrio!==false;export async function updateLanding(id,payload){const response=await fetch('/fixture/landing',{method:'POST',body:JSON.stringify({id,payload})});if(!response.ok)throw Error('Fixture save failed')}export const deleteLanding=async()=>{window.fixtureDeleted=true};`,
       gerencias:`export const fetchGerencias=async()=>[];export const fetchGerenciasForAdmin=async()=>[];export const fetchGerenciaWorkGroups=async()=>[];export const fetchLandingGerencias=async()=>[];export const setLandingGerencias=async()=>{};export const assertLandingGerenciasWorkspaceCompatible=async()=>{};`,
       atrio:`export const fetchAtrioClients=async()=>window.fixture.clients;export const fetchLandingAtrioAssignments=async()=>[];export const setLandingAtrioAssignments=async()=>{};`,
       publish:`export async function publishLandingChanges(){const response=await fetch('/fixture/publish',{method:'POST'});if(!response.ok)throw Error('Fixture publish failed');return {revalidated:true}}`,
-      dialogs:`export const useAppConfirm=()=>async()=>true;export const useAppPrompt=()=>async()=>null;`,
+      dialogs:`export const useAppConfirm=()=>async(options)=>{window.fixtureConfirmOptions=options;return window.fixtureConfirm!==false};export const useAppPrompt=()=>async()=>null;`,
     };
     const bundle=await build({absWorkingDir:root,tsconfig:path.join(root,"tsconfig.json"),stdin:{resolveDir:root,loader:"tsx",contents:`import React from 'react';import{createRoot}from'react-dom/client';import Client from './app/(panel)/dashboard/landing/[id]/editar/page';import Admin from './app/(panel)/admin/landings/[id]/editar/page';import{CurrencyScopeProvider}from './components/currency/CurrencyScope';const Page=window.fixture.mode==='admin'?Admin:Client;createRoot(document.getElementById('root')).render(<CurrencyScopeProvider><Page/></CurrencyScopeProvider>);`},bundle:true,write:false,platform:"browser",format:"iife",jsx:"automatic",define:{"process.env":"{}","process.env.NODE_ENV":'"production"',"process.env.NEXT_PUBLIC_SUPABASE_URL":JSON.stringify(origin),"process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY":'"synthetic-public"'},plugins:[{name:"isolated-editor",setup(b){
       b.onResolve({filter:/^(next\/navigation|next\/link|@\/lib\/supabaseClient|@\/lib\/landing\/landingsDb|@\/lib\/gerencias\/gerenciasDb|@\/lib\/atrio\/atrioDb|@\/lib\/landing\/publishLanding|@\/components\/ui\/AppConfirmDialog)$/},args=>({path:({"next/navigation":"navigation","next/link":"link","@/lib/supabaseClient":"supabase","@/lib/landing/landingsDb":"landings","@/lib/gerencias/gerenciasDb":"gerencias","@/lib/atrio/atrioDb":"atrio","@/lib/landing/publishLanding":"publish","@/components/ui/AppConfirmDialog":"dialogs"} as Record<string,string>)[args.path],namespace:"fixture"}));
@@ -93,7 +101,9 @@ async function main() {
       await context.route("**/*",route=>new URL(route.request().url()).origin===origin?route.continue():route.abort());
       const url=origin+(mode==="admin"?`/admin/landings/${id(1)}/editar`:`/dashboard/landing/${id(1)}/editar`);
       await page.goto(url);
-      try { await page.locator('input[value="template1"]').waitFor({timeout:10000}); }
+      try { await page.getByRole("button",{name:"Plantilla",exact:true}).waitFor({timeout:10000});
+        assert.equal(await page.locator('section > button[aria-expanded="true"]').count(),0);
+        await expand(page,"Plantilla"); }
       catch { throw Error(JSON.stringify({mode,errors,body:(await page.locator("body").innerText()).slice(0,1200),redirect:await page.evaluate(()=>(window as any).fixtureDestination)})); }
       await page.locator('input[value="Nueva-landing-fixture"]').fill("editor8test");
       await page.getByRole('group',{name:'Canal de atención'}).getByRole('button',{name:'Atrio',exact:true}).click();
@@ -109,6 +119,7 @@ async function main() {
       const channelBox=await page.getByRole("region",{name:"Canal de la landing"}).boundingBox();
       const templateBox=await page.getByRole("button",{name:"Plantilla",exact:true}).boundingBox();
       assert.ok(channelBox&&templateBox&&channelBox.y<templateBox.y,"channel card precedes templates");
+      await expand(page,"Portada y tarjetas");
       const skinCard = page.getByRole("heading",{name:"Tarjeta 2",exact:true}).locator("..");
       await skinCard.getByRole("button",{name:"Página de Multi Skin de tarjeta 2",exact:true}).click();
       await page.getByRole("option").first().waitFor();
@@ -139,6 +150,7 @@ async function main() {
       assert.ok(operations.findIndex(value=>value.action==="save")<operations.findIndex(value=>value.action==="configure"));
       assert.equal(operations.at(-1).action,"publish");
       await page.goto(url);
+      await expand(page,"Portada y tarjetas");
       await page.getByRole("heading",{name:"Tarjeta 2",exact:true}).waitFor();
       assert.match(await page.getByRole("button",{name:"Página de Multi Skin de tarjeta 2",exact:true}).innerText(),/Bet30/);
       await page.getByRole("button",{name:"Redirección",exact:true}).click();
@@ -147,7 +159,7 @@ async function main() {
       assert.equal(await page.getByRole("button",{name:mode==="dashboard"?"Equitativa":"Aleatoria",exact:true}).getAttribute("aria-pressed"),"true");
       if(mode==="dashboard")assert.equal(await page.getByRole("button",{name:"Chats iniciados",exact:true}).getAttribute("aria-pressed"),"true");
       else assert.equal(await page.getByRole("spinbutton",{name:"Peso bot 1044",exact:true}).inputValue(),"3");
-      await mkdir("test-results/template8",{recursive:true});await page.screenshot({path:`test-results/template8/${mode}-unified-editor.png`,fullPage:true});
+      await page.screenshot({path:path.join(outputDirectory,`${mode}-unified-editor.png`),fullPage:true});
       assert.deepEqual(errors,[]);results.push({mode,firstSave:true,oneDirectoryRead:true,threeProviderPools:true,restoredSelection:true});
       await context.close();
     }
@@ -157,6 +169,7 @@ async function main() {
     await page.goto(`${origin}/dashboard/landing/${id(1)}/editar`);
     await page.locator('input[value="Nueva-landing-fixture"]').fill("editor7test");
     await page.getByRole('group',{name:'Canal de atención'}).getByRole('button',{name:'Atrio',exact:true}).click();
+    await expand(page,"Plantilla");
     await page.locator('input[value="template7"]').check();
     await page.getByRole("button",{name:"Redirección",exact:true}).click();await page.getByText("gera",{exact:true}).click();
     await page.getByRole("checkbox",{name:"Seleccionar bot 1035",exact:true}).check();
@@ -173,6 +186,7 @@ async function main() {
       await mobile.route("**/*",route=>new URL(route.request().url()).origin===origin?route.continue():route.abort());
       await page.goto(`${origin}/dashboard/landing/${id(1)}/editar`);
       const channel=page.getByRole("region",{name:"Canal de la landing"});await channel.waitFor();
+      await expand(page,"Plantilla");
       const atrio=channel.getByRole("button",{name:"Atrio",exact:true}),whatsapp=channel.getByRole("button",{name:"WhatsApp",exact:true});
       if(enabled){
         assert.equal(await page.locator('input[name="landing-template"]').count(),6);
@@ -188,11 +202,50 @@ async function main() {
       }
       assert.equal(await channel.locator('img').count(),2);
       assert.ok(await channel.locator('img').evaluateAll(images=>images.every(image=>(image as HTMLImageElement).naturalWidth>0)),"original channel logos load");
-      await channel.screenshot({path:`test-results/template8/channel-${enabled?"enabled":"disabled"}-mobile.png`});
+      await channel.screenshot({path:path.join(outputDirectory,`channel-${enabled?"enabled":"disabled"}-mobile.png`)});
       assert.deepEqual(errors,[]);results.push({mode:`mobile-atrio-${enabled?"enabled":"disabled"}`,channelPermission:true});
       await mobile.close();
     }
-    await writeFile("test-results/template8/editor-results.json",JSON.stringify(results,null,2));console.log(JSON.stringify(results));
+    allowAtrio=true;
+    for(const mode of ["dashboard","admin"])for(const width of [390,1280])for(const number of [1,2,3,4,5,6,7,8,9,0]){
+      reset();actorMode=mode;
+      const template=number||1;
+      landing.config={...DEFAULT_CONFIG,template:`template${template}`,ctaDestination:template>=7?"atrio":"whatsapp"};
+      if(!number)landing.landingType="external";
+      const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage();
+      const errors:string[]=[];page.on("pageerror",error=>errors.push(error.message));
+      await context.route("**/*",route=>new URL(route.request().url()).origin===origin?route.continue():route.abort());
+      try{
+        await page.goto(origin+(mode==="admin"?`/admin/landings/${id(1)}/editar`:`/dashboard/landing/${id(1)}/editar`));
+        const actions=page.getByRole("group",{name:"Acciones de la landing"});await actions.waitFor();
+        assert.equal(await page.locator('section > button[aria-expanded="true"]').count(),0,"all editor sections start collapsed");
+        assert.equal(await page.locator('details[open]').count(),0);
+        assert.equal(await page.getByRole("button",{name:"Guardar",exact:true}).count(),1);
+        assert.equal(await page.getByRole("button",{name:"Eliminar landing",exact:true}).count(),1);
+        assert.equal(await page.getByRole("button",{name:"Resetear",exact:true}).count(),0);
+        assert.equal(await page.getByRole("button",{name:"Exportar JSON",exact:true}).count(),0);
+        assert.equal(await actions.evaluate(el=>getComputedStyle(el).justifyContent),"flex-end");
+        assert.equal(await actions.locator("button svg").count(),2);
+        assert.equal(await actions.evaluate(el=>el===el.parentElement?.lastElementChild),true,"actions follow the editor");
+        if(number)assert.equal(await actions.evaluate(el=>el.previousElementSibling?.tagName),"FORM");
+        if(template===5&&number){
+          await expand(page,"Live");assert.equal(await page.getByRole("button",{name:"Live",exact:true}).getAttribute("aria-expanded"),"true");
+          await page.getByRole("button",{name:"Live",exact:true}).click();
+        }
+        if(template===1&&number){
+          await page.evaluate(()=>{(window as any).fixtureConfirm=false});
+          await actions.getByRole("button",{name:"Eliminar landing",exact:true}).click();
+          assert.equal(await page.evaluate(()=>Boolean((window as any).fixtureDeleted)),false);
+          await page.evaluate(()=>{(window as any).fixtureConfirm=true});
+          await actions.getByRole("button",{name:"Eliminar landing",exact:true}).click();
+          await page.waitForFunction(()=>Boolean((window as any).fixtureDeleted));
+          assert.equal(await page.evaluate(()=>(window as any).fixtureConfirmOptions.danger),true);
+        }
+        if(number===5){await page.screenshot({path:path.join(outputDirectory,`collapsed-${mode}-${width}.png`),fullPage:true});}
+        assert.deepEqual(errors,[]);results.push({mode,template:number||"external",width,collapsed:true,footerActions:true});
+      }finally{await context.close();}
+    }
+    await writeFile(path.join(outputDirectory,"editor-results.json"),JSON.stringify(results,null,2));console.log(JSON.stringify(results));
   }finally{await browser?.close();await new Promise<void>(done=>server.close(()=>done()));}
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

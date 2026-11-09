@@ -29,6 +29,8 @@ interface LandingEditorFormProps {
   onSave: () => void;
   onReset: () => void;
   showTemplateSection?: boolean;
+  /** Optional utilities remain available in code while hidden in the editor. */
+  showUtilityActions?: boolean;
   /** Sube la imagen a Supabase y devuelve la URL pública. Si se pasa, las imágenes se guardan en Storage. */
   uploadImage?: (file: File) => Promise<string>;
   /** Identificación básica de la landing (usada en el JSON exportado). */
@@ -160,7 +162,7 @@ export function LandingTemplateSection({
   allowAtrio?: boolean;
 }) {
   return (
-    <CollapsibleSection title="Plantilla" defaultOpen>
+    <CollapsibleSection title="Plantilla" keepMounted>
       <div className="space-y-3">
         <p className="text-xs text-zinc-400">
           Elegí la plantilla de layout que define qué secciones se configuran.
@@ -197,7 +199,7 @@ export function LandingTemplateSection({
 
 /**
  * Formulario del dashboard del constructor de landing por secciones.
- * Cada sección es colapsable. Incluye acciones: Guardar, Resetear, Exportar JSON.
+ * Cada sección es colapsable. El editor ofrece sus acciones en el pie de página.
  */
 export function LandingEditorForm({
   config,
@@ -205,6 +207,7 @@ export function LandingEditorForm({
   onSave,
   onReset,
   showTemplateSection = true,
+  showUtilityActions = false,
   uploadImage,
   landingId,
   landingName,
@@ -671,7 +674,7 @@ export function LandingEditorForm({
       )}
 
       {isTemplate6 && (
-        <CollapsibleSection title="Portada y tarjetas" defaultOpen>
+        <CollapsibleSection title="Portada y tarjetas">
           <div className="space-y-5">
             <div>
               <label htmlFor={fieldId("template6-grid")} className="mb-1 block text-xs font-medium text-zinc-300">
@@ -776,7 +779,7 @@ export function LandingEditorForm({
       )}
 
       {isTemplate4 && (
-        <CollapsibleSection title="Chat" defaultOpen>
+        <CollapsibleSection title="Chat">
           <div className="space-y-5">
             <ImageUploader
               label="Foto de perfil"
@@ -919,7 +922,7 @@ export function LandingEditorForm({
       )}
 
       {isTemplate5 && (
-        <CollapsibleSection title="Live" defaultOpen>
+        <CollapsibleSection title="Live">
           <div className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -1520,7 +1523,7 @@ export function LandingEditorForm({
       )}
 
       {/* Acciones */}
-      <div className="flex flex-wrap gap-3 border-t border-zinc-800 pt-6">
+      {showUtilityActions && <div className="flex flex-wrap gap-3 border-t border-zinc-800 pt-6">
         <button
           type="button"
           onClick={onReset}
@@ -1535,7 +1538,7 @@ export function LandingEditorForm({
         >
           Exportar JSON
         </button>
-      </div>
+      </div>}
       {showJsonModal && (
         <ModalPortal>
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 px-3">

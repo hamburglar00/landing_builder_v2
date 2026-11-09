@@ -1,0 +1,51 @@
+{
+  "date": "2026-11-09",
+  "scope": [
+    "LandingBuilder"
+  ],
+  "canonicalSource": "landing-builder/frontend",
+  "changes": {
+    "editor": "All collapsible cards initially closed for templates 1-9 and both editor roles. Reset/JSON utilities hidden. One footer with delete and save, icons and right alignment. Existing handlers, confirmation, validation and drafts retained, including external landings.",
+    "directory": "Separate agency ID and platform columns; Atrio manager type in Type; single-line cells with contained horizontal scrolling; CHATS header; all headers/cells left aligned; N.A. for non-applicable values and literal unformatted IDs.",
+    "status": "Source-unavailable phones use the existing yellow Sin managers activos status. Manual inactivity remains distinct.",
+    "platform": "Preserve authoritative agency platform in the existing WhatsApp visual inventory JSON. Old inventory without platform displays N.A. until its next import/refresh. No schema change or platform inference."
+  },
+  "unchangedDependencies": [
+    "Atrio: previous daily-reset migration and private adapter remain as deployed; no changes or migrations in this batch.",
+    "NexoBet: editor/channel permissions remain product-specific. Pinned marketing module checked without differences.",
+    "Four gateways and Ganamos+ Worker: shared SDK and public landing renderers unchanged.",
+    "API2 and Panel3: no changes."
+  ],
+  "validation": {
+    "build": "Next.js production build and TypeScript passed.",
+    "lint": "Changed directory, shared editor actions and snapshot persistence: passed.",
+    "unit": "17 import/workspace checks and 18 import/template-permission/Template 9 checks passed; overlapping import suite counted separately.",
+    "editorBrowsers": {
+      "chromium": 45,
+      "webkit": 45,
+      "coverage": "Actual editor modules; both roles; 390/1280 widths; every template plus external landings; initial collapsed state, footer actions, delete cancel/confirm, channel permissions, retained save/destination flows. Services/auth/storage synthetic."
+    },
+    "directoryBrowsers": {
+      "chromium": 63,
+      "webkit": 63,
+      "coverage": "Actual production build; both roles; 390/1280/1440 widths; columns/alignment/no wrapping, literal ID 1035, status color, manual phone actions, import, Atrio management, resets, filters, permission boundary and page-2 demand loading. All business services intercepted."
+    },
+    "marketingSync": "24 pinned files match; no shared marketing changes.",
+    "encoding": "Changed files passed UTF-8/mojibake and git whitespace checks.",
+    "artifacts": [
+      "frontend/test-results/template8/{chromium,webkit}/editor-results.json (ignored local artifacts)",
+      ".vercel/editor-table-ui-20261109/screenshots/ (ignored local browser screenshots)"
+    ],
+    "productionWritesFromTests": false
+  },
+  "release": {
+    "branch": "main",
+    "repository": "hamburglar00/landing_builder_v2",
+    "project": "landing-builder-v2-k259",
+    "domains": [
+      "constructor.panelbotadmin.com",
+      "mkt.panelbotadmin.com"
+    ],
+    "status": "Pending commit/push and automatic production deployment verification."
+  }
+}

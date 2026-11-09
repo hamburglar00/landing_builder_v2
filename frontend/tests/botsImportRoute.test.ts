@@ -272,6 +272,7 @@ test("import re-reads source, is scoped to actor/workspace and preserves saved n
   let response = await POST(f.request({ action: "import" }));
   assert.equal(response.status, 200);
   assert.equal(f.storedGroups[0].nombre, "Changed since preview");
+  assert.equal((f.storedGroups[0].pbadmin_bots as { platform: number }[])[0].platform, 7);
   assert.equal(f.storedGroups[0].user_id, user);
   assert.equal(f.storedAdvisors[0].user_id, user);
   f.storedGroups[0].nombre = "Edited locally";

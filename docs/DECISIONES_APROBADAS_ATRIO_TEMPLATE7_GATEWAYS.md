@@ -1,5 +1,12 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Editor cerrado y columnas de Redirección en Builder (09/11/2026)
+
+- Todas las tarjetas colapsables del editor arrancan cerradas en las nueve plantillas, tanto para cliente como para administrador. Ocultar temporalmente Resetear y Exportar JSON, conservando su implementación. Colocar una sola pareja de acciones al pie, alineadas a la derecha: Eliminar landing con papelera roja y Guardar con disquete. Conservar validaciones, borradores, permisos y confirmación de borrado, también en landings externas.
+- Redirección muestra cada celda en una línea, con desplazamiento horizontal contenido. Separar ID después de Gerencia y Plataforma antes de Bot. En Atrio, Bot contiene el número de manager y Tipo su clasificación; el asesor conserva su slug en la ayuda. Cabeceras y celdas se alinean a la izquierda, los datos no aplicables usan N.A. y el encabezado de chats es CHATS. Conservar métricas, ceros, detalle desplegable, todas las acciones y paginación por demanda de 50 grupos.
+- Unificar el teléfono ausente del origen bajo «Sin managers activos», con el tono amarillo existente. Conservar «Inactivo» para la desactivación manual. La plataforma de WhatsApp se conserva en el snapshot visual al importar/sincronizar; si el inventario anterior no la incluye, mostrar N.A. hasta su próxima actualización, sin inferirla.
+- Alcance exclusivo de la UI y del inventario visual de Builder. No requiere migraciones ni cambios en Atrio, NexoBet, gateways o Worker. La migración previa de Atrio correspondía al reinicio diario ya solicitado para ambos canales. El usuario solicita commit y push; producción sigue main y se comprueba por separado. [Validación del lote](validation/editor-redirection-ui-20261109.json).
+
 ### Bots de Builder: rediseño visual sin pérdida funcional (09/11/2026)
 
 - El usuario aporta maqueta y especificación para reorganizar Bots con encabezado compacto, filtros, menú de acciones y una tabla común. La referencia es estética; la implementación actual determina todas las funciones que deben conservarse, incluidas las omitidas por la maqueta. Preparar el resultado para revisión visual del usuario.
