@@ -21,7 +21,9 @@
 .bulk { margin-left: auto; }
 .scroll { overflow-x: auto; max-width: 100%; border-radius: 12px; scrollbar-width: thin; scrollbar-color: #3a4c54 #0e151a; }
 .table { width: max-content; min-width: 100%; table-layout: auto; border-collapse: separate; border-spacing: 0; color: #eef3ee; font-size: 12px; }
-.table thead th { padding: 13px 8px; text-align: left; white-space: nowrap; background: #16211a; border-bottom: 1px solid #2c4a1e; color: #9de865; font-size: 11px; font-weight: 700; letter-spacing: .06em; line-height: 1.5; }
+.table thead th { padding: 13px 8px; text-align: left; white-space: nowrap; background: #1b2d1f; border-top: 2px solid #628d43; border-bottom: 2px solid #628d43; color: #9de865; font-size: 11px; font-weight: 700; letter-spacing: .06em; line-height: 1.5; }
+.table thead th:first-child { border-left: 2px solid #628d43; border-radius: 10px 0 0 10px; }
+.table thead th:last-child { border-right: 2px solid #628d43; border-radius: 0 10px 10px 0; }
 .table td { padding: 7px 8px; border-top: 1px solid #222e35; line-height: 1.5; vertical-align: middle; text-align: left; white-space: nowrap; }
 .table .numeric { text-align: left; font-variant-numeric: tabular-nums; }
 .table tbody .parent[data-stripe="0"] { background: #131b20; }

@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-09",
+  "scope": ["LandingBuilder panel UI"],
+  "canonicalSource": "landing-builder/frontend",
+  "changes": {
+    "loading": "LandingBuilderLoading reuses the original vertical SVG with a gentle 7px float and three pulsing progress dots. Shared by both session-check screens, section loading and both landing editor fallbacks. Full-screen loading is in the initial HTML; there are no artificial delays or changes to session checks.",
+    "accessibility": "Labeled live status with aria-busy; the logo and dots become static under prefers-reduced-motion. Responsive sizing fits narrow viewports.",
+    "header": "12px gap between the table header and first agency. Dedicated 2px green perimeter and highlighted background around the header only. Keep compact rows, column alignment, agency boundaries and contained horizontal scrolling."
+  },
+  "verification": {
+    "productionBuildAndTypeScript": "passed",
+    "targetedLint": "passed",
+    "encodingAndWhitespace": "passed",
+    "initialHtml": ["/dashboard/bots", "/admin/bots"],
+    "browsers": { "chromiumCases": 12, "webkitCases": 12 },
+    "roles": ["client", "admin"],
+    "widths": [320, 390, 768, 1280, 1440],
+    "coverage": "Actual compiled app; synthetic auth deliberately delayed to inspect the initial loader. SVG decodes, animation follows motion preference, status is accessible, page does not overflow, loader disappears after auth/data resolve, expanded table columns remain aligned, header gap and borders measured in both engines. No JavaScript errors or business writes."
+  },
+  "relatedProducts": {
+    "NexoBet": "Reviewed shared-module guide; 24 pinned marketing files match. Loader and branding remain specific to Builder; no shared asset edits or NexoBet publication required.",
+    "AtrioAndGateways": "No implementation, SDK, Worker or public widget changes.",
+    "publicLandings": "No global route fallback added; public renderers, promotions and brand assets remain outside this panel presentation change."
+  },
+  "migrationsRequired": false,
+  "sessionLogicChanged": false,
+  "originalSvgChanged": false,
+  "publicationTarget": {
+    "branch": "main",
+    "project": "landing-builder-v2-k259",
+    "domains": ["constructor.panelbotadmin.com", "mkt.panelbotadmin.com"]
+  },
+  "artifacts": ".vercel/brand-loading-table-header-20261109/ (ignored screenshots, browser reports, build log and release evidence)"
+}

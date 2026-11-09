@@ -8,7 +8,7 @@ El kit original completo está versionado en `frontend/assets/landingbuilder/`: 
 
 Los recursos que consume la web están en `frontend/public/brand/landingbuilder/`. Los íconos de navegador e instalación están en `frontend/public/`, manteniendo los nombres de las rutas existentes. `frontend/app/manifest.ts` sigue siendo la única fuente del manifiesto servido en `/manifest.webmanifest`; el `site.webmanifest` del kit se conserva como referencia, sin publicar un segundo manifiesto.
 
-`LandingBuilderLogo` centraliza los logos horizontal, vertical e isotipo. Los SVG contienen el texto trazado y no requieren instalar fuentes. Mantener sus proporciones, colores y ventana transparente; no agregar efectos al logo.
+`LandingBuilderLogo` centraliza los logos horizontal, vertical e isotipo. Los SVG contienen el texto trazado y no requieren instalar fuentes. Mantener sus proporciones, colores y ventana transparente; no agregar efectos al logo. En los estados de carga se permite animar su contenedor con una flotación suave y puntos de progreso, respetando movimiento reducido, sin alterar el recurso original.
 
 Para actualizar la marca: revisar primero el kit versionado, copiar los archivos utilizados a sus destinos públicos y actualizar el componente, los metadatos y el manifiesto cuando corresponda. El generador original requiere Inter Display, fontTools, rsvg-convert e ImageMagick en Linux; no se ejecuta durante el build de la aplicación.
 

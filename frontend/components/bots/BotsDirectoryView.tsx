@@ -248,7 +248,7 @@ export function BotsDirectoryView(p: Props) {
             const messages = phones.reduce((sum, phone) => sum + (p.metrics[phone.id]?.messagesReceived ?? 0), connections.reduce((sum, entry) => sum + entry.chats_started, 0));
             const historical = phones.reduce((sum, phone) => sum + (p.metrics[phone.id]?.messagesReceivedHistorical ?? 0), connections.reduce((sum, entry) => sum + (entry.chats_started_total ?? entry.chats_started), 0));
             return <tbody key={key} className={styles.group} data-gerencia-group={key} data-expanded={expandable && open} aria-label={`Gerencia ${group.nombre}`}>
-              {index > 0 && <tr className={styles.groupSpacer} aria-hidden="true"><td colSpan={labels.length + 1} /></tr>}
+              <tr className={styles.groupSpacer} aria-hidden="true"><td colSpan={labels.length + 1} /></tr>
               <tr className={`${styles.parent} ${expandable ? styles.expandable : ""}`} data-stripe={index % 2} data-gerencia={key}
                 onClick={event => { if (expandable && event.currentTarget.contains(event.target as Node) && !(event.target as HTMLElement).closest("button,a,input,select")) toggle(); }}>
                 <td title={group.source_type === "manual" ? "Origen manual" : "Origen PBAdmin"}><span className={styles.name}>{group.nombre}</span></td>

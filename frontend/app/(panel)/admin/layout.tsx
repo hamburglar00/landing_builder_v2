@@ -8,6 +8,7 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
 import { RouteProgress } from "@/components/ui/RouteProgress";
 import { LandingBuilderLogo } from "@/components/brand/LandingBuilderLogo";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 import { CurrencyScopeSelector } from "@/components/currency/CurrencyScope";
 import { AppConfirmProvider } from "@/components/ui/AppConfirmDialog";
 import { ClientModulePermissionsContext } from "@/components/clients/ClientModulePermissions";
@@ -462,13 +463,7 @@ export default function AdminLayout({
   }, [isNavigating]);
 
   if (isCheckingSession) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-0)]">
-        <p className="text-sm text-[var(--color-text-muted)]">
-          Cargando panel...
-        </p>
-      </div>
-    );
+    return <LandingBuilderLoading fullScreen />;
   }
 
   if (!isAdmin) {

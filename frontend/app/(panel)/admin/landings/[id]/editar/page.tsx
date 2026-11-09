@@ -21,6 +21,7 @@ import {
   LandingTemplateSection,
 } from "@/components/landing/LandingEditorForm";
 import { PublishTargetSection } from "@/components/landing/PublishTargetSection";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 import { ActionNotice } from "@/components/ui/ActionNotice";
 import { LandingEditorActions } from "@/components/landing/LandingEditorActions";
 import { LandingUrlParametersCard } from "@/components/landing/LandingUrlParametersCard";
@@ -506,11 +507,7 @@ export default function AdminLandingEditarPage() {
   };
 
   if (!ready || !landing) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-zinc-400">Cargando...</p>
-      </div>
-    );
+    return <LandingBuilderLoading />;
   }
   const isDraftLanding = Boolean(
     (initialName && initialName.startsWith("Nueva-landing-")) ||
