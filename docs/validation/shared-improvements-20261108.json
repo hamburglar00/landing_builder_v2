@@ -1,0 +1,74 @@
+{
+  "date": "2026-11-08",
+  "codeCommit": "41d97227c990ad224a682690b84a0f893ca209e5",
+  "branch": "fix/template7-session-reentry",
+  "published": true,
+  "deployment": "dpl_P69xUFUZNUopTtCm7EtsGvdSDLp6",
+  "rollback": "dpl_9L7EAMcFTmbhwDEL45p1D1p3ev8q",
+  "module": {
+    "version": "1.2.0",
+    "canonical": "Builder",
+    "consumer": "NexoBet",
+    "sourceWorkingTree": false
+  },
+  "validation": {
+    "unit": {
+      "passed": 426,
+      "failed": 0,
+      "preexistingSkipped": 1
+    },
+    "typescript": true,
+    "metaFormBrowserCases": 4,
+    "botsTableBrowserChecks": 41,
+    "vercelProductionBuild": true
+  },
+  "publicVerification": {
+    "checkedAt": "2026-11-09T00:44:48.424Z",
+    "deployment": "dpl_P69xUFUZNUopTtCm7EtsGvdSDLp6",
+    "checks": [
+      {
+        "origin": "https://constructor.panelbotadmin.com",
+        "path": "/login",
+        "status": 200,
+        "pbadminLoginPreserved": true
+      },
+      {
+        "origin": "https://constructor.panelbotadmin.com",
+        "path": "/api/meta/connection",
+        "status": 401,
+        "requiresSession": true
+      },
+      {
+        "origin": "https://constructor.panelbotadmin.com",
+        "path": "/api/meta/connection",
+        "status": 403,
+        "rejectsForeignOrigin": true
+      },
+      {
+        "origin": "https://mkt.panelbotadmin.com",
+        "path": "/login",
+        "status": 200,
+        "pbadminLoginPreserved": true
+      },
+      {
+        "origin": "https://mkt.panelbotadmin.com",
+        "path": "/api/meta/connection",
+        "status": 401,
+        "requiresSession": true
+      },
+      {
+        "origin": "https://mkt.panelbotadmin.com",
+        "path": "/api/meta/connection",
+        "status": 403,
+        "rejectsForeignOrigin": true
+      }
+    ],
+    "eventsSentToMeta": 0,
+    "accountsCreated": 0
+  },
+  "limitations": [
+    "API2 WhatsApp MKT classification fix remains local for programmer publication",
+    "Public smoke checks verify deployment and access control; UI uses controlled browser fixtures",
+    "No real account, player or monetary operation created"
+  ]
+}
