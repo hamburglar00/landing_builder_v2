@@ -1254,3 +1254,11 @@ Se retiran el endpoint privado de exportación y su clave dedicada. El autologin
 - Mantener una implementación común versionada cuando sea posible, sincronizarla después de revisar diferencias y verificar los adaptadores propios. No mezclar cuentas, conversaciones, bases, configuraciones privadas ni secretos.
 - Cada entrega registra pruebas, commit/push y publicación por producto como estados separados. Se pueden registrar ideas nuevas durante una verificación; si cambian el código del lote, repetir las pruebas afectadas antes de cerrar. Procedimiento permanente en `NexoBet/docs/MODULOS_COMPARTIDOS.md`, enlazado desde los tres `AGENTS.md`.
 - API2/Panel3 conservan su autorización previa y publicación por el programador. Esta organización no amplía permisos financieros ni modifica la lógica de PBAdmin.
+
+### Perfil del jugador, invitaciones y comprobantes (08/11/2026)
+
+- Atrio es la fuente compartida con NexoBet. El perfil del jugador presenta dos tarjetas: datos de contacto editables arriba y usuario/clave compactos al final. Los campos deben distinguirse por etiqueta, fondo, borde y foco; evitar una tarjeta independiente por dato. Conservar consulta autorizada, ocultamiento y copiado de credenciales.
+- Unificar los colores y componentes de las invitaciones de perfil entre widget y chat directo, sin fondos negros fijos que contradigan la paleta. Ordenar el encabezado directo y estabilizar los chips al aparecer canales o cambiar el alto disponible.
+- «Recordar más tarde» pospone la invitación actual y sus recordatorios automáticos. Un envío nuevo explícito del asesor debe poder llegar inmediatamente, aunque sea del mismo tipo. Conservar aislamiento por jugador, comprobación del estado real y deduplicación de una misma invitación.
+- Copiar CBU muestra confirmación sólo después de copiar correctamente. Aproximadamente un segundo después, ofrecer una guía clara para transferir, guardar captura del comprobante y subirlo desde la galería, con CTA destacado y X de cierre. Reutilizar el flujo de adjuntos; copiar o cerrar no envía un comprobante ni ejecuta operaciones financieras.
+- Aplicar y verificar en Atrio y NexoBet y en los cuatro contextos de gateway, con su marca y paleta. El diseño y la ubicación de los enlaces de WhatsApp/Telegram quedan para discusión: el usuario pidió expresamente no modificarlos en este lote.
