@@ -235,6 +235,7 @@ async function handleTemplate7StartInner(
     const effectiveDeviceId = identity.deviceId;
     const resolveInput: PlayerResolveRequest = { advisor: resolvedAdvisor, deviceId: effectiveDeviceId, name: payload.name,
       ...(payload.phone ? { phone: payload.phone } : {}),
+      ...(effectiveConfig.template === "template7" || effectiveConfig.template === "template9" ? { whatsappRequested: effectiveConfig.template7WhatsappEnabled === true } : {}),
       landingId: landing.id, landingSlug: landing.name, promoCode: payload.promo_code, targetProvider: provider };
     const player = validateResolvedPlayer(await timedServerStage(
       "template7_start",

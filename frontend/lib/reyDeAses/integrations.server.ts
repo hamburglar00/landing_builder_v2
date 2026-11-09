@@ -106,6 +106,7 @@ export async function resolveInternalChatPlayer(input: PlayerResolveRequest): Pr
     device_id: input.deviceId,
     name: input.name,
     ...(input.phone ? { phone: input.phone } : {}),
+    ...(typeof input.whatsappRequested === "boolean" ? { whatsapp_requested: input.whatsappRequested } : {}),
     landing_id: input.landingId,
     landing_slug: input.landingSlug,
     atrio_client_id: input.advisor.atrioClientId,

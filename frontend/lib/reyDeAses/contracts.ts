@@ -40,6 +40,7 @@ export type PlayerResolveRequest = {
   deviceId: string;
   name: string;
   phone?: string;
+  whatsappRequested?: boolean;
   landingId: string;
   landingSlug: string;
   promoCode: string;

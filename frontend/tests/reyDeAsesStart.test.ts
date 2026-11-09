@@ -144,6 +144,27 @@ function dependencies(status: ReturnType<StartDependencies["api2Status"]> = null
   return { deps, calls };
 }
 
+test("profile analytics snapshot uses saved Template 7/9 settings for all four providers", async () => {
+  for (const provider of ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_skin"] as const)
+    for (const template of ["template7", "template9"] as const) for (const enabled of [true, false]) {
+      const { deps } = dependencies(null, provider), read = deps.db.landing;
+      deps.db.landing = async id => {
+        const row = (await read(id))!;
+        return { ...row, config: { ...(row.config as Record<string, unknown>), template, template7WhatsappEnabled: enabled }, landing_config: { layout: { template: template === "template9" ? 9 : 7 } } };
+      };
+      const resolve = deps.resolvePlayer;
+      deps.resolvePlayer = async input => { assert.equal(input.whatsappRequested, enabled); return resolve(input); };
+      assert.equal((await handleReyStart(request(validPayload), deps)).status, 200);
+    }
+});
+
+test("a browser cannot supply a trusted profile analytics snapshot", async () => {
+  const { deps } = dependencies();
+  const resolve = deps.resolvePlayer;
+  deps.resolvePlayer = async input => { assert.equal(input.whatsappRequested, false); return resolve(input); };
+  assert.equal((await handleReyStart(request({ ...validPayload, whatsapp_requested: true }), deps)).status, 200);
+});
+
 test("start rechaza formato, tipo y tamaño inválidos antes de consultar la base", async () => {
   const { deps, calls } = dependencies();
   for (const payload of [{ ...validPayload, name: " " }, { ...validPayload, landing_id: "invalid" }, { ...validPayload, advisor_id: "invalid" }]) {
@@ -503,12 +524,13 @@ test("adaptadores usan contrato servidor-servidor y no exponen credenciales", as
         assert.deepEqual(JSON.parse(String(init?.body)), {
           advisor_id: advisorId, advisor_slug: "gera", device_id: deviceId, name: "Martín",
           phone: "5491123456789",
+          whatsapp_requested: true,
           landing_id: landingId, landing_slug: "landing-7", atrio_client_id: clientId,
           promo_code: "LP-a1b2", target_provider: provider, source: "landing_builder",
         });
         return Response.json(resolvedPlayer(provider));
       };
-      const result = await resolveInternalChatPlayer({ advisor, deviceId, name: "Martín", phone: "5491123456789", landingId, landingSlug: "landing-7", promoCode: "LP-a1b2", targetProvider: provider });
+      const result = await resolveInternalChatPlayer({ advisor, deviceId, name: "Martín", phone: "5491123456789", whatsappRequested: true, landingId, landingSlug: "landing-7", promoCode: "LP-a1b2", targetProvider: provider });
       assert.equal(result.player_provider_account_id, provider === "rey_de_ases" ? providerAccountId : multiSkinAccountId);
       assert.equal(result.target_provider, provider);
     }
