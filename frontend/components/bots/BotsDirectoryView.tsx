@@ -74,7 +74,6 @@ type Props = {
 
 const numberFormat = new Intl.NumberFormat("es-AR");
 const labels = ["GERENCIA", "ID", "ASESOR", "CANAL", "PLATAFORMA", "BOT", "TIPO", "USO", "ESTADO", "CONTADOR", "CHATS", "HISTÓRICO"];
-const widths = [180, 72, 140, 104, 156, 172, 96, 158, 190, 96, 80, 100, 72];
 const NotApplicable = () => <span className={styles.notApplicable}>N.A.</span>;
 const Separator = () => <div role="separator" className={styles.separator} />;
 const roleLabel = (phone: GerenciaPhoneRow) => phone.assignment_role === "follow_up" ? "WhatsApp de venta" : "WhatsApp publicitario";
@@ -235,7 +234,6 @@ export function BotsDirectoryView(p: Props) {
     </div>
     <AtrioBotTable entries={p.filteredGroups.flatMap(group => group.atrioBots)} onChanged={p.onAtrioChanged} render={atrioActions => <div className={styles.scroll} tabIndex={0} aria-label="Directorio de bots, desplazamiento horizontal">
       <table className={styles.table} aria-label="Bots por gerencia">
-        <colgroup>{widths.map((width, i) => <col key={i} style={{ width }} />)}</colgroup>
         <thead><tr>{labels.map((label, i) => <th key={label} scope="col" className={i === 1 || i >= 9 ? styles.numeric : undefined} title={label === "CHATS" ? "Atrio: chats iniciados. WhatsApp: mensajes recibidos." : undefined}>{label}</th>)}<th scope="col"><span className="sr-only">Acciones</span></th></tr></thead>
         <tbody>
           {!visible.length && <tr><td colSpan={labels.length + 1} className={styles.empty}>{p.loading ? "Cargando bots…" : !counts.all ? "Todavía no hay bots. Usá Vincular Bots para comenzar." : p.onlyActive ? "No hay gerencias con bots activos para mostrar." : "No hay gerencias que coincidan con la búsqueda."}</td></tr>}

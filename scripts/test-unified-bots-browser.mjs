@@ -504,6 +504,7 @@ try {
       await fillSearch(page, "2000");
       await row(page, "Atrio pendiente").getByText("Pendiente de vinculación", { exact: true }).waitFor();
       await openMenu(page, "Acciones de Atrio pendiente");
+      assert.equal(await page.getByRole("menuitem", { name: "Abrir asesor", exact: true }).count(), 0);
       assert.equal(await page.getByRole("menuitem", { name: "Abrir chat del bot", exact: true }).count(), 0);
       assert.equal(await page.getByRole("menuitem", { name: "Reiniciar asignaciones del asesor", exact: true }).isDisabled(), true);
       await page.keyboard.press("Escape");
@@ -570,7 +571,8 @@ try {
 
       await fillSearch(page, "Solo Atrio");
       await openMenu(page, "Acciones de Solo Atrio");
-      assert.match(await page.getByRole("menuitem", { name: "Abrir chat del bot", exact: true }).getAttribute("href"), /\/gera\/bot\/1046$/);
+      assert.equal(await page.getByRole("menuitem", { name: "Abrir asesor", exact: true }).count(), 0);
+      assert.equal(await page.getByRole("menuitem", { name: "Abrir chat del bot", exact: true }).count(), 0);
       await page.getByRole("menuitem", { name: "Editar vínculo", exact: true }).click();
       const slug = page.getByRole("dialog").getByLabel("Slug del asesor", { exact: true });
       await slug.fill("gera-editado");

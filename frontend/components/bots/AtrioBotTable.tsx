@@ -1,7 +1,6 @@
 "use client";
 import { useCallback, useState, type ReactNode } from "react";
 import {
-  buildAtrioUrl,
   updateAtrioClient,
   deleteAtrioClient,
 } from "@/lib/atrio/atrioDb";
@@ -85,25 +84,6 @@ export function AtrioBotTable({
     }
   }
   const renderActions = (entry: AtrioBotEntry) => <>
-                      <a
-                        role="menuitem"
-                        href={buildAtrioUrl(entry.client.slug)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-emerald-300"
-                      >
-                        Abrir asesor
-                      </a>
-                      {entry.connection && (
-                        <a
-                        role="menuitem"
-                          href={`${buildAtrioUrl(entry.client.slug)}/bot/${entry.connection.manager_id}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Abrir chat del bot
-                        </a>
-                      )}
                       <button
                         role="menuitem"
                         disabled={busy}

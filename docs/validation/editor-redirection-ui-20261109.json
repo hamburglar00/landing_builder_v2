@@ -102,5 +102,41 @@
     "verifiedAt": "2026-11-09T20:37:37.998Z",
     "previousProductionCommit": "332d4f27055ee86179ae9750050a6929cf2f50bc",
     "migrationsRequired": false
+  },
+  "presentationFollowUp": {
+    "date": "2026-11-09",
+    "scope": "LandingBuilder directory presentation only",
+    "changes": [
+      "Remove Abrir asesor and Abrir chat del bot from shared advisor/bot menus.",
+      "Use content-based column widths and 8 px horizontal cell padding; preserve full single-line text, font size and contained horizontal scroll."
+    ],
+    "sameFixtureAt1440": {
+      "beforeWidth": 1792,
+      "afterWidth": 1402.875,
+      "reductionPercent": 21.7,
+      "font": "12px"
+    },
+    "checks": {
+      "productionBuildAndTypeScript": "passed",
+      "changedComponentsLint": "passed",
+      "chromiumFunctionalChecks": 63,
+      "webkitLayoutAndMenuCases": 6,
+      "roles": [
+        "client",
+        "admin"
+      ],
+      "widths": [
+        1440,
+        1280,
+        390
+      ],
+      "menus": "Linked advisor, pending advisor and expanded bot; removed links absent, edit/reset/remove actions retained.",
+      "encodingAndWhitespace": "passed",
+      "businessServices": "synthetic",
+      "productionBusinessWrites": 0
+    },
+    "migrationsRequired": false,
+    "otherProductsChanged": false,
+    "artifacts": ".vercel/redirection-compact-20261109/ (ignored local screenshots and geometry)"
   }
 }
