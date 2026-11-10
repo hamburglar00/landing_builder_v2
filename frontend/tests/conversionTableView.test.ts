@@ -6,8 +6,15 @@ import {
   columnTooltip,
   columnsForTableView,
   FRIENDLY_HIDDEN_COLUMNS,
+  displayConversionStage,
   type ConversionColumnKey,
 } from "../components/conversiones/conversionPageShared";
+
+test("the canonical registration stage displays the actual CompleteRegistration event", () => {
+  assert.equal(displayConversionStage({estado:"registration",source_platform:"landing"}),"CompleteRegistration");
+  assert.equal(displayConversionStage({estado:"lead",source_platform:"landing"}),"lead");
+  assert.equal(displayConversionStage({estado:"lead",source_platform:"whatsapp_cloud_api"}),"LeadSubmitted");
+});
 
 const EXPECTED_HIDDEN_COLUMNS: ConversionColumnKey[] = [
   "zip",

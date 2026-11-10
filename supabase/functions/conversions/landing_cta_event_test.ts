@@ -1,10 +1,26 @@
-import { freezeLandingCtaEvent, frozenLandingCtaEvent, landingCtaCapiEnabled, serializeLandingCtaCapture } from './landing_cta_event.ts';
+import { freezeLandingCtaEvent, frozenLandingCtaEvent, landingCtaCapiEnabled, serializeLandingCtaCapture, landingCtaStoragePatch, capiEventStorage } from './landing_cta_event.ts';
 import { buildMetaRequest } from './shared.ts';
 function assert(value: unknown, message = 'assertion failed'): asserts value { if (!value) throw Error(message); }
 const payload = { source_platform: 'landing', cta_destination: 'atrio', event_id: 'cta-original', lead_capture_form: true, form_fn: 'Fixture', cta_meta_event:'Lead' };
 const published = (template: number, event = 'Lead') => ({layout:{template},tracking:{ctaMetaEvent:event}});
 function row(capture: unknown) { return { country:'',st:'',ct:'',zip:'',contact_event_id:'cta-original',contact_payload_raw:JSON.stringify(capture),external_id:'fixture',event_source_url:'https://landing.fixture.test/test',currency:'ARS' } as any; }
 const config = {user_id:'owner',pixel_id:'123',meta_access_token:'fixture',meta_api_version:'v25.0',send_contact_capi:true} as any;
+Deno.test('canonical storage and delivery status match the frozen CTA event without changing its capture identity',()=>{
+  for(const event of ['Lead','CompleteRegistration'] as const) {
+    const captured={...row(freezeLandingCtaEvent({...payload,cta_meta_event:event},published(9,event))),contact_event_time:1234567890};
+    const before=JSON.stringify(captured),patch=landingCtaStoragePatch(captured),stage=event==='Lead'?'lead':'registration';
+    assert(patch.estado===stage);
+    assert(patch[`${stage}_event_id`]===captured.contact_event_id);
+    assert(patch[`${stage}_event_time`]===1234567890);
+    assert(patch[`${stage}_payload_raw`]===captured.contact_payload_raw);
+    assert(capiEventStorage('Contact',captured).statusField===`${stage}_status_capi`);
+    assert(capiEventStorage('Contact',captured).eventName===event);
+    assert(JSON.stringify(captured)===before);
+    assert(capiEventStorage('Purchase',captured).statusField==='purchase_status_capi');
+  }
+  assert(Object.keys(landingCtaStoragePatch(row(payload))).length===0);
+  assert(capiEventStorage('Contact',row(payload)).statusField==='contact_status_capi');
+});
 Deno.test('only published T7/T8/T9 select a CTA event; browser markers and invalid forms cannot override it',()=>{
   for(const template of [7,8,9]){
     const result = freezeLandingCtaEvent({...payload,cta_meta_event:'CompleteRegistration',landing_cta_meta_event:'Purchase'},published(template,'CompleteRegistration'));

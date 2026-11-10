@@ -26,7 +26,7 @@ import {
 } from "../conversions/pixel_attribution.ts";
 import { workspaceCapiEnabled, WORKSPACE_CAPI_DISABLED_STATUS } from "../conversions/workspace_capi.ts";
 import { resolvePurchaseEventSourceUrl, sourceUrlFromPayload } from "../conversions/purchase_source_url.ts";
-import { landingCtaCapiEnabled } from "../conversions/landing_cta_event.ts";
+import { landingCtaCapiEnabled, capiEventStorage, frozenLandingCtaEvent } from "../conversions/landing_cta_event.ts";
 import { hasActivePurchaseIngestEvent } from "../conversions/purchase_ingest.ts";
 
 const corsHeaders = {
@@ -50,7 +50,7 @@ const CONTACT_LEAD_CAPI_RETRY_SELECT = `
   purchase_event_id, purchase_event_time, purchase_payload_raw,
   client_ip, agent_user, device_type, event_source_url,
   estado, valor, currency,
-  contact_status_capi, lead_status_capi, purchase_status_capi,
+  contact_status_capi, lead_status_capi, registration_status_capi, purchase_status_capi,
   observaciones,
   external_id, utm_campaign, telefono_asignado, promo_code,
   geo_city, geo_region, geo_country,
@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
       .from("conversions")
       .select(CONTACT_LEAD_CAPI_RETRY_SELECT)
       .eq("contact_capi_retryable", true)
-      .eq("contact_status_capi", "error")
+      .or("contact_status_capi.eq.error,lead_status_capi.eq.error,registration_status_capi.eq.error")
       .lt("contact_capi_retry_count", MAX_CONTACT_LEAD_CAPI_RETRIES)
       .order("created_at", { ascending: true })
       .limit(100);
@@ -203,7 +203,7 @@ Deno.serve(async (req) => {
       ? await db
         .from("conversions_pixel_configs")
         .select(
-          "user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, meta_ads_only_capi, send_purchase_capi, include_purchase_type_capi, send_first_purchase_capi, send_repeat_purchase_capi, repeat_purchase_capi_window_days, purchase_capi_min_amount_enabled, purchase_capi_min_amount, send_geo_capi, is_default",
+          "user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, send_complete_registration_capi, meta_ads_only_capi, send_purchase_capi, include_purchase_type_capi, send_first_purchase_capi, send_repeat_purchase_capi, repeat_purchase_capi_window_days, purchase_capi_min_amount_enabled, purchase_capi_min_amount, send_geo_capi, is_default",
         )
         .in("user_id", userIds)
       : { data: [] };
@@ -1654,7 +1654,14 @@ async function retrySingleContactLeadCapiEvent(
   const succeededKey = isContact ? "contactSucceeded" : "leadSucceeded";
   const failedKey = isContact ? "contactFailed" : "leadFailed";
   const skippedKey = isContact ? "contactSkipped" : "leadSkipped";
-  const statusField = isContact ? "contact_status_capi" : "lead_status_capi";
+  const delivery = capiEventStorage(eventName, row);
+  const statusField = delivery.statusField;
+  // A captured CTA is not another retry of an unrelated later milestone.
+  if (isContact && frozenLandingCtaEvent(row) &&
+      (row[statusField as keyof CapiRetryRow] || row.contact_status_capi) !== "error") {
+    stats[skippedKey]++;
+    return;
+  }
   const retryableField = isContact
     ? "contact_capi_retryable"
     : "lead_capi_retryable";
@@ -1688,7 +1695,7 @@ async function retrySingleContactLeadCapiEvent(
       row.user_id,
       row.id,
       "WARN",
-      `Meta CAPI retry ${eventName} omitido`,
+      `Meta CAPI retry ${delivery.eventName} omitido`,
       reason,
       "",
       "",
@@ -1698,7 +1705,7 @@ async function retrySingleContactLeadCapiEvent(
   if (!eventId || !Number.isFinite(eventTime) || eventTime <= 0) {
     await skip(
       JSON.stringify({
-        event_name: eventName,
+        event_name: delivery.eventName,
         reason: "event_id/event_time invalido",
         event_id: eventId,
         event_time: eventTime,
@@ -1721,7 +1728,7 @@ async function retrySingleContactLeadCapiEvent(
   if (retryCount >= MAX_CONTACT_LEAD_CAPI_RETRIES) {
     await skip(
       JSON.stringify({
-        event_name: eventName,
+        event_name: delivery.eventName,
         reason: "max retries alcanzado",
         retry_count: retryCount,
       }),
@@ -1732,14 +1739,14 @@ async function retrySingleContactLeadCapiEvent(
   if (isChatraceMetaCapiDisabled(row, chatraceMetaCapiMap)) {
     await skip(
       JSON.stringify({
-        event_name: eventName,
+        event_name: delivery.eventName,
         reason: "chatrace_meta_capi_disabled",
       }),
       {
         [statusField]: "skipped_chatrace_capi_disabled",
         observaciones: appendObs(
           row.observaciones ?? "",
-          `${eventName.toUpperCase()} CAPI OMITIDO CHATRACE DESACTIVADO`,
+          `${delivery.eventName.toUpperCase()} CAPI OMITIDO CHATRACE DESACTIVADO`,
         ),
       },
     );
@@ -1747,10 +1754,10 @@ async function retrySingleContactLeadCapiEvent(
   }
 
   if (isEventTimeTooOldForMetaCapi(eventTime)) {
-    const oldMsg = `${eventName.toUpperCase()} CAPI OMITIDO EVENT_TIME ANTIGUO`;
+    const oldMsg = `${delivery.eventName.toUpperCase()} CAPI OMITIDO EVENT_TIME ANTIGUO`;
     await skip(
       JSON.stringify({
-        event_name: eventName,
+        event_name: delivery.eventName,
         reason: "event_time mayor a 7 dias",
         event_time: eventTime,
       }),
@@ -1774,8 +1781,8 @@ async function retrySingleContactLeadCapiEvent(
       row.user_id,
       row.id,
       "ERROR",
-      `Meta CAPI retry ${eventName} sin config`,
-      JSON.stringify({ event_name: eventName, pixel_id: row.pixel_id ?? "" }),
+      `Meta CAPI retry ${delivery.eventName} sin config`,
+      JSON.stringify({ event_name: delivery.eventName, pixel_id: row.pixel_id ?? "" }),
       "",
       "",
     );
@@ -1793,7 +1800,7 @@ async function retrySingleContactLeadCapiEvent(
   if (isContact && isWhatsappCloudApi) {
     await skip(
       JSON.stringify({
-        event_name: eventName,
+        event_name: delivery.eventName,
         reason: "whatsapp_cloud_api_contact_internal_only",
       }),
       {
@@ -1809,10 +1816,10 @@ async function retrySingleContactLeadCapiEvent(
 
   if (shouldSkipCapiForNonMetaOrigin(config, row)) {
     const skippedMsg =
-      `${eventName.toUpperCase()} CAPI OMITIDO ORIGEN NO META ADS`;
+      `${delivery.eventName.toUpperCase()} CAPI OMITIDO ORIGEN NO META ADS`;
     await skip(
       JSON.stringify({
-        event_name: eventName,
+        event_name: delivery.eventName,
         reason: "not_meta_ads",
         from_meta_ads: row.from_meta_ads === true,
         pixel_id: config.pixel_id,
@@ -1828,15 +1835,15 @@ async function retrySingleContactLeadCapiEvent(
   if (eventName === "Contact" && (config.send_contact_capi === false || !landingCtaCapiEnabled(config, eventName, row))) {
     await skip(
       JSON.stringify({
-        event_name: eventName,
+        event_name: delivery.eventName,
         reason: "contact_capi_disabled_by_pixel_config",
         pixel_id: config.pixel_id,
       }),
       {
-        [statusField]: "skipped_contact_capi_disabled",
+        [statusField]: `skipped_${delivery.stage}_capi_disabled`,
         observaciones: appendObs(
           row.observaciones ?? "",
-          "CONTACT CAPI OMITIDO CONFIG DESACTIVADA",
+          `${delivery.eventName.toUpperCase()} CAPI OMITIDO CONFIG DESACTIVADA`,
         ),
       },
     );
@@ -1846,7 +1853,7 @@ async function retrySingleContactLeadCapiEvent(
   if (eventName === "Lead" && config.send_lead_capi === false) {
     await skip(
       JSON.stringify({
-        event_name: eventName,
+        event_name: delivery.eventName,
         reason: "lead_capi_disabled_by_pixel_config",
         pixel_id: config.pixel_id,
       }),
@@ -1964,7 +1971,7 @@ async function retrySingleContactLeadCapiEvent(
       ...(traceDatasetId ? { dataset_id: traceDatasetId } : {}),
       observaciones: appendObs(
         row.observaciones ?? "",
-        isContact ? "ERROR CONTACT" : "ERROR LEAD",
+        `ERROR ${delivery.eventName.toUpperCase()}`,
       ),
     }).eq("id", row.id);
     await writeConversionLog(
@@ -1972,7 +1979,7 @@ async function retrySingleContactLeadCapiEvent(
       row.user_id,
       row.id,
       "ERROR",
-      `Meta CAPI retry ${eventName} fallo`,
+      `Meta CAPI retry ${delivery.eventName} fallo`,
       detail,
       metaPayloadRaw,
       responseRaw,
@@ -1999,7 +2006,7 @@ async function retrySingleContactLeadCapiEvent(
         ...(traceDatasetId ? { dataset_id: traceDatasetId } : {}),
         observaciones: appendObs(
           row.observaciones ?? "",
-          isContact ? "CONTACT OK" : "LEAD OK",
+          `${delivery.eventName.toUpperCase()} OK`,
         ),
       }).eq("id", row.id);
       await writeConversionLog(
@@ -2007,7 +2014,7 @@ async function retrySingleContactLeadCapiEvent(
         row.user_id,
         row.id,
         "INFO",
-        `Meta CAPI retry ${eventName} OK`,
+        `Meta CAPI retry ${delivery.eventName} OK`,
         `HTTP 200 retry ${retryCount + 1}/${MAX_CONTACT_LEAD_CAPI_RETRIES}`,
         metaPayloadRaw,
         resText,
@@ -2075,6 +2082,9 @@ function resolveRetryConfig(
     send_lead_capi: selected
       ? selected.send_lead_capi !== false
       : cfg.send_lead_capi !== false,
+    send_complete_registration_capi: selected
+      ? selected.send_complete_registration_capi === true
+      : cfg.send_complete_registration_capi === true,
     meta_ads_only_capi: selected
       ? selected.meta_ads_only_capi === true
       : cfg.meta_ads_only_capi === true,

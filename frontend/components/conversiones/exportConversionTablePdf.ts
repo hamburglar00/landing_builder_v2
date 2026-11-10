@@ -156,6 +156,7 @@ export async function exportConversionTablePdf(options: ExportConversionTablePdf
 
   const purchases = rows.filter((row) => row.estado === "purchase");
   const leads = rows.filter((row) => row.estado === "lead");
+  const registrations = rows.filter((row) => row.estado === "registration");
   const contacts = rows.filter((row) => row.estado === "contact");
   const selectedEvents = new Set((selectedEventTypes ?? []).map((event) => event.toLowerCase()));
   const shouldShowEventCard = (event: string) =>
@@ -234,6 +235,7 @@ export async function exportConversionTablePdf(options: ExportConversionTablePdf
       { label: "Registros", value: formatIntegerWithThousands(rows.length) },
       ...(shouldShowEventCard("contact") ? [{ label: "Contactos", value: formatIntegerWithThousands(contacts.length) }] : []),
       ...(shouldShowEventCard("lead") ? [{ label: "Leads", value: formatIntegerWithThousands(leads.length) }] : []),
+      ...(shouldShowEventCard("registration") ? [{ label: "CompleteRegistration", value: formatIntegerWithThousands(registrations.length) }] : []),
       ...(shouldShowEventCard("purchase") ? [{ label: "Purchases", value: formatIntegerWithThousands(purchases.length) }] : []),
       ...(shouldShowEventCard("lead") && shouldShowEventCard("purchase")
         ? [{ label: "% de carga", value: leads.length > 0 ? `${loadRate.toFixed(1).replace(".", ",")}%` : "-" }]

@@ -5,11 +5,12 @@ import type { ConversionRow } from "@/lib/conversionsDb";
 import type { ConversionColumnKey } from "@/components/conversiones/conversionPageShared";
 import { exportConversionTablePdf } from "@/components/conversiones/exportConversionTablePdf";
 
-type EventKey = "contact" | "lead" | "purchase";
+type EventKey = "contact" | "lead" | "registration" | "purchase";
 
 const EVENT_OPTIONS: { key: EventKey; label: string }[] = [
   { key: "contact", label: "Contact" },
   { key: "lead", label: "Lead" },
+  { key: "registration", label: "CompleteRegistration" },
   { key: "purchase", label: "Purchase" },
 ];
 
@@ -32,6 +33,7 @@ export default function ConversionTablePdfExportButton({
   const [selectedEvents, setSelectedEvents] = useState<Record<EventKey, boolean>>({
     contact: false,
     lead: true,
+    registration: true,
     purchase: true,
   });
 
@@ -39,12 +41,12 @@ export default function ConversionTablePdfExportButton({
     return rows.reduce<Record<EventKey, number>>(
       (acc, row) => {
         const status = String(row.estado ?? "").toLowerCase();
-        if (status === "contact" || status === "lead" || status === "purchase") {
+        if (status === "contact" || status === "lead" || status === "registration" || status === "purchase") {
           acc[status] += 1;
         }
         return acc;
       },
-      { contact: 0, lead: 0, purchase: 0 },
+      { contact: 0, lead: 0, registration: 0, purchase: 0 },
     );
   }, [rows]);
 
@@ -54,6 +56,7 @@ export default function ConversionTablePdfExportButton({
       return (
         (status === "contact" && selectedEvents.contact) ||
         (status === "lead" && selectedEvents.lead) ||
+        (status === "registration" && selectedEvents.registration) ||
         (status === "purchase" && selectedEvents.purchase)
       );
     });
