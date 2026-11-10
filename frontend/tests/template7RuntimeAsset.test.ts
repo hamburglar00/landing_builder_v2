@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
-import {template7RuntimeAsset,template7RuntimeAssetResponse} from '../components/public-landing/template7RuntimeAsset';
+import {template7RuntimeAsset} from '../components/public-landing/template7RuntimeAsset';
+import {template7RuntimeAssetResponse} from '../components/public-landing/template7RuntimeResponse';
 import {renderPublicLandingHtml,renderClassicTemplate7InlineHtml} from '../components/public-landing/renderPublicLandingHtml';
 import {optimizeTemplate7Images,template8Image} from '../lib/landing/template7Images';
 import type {PublicLandingConfig} from '../components/public-landing/types';
@@ -23,7 +24,8 @@ test('T1-6 use a content-addressed, config-free runtime while previously emitted
 });
 
 for(const template of [7,8] as const)for(const classic of [false,true])test(`T${template} ${classic?'classic':'builder'} reusable runtime is immutable, config-free and matches its content hash`,async()=>{
-  const asset=template7RuntimeAsset(template,classic);
+  const metadata=template7RuntimeAsset(template,classic);
+  const asset={...metadata,source:readFileSync(new URL('../public/public-assets/template-entry/'+metadata.name,import.meta.url),'utf8')};
   const hash=createHash('sha256').update(asset.source).digest('hex').slice(0,24);
   assert.ok(asset.name.endsWith('-'+hash+'.js'));
   assert.equal(readFileSync(new URL('../public/public-assets/template-entry/'+asset.name,import.meta.url),'utf8'),asset.source);

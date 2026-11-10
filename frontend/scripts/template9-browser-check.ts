@@ -4,7 +4,7 @@ import {createRequire} from 'node:module';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import path from 'node:path';
 import {renderPublicLandingHtml,renderClassicTemplate7Html} from '../components/public-landing/renderPublicLandingHtml';
-import {template7RuntimeAssetResponse} from '../components/public-landing/template7RuntimeAsset';
+import {template7RuntimeAssetResponse} from '../components/public-landing/template7RuntimeResponse';
 import {DEFAULT_CONFIG} from '../lib/landing/mocks';
 import {switchLandingTemplate} from '../lib/landing/templateVariants';
 import {buildLandingConfig} from '../lib/landing/buildLandingConfig';

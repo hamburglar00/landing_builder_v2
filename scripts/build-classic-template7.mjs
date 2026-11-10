@@ -2,6 +2,7 @@ import { createRequire } from "node:module";
 import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { createHash } from 'node:crypto';
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const require = createRequire(path.join(root, "frontend/package.json"));
@@ -27,11 +28,21 @@ const result = await build({
   banner: { js: "// GENERATED from landing-builder. Run scripts/build-classic-template7.mjs --write there.\n// Contains only public rendering/tracking logic; no environment values are embedded." },
 });
 const source = result.outputFiles[0].text;
+const classicRoot=path.resolve(root,'../landing-prueba-1');
+const analytics=await build({absWorkingDir:classicRoot,entryPoints:['lib/landing/analytics-runtime.ts'],bundle:true,write:false,platform:'browser',format:'iife',target:'es2020',minify:true,legalComments:'none',define:{'process.env.NODE_ENV':'"production"'}});
+const analyticsSource=analytics.outputFiles[0].text;
+const analyticsName=`analytics-${createHash('sha256').update(analyticsSource).digest('hex').slice(0,24)}.js`;
+const analyticsFile=path.join(classicRoot,'public/public-assets/template-entry',analyticsName);
+const analyticsManifest=JSON.stringify({name:analyticsName},null,2)+'\n';
+const analyticsManifestFile=path.join(classicRoot,'lib/landing/analytics.generated.json');
+if(process.argv.includes('--write')){
+  await writeFile(analyticsFile,analyticsSource);await writeFile(analyticsManifestFile,analyticsManifest);
+}else if(await readFile(analyticsFile,'utf8')!==analyticsSource||await readFile(analyticsManifestFile,'utf8')!==analyticsManifest)throw Error('Classic analytics adapter out of sync');
 const assetSource=path.join(root,'frontend/public/public-assets/template-entry');
 const assetTarget=path.resolve(root,'../landing-prueba-1/public/public-assets/template-entry');
 if(process.argv.includes('--write'))await mkdir(assetTarget,{recursive:true});
 for(const name of await readdir(assetSource)){
-  if(!/^t[78]-(?:classic|builder)-[a-f0-9]{24}\.js$/.test(name))continue;
+  if(!/^(?:t[78]-(?:classic|builder)-[a-f0-9]{24}\.js|landing-[a-f0-9]{24}\.(?:js|css))$/.test(name))continue;
   const contents=await readFile(path.join(assetSource,name),'utf8');
   if(process.argv.includes('--write'))await writeFile(path.join(assetTarget,name),contents);
   else if(await readFile(path.join(assetTarget,name),'utf8')!==contents)throw Error('Classic entry asset out of sync: '+name);

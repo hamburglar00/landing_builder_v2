@@ -49,9 +49,9 @@ test("returning pool visitor uses existing identity/name and promo without anoth
   assert.deepEqual(Reflect.get(requests[0].payload,"attribution"),{landing:'test',landing_resolution:'url_parameter',target_provider:'ganamos_net',skin_code:'',fbp:'fb.1.123.original-browser',fbc:'fb.1.123.original-click',utm_source:'facebook'});
   assert.deepEqual(redirects, ["https://casino.test/prepare?t=opaque"]);
 });
-test("classic pool recovery preserves its stable device identifier and start endpoint", async () => {
+test("classic pool recovery preserves its stable device identifier and preparation endpoint", async () => {
   const { requests, redirects } = await runWarm({ ...advisor, preparationReady: true, existingName: "Existing", promoCode: "PROMO" }, true);
-  assert.equal(requests.length, 1); assert.equal(requests[0].url, "/api/template7/start");
+  assert.equal(requests.length, 1); assert.equal(requests[0].url, "/api/template7/prepare");
   assert.equal(Reflect.get(requests[0].payload, "device_id"), "device");
   assert.deepEqual(redirects, ["https://casino.test/prepare?t=opaque"], "classic also enters through the visible transition");
 });
@@ -66,7 +66,7 @@ test("a late automatic recovery cannot navigate after a newer entry supersedes i
 
 test('classic without a manager pool resumes the remembered pending entry without another name', async () => {
   const {requests,redirects} = await runWarm(advisor,true,{ready:true,existing_name:'Benja',promo_code:'ORIGINAL'});
-  assert.deepEqual(requests.map(request=>request.url),['/api/template7/warm','/api/template7/start']);
+  assert.deepEqual(requests.map(request=>request.url),['/api/template7/warm','/api/template7/prepare']);
   assert.equal(Reflect.get(requests[1].payload,'name'),'Benja');
   assert.equal(Reflect.get(requests[1].payload,'promo_code'),'ORIGINAL');
   assert.equal(Reflect.get(requests[1].payload,'device_id'),'device');

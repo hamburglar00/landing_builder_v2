@@ -99,7 +99,10 @@ async function prepareToken(): Promise<string> {
   assert.equal(url.searchParams.size, 1);
   const token = url.searchParams.get("t") || "";
   assert.ok(token.length > 100);
-  assert.doesNotMatch(token, /Mart|landing-7|player|secret/);
+  // Random ciphertext can contain short words by chance. Assert the opaque
+  // envelope and absence of complete plaintext fields, not four random bytes.
+  assert.match(token, /^p1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+  assert.doesNotMatch(token, /"(?:form_name|landing_slug|password)"\s*:/);
   return token;
 }
 

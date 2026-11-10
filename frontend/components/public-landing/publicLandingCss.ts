@@ -1528,6 +1528,7 @@ body.public-lead-capture-open {
 }
 
 .public-landing.template5 .template5__curtain {
+  display: none;
   background:
     radial-gradient(circle at 50% 34%, rgba(229, 189, 66, 0.18), transparent 24%),
     #080403;
@@ -1540,8 +1541,8 @@ body.public-lead-capture-open {
 .public-landing.template5 .template5__progress,
 .public-landing.template5 .template5__feed,
 .public-landing.template5 .template5__activity {
-  opacity: 0;
-  animation: template5EnterUp 0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 1;
+  animation: none;
 }
 
 .public-landing.template5 .template5__topline {
@@ -1779,7 +1780,7 @@ body.public-lead-capture-open {
 }
 
 .public-landing.template4 .template4__intro {
-  display: flex;
+  display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -1979,7 +1980,7 @@ body.public-lead-capture-open {
   background: #223237;
   color: #ffffff;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.34);
-  animation: publicLandingTemplate4Rise 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: none;
 }
 
 .public-landing.template4 .template4__bubble--delay-1 {

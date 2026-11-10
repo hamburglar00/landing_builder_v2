@@ -31,6 +31,7 @@ export function buildPixelInitScript(
   pixelId: string,
   slug: string,
   phoneCountryCode = "54",
+  legacyClassicTracking = false,
 ) {
   const safePixelId = pixelId.replace(/\D+/g, "");
   if (!safePixelId) return "";
@@ -57,7 +58,7 @@ export function buildPixelInitScript(
         s.parentNode.insertBefore(t,s);
       }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
 
-      try {
+      try {${legacyClassicTracking ? "\n        if (!/(?:^|; )_fbp=/.test(document.cookie)) document.cookie = '_fbp=' + encodeURIComponent('fb.1.' + Date.now() + '.' + Math.floor(Math.random() * 10000000000)) + '; path=/; max-age=7776000; SameSite=Lax';" : ""}
         var params = new URLSearchParams(window.location.search);
         var storageNamespace = ${escapeScriptJson(storageNamespace)};
 
@@ -170,7 +171,7 @@ export function buildPixelInitScript(
         ]) || undefined;
 
         var externalId =
-          firstNonEmpty([readMeta('externalId'), readLocalStorage('external_id')]) ||
+          firstNonEmpty([readMeta('externalId'), readLocalStorage('external_id')${legacyClassicTracking ? ", params.get('external_id'), params.get('eid')" : ""}]) ||
           getOrCreateExternalId();
 
         writeLocalStorage('external_id', externalId);

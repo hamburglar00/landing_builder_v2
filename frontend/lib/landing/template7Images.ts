@@ -3,6 +3,9 @@ type ImageConfig = {
   layout?: { template?: number };
   content?: {
     logoUrl?: string; logoSrcSet?: string; logoOriginalUrl?: string;
+    template4?: { profileImageUrl?: string; backgroundImageUrl?: string };
+    template5?: { profileImageUrl?: string; backgroundImageUrl?: string };
+    template6?: { backgroundImageUrl?: string; cards?: Array<{ imageUrl: string }> };
     template8?: { backgroundImageUrl?: string; cards?: Array<{ imageUrl: string }> };
   };
   background?: {
@@ -43,6 +46,8 @@ function originalUrl(raw: string): string {
   return url.toString();
 }
 
+export { originalUrl as publicImageOriginalUrl };
+
 export function template7Logo(raw: string) {
   const variants = [1, 2].map(scale => template7ImageUrl(raw, 170 * scale, 138 * scale));
   return {
@@ -72,17 +77,29 @@ export function optimizeTemplate7Images<T extends ImageConfig>(config: T): T {
       cards: (cover.cards || []).map(card => ({ ...card, imageUrl: template8Image(card.imageUrl).src })),
     } } };
   }
-  if (config.layout?.template !== 7) return config;
+  if (config.layout?.template === 9) return config;
   const logo = template7Logo(config.content?.logoUrl || "");
   const images = config.background?.images || [];
   return {
     ...config,
-    ...(config.content ? { content: { ...config.content, logoUrl: logo.src, logoSrcSet: logo.srcSet, logoOriginalUrl: originalUrl(config.content.logoUrl || "") } } : {}),
+    ...(config.content ? { content: { ...config.content, logoUrl: logo.src, logoSrcSet: logo.srcSet, logoOriginalUrl: originalUrl(config.content.logoUrl || ""),
+      ...Object.fromEntries(([4, 5] as const).flatMap(template => {
+        const key = `template${template}` as 'template4' | 'template5', section = config.content?.[key];
+        return section ? [[key, { ...section,
+          profileImageUrl: template7ImageUrl(section.profileImageUrl || '', 192, 192),
+          backgroundImageUrl: template7ImageUrl(section.backgroundImageUrl || '', 1024),
+        }]] : [];
+      })),
+      ...(config.content.template6 ? { template6: { ...config.content.template6,
+        backgroundImageUrl: template8Image(config.content.template6.backgroundImageUrl || '', true).src,
+        cards: (config.content.template6.cards || []).map(card => ({ ...card, imageUrl: template8Image(card.imageUrl).src })),
+      } } : {}),
+    } } : {}),
     ...(config.background ? { background: {
       ...config.background,
       images: images.map(url => template7ImageUrl(url, 640)),
       imagesOriginal: images.map(originalUrl),
-      imagesResponsive: images.map(url => ({
+      imagesResponsive: images.map((url, index) => template7ImageUrl(url, 640) === url && config.background?.imagesResponsive?.[index] ? config.background.imagesResponsive[index] : ({
         mobile: template7ImageUrl(url, 640),
         tablet: template7ImageUrl(url, 1024),
         desktop: template7ImageUrl(url, 1600),
@@ -92,10 +109,12 @@ export function optimizeTemplate7Images<T extends ImageConfig>(config: T): T {
 }
 
 export function template7ImageWarmUrls(config: ImageConfig): string[] {
-  if (config.layout?.template !== 7) return [];
+  if (config.layout?.template === 9) return [];
   const urls = [
     ...template7Logo(config.content?.logoUrl || "").variants,
     ...(config.background?.images || []).slice(0, 6).flatMap(url => [640, 1024, 1600].map(width => template7ImageUrl(url, width))),
+    ...([config.content?.template6, config.content?.template8].flatMap(cover => !cover ? [] : [template8Image(cover.backgroundImageUrl || '', true).src, ...(cover.cards || []).map(card => template8Image(card.imageUrl).src)])),
+    ...([config.content?.template4, config.content?.template5].flatMap(section => !section ? [] : [template7ImageUrl(section.profileImageUrl || '', 192, 192), template7ImageUrl(section.backgroundImageUrl || '', 1024)])),
   ];
   return [...new Set(urls)].filter(url => {
     try { return new URL(url).pathname.startsWith(RENDER_PATH) && template7ImageUrl(url, 1) !== url; }

@@ -7,7 +7,13 @@ import path from 'node:path';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const require=createRequire(path.join(root,'frontend/package.json'));
 const {chromium,webkit}=require(path.join(process.env.APPDATA,'npm/node_modules/playwright'));
-const assets=JSON.parse(await readFile(path.join(root,'frontend/components/public-landing/template7RuntimeAssets.generated.json'),'utf8'));
+// Inspect generated functions before minification; the full immutable programs
+// are covered by the entry/delivery browser suites.
+const {build}=require('esbuild');
+const bundle=await build({absWorkingDir:path.join(root,'frontend'),entryPoints:['components/public-landing/template7FastRuntime.ts'],bundle:true,write:false,platform:'node',format:'cjs',target:'es2020',jsx:'automatic',external:['react','react/jsx-runtime']});
+const generated={exports:{}};
+new Function('module','exports','require',bundle.outputFiles[0].text)(generated,generated.exports,require);
+const assets=Object.fromEntries([7,8].flatMap(template=>[false,true].map(classic=>[`t${template}-${classic?'classic':'builder'}`,{source:generated.exports.buildTemplate7FastRuntime('',{layout:{template}},classic?'function getOrCreateDeviceId(){return crypto.randomUUID();}':'',false)}])));
 const sdk=await readFile(path.join(root,'frontend/public/vendor/meta-capi-param-builder/1.3.1/clientParamBuilder.bundle.js'),'utf8');
 const manifest=await readFile(path.join(root,'frontend/lib/meta/ebpAssetManifest.ts'),'utf8');
 const helperPath=manifest.match(/"(\/vendor\/atrio-meta-click\/v1\/[^"\s]+)"/)[1];

@@ -4,7 +4,7 @@ import { Script } from "node:vm";
 import { readFile } from "node:fs/promises";
 import { buildTemplate7ResourceWarmup } from "../components/public-landing/template7ResourceWarmup";
 
-test("resource warmup waits for form intent and mounts static chat assets once", () => {
+test("resource warmup waits for form intent without loading a chat in the wrong cache partition", () => {
   const script = buildTemplate7ResourceWarmup("https://casino.test", "https://chat.test").match(/<script[^>]*>([\s\S]*)<\/script>/)![1];
   const listeners:Record<string,(event:unknown)=>void>={}, requests: string[] = [], elements: Record<string, unknown>[] = [];
   const context = {
@@ -18,8 +18,8 @@ test("resource warmup waits for form intent and mounts static chat assets once",
   const event={target:{closest:()=>({})}};
   listeners.focusin(event);listeners.input(event);
   assert.deepEqual(requests, ["https://casino.test/api/preparations/warm"]);
-  assert.equal(elements.filter(el => el.tag === "iframe").length, 1);
-  assert.equal(elements.find(el => el.tag === "iframe")?.src, "https://chat.test/embed/warm");
+  assert.equal(elements.filter(el => el.tag === "iframe").length, 0);
+  assert.equal(elements.filter(el => el.tag === "link").length, 0, 'exact JS/CSS are warmed inside the gateway cache partition');
   assert.ok(!requests.some(url => /players|start|resolve/.test(url)));
   assert.ok(!elements.some(el => String(el.href).includes("gateway-app-sdk")), "optional app SDK must not compete with entry assets");
 });

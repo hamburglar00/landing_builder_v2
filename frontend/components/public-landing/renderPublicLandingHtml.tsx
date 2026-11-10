@@ -5,12 +5,13 @@ import { buildTemplate7ResourceWarmup } from "./template7ResourceWarmup";
 import PhonePrewarmScript from "./PhonePrewarmScript";
 import PublicLandingRuntimeScript from "./PublicLandingRuntimeScript";
 import publicLandingRuntimeAsset from "./publicLandingRuntimeAsset.generated.json";
+import publicLandingStyleAsset from './publicLandingStyleAsset.generated.json';
 import { buildClientIdentityBootstrapScript } from "./clientIdentityBootstrapScript";
 import { TEMPLATE7_CRITICAL_CSS, TEMPLATE8_CRITICAL_CSS } from "./publicLandingCss";
 import { renderTemplate7RuntimeAsset } from "./template7RuntimeAsset";
 import AtrioPrewarmScript from "./AtrioPrewarmScript";
 import { buildTemplate7ReentryScript, guardTemplate7ReentryScripts } from "./template7ReentryScript";
-import { optimizeTemplate7Images, template8Image } from "../../lib/landing/template7Images";
+import { optimizeTemplate7Images, template8Image, publicImageOriginalUrl } from "../../lib/landing/template7Images";
 import { gatewayOriginFor } from "../../lib/reyDeAses/gatewayOrigins";
 import { renderGatewayEntryTransition } from "../../lib/gateway-entry-transition";
 import { isMultiSkinCode } from "../../lib/multi-skin-catalog";
@@ -21,6 +22,8 @@ import {
 } from "./metaPixelHtml";
 import type { PublicLandingConfig, PublicLandingPhoneResponse } from "./types";
 import { WHATSAPP_GREEN_PATH, WHATSAPP_WHITE_PATH } from "./whatsAppBrandIcon";
+import { buildEntryFunnelMetadataScript, buildLandingEntryFunnelScript } from '../../lib/landing/entryFunnel.bootstrap';
+import type { EntryFunnelTemplate } from '../../lib/landing/entryFunnel';
 
 type RenderParams = {
   slug: string;
@@ -28,6 +31,7 @@ type RenderParams = {
   cachedPhone?: PublicLandingPhoneResponse | null;
   canonicalUrl?: string;
   legalBasePath?: string;
+  engine?: 'classic' | 'constructor';
 };
 
 type ResponsiveImage = {
@@ -135,15 +139,18 @@ function buildPreloadLinks(config: PublicLandingConfig) {
     return image.src ? `<link rel="preload" as="image" href="${escapeHtml(image.src)}"${attr("imagesrcset", image.srcSet)}${attr("imagesizes", image.srcSet ? image.sizes : "")} fetchpriority="high">` : "";
   }
   if (config.layout?.template === 6) {
-    const firstImage = config.content?.template6?.backgroundImageUrl || config.content?.template6?.cards?.[0]?.imageUrl || "";
-    return firstImage
-      ? `<link rel="preload" as="image" href="${escapeHtml(firstImage)}" fetchpriority="high">`
-      : "";
+    const background = config.content?.template6?.backgroundImageUrl || '';
+    const image = template8Image(background || config.content?.template6?.cards?.[0]?.imageUrl || '', !!background);
+    return image.src ? `<link rel="preload" as="image" href="${escapeHtml(image.src)}"${attr('imagesrcset', image.srcSet)}${attr('imagesizes', image.srcSet ? image.sizes : '')} fetchpriority="high">` : '';
   }
-  const firstResponsiveBackground = config.background?.imagesResponsive?.[0];
-  const firstBackground =
-    firstResponsiveBackground?.mobile || config.background?.images?.[0] || "";
-  const firstBackgroundSrcSet = buildImageSrcSet(firstResponsiveBackground);
+  if (config.layout?.template === 4 || config.layout?.template === 5) {
+    const section = config.layout.template === 4 ? config.content?.template4 : config.content?.template5;
+    const image = section?.backgroundImageUrl || section?.profileImageUrl || '';
+    return image ? `<link rel="preload" as="image" href="${escapeHtml(image)}" fetchpriority="high">` : '';
+  }
+  const selected = getResponsiveBackgroundData(config);
+  const firstBackground = selected.currentImage;
+  const firstBackgroundSrcSet = selected.srcSet;
   const firstBackgroundSizes =
     config.layout?.template === 2
       ? "(max-width: 430px) 100vw, 430px"
@@ -158,7 +165,7 @@ function buildPreloadLinks(config: PublicLandingConfig) {
             : ""
         } fetchpriority="high">`
       : "",
-    logoUrl ? `<link rel="preload" as="image" href="${escapeHtml(logoUrl)}" fetchpriority="high">` : "",
+    logoUrl ? `<link rel="preload" as="image" href="${escapeHtml(logoUrl)}"${attr('imagesrcset', config.content?.logoSrcSet)} fetchpriority="high">` : "",
   ]
     .filter(Boolean)
     .join("");
@@ -265,7 +272,7 @@ function renderTemplate4Avatar(profileImageUrl: string, large = false) {
     ? "template4__photo template4__photo--large"
     : "template4__photo";
   if (profileImageUrl) {
-    return `<img src="${escapeHtml(profileImageUrl)}" alt="" class="${className}" decoding="async" loading="eager">`;
+    return `<img src="${escapeHtml(profileImageUrl)}"${imageFallbackAttributes(profileImageUrl)} alt="" class="${className}" decoding="async" loading="eager">`;
   }
   return `<div class="${className}">foto${large ? "<br>asesora" : ""}</div>`;
 }
@@ -296,7 +303,7 @@ function renderTemplate5Title(lines: string[]) {
 
 function renderTemplate5Avatar(profileImageUrl: string) {
   if (profileImageUrl) {
-    return `<img src="${escapeHtml(profileImageUrl)}" alt="" class="template5__avatar-img" decoding="async" loading="eager">`;
+    return `<img src="${escapeHtml(profileImageUrl)}"${imageFallbackAttributes(profileImageUrl)} alt="" class="template5__avatar-img" decoding="async" loading="eager">`;
   }
 
   return `<div class="template5__avatar-placeholder">foto<br>asesor</div>`;
@@ -314,8 +321,8 @@ function renderPrivacyFooter(config: PublicLandingConfig) {
   )}.</p>${template7IdentityNotice}<p><strong>Datos tratados.</strong> Al navegar o utilizar el botón de contacto pueden procesarse datos técnicos del dispositivo y la conexión, cookies e identificadores publicitarios, la procedencia de la visita y los datos que usted proporcione voluntariamente.</p><p><strong>Finalidades.</strong> Los datos se utilizan para atender consultas por WhatsApp, operar el servicio, medir resultados y atribuir conversiones publicitarias.</p><p><strong>Meta.</strong> Esta landing puede utilizar Meta Pixel y Conversions API. En consecuencia, cierta información puede compartirse con Meta Platforms para medición, atribución y publicidad, de acuerdo con sus políticas.</p><p><strong>Derechos y contacto.</strong> Puede solicitar información, actualización o supresión de sus datos mediante el canal de WhatsApp ofrecido en esta landing.</p><p>También puede administrar las cookies desde su navegador y revisar sus preferencias publicitarias en Meta.</p><div class="public-privacy-dialog__links"><a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noreferrer noopener">Política de privacidad de Meta</a><a href="https://www.facebook.com/adpreferences/ad_settings" target="_blank" rel="noreferrer noopener">Preferencias de anuncios de Meta</a></div></div></dialog>`;
 }
 
-function pixelScriptForTemplate(pixelId: string, slug: string, phoneCountryCode: string, template: number): string {
-  const original = buildPixelInitScript(pixelId, slug, phoneCountryCode);
+function pixelScriptForTemplate(pixelId: string, slug: string, phoneCountryCode: string, template: number, legacyExternalId = false): string {
+  const original = buildPixelInitScript(pixelId, slug, phoneCountryCode, legacyExternalId);
   if (template !== 7 && template !== 9 || !original) return original;
   const body = original.slice("<script>".length, -"</script>".length);
   return `<script>(function(){function init(){${body}}var ready=window.__LB_IDENTITY_READY__;if(ready&&typeof ready.then==="function")ready.then(init,init);else init();})();</script>`;
@@ -335,8 +342,10 @@ function getResponsiveBackgroundData(config: PublicLandingConfig) {
     .map((image) => image.mobile)
     .filter((image): image is string => Boolean(image));
   const rotationImages = mobileImages.length ? mobileImages : safeImages;
-  const firstResponsiveImage = responsiveImages[0];
-  const currentImage = firstResponsiveImage?.mobile || safeImages[0] || "";
+  const interval = Math.max(1, Number(config.background?.rotateEveryHours) || 24) * 3600000;
+  const index = rotationImages.length > 1 ? Math.floor(Date.now() / interval) % rotationImages.length : 0;
+  const firstResponsiveImage = responsiveImages[index];
+  const currentImage = firstResponsiveImage?.mobile || safeImages[index] || "";
   const srcSet = buildImageSrcSet(firstResponsiveImage);
 
   return {
@@ -344,14 +353,30 @@ function getResponsiveBackgroundData(config: PublicLandingConfig) {
     rotationImages,
     srcSet,
     rotateEveryHours: config.background?.rotateEveryHours ?? 24,
+    index,
   };
+}
+
+function backgroundVariantAttributes(config: PublicLandingConfig) {
+  const { index } = getResponsiveBackgroundData(config);
+  const variants = (config.background?.imagesResponsive || []).map((image, i) => ({
+    srcSet: buildImageSrcSet(image), original: config.background?.imagesOriginal?.[i] || '',
+  }));
+  return attr('data-template7-background-variants', variants.length ? JSON.stringify(variants) : '')
+    + attr('data-image-fallback', config.background?.imagesOriginal?.[index]);
+}
+
+function imageFallbackAttributes(source: string) {
+  const original = publicImageOriginalUrl(source);
+  return source === original ? '' : attr('data-image-fallback', original)
+    + ` onerror="this.onerror=null;this.removeAttribute('srcset');this.src=this.dataset.imageFallback"`;
 }
 
 function renderRotatingBackground(config: PublicLandingConfig, overlay = true) {
   const { currentImage, rotationImages, srcSet, rotateEveryHours } = getResponsiveBackgroundData(config);
 
   if (currentImage) {
-    return `<img src="${escapeHtml(currentImage)}"${attr("srcset", srcSet)} sizes="100vw" alt="" class="background-layer background-layer__image" data-public-landing-rotating-image="true" data-public-landing-images="${escapeHtml(
+    return `<img src="${escapeHtml(currentImage)}"${backgroundVariantAttributes(config)}${imageFallbackAttributes(currentImage)}${attr("srcset", srcSet)} sizes="100vw" alt="" class="background-layer background-layer__image" data-public-landing-rotating-image="true" data-public-landing-images="${escapeHtml(
       JSON.stringify(rotationImages),
     )}" data-public-landing-rotate-hours="${escapeHtml(rotateEveryHours)}" loading="eager" fetchpriority="high" decoding="async" width="1080" height="1920">${
       overlay ? '<div class="overlay"></div>' : ""
@@ -365,7 +390,7 @@ function renderFrameBackgroundTemplate2(config: PublicLandingConfig) {
   const { currentImage, rotationImages, srcSet, rotateEveryHours } = getResponsiveBackgroundData(config);
   if (!currentImage) return "";
 
-  return `<img src="${escapeHtml(currentImage)}"${attr(
+  return `<img src="${escapeHtml(currentImage)}"${backgroundVariantAttributes(config)}${imageFallbackAttributes(currentImage)}${attr(
     "srcset",
     srcSet,
   )} sizes="(max-width: 430px) 100vw, 430px" alt="" class="frame__bg"${attr(
@@ -382,11 +407,12 @@ function renderFrameBackgroundTemplate7(config: PublicLandingConfig) {
   const { currentImage, rotationImages, srcSet, rotateEveryHours } = getResponsiveBackgroundData(config);
   if (!currentImage) return "";
 
-  const mobile = config.background?.imagesResponsive?.[0]?.mobile;
+  const selectedIndex = getResponsiveBackgroundData(config).index;
+  const mobile = config.background?.imagesResponsive?.[selectedIndex]?.mobile;
   const variants = (config.background?.imagesResponsive || []).map((image, index) => ({
     srcSet: buildImageSrcSet(image), original: config.background?.imagesOriginal?.[index] || "",
   }));
-  return `<picture>${mobile ? `<source data-template7-mobile-background media="(max-width: 640px)" srcset="${escapeHtml(mobile)}">` : ""}<img src="${escapeHtml(currentImage)}"${attr("data-image-fallback", config.background?.imagesOriginal?.[0])} onerror="this.onerror=null;this.removeAttribute('srcset');var s=this.parentElement.querySelector('source');if(s)s.remove();if(this.dataset.imageFallback)this.src=this.dataset.imageFallback"${attr(
+  return `<picture>${mobile ? `<source data-template7-mobile-background media="(max-width: 640px)" srcset="${escapeHtml(mobile)}">` : ""}<img src="${escapeHtml(currentImage)}"${attr("data-image-fallback", config.background?.imagesOriginal?.[selectedIndex])} onerror="this.onerror=null;this.removeAttribute('srcset');var s=this.parentElement.querySelector('source');if(s)s.remove();if(this.dataset.imageFallback)this.src=this.dataset.imageFallback"${attr(
     "srcset",
     srcSet,
   )} sizes="100vw" alt="" class="template7__background-image"${attr(
@@ -467,7 +493,7 @@ function renderTemplate1({ config }: RenderParams) {
     false,
   )}<div class="content">${
     hasLogo
-      ? `<img src="${escapeHtml(config.content?.logoUrl)}" class="logo" alt="${escapeHtml(
+      ? `<img src="${escapeHtml(config.content?.logoUrl)}"${attr("srcset", config.content?.logoSrcSet)}${imageFallbackAttributes(config.content?.logoUrl || "")} class="logo" alt="${escapeHtml(
           config.name,
         )}" decoding="async" fetchpriority="high" width="200" height="150" data-public-landing-trigger style="cursor:pointer">`
       : ""
@@ -516,7 +542,7 @@ function renderTemplate2({ config }: RenderParams) {
   const emailCaptureEnabled = config.emailCapture?.enabled === true;
   return `<main class="public-landing lp"><section class="phone-view"><div class="artboard${emailCaptureEnabled ? " has-inline-email" : ""}"><div class="frame">${renderFrameBackgroundTemplate2(config)}${
     hasLogo
-      ? `<img src="${escapeHtml(config.content?.logoUrl)}" alt="${escapeHtml(
+      ? `<img src="${escapeHtml(config.content?.logoUrl)}"${attr("srcset", config.content?.logoSrcSet)}${imageFallbackAttributes(config.content?.logoUrl || "")} alt="${escapeHtml(
           config.name,
         )}" class="frame__logo" decoding="async" fetchpriority="high" width="220" height="160" data-public-landing-trigger style="cursor:pointer">`
       : ""
@@ -678,11 +704,11 @@ function renderTemplate6({ config }: RenderParams) {
     const card = cover?.cards?.[index];
     const label = String(card?.ctaText || config.content?.ctaText || "Abrir WhatsApp").trim();
     const image = String(card?.imageUrl || "").trim();
-    const responsive = isTemplate8 ? template8Image(image) : null;
+    const responsive = template8Image(image);
     const caption = String(card?.text || `Opción ${index + 1}`).trim();
     return `<article class="template6__card"><div class="template6__image">${
       image
-        ? `<img src="${escapeHtml(image)}"${responsive ? attr("srcset", responsive.srcSet) + attr("sizes", responsive.srcSet ? responsive.sizes : "") : ""} alt="${escapeHtml(caption)}" width="480" height="480" loading="${index < 2 ? "eager" : "lazy"}" decoding="async"${index === 0 && !backgroundImageUrl ? ' fetchpriority="high"' : ""}>`
+        ? `<img src="${escapeHtml(image)}"${imageFallbackAttributes(image)}${responsive ? attr("srcset", responsive.srcSet) + attr("sizes", responsive.srcSet ? responsive.sizes : "") : ""} alt="${escapeHtml(caption)}" width="480" height="480" loading="${index < 2 ? "eager" : "lazy"}" decoding="async"${index === 0 && !backgroundImageUrl ? ' fetchpriority="high"' : ""}>`
         : `<span>Imagen ${index + 1}</span>`
     }</div><p class="template6__caption">${escapeHtml(caption)}</p><button type="button" class="template6__cta" ${isTemplate8 ? `data-template8-card-index="${index + 1}" ` : "data-public-landing-cta"} data-template6-card-index="${index + 1}" data-public-landing-rest-label="${escapeHtml(label)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin número disponible" aria-label="${escapeHtml(label)}"><span data-public-landing-cta-label>${escapeHtml(label)}</span>${cover?.showWhatsAppLogo === false ? "" : renderWhatsAppIcon("template6__cta-icon")}</button></article>`;
   }).join("");
@@ -700,9 +726,9 @@ function renderTemplate6({ config }: RenderParams) {
     "--template6-cta-size": `${Math.min(22, Math.max(11, config.typography?.cta?.sizePx || 14))}px`,
     "--template6-cta-weight": config.typography?.cta?.weight || 700,
   });
-  const backgroundResponsive = isTemplate8 ? template8Image(backgroundImageUrl, true) : null;
+  const backgroundResponsive = template8Image(backgroundImageUrl, true);
   const background = backgroundImageUrl
-    ? `<div class="template6__background" aria-hidden="true"><img src="${escapeHtml(backgroundImageUrl)}"${backgroundResponsive ? attr("srcset", backgroundResponsive.srcSet) + attr("sizes", backgroundResponsive.srcSet ? backgroundResponsive.sizes : "") : ""} alt="" loading="eager" decoding="async" fetchpriority="high"></div>`
+    ? `<div class="template6__background" aria-hidden="true"><img src="${escapeHtml(backgroundImageUrl)}"${imageFallbackAttributes(backgroundImageUrl)}${backgroundResponsive ? attr("srcset", backgroundResponsive.srcSet) + attr("sizes", backgroundResponsive.srcSet ? backgroundResponsive.sizes : "") : ""} alt="" loading="eager" decoding="async" fetchpriority="high"></div>`
     : "";
   return `<main class="public-landing template6${isTemplate8 ? " template8" : ""}${backgroundImageUrl ? " has-background" : ""}"${styles}>${background}<div class="template6__shell"><header class="template6__header"><h1>${title.map((line) => `<span>${escapeHtml(line)}</span>`).join("")}</h1></header><section class="template6__grid" aria-label="Opciones disponibles">${cards}</section><footer class="template6__footer">${footer.map((line) => `<span>${escapeHtml(line)}</span>`).join("")}</footer></div></main>`;
 }
@@ -740,7 +766,7 @@ function renderTemplate(params: RenderParams) {
 
 export function renderPublicLandingHtml(params: RenderParams) {
   params = { ...params, config: optimizeTemplate7Images(params.config) };
-  const { slug, config, cachedPhone, canonicalUrl } = params;
+  const { slug, config, cachedPhone, canonicalUrl, engine = 'constructor' } = params;
   const isTemplate8 = config.layout?.template === 8;
   const isTemplate7 = config.layout?.template === 7 || isTemplate8 || config.layout?.template === 9;
   const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
@@ -760,12 +786,12 @@ export function renderPublicLandingHtml(params: RenderParams) {
   const runtimeAsset = isTemplate7 ? renderTemplate7RuntimeAsset(slug, config) : null;
   const runtimeScript = runtimeAsset
       ? runtimeAsset.script
-    : `${renderScriptElement(PublicLandingRuntimeScript({ slug, config }))}<script src="/public-assets/template-entry/${publicLandingRuntimeAsset.name}" defer></script>`;
+    : `<script>${buildLandingEntryFunnelScript({ landingId: config.id || '', template: (config.layout?.template || 1) as EntryFunnelTemplate, engine })}</script>${renderScriptElement(PublicLandingRuntimeScript({ slug, config, engine }))}<script src="/public-assets/template-entry/${publicLandingRuntimeAsset.name}" defer></script>`;
   const template7PlaceholderScript = isTemplate7 && config.layout?.template !== 9
     ? `<script>(()=>{const input=document.querySelector('[data-template7-name]');if(!input)return;const names=${JSON.stringify(TEMPLATE7_EXAMPLE_NAMES)};input.placeholder='Ej.: '+names[Math.floor(Math.random()*names.length)];})();</script>`
     : "";
 
-  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${escapeHtml(
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">${isTemplate7 ? `<script>${buildEntryFunnelMetadataScript(engine)}</script>` : ''}<title>${escapeHtml(
     metadata.title,
   )}</title>${buildPublicMetadataTags(
     config,
@@ -783,11 +809,12 @@ export function renderPublicLandingHtml(params: RenderParams) {
     pixelId
       ? '<link rel="preconnect" href="https://www.facebook.com"><link rel="preconnect" href="https://connect.facebook.net">'
       : ""
-  }${runtimeAsset ? runtimeAsset.preload + runtimeAsset.config : ""}${isTemplate7 ? buildClientIdentityBootstrapScript(isTemplate8 ? undefined : { slug, landingId: config.id || "" }) + (isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug, landingId: config.id || "" }))) : ""}${buildPreloadLinks(config)}${isTemplate7 ? `<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS + (config.layout?.template === 9 ? TEMPLATE9_CSS : "")}</style>` : '<link rel="stylesheet" href="/public-assets/landing-styles-v3.css">'}${phonePrewarmScript}${pixelScriptForTemplate(
+  }${runtimeAsset ? runtimeAsset.preload + runtimeAsset.config : ""}${isTemplate7 ? buildClientIdentityBootstrapScript(isTemplate8 ? undefined : { slug, landingId: config.id || "" }) + (isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug, landingId: config.id || "" }))) : ""}${buildPreloadLinks(config)}${isTemplate7 ? `<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS + (config.layout?.template === 9 ? TEMPLATE9_CSS : "")}</style>` : `<link rel="stylesheet" href="/public-assets/template-entry/${publicLandingStyleAsset.name}">`}${phonePrewarmScript}${pixelScriptForTemplate(
     pixelId,
     slug,
     config.tracking?.phoneCountryCode || "54",
     config.layout?.template || 0,
+    engine === 'classic' && !isTemplate7,
   )}</head><body>${buildPixelNoscript(pixelId)}${renderTemplate(params)}${template7PlaceholderScript}${renderPrivacyFooter(
     config,
   )}${runtimeScript}${isTemplate7 ? resourceWarmup(config) : ""}</body></html>`;
@@ -801,7 +828,8 @@ export function renderClassicTemplate7InlineHtml(params: RenderParams, deviceIdS
   const config = optimizeTemplate7Images(params.config);
   const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
   const isTemplate8 = config.layout?.template === 8;
-  const runtimeAsset = renderTemplate7RuntimeAsset(params.slug, config, deviceIdScript);
+  const originalAsset = renderTemplate7RuntimeAsset(params.slug, config, deviceIdScript);
+  const runtimeAsset = { ...originalAsset, preload: `<script>${buildEntryFunnelMetadataScript('classic')}</script>` + originalAsset.preload };
   const html = `${runtimeAsset.preload}${runtimeAsset.config}${isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug: params.slug, landingId: config.id || "", deviceIdScript }))}${buildPreloadLinks(config)}<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS + (config.layout?.template === 9 ? TEMPLATE9_CSS : "")}</style>${pixelScriptForTemplate(pixelId, params.slug, config.tracking?.phoneCountryCode || "54", 7)}${buildPixelNoscript(pixelId)}${renderTemplate({ ...params, config, legalBasePath: `/${encodeURIComponent(params.slug)}` })}${renderPrivacyFooter(config.layout?.template === 9 ? config : { ...config, layout: { ...config.layout, template: 0 } })}${runtimeAsset.script}${resourceWarmup(config)}`;
   if (isTemplate8) return html;
   const reentry = buildTemplate7ReentryScript(template7GatewayOrigin(config), `/${encodeURIComponent(params.slug)}`, config.tracking?.target_provider !== "multi_skin");
@@ -811,5 +839,13 @@ export function renderClassicTemplate7InlineHtml(params: RenderParams, deviceIdS
 /** Complete classic document without React hydration, layout CSS or Next chunks. */
 export function renderClassicTemplate7Html(params: RenderParams, deviceIdScript: string) {
   const metadata = publicMetadata(params.config, params.slug);
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="${params.config.layout?.template === 9 ? getTemplate9Brand(params.config.tracking?.target_provider || "rey_de_ases", params.config.tracking?.skin_code).deep : "#000000"}"><title>${escapeHtml(metadata.title)}</title>${buildPublicMetadataTags(params.config, params.slug, params.canonicalUrl)}</head><body>${renderClassicTemplate7InlineHtml(params, deviceIdScript)}</body></html>`;
+  const origins = [process.env.NEXT_PUBLIC_SUPABASE_URL, template7GatewayOrigin(params.config), ...(params.config.tracking?.pixelId ? ['https://www.facebook.com', 'https://connect.facebook.net'] : [])];
+  const connections = [...new Set(origins.flatMap(origin => { try { return origin ? [new URL(origin).origin] : []; } catch { return []; } }))].map(origin => `<link rel="preconnect" href="${escapeHtml(origin)}" crossorigin>`).join('');
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="${params.config.layout?.template === 9 ? getTemplate9Brand(params.config.tracking?.target_provider || "rey_de_ases", params.config.tracking?.skin_code).deep : "#000000"}"><title>${escapeHtml(metadata.title)}</title>${buildPublicMetadataTags(params.config, params.slug, params.canonicalUrl)}${connections}</head><body>${renderClassicTemplate7InlineHtml(params, deviceIdScript)}</body></html>`;
+}
+
+/** All templates share delivery/assets; classic retains its identity and API adapter. */
+export function renderClassicPublicLandingHtml(params: RenderParams, deviceIdScript: string) {
+  if ([7, 8, 9].includes(Number(params.config.layout?.template))) return renderClassicTemplate7Html(params, deviceIdScript);
+  return renderPublicLandingHtml({ ...params, engine: 'classic', legalBasePath: `/${encodeURIComponent(params.slug)}` });
 }

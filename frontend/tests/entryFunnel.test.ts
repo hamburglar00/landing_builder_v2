@@ -71,3 +71,20 @@ test("attempts and finite phases preserve old payloads and reject diagnostic fre
   const context = { landing_id: landing, flow_id: flow, template: 7, started_at: Date.now(), telemetry_origin: "https://landing.panelbotadmin.com", ...attempt };
   assert.deepEqual(validateEntryFunnelContext(context), context);
 });
+
+test("all nine templates share bounded provenance without classifying unknown visitors as real", () => {
+  const provenance = { engine: "classic", release: "a".repeat(40), environment: "production", source: "unknown", entry_strategy: "combined_login" };
+  for (let template = 1; template <= 9; template++) {
+    const row = { ...event, ...provenance, name: "cta_available" };
+    assert.deepEqual(validateEntryFunnelBatch({ ...batch, template, events: [row] })?.events, [row]);
+    assert.ok(validateEntryFunnelBatch({ ...batch, template, events: [{ ...row, name: "outbound_requested" }] }));
+  }
+  for (const invalid of [{engine:"foreign"},{engine:["classic"]},{release:"token=private"},{release:"a".repeat(41)},{environment:"client@private.test"},{source:"real"},{source:null},{entry_strategy:"private"},{entry_strategy:null}]) {
+    assert.equal(validateEntryFunnelBatch({ ...batch, events: [{ ...event, ...provenance, ...invalid }] }), null);
+  }
+  for (const template of [0,10,1.5,"1"]) assert.equal(validateEntryFunnelBatch({ ...batch, template }), null);
+  const context = { ...provenance, landing_id: landing, flow_id: flow, template: 7, started_at: Date.now(), telemetry_origin: "https://landing.panelbotadmin.com" };
+  assert.deepEqual(validateEntryFunnelContext(context), context);
+  assert.equal(validateEntryFunnelContext({ ...context, release: "private-url" }), null);
+  assert.equal(validateEntryFunnelBatch(batch)?.events[0].engine, undefined, "legacy events are not backfilled");
+});

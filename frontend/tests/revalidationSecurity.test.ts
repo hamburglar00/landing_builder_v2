@@ -118,14 +118,12 @@ test("all backend and upstream errors are projected without details or canary", 
 
 test("constructor receiver verifies in backend and never reflects incoming bodies", async () => {
   let invalidations = 0;
-  const d = { environment: "local" as const, secret: async () => canary, invalidate: () => { invalidations++; }, warm: async () => true };
+  const d = { environment: "local" as const, secret: async () => canary, invalidate: () => { invalidations++; } };
   const req = (body: unknown) => new Request("http://localhost:3001/api/revalidate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   await clean(await handleConstructorRevalidation(req({ name: "synthetic", secret: "wrong" }), d), 401);
   await clean(await handleConstructorRevalidation(req({ name: "../other", secret: canary }), d), 400);
   assert.equal(invalidations, 0);
   await clean(await handleConstructorRevalidation(req({ name: "synthetic", secret: canary }), d), 200); assert.equal(invalidations, 1);
-  d.warm = async () => false;
-  await clean(await handleConstructorRevalidation(req({ name: "synthetic", secret: canary }), d), 502);
   d.invalidate = () => { throw new Error(canary); };
   await clean(await handleConstructorRevalidation(req({ name: "synthetic", secret: canary }), d), 503);
   const broken = new Request("http://localhost:3001/api/revalidate", { method: "POST", headers: { "Content-Type": "application/json" }, body: '{"secret":"' + canary });
@@ -159,9 +157,17 @@ test("backend requires synthetic local database address and scopes user lookups"
 
 test("real local HTTP retains classic contract, blocks redirects and sanitizes responses", async (t) => {
   let responseMode: number | "valid" | "invalid" | "error" = "valid";
-  let classicCalls = 0, constructorCalls = 0, warmCalls = 0;
+  let classicCalls = 0, constructorCalls = 0, warmCalls = 0, classicWarmCalls = 0;
   const received: unknown[] = [];
   const classic = createServer(async (req, res) => {
+    if (req.method === 'GET') {
+      classicWarmCalls++;
+      assert.equal(req.url, '/synthetic');
+      assert.equal(classicCalls, 1, 'invalidation response must complete before canonical warming');
+      assert.equal(req.headers['cache-control'], undefined);
+      assert.equal(req.headers.authorization, undefined);
+      res.end('public synthetic page'); return;
+    }
     classicCalls++;
     let body = ""; for await (const chunk of req) body += chunk;
     received.push(JSON.parse(body));
@@ -176,7 +182,7 @@ test("real local HTTP retains classic contract, blocks redirects and sanitizes r
   const constructor = createServer((req, res) => {
     constructorCalls++;
     if (req.url === "/l/synthetic") { warmCalls++; res.end("synthetic page".repeat(5000)); return; }
-    res.end(JSON.stringify({ ok: true }));
+    res.end(JSON.stringify({ ok: true, revalidated: true }));
   });
   const close = (server: Server) => new Promise<void>(resolve => { server.close(() => resolve()); server.closeAllConnections(); });
   try {
@@ -194,13 +200,14 @@ test("real local HTTP retains classic contract, blocks redirects and sanitizes r
     }) as typeof http.request);
     syncBuiltinESMExports();
     const result = await postRevalidation(destinationFor("local", "classic"), "synthetic", canary);
-    assert.deepEqual(result, { ok: true, revalidated: true, warmed: { config: true, page: false, retried: true } });
+    assert.deepEqual(result, { ok: true, revalidated: true, warmed: { config: null, page: true, retried: false } });
+    assert.equal(classicWarmCalls, 1);
     assert.deepEqual(received[0], { name: "synthetic", secret: canary }); assert.ok(!JSON.stringify(result).includes(canary));
     for (const status of [301, 302, 303, 307, 308]) { responseMode = status; await assert.rejects(postRevalidation(destinationFor("local", "classic"), "synthetic", canary)); }
     assert.equal(constructorCalls, 0);
     for (const mode of ["invalid", "error"] as const) { responseMode = mode; await assert.rejects(postRevalidation(destinationFor("local", "classic"), "synthetic", canary), error => !String(error).includes(canary)); }
-    assert.deepEqual(await postRevalidation(destinationFor("local", "constructor"), "synthetic", canary), { ok: true, revalidated: true });
-    assert.equal(await warmConstructor("local", "synthetic"), true); assert.equal(warmCalls, 1);
+    assert.deepEqual(await postRevalidation(destinationFor("local", "constructor"), "synthetic", canary), { ok: true, revalidated: true, warmed: { config: null, page: true, retried: false } });
+    assert.equal(await warmConstructor("local", "synthetic"), true); assert.equal(warmCalls, 2);
     assert.equal(classicCalls, 8);
   } finally { t.mock.restoreAll(); syncBuiltinESMExports(); await close(classic); await close(constructor); }
 });

@@ -1,11 +1,12 @@
-import type { EntryFunnelContext } from "./entryFunnel";
+import type { EntryFunnelContext, EntryFunnelProvenance, EntryFunnelTemplate } from "./entryFunnel";
 export type EntryFunnelClient = { flowId: string; beginAttempt(): void; emit(name: string, details?: Record<string, unknown>): void; flush(beacon?: boolean): void; context(): EntryFunnelContext; timings(header: string | null): void; adopt(context: EntryFunnelContext): void; stop(): void };
 
 /** Self-contained to embed into the existing public runtime; no additional blocking request. */
 export function installEntryFunnel(config: {
   navigationKind?: "preparation" | "gateway"; landingId?: string; template?: number; entryTemplate?: number; template8?: boolean; targetProvider?: string; skinCode?: string;
+  telemetry?: EntryFunnelProvenance;
 }, suppliedContext?: EntryFunnelContext, endpoint = "/api/entry-funnel"): EntryFunnelClient | undefined {
-  const browser = window as typeof window & { __entryFunnel?: EntryFunnelClient; __ENTRY_FUNNEL_EARLY__?: { started_at?: number; context?: EntryFunnelContext; timings?: string[]; events?: Array<{ name: string; at: number; id?: string; error_code?: string }> } };
+  const browser = window as typeof window & { __entryFunnel?: EntryFunnelClient; __ENTRY_FUNNEL_METADATA__?: EntryFunnelProvenance; __ENTRY_FUNNEL_EARLY__?: { started_at?: number; context?: EntryFunnelContext; timings?: string[]; events?: Array<{ name: string; at: number; id?: string; error_code?: string }> } };
   if (browser.__entryFunnel) {
     if (!suppliedContext || browser.__entryFunnel.flowId === suppliedContext.flow_id) {
       if (suppliedContext) browser.__entryFunnel.adopt(suppliedContext);
@@ -16,8 +17,21 @@ export function installEntryFunnel(config: {
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   const template = suppliedContext?.template || config.entryTemplate || (config.template8 || config.template === 8 ? 8 : config.template);
   const landing = suppliedContext?.landing_id || config.landingId;
-  if (![7, 8, 9].includes(Number(template)) || !uuid.test(String(landing))) return;
-  const allowed = ["page_visible", "form_visible", "name_focus", "name_started", "name_valid", "skin_selected", "cta_clicked", "destination_ready", "account_ready", "login_confirmed", "gateway_loaded", "iframe_loaded", "chat_bootstrap_ready", "welcome_ready", "wallet_ready", "chat_usable", "chat_ready", "entry_error", "visibility_hidden", "resumed", "stage_timing", "casino_account_ready", "entry_retry", "attempt_started"];
+  if (![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(Number(template)) || !uuid.test(String(landing))) return;
+  const provenance = (value: EntryFunnelProvenance = {}): EntryFunnelProvenance => ({
+    ...(typeof value.engine === "string" && ["classic", "constructor", "nexobet"].includes(value.engine) ? { engine: value.engine } : {}),
+    ...(typeof value.release === "string" && /^[0-9a-f]{7,40}$/.test(value.release) ? { release: value.release } : {}),
+    ...(typeof value.environment === "string" && ["production", "preview", "development", "unknown"].includes(value.environment) ? { environment: value.environment } : {}),
+    ...(typeof value.source === "string" && ["synthetic", "unknown"].includes(value.source) ? { source: value.source } : {}),
+    ...(typeof value.entry_strategy === "string" && ["sequential", "combined_login"].includes(value.entry_strategy) ? { entry_strategy: value.entry_strategy } : {}),
+  });
+  const metadata = provenance(suppliedContext || config.telemetry || browser.__ENTRY_FUNNEL_METADATA__);
+  if (!suppliedContext) {
+    metadata.engine ||= location.origin === "https://landing.panelbotadmin.com" ? "classic" : location.origin === "https://mkt.panelbotadmin.com" ? "constructor" : undefined;
+    metadata.environment ||= "unknown";
+    metadata.source = navigator.webdriver === true ? "synthetic" : metadata.source || "unknown";
+  }
+  const allowed = ["page_visible", "form_visible", "name_focus", "name_started", "name_valid", "skin_selected", "cta_clicked", "destination_ready", "account_ready", "login_confirmed", "gateway_loaded", "iframe_loaded", "chat_bootstrap_ready", "welcome_ready", "wallet_ready", "chat_usable", "chat_ready", "entry_error", "visibility_hidden", "resumed", "stage_timing", "casino_account_ready", "entry_retry", "attempt_started", "cta_available", "outbound_requested"];
   const phases = ["landing_dns", "landing_connect", "landing_tls", "landing_ttfb", "landing_download", "landing_navigation",
     "gateway_dns", "gateway_connect", "gateway_tls", "gateway_ttfb", "gateway_download", "gateway_navigation",
     "casino_ttfb", "casino_download", "casino_navigation",
@@ -49,13 +63,15 @@ export function installEntryFunnel(config: {
     if (!context) {
       const stored = early?.context || JSON.parse(sessionStorage.getItem(key) || "null");
       if (stored && uuid.test(stored.flow_id) && stored.landing_id === landing && stored.template === template &&
+        (!stored.engine || !metadata.engine || stored.engine === metadata.engine) &&
+        (stored.release === undefined || metadata.release === undefined || stored.release === metadata.release) &&
         stored.telemetry_origin === location.origin && Number.isSafeInteger(stored.started_at) &&
         stored.started_at <= now && stored.started_at > now - 86400000) context = stored;
     }
   } catch { /* Storage can be unavailable in embedded/private browsers. */ }
   const earlyStart = Number(early?.started_at);
-  if (!context) context = { landing_id: String(landing), flow_id: id(), template: template as 7 | 8 | 9, telemetry_origin: location.origin, started_at: Number.isSafeInteger(earlyStart) && earlyStart <= now && earlyStart > now - 86400000 ? earlyStart : now };
-  const flow: EntryFunnelContext = { landing_id: context.landing_id, flow_id: context.flow_id, template: context.template,
+  if (!context) context = { landing_id: String(landing), flow_id: id(), template: template as EntryFunnelTemplate, telemetry_origin: location.origin, started_at: Number.isSafeInteger(earlyStart) && earlyStart <= now && earlyStart > now - 86400000 ? earlyStart : now };
+  const flow: EntryFunnelContext = { ...metadata, landing_id: context.landing_id, flow_id: context.flow_id, template: context.template,
     telemetry_origin: context.telemetry_origin, started_at: context.started_at };
   if (uuid.test(String(context.attempt_id)) && Number.isInteger(context.attempt_number) && Number(context.attempt_number) >= 1 && Number(context.attempt_number) <= 1000) {
     flow.attempt_id = context.attempt_id; flow.attempt_number = context.attempt_number;
@@ -65,13 +81,14 @@ export function installEntryFunnel(config: {
   function beginAttempt() {
     attemptStartedAt = performance.now();
     flow.attempt_id = id(); flow.attempt_number = Math.min(1000, (flow.attempt_number || 0) + 1);
-    delete flow.account_kind; persistContext();
+    delete flow.account_kind; delete flow.entry_strategy; persistContext();
     emit("attempt_started");
   }
   function adopt(value: EntryFunnelContext) {
     if (value.flow_id !== flow.flow_id || !uuid.test(String(value.attempt_id)) ||
       !Number.isInteger(value.attempt_number) || Number(value.attempt_number) < 1 || Number(value.attempt_number) > 1000) return;
     flow.attempt_id = value.attempt_id; flow.attempt_number = value.attempt_number;
+    Object.assign(flow, provenance(value));
     if (value.account_kind === "new" || value.account_kind === "existing") flow.account_kind = value.account_kind;
     else delete flow.account_kind;
     persistContext();
@@ -130,16 +147,18 @@ export function installEntryFunnel(config: {
     if (!active || !allowed.includes(name) || count >= 120) return;
     if (name === "stage_timing" && (!phases.includes(String(details.phase)) || !Number.isSafeInteger(details.duration_ms) || Number(details.duration_ms) < 0 || Number(details.duration_ms) > 86400000)) return;
     if (name === "cta_clicked") { reportVisual(); beginAttempt(); }
+    if (name === "outbound_requested" && !flow.attempt_id) beginAttempt();
     if (name === "chat_usable") reportVisual();
     if (details.account_kind === "new" || details.account_kind === "existing") { flow.account_kind = details.account_kind; persistContext(); }
     const provider = details.provider || config.targetProvider;
     const skin = details.skin || config.skinCode;
     const once = !["cta_clicked", "entry_retry", "entry_error", "visibility_hidden", "resumed"].includes(name);
-    const attemptScoped = details.flow_scoped !== true && !(name === 'stage_timing' && String(details.phase).startsWith('landing_')) && !["page_visible", "form_visible", "name_focus", "name_started", "name_valid", "skin_selected"].includes(name);
+    const attemptScoped = details.flow_scoped !== true && !(name === 'stage_timing' && String(details.phase).startsWith('landing_')) && !["page_visible", "form_visible", "cta_available", "name_focus", "name_started", "name_valid", "skin_selected"].includes(name);
     const stageKey = name + ":" + String(provider || "") + ":" + String(skin || "") + ":" + (attemptScoped ? flow.attempt_id || "" : "") + ":" + String(details.phase || "") + ":" + String(details.resource_key || "");
     if (once && seen.has(stageKey)) return;
     seen.add(stageKey); count += 1;
     const event: Record<string, unknown> = {
+      ...provenance(flow),
       id: uuid.test(String(details.event_id)) ? details.event_id : id(), name, elapsed_ms: Math.max(0, Math.min(86400000, Number.isSafeInteger(details.elapsed_ms) ? Number(details.elapsed_ms) : Date.now() - flow.started_at)),
     };
     if (attemptScoped && flow.attempt_id && uuid.test(flow.attempt_id)) { event.attempt_id = flow.attempt_id; event.attempt_number = flow.attempt_number; }
@@ -240,26 +259,33 @@ export function installEntryFunnel(config: {
     const visibleForm = () => {
       if (document.visibilityState === "hidden") return;
       emit("page_visible");
-      const form = document.querySelector("[data-template7-form]");
+      const form = document.querySelector("[data-template7-form], [data-entry-funnel-form]");
       if (form && form.getClientRects().length) emit("form_visible");
+      const cta = document.querySelector<HTMLButtonElement>("[data-public-landing-cta], [data-entry-funnel-cta]");
+      if (cta && !cta.disabled && cta.getAttribute("aria-disabled") !== "true" && cta.getClientRects().length &&
+        getComputedStyle(cta).visibility !== "hidden" && Number(getComputedStyle(cta).opacity) > 0) emit("cta_available");
     };
     document.addEventListener("focusin", event => {
-      if ((event.target as Element)?.matches?.("[data-template7-name]")) { visibleForm(); emit("name_focus"); }
+      if ((event.target as Element)?.matches?.("[data-template7-name], [data-entry-funnel-name]")) { visibleForm(); emit("name_focus"); }
     });
     document.addEventListener("input", event => {
       const target = event.target as HTMLInputElement;
-      if (!target?.matches?.("[data-template7-name]")) return;
+      if (!target?.matches?.("[data-template7-name], [data-entry-funnel-name]")) return;
       if (target.value.length > 0) emit("name_started");
       if (target.value.trim() && target.checkValidity()) emit("name_valid");
     });
     const begin = () => {
       requestAnimationFrame(visibleForm);
       const observer = new MutationObserver(visibleForm);
-      observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["hidden", "class"] });
+      observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["hidden", "class", "disabled", "aria-disabled", "style"] });
       setTimeout(() => observer.disconnect(), 120000);
     };
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", begin, { once: true });
     else begin();
+    if (Number(template) <= 6) document.addEventListener("click", event => {
+      const cta = (event.target as Element)?.closest?.<HTMLButtonElement>("[data-public-landing-cta], [data-entry-funnel-cta]");
+      if (cta && !cta.disabled && cta.getAttribute("aria-disabled") !== "true") emit("cta_clicked");
+    }, { capture: true });
   }
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") { reportVisual(); emit("visibility_hidden"); flush(true); }

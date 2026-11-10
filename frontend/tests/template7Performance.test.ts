@@ -5,6 +5,7 @@ import { optimizeTemplate7Images, template7ImageUrl, template7ImageWarmUrls, tem
 import { imageConfigFromLanding, warmTemplate7Images } from "../lib/landing/warmTemplate7Images.server";
 import { renderPublicLandingHtml, renderClassicTemplate7InlineHtml } from "../components/public-landing/renderPublicLandingHtml";
 import { template7RuntimeAsset } from "../components/public-landing/template7RuntimeAsset";
+import { buildTemplate7FastRuntime } from '../components/public-landing/template7FastRuntime';
 import { TEMPLATE7_CRITICAL_CSS, PUBLIC_LANDING_CSS } from "../components/public-landing/publicLandingCss";
 import type { PublicLandingConfig } from "../components/public-landing/types";
 import { handlePanelRevalidation, type Actor, type RevalidationBackend } from "../lib/revalidation/service.server";
@@ -75,14 +76,16 @@ test("rotating T7 backgrounds change mobile, desktop and fallback URLs together"
   assert.equal(attributes.get("data-image-fallback"), "original-a");
 });
 
-test("templates 1-6 retain image configuration and CSS, with the current attribution runtime", () => {
+test("templates 1-6 optimize public derivatives without mutating saved image configuration", () => {
   for (let template = 1; template <= 6; template++) {
     const config = { ...fixture(), layout: { template, ctaPosition: "bottom" } };
-    assert.equal(optimizeTemplate7Images(config), config);
+    const before = JSON.stringify(config), optimized = optimizeTemplate7Images(config);
+    assert.equal(JSON.stringify(config), before);
+    assert.equal(optimized.content?.logoOriginalUrl, config.content?.logoUrl);
     const html = renderPublicLandingHtml({ slug: "test", config });
     assert.match(html, /src="\/public-assets\/template-entry\/landing-[a-f0-9]{24}\.js" defer/);
     assert.doesNotMatch(html, /landing-runtime-v[3-6]\.js/);
-    assert.match(html, /href="\/public-assets\/landing-styles-v3.css"/);
+    assert.match(html, /href="\/public-assets\/template-entry\/landing-[a-f0-9]{24}\.css"/);
     assert.doesNotMatch(html, /data-template7-critical/);
   }
 });
@@ -90,7 +93,8 @@ test("templates 1-6 retain image configuration and CSS, with the current attribu
 for (const provider of ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_skin"] as const) {
   test(`${provider}: both engines ship a usable inline form and one tracking implementation`, () => {
     const config = fixture(provider);
-    const pages = [renderPublicLandingHtml({ slug: "test", config }) + `<script>${template7RuntimeAsset(7,false).source}</script>`, renderClassicTemplate7InlineHtml({ slug: "test", config }, "function getOrCreateDeviceId(){return crypto.randomUUID();}") + `<script>${template7RuntimeAsset(7,true).source}</script>`];
+    // Inspect generator semantics here; immutable/minified programs are exercised in browsers.
+    const pages = [renderPublicLandingHtml({ slug: "test", config }) + `<script>${buildTemplate7FastRuntime('',config,'',false)}</script>`, renderClassicTemplate7InlineHtml({ slug: "test", config }, "function getOrCreateDeviceId(){return crypto.randomUUID();}") + `<script>${buildTemplate7FastRuntime('',config,'function getOrCreateDeviceId(){return crypto.randomUUID();}',false)}</script>`];
     for (const html of pages) {
       assert.match(html, /data-template7-critical/);
       assert.doesNotMatch(html, /<script[^>]+src="\/public-assets\/landing-runtime/);
@@ -112,7 +116,7 @@ for (const provider of ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_s
     }
     assert.match(pages[0], /fetchWithEntryRecovery\("\/api\/template7\/prepare"/);
     assert.doesNotMatch(pages[0], /device_id: getOrCreateDeviceId/);
-    assert.match(pages[1], /fetchWithEntryRecovery\("\/api\/template7\/start"/);
+    assert.match(pages[1], /fetchWithEntryRecovery\("\/api\/template7\/prepare"/);
     assert.match(pages[1], /device_id: getOrCreateDeviceId/);
     // The observer may name the endpoint; classic must never issue its request.
     assert.doesNotMatch(pages[1], /(?:fetch|__T7_FETCH_JSON__)\(["']\/api\/client-identity\/bootstrap|<code>lb_cid<\/code>/);

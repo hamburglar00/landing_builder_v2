@@ -19,6 +19,35 @@
 - Unificar el teléfono ausente del origen bajo «Sin managers activos», con el tono amarillo existente. Conservar «Inactivo» para la desactivación manual. La plataforma de WhatsApp se conserva en el snapshot visual al importar/sincronizar; si el inventario anterior no la incluye, mostrar N.A. hasta su próxima actualización, sin inferirla.
 - Alcance exclusivo de la UI y del inventario visual de Builder. No requiere migraciones ni cambios en Atrio, NexoBet, gateways o Worker. La migración previa de Atrio correspondía al reinicio diario ya solicitado para ambos canales. El usuario solicita commit y push; producción sigue main y se comprueba por separado. [Validación del lote](validation/editor-redirection-ui-20261109.json).
 
+### Lector de comprobantes y avisos de crédito de Atrio (09/11/2026)
+
+- El usuario autoriza conservar OpenAI, gobernado por un switch global de Super Admin. Se usa sólo con clave y switch activo; apagado, sin configurar o ante fallo, consumir el lector existente de API2. Un resultado válido que descarta el archivo como comprobante no dispara otra lectura. Mantener el modal MKT, su revisión y CTA manual; la lectura no acredita.
+- Avisar al Super Admin por push y su Telegram cuando OpenAI rechace por crédito agotado. No confundir un 429 temporal con falta de crédito. Habilitar suscripciones y vinculación propias de ese rol, agrupar avisos por hora y canal y reintentar fallos de transporte con una cola privada.
+- API2: adaptador autenticado de lectura exclusivamente, con asesor/manager/gerencia exactos y archivo recibido por multipart. Reutiliza `FileProcessorHelper.processFileFromUrl` y su configuración Bedrock sin modificar OCR, clasificación, validación o finanzas del programador. Trabajo local en la rama ya autorizada `feature/atrio-integration`; publicación por el programador. Aplicar la migración de Atrio antes de publicar su web. Conservar OpenAI activo inicialmente para mantener el servicio hasta que se publique el adaptador de API2.
+- Atrio atiende a los cuatro gateways con una implementación única, sin cambios de SDK o Worker. Builder conserva su recorrido. NexoBet se revisa pero conserva su adaptador independiente de `integration-events.ts`, su autenticación/superadmin propios (`nx_settings`) y el módulo 1.6.1 fijado; su superadmin no accede al panel de integraciones de Atrio. Este lote administra proveedores y avisos globales de Atrio, sin extenderlos al producto ni a los pagos de implementación de NexoBet.
+
+### Edición del acceso Cargar (09/11/2026)
+
+- El usuario pide quitar el lápiz del chip Cargar porque abre una edición sin campos útiles. Conservar «Administrar billeteras» como única acción de edición del chip, sus estados y los interruptores de las billeteras. Los demás chips conservan su edición.
+- Cambio compartido: fuente canónica en Atrio y copia revisada en NexoBet, sin cambios de envío de billeteras, operaciones financieras ni SDK/gateways.
+
+### Tamaño visible del favicon de Atrio (09/11/2026)
+
+- El usuario pide igualar el tamaño visible del favicon de Atrio al de LandingBuilder y NexoBet. Ampliar 1,5 veces el símbolo canónico dentro del lienzo del favicon, conservando sus proporciones y colores; generar SVG y PNG de 16/32/48 px con rutas nuevas para renovar la caché del navegador.
+- Cambio exclusivo de identidad de Atrio en las pestañas. Conservar el logo dentro de la app, iconos de instalación/PWA y las identidades de Builder, NexoBet y los cuatro gateways. Sin cambios de SDK, servicios ni finanzas.
+
+### Hora y recibos de las invitaciones (09/11/2026)
+
+- El usuario pide alinear hora y doble check a la derecha dentro de las tarjetas de invitación, igual que en las burbujas. Aplicar a perfil, instalación, push y promociones, conservando la alineación del título/contenido y la dirección de envío/recepción de la tarjeta.
+- Fuente canónica en Atrio; sincronizar la copia compartida de NexoBet y revisar ambos temas y móvil/escritorio. Los cuatro gateways reciben el widget único de Atrio; conservar SDK y adaptadores, incluido el Worker de Ganamos+. Sólo presentación: sin cambiar estados de entrega/lectura, acciones, permisos o finanzas. La hora de perfil del cliente ya estaba a la derecha y se conserva.
+
+### Autoridad financiera exclusiva del programador (09/11/2026)
+
+- El usuario establece que manda el código del programador en lo financiero: flujo de cargas/retiros, lectura/validación de comprobantes, OCR, saldos, wallets, HG, conciliación, duplicados y reintentos. Los agentes no modifican ni reimplementan esos comportamientos.
+- Atrio, LandingBuilder, Panel3 y NexoBet sólo consumen los endpoints/servicios existentes y presentan su resultado, sin trasladar decisiones financieras a lógica propia de los adaptadores o la UI. Los posibles defectos o incompatibilidades se documentan con evidencia para el programador.
+- El ajuste posterior al pull de API2 fue exclusivamente un fixture: ejecutar los nuevos métodos reales del servicio de retiros, manteniendo las mismas expectativas de débito, reserva y no repetición de transferencias. No se cambió el servicio financiero del programador. Las pruebas se adaptan al contrato real; nunca se cambia el motor ni se debilitan controles para obtener un resultado verde.
+- Esta regla rige los próximos trabajos de integración y la revisión de los lotes pendientes; no autoriza revertir cambios preexistentes ni publicar o ejecutar operaciones financieras.
+
 ### Bots de Builder: rediseño visual sin pérdida funcional (09/11/2026)
 
 - El usuario aporta maqueta y especificación para reorganizar Bots con encabezado compacto, filtros, menú de acciones y una tabla común. La referencia es estética; la implementación actual determina todas las funciones que deben conservarse, incluidas las omitidas por la maqueta. Preparar el resultado para revisión visual del usuario.
@@ -32,6 +61,29 @@
 - Colocar la tarjeta «Canal» antes de Plantilla, con WhatsApp y Atrio como selector y sus logos originales. WhatsApp muestra plantillas 1–6; Atrio muestra 7–9. Quitar la elección de canal de Tracking; mantener allí Pixel, eventos y país. Plataforma/skin se configuran junto al canal, conservando sus valores y los borradores por plantilla al cambiar de canal.
 - Un único permiso administrado `client_module_permissions.show_atrio` habilita Atrio y todas sus plantillas. Quitar controles individuales de plantillas 7/9 y 8. Aplicar la misma regla en lectura del editor, comprobación al guardar y RLS de ambos JSON; los indicadores históricos por plantilla dejan de conceder acceso. No conceder Atrio a partir de esos indicadores ni eliminar/publicar de nuevo landings existentes al migrar. Mantener propiedad, suscripción y excepción de administrador.
 - Cambio propio del editor/permisos de Builder. NexoBet conserva su canal propio, sin copiar el selector ni estos permisos; revisar el módulo de marketing fijado. Renderers públicos, Template 7/9 y los cuatro gateways conservan sus contratos y se verifican por regresión. Incluido en la publicación integral autorizada por el usuario, con migración y comprobaciones de permisos.
+
+### Sincronización por cambios y confirmación de billetera (09/11/2026, local)
+
+- El usuario pidió implementar avisos por alta/edición/baja con reintentos y respaldo. Sustituye la recomendación anterior de conservar el cron. API2 registra el pendiente en la misma transacción mediante triggers sobre las fuentes del inventario; agrupa por administración/proveedor y conserva revisiones concurrentes. El worker consulta sólo la cola cada cinco segundos; el inventario estable se comprueba cada quince minutos, sin POST si no cambió.
+- Migración aditiva exclusiva de Extensiones, sin cambios de schema o motores financieros. API2 sigue local en `feature/atrio-integration`, sin push/despliegue ni migración productiva. Preparar migración y permisos de triggers antes del worker. Preservar cambios Nexo y de marca/estructura de Panel3.
+- COMENZAR YA ya selecciona PBAdmin Wallet para Full Carga. Agregar cuarta etapa «Tu billetera», espera «Conectando billetera…» y confirmación con titular legal, CBU/CVU y alias reales del receptor. Es informativo: no crear billeteras, reservar cuentas ni cambiar rotación, saldos o movimientos. Sin titular legal, informarlo; no usar el alias como titular. MKT conserva tres etapas y su billetera propia en Atrio.
+- Complementar el diagnóstico entre servidores con una regresión de navegador sobre los componentes completos de widget e inbox, los cuatro gateways, móvil/escritorio y Chromium/WebKit. HTTP/Realtime simulados; la comprobación productiva se hace después de publicar con identidades técnicas acordadas. No certificar servicios productivos ni fondos con una prueba local.
+- Importar y el sync automático alimentan el mismo inventario de Builder. `sync-phones` mantiene el pool de teléfonos; `landing-phone` conserva filtros de WhatsApp activo, captación y reglas de reparto. No se modifica ese runtime ni se promete que un cambio de inventario sustituya inmediatamente el refresco de teléfonos.
+
+### Diagnóstico automático del alta PBAdmin → Atrio (09/11/2026)
+
+- El usuario pidió implementar la comprobación final de vínculo, medio de ingreso e intercambio técnico bidireccional. Ejecutarla al finalizar COMENZAR YA y en sus reintentos, sin agregar datos al formulario ni ejecutar operaciones monetarias.
+- Sólo ofrecer el enlace del gateway cuando estén confirmados el bot/asesor/gerencia exactos, un medio de ingreso configurado y la respuesta técnica persistida. Un HTTP 200 o un contrato antiguo incompleto no alcanzan. MKT sin billetera queda pendiente con acceso a Atrio; después se verifica el mismo bot.
+- Registrar el intercambio técnico en una tabla privada, sin crear clientes, conversaciones operativas, notificaciones, tracking ni estadísticas. La prueba acredita configuración y transporte entre servidores, no recepción de dinero, navegador, instalación o push.
+- Alcance: Atrio como fuente de diagnóstico, API2 y Panel3 en local sobre la rama ya autorizada. Revisión para los cuatro proveedores con una implementación única. NexoBet conserva su activación propia y el retorno diferido de su adaptador; este lote no lo incorpora al onboarding de Extensiones. Preservar los cambios paralelos de marca y del proveedor compartido de COMENZAR YA.
+- Sobre el cron, el usuario consultó eficiencia: recomendar avisos por edición con cola persistente y reconciliación de respaldo menos frecuente. No cambiar aquí el cron ni el motor de sincronización. Builder conserva separados el inventario de bots y la disponibilidad de teléfonos WhatsApp.
+
+### Ingreso PBAdmin y billetera inicial de MKT (09/11/2026)
+
+- PBAdmin es la entrada al conjunto Atrio/Builder mediante Extensiones: conservar vínculos, UUID, tokens y sincronización de bots detrás del recorrido del cliente. Auditar el cron de reconciliación y distinguirlo del cron de teléfonos de WhatsApp; no prometer actualización instantánea por cada edición.
+- Atrio debe ofrecer, al ingresar, el formulario existente de Configuración → Cargas cuando el asesor tiene un bot MKT activo y ninguna billetera activa. Cubrir también el administrador PBAdmin con asesor personal, verificando el actor en servidor. Reutilizar formulario/validación; no pedir billetera propia a Full Carga. Posponer sólo descarta el aviso en la visita actual.
+- El usuario reemplaza la prueba Multi Skin con un jugador aportado por el cliente: generar/reutilizar una cuenta técnica de prueba en servidor, sin pedir sus credenciales al cliente, sin acreditaciones, retiros ni jugadores reales durante las verificaciones. API2/Panel3 quedan locales para el programador; respetar la rama autorizada y los cambios preexistentes.
+- Alcance: modal de onboarding exclusivo de Atrio, ligado a Extensiones de PBAdmin. NexoBet conserva su alta propia Full Carga; revisar/sincronizar únicamente el formulario de billetera compartido sin incorporar ese modal. Gateways conservan su widget y flujo de ingreso. Estado de esta entrega: implementación local, sin publicación.
 
 ### Identidad de LandingBuilder (09/11/2026)
 
@@ -1376,3 +1428,14 @@ Se retiran el endpoint privado de exportación y su clave dedicada. El autologin
 - Sólo canal Atrio: un asesor usa bots de la administración de su usuario PBAdmin y una combinación única de asesor/plataforma/tipo. Validar nuevas asignaciones y cambios de identidad de manera transaccional; WhatsApp está exento. Conservar la unicidad previa por gerencia operativa, bots pausados y cuentas existentes, sin reasignaciones ni borrados automáticos. Una vinculación manual nueva requiere demostrar la administración mediante Extensiones; NexoBet usa su vínculo de cuenta propio. Builder conserva su inventario de múltiples administraciones.
 - NexoBet: carga sin tarjeta, logo cuatro veces mayor y texto debajo, conservando animación, movimiento reducido y ajuste al ancho/alto móvil.
 - Panel3: selector de suscripción ordenado alfabéticamente por el nombre mostrado, lupa adyacente y búsqueda por nombre/correo con los mismos permisos. Sidebar «Descargas» pasa a «Premios», conservando ruta y funcionalidad.
+
+### Optimización integral autorizada (09/11/2026)
+
+- La autorización posterior mantiene API2 y Panel3 **sólo en local**: prevalece sobre la autorización de push del lote anterior. No publicar sus ramas ni desplegarlos. No modificar algoritmos de comprobantes, cargas, retiros, saldos o suscripciones.
+- Checkpoint previo verificado en `C:/Users/Leo/Desktop/V2/checkpoints/2026-11-09_222409_pre-optimizacion`: diez repositorios, veinte worktrees, bundles y snapshots de trabajo/configuración privada. No incluye una copia de la base productiva; cualquier migración remota requiere respaldo y verificación propios.
+- Optimizar ambas entregas (clásico y constructor) para las nueve plantillas. Compartir renderer, imágenes, recursos versionados y medición cuando corresponde; conservar el adaptador de identidad/endpoints del clásico. Toda mejora común debe alcanzar las cuatro familias de gateways, incluido el Worker de Ganamos+.
+- Meta Pixel y CAPI son condición de aceptación: no retrasar Pixel, retirar eventos ni perder atribución/deduplicación. Conservar `fbclid`, `fbc`, `fbp`, UTM y `event_id`; no registrar credenciales, nombres ni datos bancarios en diagnósticos.
+- Evitar consultas obligatorias de configuración antes de la caché HTML. Versionar/minificar el programa final y estilos, conservar recursos antiguos para HTML ya cacheado y originales de imágenes. No usar precarga de módulos para scripts que no son ESM.
+- Chat progresivo: presentar el saludo y el chat utilizable antes de los datos bancarios; incorporar luego la burbuja de carga. Conservar recuperación, persistencia e idempotencia; no crear jugadores antes del nombre y CTA finales. No alterar la asignación de billetera.
+- Medir por separado pantalla, CTA, cuenta, ingreso, chat utilizable y billetera lista, con motor, versión, entorno, origen de muestra y correlación de intento. No comparar pruebas sintéticas con tráfico desconocido ni inventar procedencia histórica.
+- Pruebas de regresión antes y después, en entornos y fixtures aislados. Producción con una rama estable `main` por repositorio y ramas temporales; no borrar trabajo pendiente ni mezclar cambios ajenos. Los experimentos de anticipación y región se habilitan sólo con evidencia de paridad y medición total.

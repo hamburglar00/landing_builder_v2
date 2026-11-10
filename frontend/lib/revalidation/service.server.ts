@@ -94,7 +94,7 @@ export async function handlePanelRevalidation(request: Request, dependencies: De
 
 export async function handleConstructorRevalidation(request: Request, dependencies: {
   environment: RevalidationEnvironment; secret: () => Promise<string>;
-  invalidate: (name: string) => void; warm: (name: string) => Promise<boolean>;
+  invalidate: (name: string) => void;
 }): Promise<Response> {
   try {
     if (request.method !== "POST" || new URL(request.url).search) return denied(400, "invalid_request");
@@ -110,7 +110,6 @@ export async function handleConstructorRevalidation(request: Request, dependenci
     const expected = Buffer.from(secret), supplied = Buffer.from(body.secret);
     if (expected.length !== supplied.length || !timingSafeEqual(expected, supplied)) return denied(401, "invalid_secret");
     dependencies.invalidate(body.name);
-    if (!await dependencies.warm(body.name)) return denied(502, "warm_failed");
-    return safeJson({ ok: true, revalidated: true, warmed: { ok: true } });
+    return safeJson({ ok: true, revalidated: true });
   } catch { return denied(503, "revalidation_unavailable"); }
 }

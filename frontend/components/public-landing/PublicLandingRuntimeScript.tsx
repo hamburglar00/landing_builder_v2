@@ -11,6 +11,7 @@ import { META_EBP_COLLECTOR_URL } from "@/lib/meta/ebpAssetManifest";
 type Props = {
   slug: string;
   config: PublicLandingConfig;
+  engine?: 'classic' | 'constructor';
 };
 
 const SOCIAL_PROOF_ITEMS = [
@@ -68,9 +69,11 @@ function escapeScriptJson(value: unknown) {
   });
 }
 
-export function buildRuntimeConfig({ slug, config }: Props) {
+export function buildRuntimeConfig({ slug, config, engine = 'constructor' }: Props) {
   const runtimeConfig = {
     slug,
+    engine,
+    automaticLandingSelection: engine === 'classic',
     landingId: config.id,
     landingName: config.name,
     pixelId: String(config.tracking?.pixelId || "").trim(),
@@ -349,7 +352,9 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
         ]);
         var externalId = firstNonEmpty([
           meta.externalId || "",
-          getLocalStorageValue("external_id")
+          getLocalStorageValue("external_id"),
+          cfg.engine === "classic" ? getParam("external_id") : "",
+          cfg.engine === "classic" ? getParam("eid") : ""
         ]) || getOrCreateExternalId();
         var fn = firstNonEmpty([getParam("fn"), getLocalStorageValue("fn"), meta.userFn || ""]);
         var ln = firstNonEmpty([getParam("ln"), getLocalStorageValue("ln"), meta.userLn || ""]);
@@ -817,7 +822,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
       }
 
       function contactDedupKey(slug, externalId) {
-        return "contact_sent:" + slug + ":" + externalId;
+        return (cfg.engine === "classic" ? cfg.storageNamespace + ":" : "") + "contact_sent:" + slug + ":" + externalId;
       }
 
       function wasContactRecentlySent(slug, externalId) {
@@ -847,7 +852,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
       }
 
       function journeyStartDedupKey(slug, externalId) {
-        return "journey_start_sent:" + slug + ":" + externalId;
+        return (cfg.engine === "classic" ? cfg.storageNamespace + ":" : "") + "journey_start_sent:" + slug + ":" + externalId;
       }
 
       function wasJourneyStartSent(slug, externalId) {
@@ -1000,6 +1005,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
       }
 
       function setNoPhoneState(button) {
+        try { window.__entryFunnel?.emit("entry_error", { error_stage: "destination", error_code: "destination_unavailable" }); } catch (e) {}
         button.disabled = true;
         setButtonText(button, getDisabledButtonText(button));
         if (noPhoneTimer) window.clearTimeout(noPhoneTimer);
@@ -1510,6 +1516,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
                   .catch(function () { failTemplate7(button); });
               } else {
                 window.setTimeout(function () {
+                  try { window.__entryFunnel?.emit("outbound_requested"); window.__entryFunnel?.flush(true); } catch (e) {}
                   window.location.assign(redirectUrl);
                 }, 180);
               }
@@ -1517,6 +1524,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
             .catch(function () {
               if (cfg.template === 7) failTemplate7(button);
               else {
+                try { window.__entryFunnel?.emit("entry_error", { error_stage: "destination", error_code: "network_error" }); } catch (e) {}
                 clickLocked = false;
                 button.disabled = false;
                 setButtonText(button, getRestButtonText(button));

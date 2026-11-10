@@ -2,7 +2,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 const root = fileURLToPath(new URL("../", import.meta.url));
-for (const relative of ["lib/landing/entryFunnel.ts", "lib/landing/entryFunnel.server.ts", "app/api/entry-funnel/route.ts"]) {
+for (const relative of ["lib/landing/entryFunnel.ts", "lib/landing/entryFunnel.server.ts", "lib/landing/entryFunnel.client.ts", "lib/landing/entryFunnel.bootstrap.ts", "app/api/entry-funnel/route.ts"]) {
   const source = await readFile(path.join(root, "frontend", relative), "utf8");
   const target = path.resolve(root, "../landing-prueba-1", relative);
   if (process.argv.includes("--check")) {

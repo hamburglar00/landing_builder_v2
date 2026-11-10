@@ -51,6 +51,30 @@ try {
   for(const [n,phase] of ['landing_dom','landing_load','landing_fcp','landing_lcp','landing_blocked','landing_runtime','gateway_dom','preparation_runtime','account_request','identity_request','chat_session_request','chat_dns','chat_ttfb','chat_hydration','chat_fcp','chat_visible_to_usable'].entries()) {
     assert.equal(await record([{...measured,id:id(100+n),phase}]),true,phase);checks++;
   }
-  await db.exec(await readFile(new URL("./entry-performance-report.sql", import.meta.url), "utf8")); checks++;
+  await db.exec(await readFile(new URL("../supabase/migrations/20261110014924_entry_funnel_all_templates_provenance.sql", import.meta.url), "utf8"));
+  assert.deepEqual((await db.query("select engine,release,environment,source,entry_strategy from entry_funnel_events where event_id=$1",[original.id])).rows[0],{engine:null,release:null,environment:null,source:null,entry_strategy:null}); checks++;
+  let sequence = 400;
+  for (let template=1;template<=9;template++) {
+    const landing = id(200+template);
+    await db.query("insert into landings values($1,$2,$3)",[landing,id(2),{template:'template'+template}]);
+    for(const engine of ['classic','constructor']) {
+      const observed = {...original,id:id(sequence++),name:'cta_available',engine,release:'a'.repeat(40),environment:'production',source:'unknown'};
+      assert.equal(await record([observed],landing,template),true);checks++;
+      assert.equal(await record([{...observed,id:id(sequence++),name:'outbound_requested',source:'synthetic'}],landing,template),true);checks++;
+    }
+  }
+  for(const change of [{engine:'foreign'},{engine:['classic']},{release:'private-url'},{release:'a'.repeat(41)},{environment:'private-environment'},{source:'real'},{source:null},{token:'private'},{entry_strategy:'private'},{entry_strategy:null}]) {
+    assert.equal(await record([{...original,id:id(sequence++),...change}]),false);checks++;
+  }
+  const provenance = (await db.query("select engine,release,environment,source from entry_funnel_events where engine='constructor' limit 1")).rows[0];
+  assert.deepEqual(provenance,{engine:'constructor',release:'a'.repeat(40),environment:'production',source:'unknown'});checks++;
+  for(const entry_strategy of ['sequential','combined_login']) {
+    const attempt_id=id(sequence++);
+    assert.equal(await record([{...original,id:id(sequence++),attempt_id,attempt_number:1},{...original,id:id(sequence++),attempt_id,attempt_number:1,name:'chat_usable',elapsed_ms:1500,entry_strategy}]),true);checks++;
+  }
+  const reports=await db.exec(await readFile(new URL("./entry-performance-report.sql", import.meta.url), "utf8")); checks++;
+  const cohorts=reports[2].rows.filter(row=>['sequential','combined_login'].includes(row.entry_strategy));
+  assert.equal(cohorts.length,2);checks++;
+  assert.ok(cohorts.every(row=>Number(row.complete_timings)===1&&row.click_to_usable_p50_ms===1400),'late strategy selection must not split the initial CTA from chat usable');checks++;
   console.log(`Entry attempt PostgreSQL: ${checks} checks passed (old payloads, timings, attempts, T9, dedup, limits, tenant and role isolation).`);
 } finally { await db.close(); }

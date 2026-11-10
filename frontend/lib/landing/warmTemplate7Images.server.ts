@@ -1,8 +1,5 @@
 import "server-only";
 import { template7ImageWarmUrls } from "./template7Images";
-import { normalizeTemplate8Cover } from "./template8";
-import { buildOptimizedImageUrl } from "./imageUrl";
-import type { LandingTemplate8CoverConfig } from "./types";
 
 type Row = { landing_config?: unknown; config?: unknown };
 const record = (value: unknown): Record<string, unknown> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
@@ -11,13 +8,18 @@ export function imageConfigFromLanding(row: Row) {
   const saved = record(row.landing_config);
   const raw = record(row.config);
   const active = { ...raw, ...record(record(raw.templateConfigs)[String(raw.template || "")]) };
-  const template = active.template === "template7" ? 7 : Number(record(saved.layout).template || 0);
+  const template = Number(String(active.template || '').replace('template', '')) || Number(record(saved.layout).template || 0);
   const content = record(saved.content);
   const background = record(saved.background);
   const candidates = Array.isArray(background.images) ? background.images : Array.isArray(active.backgroundImages) ? active.backgroundImages : [];
   return {
     layout: { template },
-    content: { logoUrl: String(content.logoUrl || active.logoUrl || "") },
+    content: { logoUrl: String(content.logoUrl || active.logoUrl || ""),
+      template4: { ...record(active.template4Chat), ...record(content.template4) },
+      template5: { ...record(active.template5Live), ...record(content.template5) },
+      template6: { ...record(active.template6Cover), ...record(content.template6) },
+      template8: { ...record(active.template8Cover), ...record(content.template8) },
+    },
     background: { images: candidates.filter((item): item is string => typeof item === "string") },
   };
 }
@@ -26,14 +28,7 @@ export function imageConfigFromLanding(row: Row) {
 export async function warmTemplate7Images(row: Row, storageOrigin: string, fetcher: typeof fetch = fetch) {
   let origin: URL;
   try { origin = new URL(storageOrigin); } catch { return { total: 0, ready: 0 }; }
-  const saved = record(row.landing_config), raw = record(row.config);
-  const isTemplate8 = raw.template === "template8" || record(saved.layout).template === 8;
-  const cover = normalizeTemplate8Cover((record(record(saved.content).template8).cardCount
-    ? record(record(saved.content).template8) : record(raw.template8Cover)) as Partial<LandingTemplate8CoverConfig>);
-  const candidates = isTemplate8 ? [
-    ...(cover.backgroundImageUrl ? [buildOptimizedImageUrl(cover.backgroundImageUrl, { width: 960, quality: 65 })] : []),
-    ...cover.cards.slice(0, cover.cardCount).filter(card => card.imageUrl).map(card => buildOptimizedImageUrl(card.imageUrl, { width: 480, quality: 65 })),
-  ] : template7ImageWarmUrls(imageConfigFromLanding(row));
+  const candidates = template7ImageWarmUrls(imageConfigFromLanding(row));
   const urls = [...new Set(candidates)].filter(value => {
     try { const url = new URL(value); return url.origin === origin.origin && url.pathname.startsWith("/storage/v1/render/image/public/landing-images/"); }
     catch { return false; }

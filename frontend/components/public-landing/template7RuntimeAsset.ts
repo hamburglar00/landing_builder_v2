@@ -1,27 +1,15 @@
 import { buildTemplate7RuntimeConfig } from "./template7FastRuntime";
 import type { PublicLandingConfig } from "./types";
-import generated from "./template7RuntimeAssets.generated.json";
+import generated from "./template7RuntimeNames.generated.json";
 
 
 /** Only four config-free programs are cacheable. No tenant, pixel, session,
  * attribution, credentials, or environment values become part of an asset. */
 export function template7RuntimeAsset(template: 7 | 8, classic: boolean) {
   const variant = `t${template}-${classic ? "classic" : "builder"}`;
-  const asset=(generated as Record<string,{name:string;source:string}>)[variant];
+  const asset=(generated as Record<string,{name:string}>)[variant];
   if(!asset)throw new Error("Run scripts/build-template7-runtime-assets.mjs before rendering Template 7/8");
   return asset;
-}
-
-export function template7RuntimeAssetResponse(name: string): Response {
-  const match = /^t([78])-(classic|builder)-[a-f0-9]{24}\.js$/.exec(name);
-  if (!match) return new Response("Not found", { status: 404, headers: { "Cache-Control": "no-store" } });
-  const asset = template7RuntimeAsset(Number(match[1]) as 7 | 8, match[2] === "classic");
-  if (asset.name !== name) return new Response("Not found", { status: 404, headers: { "Cache-Control": "no-store" } });
-  return new Response(asset.source, { headers: {
-    "Content-Type": "text/javascript; charset=utf-8",
-    "Cache-Control": "public, max-age=31536000, immutable",
-    "X-Content-Type-Options": "nosniff",
-  } });
 }
 
 /** The form is already HTML. Handle early intent and queue one CTA while this
@@ -62,14 +50,26 @@ function t7AssetFailure(){
 window.__T7_ASSET_FAILED__=t7AssetFailure;
 t7AssetTimer=setTimeout(t7AssetFailure,10000);
 window.__ENTRY_FUNNEL_EARLY__={started_at:Math.round(performance.timeOrigin||Date.now()),events:[]};
+function t7Provenance(value){
+  value=value||{};var result={};
+  if(typeof value.engine==='string'&&['classic','constructor','nexobet'].includes(value.engine))result.engine=value.engine;
+  if(typeof value.release==='string'&&/^[0-9a-f]{7,40}$/.test(value.release))result.release=value.release;
+  if(typeof value.environment==='string'&&['production','preview','development','unknown'].includes(value.environment))result.environment=value.environment;
+  if(typeof value.source==='string'&&['synthetic','unknown'].includes(value.source))result.source=value.source;
+  return result;
+}
 try{
   var t7Cfg=window.__PUBLIC_LANDING_RUNTIME_CONFIG__||{};
+  var t7Metadata=t7Provenance(window.__ENTRY_FUNNEL_METADATA__);
+  t7Metadata.environment=t7Metadata.environment||'unknown';
+  t7Metadata.source=navigator.webdriver===true?'synthetic':t7Metadata.source||'unknown';
   var t7Uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   if(t7Uuid.test(String(t7Cfg.landingId))&&crypto.randomUUID){
     var t7Key='entry-funnel:v1:'+t7Cfg.landingId,t7Template=t7Cfg.entryTemplate===9?9:t7Cfg.template8?8:7,t7Flow=null,t7Now=Date.now();
     try{t7Flow=JSON.parse(sessionStorage.getItem(t7Key)||'null')}catch(e){}
-    if(!t7Flow||!t7Uuid.test(String(t7Flow.flow_id))||t7Flow.landing_id!==t7Cfg.landingId||t7Flow.template!==t7Template||t7Flow.telemetry_origin!==location.origin||!Number.isSafeInteger(t7Flow.started_at)||t7Flow.started_at>t7Now||t7Flow.started_at<t7Now-86400000)
+    if(!t7Flow||!t7Uuid.test(String(t7Flow.flow_id))||t7Flow.landing_id!==t7Cfg.landingId||t7Flow.template!==t7Template||t7Flow.telemetry_origin!==location.origin||!Number.isSafeInteger(t7Flow.started_at)||t7Flow.started_at>t7Now||t7Flow.started_at<t7Now-86400000||(t7Flow.engine&&t7Metadata.engine&&t7Flow.engine!==t7Metadata.engine)||(t7Flow.release&&t7Metadata.release&&t7Flow.release!==t7Metadata.release))
       t7Flow={flow_id:crypto.randomUUID(),landing_id:t7Cfg.landingId,template:t7Template,telemetry_origin:location.origin,started_at:window.__ENTRY_FUNNEL_EARLY__.started_at};
+    Object.assign(t7Flow,t7Metadata);
     window.__ENTRY_FUNNEL_EARLY__.context=t7Flow;window.__ENTRY_FUNNEL_EARLY__.started_at=t7Flow.started_at;
     try{sessionStorage.setItem(t7Key,JSON.stringify(t7Flow))}catch(e){}
   }
@@ -84,7 +84,7 @@ function t7EarlyFlush(){
   try{
     var early=window.__ENTRY_FUNNEL_EARLY__,flow=early&&early.context;
     if(!flow||!early.events.length||!navigator.sendBeacon)return;
-    var events=early.events.filter(function(event){return event.id}).map(function(event){return {id:event.id,name:event.name,elapsed_ms:Math.max(0,Math.min(86400000,event.at-flow.started_at)),...(event.error_code?{error_code:event.error_code}:{})}});
+    var events=early.events.filter(function(event){return event.id}).map(function(event){return Object.assign(t7Provenance(flow),{id:event.id,name:event.name,elapsed_ms:Math.max(0,Math.min(86400000,event.at-flow.started_at)),...(event.error_code?{error_code:event.error_code}:{})})});
     navigator.sendBeacon('/api/entry-funnel',new Blob([JSON.stringify({landing_id:flow.landing_id,flow_id:flow.flow_id,template:flow.template,events:events})],{type:'text/plain'}));
   }catch(e){}
 }

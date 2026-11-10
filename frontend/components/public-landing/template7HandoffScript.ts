@@ -42,6 +42,9 @@ export function buildTemplate7HandoffRuntimeScript(): string {
     function navigateTemplate7Handoff(raw) {
       var url = template7CheckedHandoff(raw);
       try { window.localStorage.setItem("template7:gateway-visited:" + url.origin, String(Date.now())); } catch(e) {}
+      // Some embedded browsers omit pagehide on a fast handoff. Queue diagnostics
+      // before leaving without waiting for their delivery or delaying navigation.
+      try { if (window.__entryFunnel) window.__entryFunnel.flush(true); } catch(e) {}
       // A Meta in-app browser can complete this same first-party navigation.
       // User-agent detection alone is not evidence of a failed entry.
       try { window.location.assign(url.href); return; }

@@ -3,11 +3,12 @@ import * as localPlaywright from 'playwright';
 import {createRequire} from 'node:module';
 import path from 'node:path';
 import { renderPublicLandingHtml, renderClassicTemplate7InlineHtml } from '../components/public-landing/renderPublicLandingHtml';
-import { template7RuntimeAssetResponse } from '../components/public-landing/template7RuntimeAsset';
+import { template7RuntimeAssetResponse } from '../components/public-landing/template7RuntimeResponse';
 import type { PublicLandingConfig } from '../components/public-landing/types';
 
 Object.assign(process.env,{NEXT_PUBLIC_SUPABASE_URL:'https://events.invalid',NEXT_PUBLIC_SUPABASE_ANON_KEY:'public-fixture',INTERNAL_CHAT_ORIGIN:'https://chat.invalid',REY_GATEWAY_ORIGIN:'https://rey.invalid',GANAMOS_NET_GATEWAY_ORIGIN:'https://net.invalid',MULTI_SKIN_GATEWAY_ORIGIN:'https://skins.invalid',GANAMOS_PLUS_GATEWAY_ORIGIN:'https://skins.invalid',TEMPLATE7_LANDING_ORIGINS:'https://classic.entry.invalid,https://builder.entry.invalid'});
 const id=(n:number)=>`a0000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+process.env.ENTRY_FUNNEL_RELEASE='a'.repeat(40);process.env.VERCEL_ENV='preview';delete process.env.VERCEL_GIT_COMMIT_SHA;
 const advisor={atrioClientId:id(2),atrioId:id(3),atrioSlug:'advisor',preparationReady:true};
 const fixture=(template:7|8):PublicLandingConfig=>({id:id(1),schemaVersion:1,updatedAt:'',name:'Fixture',comment:'',layout:{template,ctaPosition:'bottom'},tracking:{pixelId:'123456789',postUrl:'https://events.invalid/conversions',landingTag:'TEST',target_provider:'ganamos_net'},content:{logoUrl:'',title:['Crear cuenta'],subtitle:['Nombre'],ctaText:'CREAR USUARIO',template8:{cardCount:2,backgroundImageUrl:'',headerText:'Elegí',footerText:'',cards:[{imageUrl:'',text:'Plus',ctaText:'Elegir Plus',targetProvider:'multi_skin',multiSkinCode:'ganamos_plus'},{imageUrl:'',text:'Bet30',ctaText:'Elegir Bet30',targetProvider:'multi_skin',multiSkinCode:'bet30'}]}}});
 async function main(){
@@ -96,6 +97,7 @@ for(const [browserName,type,ua] of [['Chromium',chromium,'Mozilla/5.0 (Linux; An
         await beacon;
         const body=JSON.parse(serialized);
         assert.ok(body.events.some((event:{name:string})=>event.name==='name_started'));
+        assert.ok(body.events.every((event:{engine:string;release:string;environment:string;source:string})=>event.engine===(classic?'classic':'constructor')&&event.release==='a'.repeat(40)&&event.environment==='preview'&&['synthetic','unknown'].includes(event.source)),'early abandonment keeps the same release cohort before the asset arrives');
         assert.equal(JSON.stringify(body).includes('Nuevo'),false,'unfinished input is not logged');
         assert.equal(requests.filter(r=>r.path==='/api/template7/start'||r.path==='/api/template7/prepare').length,0);
         releaseAsset();await page.waitForLoadState('domcontentloaded');

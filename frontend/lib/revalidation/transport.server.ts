@@ -40,14 +40,18 @@ async function requestFixedUrl(url: URL, environment: RevalidationEnvironment, m
     const request = url.protocol === "https:" ? httpsRequest : httpRequest;
     const req = request(url, {
       method, agent: false, lookup: pinned, signal: AbortSignal.timeout(timeout),
-      headers: body === undefined ? { "Cache-Control": "no-cache, no-store" } : {
+      headers: body === undefined ? {} : {
         "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body),
       },
     }, res => {
       const status = res.statusCode || 0;
       // Node HTTP never follows redirects; reject every 3xx explicitly.
       if (status >= 300 && status < 400) { res.destroy(); reject(new Error("upstream_failed")); return; }
-      if (method === "GET") { res.resume(); resolve({ status, body: "" }); return; }
+      if (method === "GET") {
+        res.on('error', () => reject(new Error('upstream_failed')));
+        res.on('end', () => resolve({ status, body: '' }));
+        res.resume(); return;
+      }
       const chunks: Buffer[] = [];
       let size = 0;
       res.on("data", (chunk: Buffer) => {
@@ -75,18 +79,26 @@ export async function postRevalidation(destination: Destination, name: string, s
   if (destination.motor === "classic") {
     if (value.revalidated !== true || typeof value.warmedConfig !== "boolean"
       || typeof value.warmedPage !== "boolean" || typeof value.warmedPageRetry !== "boolean") throw new Error("upstream_failed");
-    return { ok: true, revalidated: true, warmed: { config: value.warmedConfig, page: value.warmedPage, retried: value.warmedPageRetry } };
+  } else if (value.ok !== true || value.revalidated !== true) {
+    throw new Error('upstream_failed');
   }
-  if (value.ok !== true) throw new Error("upstream_failed");
-  return { ok: true, revalidated: true };
+  // The invalidating request must finish before warming. Warming inside its
+  // handler creates a page that Next invalidates again at response completion.
+  let page=await warmPublishedLanding(destination, name), retried=false;
+  if(!page){retried=true;page=await warmPublishedLanding(destination, name);}
+  return { ok: true, revalidated: true, warmed: { config: null, page, retried } };
+}
+
+export async function warmPublishedLanding(destination: Destination, name: string): Promise<boolean> {
+  if (!isLandingName(name)) return false;
+  const target = validateDestination(destination);
+  const url = new URL(`${destination.motor === 'constructor' ? '/l' : ''}/${encodeURIComponent(name)}`, target.origin);
+  try {
+    const response = await requestFixedUrl(url, destination.environment, "GET", undefined, 8000);
+    return response.status >= 200 && response.status < 300;
+  } catch { return false; }
 }
 
 export async function warmConstructor(environment: RevalidationEnvironment, name: string): Promise<boolean> {
-  if (!isLandingName(name)) return false;
-  const target = validateDestination(destinationFor(environment, "constructor"));
-  const url = new URL(`/l/${encodeURIComponent(name)}`, target.origin);
-  try {
-    const response = await requestFixedUrl(url, environment, "GET", undefined, 8000);
-    return response.status >= 200 && response.status < 300;
-  } catch { return false; }
+  return warmPublishedLanding(destinationFor(environment, 'constructor'), name);
 }

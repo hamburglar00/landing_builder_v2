@@ -168,7 +168,7 @@ export function buildTemplate7FastRuntime(
           var entryAttempt = ++template7EntryGeneration;
           window.__T7_ENTRY_STARTED__ = true; clickLocked = true;
           if (template7Transition) template7Transition.start('preparing');
-          return fetchWithEntryRecovery('${classicDeviceIdScript ? "/api/template7/start" : "/api/template7/prepare"}', {
+          return fetchWithEntryRecovery('/api/template7/prepare', {
             method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},
             body:JSON.stringify({${classicDeviceIdScript ? "device_id:getOrCreateDeviceId()," : ""}landing_id:cfg.landingId,landing_slug:cfg.slug,
               entry_funnel:window.__entryFunnel?window.__entryFunnel.context():undefined,
@@ -312,7 +312,6 @@ export function buildTemplate7FastRuntime(
             if (event.target && event.target.nodeType && button.contains(event.target)) handleCtaClick(button);
           }, true);`,
     );
-    source = replaceOnce(source, 'fetchWithEntryRecovery("/api/template7/prepare", {', 'fetchWithEntryRecovery("/api/template7/start", {');
     source = replaceOnce(source, "body: JSON.stringify({\n            landing_id: cfg.landingId,",
       "body: JSON.stringify({\n            device_id: getOrCreateDeviceId(),\n            landing_id: cfg.landingId,");
     source = replaceOnce(source, "      var clickLocked = false;", classicDeviceIdScript + "\n      var clickLocked = false;");

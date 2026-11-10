@@ -3,7 +3,7 @@ import * as localPlaywright from 'playwright';
 import {createRequire} from 'node:module';
 import path from 'node:path';
 import {renderPublicLandingHtml,renderClassicTemplate7InlineHtml} from '../components/public-landing/renderPublicLandingHtml';
-import {template7RuntimeAssetResponse} from '../components/public-landing/template7RuntimeAsset';
+import {template7RuntimeAssetResponse} from '../components/public-landing/template7RuntimeResponse';
 import type {PublicLandingConfig} from '../components/public-landing/types';
 
 Object.assign(process.env,{NEXT_PUBLIC_SUPABASE_URL:'https://events.invalid',NEXT_PUBLIC_SUPABASE_ANON_KEY:'fixture',INTERNAL_CHAT_ORIGIN:'https://chat.invalid',GANAMOS_NET_GATEWAY_ORIGIN:'https://net.invalid',MULTI_SKIN_GATEWAY_ORIGIN:'https://skins.invalid',GANAMOS_PLUS_GATEWAY_ORIGIN:'https://skins.invalid'});
