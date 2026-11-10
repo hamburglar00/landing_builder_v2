@@ -101,7 +101,6 @@ export default function NuevoClientePage() {
   return (
     <div className="flex flex-col gap-6 sm:gap-8">
       <PageHeader
-        eyebrow="Nueva cuenta"
         title="Crear cliente"
         description="Creá un usuario de acceso con rol de cliente y configurá sus permisos iniciales."
         actions={

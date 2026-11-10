@@ -6,6 +6,7 @@ import PhonePrewarmScript from "./PhonePrewarmScript";
 import PublicLandingRuntimeScript from "./PublicLandingRuntimeScript";
 import publicLandingRuntimeAsset from "./publicLandingRuntimeAsset.generated.json";
 import publicLandingStyleAsset from './publicLandingStyleAsset.generated.json';
+import { PUBLIC_LANDING_FAVICON_LINK } from './publicLandingFavicon';
 import { buildClientIdentityBootstrapScript } from "./clientIdentityBootstrapScript";
 import { TEMPLATE7_CRITICAL_CSS, TEMPLATE8_CRITICAL_CSS } from "./publicLandingCss";
 import { renderTemplate7RuntimeAsset } from "./template7RuntimeAsset";
@@ -806,7 +807,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     config,
     slug,
     canonicalUrl,
-  )}<meta name="theme-color" content="${config.layout?.template === 9 ? getTemplate9Brand(config.tracking?.target_provider || "rey_de_ases", config.tracking?.skin_code).deep : "#000000"}">${
+  )}${PUBLIC_LANDING_FAVICON_LINK}<meta name="theme-color" content="${config.layout?.template === 9 ? getTemplate9Brand(config.tracking?.target_provider || "rey_de_ases", config.tracking?.skin_code).deep : "#000000"}">${
     supabaseOrigin
       ? `<link rel="preconnect" href="${escapeHtml(supabaseOrigin)}" crossorigin><link rel="dns-prefetch" href="${escapeHtml(supabaseOrigin)}">`
       : ""
@@ -850,7 +851,7 @@ export function renderClassicTemplate7Html(params: RenderParams, deviceIdScript:
   const metadata = publicMetadata(params.config, params.slug);
   const origins = [process.env.NEXT_PUBLIC_SUPABASE_URL, template7GatewayOrigin(params.config), ...(params.config.tracking?.pixelId ? ['https://www.facebook.com', 'https://connect.facebook.net'] : [])];
   const connections = [...new Set(origins.flatMap(origin => { try { return origin ? [new URL(origin).origin] : []; } catch { return []; } }))].map(origin => `<link rel="preconnect" href="${escapeHtml(origin)}" crossorigin>`).join('');
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="${params.config.layout?.template === 9 ? getTemplate9Brand(params.config.tracking?.target_provider || "rey_de_ases", params.config.tracking?.skin_code).deep : "#000000"}"><title>${escapeHtml(metadata.title)}</title>${buildPublicMetadataTags(params.config, params.slug, params.canonicalUrl)}${connections}</head><body>${renderClassicTemplate7InlineHtml(params, deviceIdScript)}</body></html>`;
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">${PUBLIC_LANDING_FAVICON_LINK}<meta name="theme-color" content="${params.config.layout?.template === 9 ? getTemplate9Brand(params.config.tracking?.target_provider || "rey_de_ases", params.config.tracking?.skin_code).deep : "#000000"}"><title>${escapeHtml(metadata.title)}</title>${buildPublicMetadataTags(params.config, params.slug, params.canonicalUrl)}${connections}</head><body>${renderClassicTemplate7InlineHtml(params, deviceIdScript)}</body></html>`;
 }
 
 /** All templates share delivery/assets; classic retains its identity and API adapter. */

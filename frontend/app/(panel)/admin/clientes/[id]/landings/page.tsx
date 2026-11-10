@@ -75,7 +75,6 @@ export default function AdminClienteLandingsPage() {
         </Link>
       </div>
       <PageHeader
-        eyebrow="Cliente"
         title={`Landings${clientName ? ` · ${clientName}` : ""}`}
         description="Listado de experiencias del cliente en modo solo lectura."
       />

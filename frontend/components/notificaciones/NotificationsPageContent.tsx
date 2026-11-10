@@ -168,7 +168,6 @@ export default function NotificationsPageContent({
   return (
     <div className="space-y-6 pb-8">
       <PageHeader
-        eyebrow="Automatización"
         title="Notificaciones"
         description="Configurá alertas automáticas por inactividad en Telegram."
       />

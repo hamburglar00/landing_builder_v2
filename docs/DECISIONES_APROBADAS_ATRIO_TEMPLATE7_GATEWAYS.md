@@ -7,6 +7,18 @@
 - Completar los huecos de medición del recorrido en el mismo lote: navegación frente a recorrido/intento, correlación con solicitudes backend, versiones por componente, resultado bancario explícito y fiabilidad de recepción. La telemetría actual tiene hitos de extremo a extremo, pero no equivale a una traza completa de todas las peticiones ni garantiza recepción de cada evento.
 - Mantener separada la entrega operativa pendiente de NexoBet/API2/Panel3 y los experimentos apagados. Una entrega conjunta puede tener commits y regresiones intermedias para identificar fallos y permitir reversión, conservando Pixel, reparto y las restricciones de publicación vigentes.
 
+### Encabezados uniformes y jerarquía de Redirección (10/11/2026)
+
+- Quitar de todas las secciones del panel el rótulo verde que antecede al título («Constructor», «Workspace», etc.) y mostrar sus títulos en mayúsculas, tanto en cliente como administrador. Aplicar al componente común, Documentación y vistas previas del editor; conservar descripciones y acciones. El cambio no incluye títulos de las landings públicas ni etiquetas de los modales.
+- Dar más jerarquía a la cabecera de la tabla de Redirección con fondo verde más contrastado, contorno de marca, texto de mayor peso y altura adicional. Mantener los grupos separados, su tamaño de fila, las columnas alineadas, los filtros, todas las acciones y la paginación de 50 por demanda. En móvil, el desplazamiento horizontal queda dentro de la tabla.
+- Alcance exclusivo del panel Builder. Sin cambios del clásico, NexoBet, Atrio, gateways, recursos de marca, tracking ni datos. [Validación](validation/panel-headings-20261110.md).
+
+### Favicon de LandingBuilder en ambos motores (10/11/2026)
+
+- Usar el favicon SVG de LandingBuilder en las nueve plantillas del constructor y del motor clásico, incluidas sus páginas legales. El usuario elige este recurso común en lugar de los logos particulares de las landings. Optimizar sin cambiar su apariencia y servir un archivo estático con nombre basado en su contenido y caché prolongada.
+- Fuente canónica: `frontend/public/favicon.svg` y generador `scripts/build-public-landing-favicon.mjs` de Builder. Compartir el enlace de cabecera y copiar el recurso generado al clásico con su sincronizador existente. Conservar título, contenido, estilos, eventos, identidad y comportamiento de cada landing. Publicar Builder y clásico por separado.
+- El favicon pertenece a las landings de estos dos motores. NexoBet conserva su propia identidad; sus 24 archivos de marketing fijados no cambian. No modificar el widget, los SDK, los cuatro gateways, el Worker, Atrio ni API2. [Validación](validation/public-favicon-20261110.md).
+
 ### CTA de WhatsApp y edición de vínculos (10/11/2026)
 
 - Templates 4, 5 y 6: aumentar el texto del CTA y su peso, aprovechar mejor su espacio y ampliar el icono de WhatsApp, conservando las dimensiones de los botones. Aplicar al constructor, al motor clásico y a la vista previa del editor. Contener textos excepcionalmente largos con elipsis, sin desbordes. Template 8 conserva su presentación anterior.

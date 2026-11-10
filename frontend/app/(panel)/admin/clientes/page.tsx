@@ -130,7 +130,6 @@ export default function AdminClientesPage() {
   return (
     <div className="flex flex-col gap-6 sm:gap-8">
       <PageHeader
-        eyebrow="Cuentas"
         title="Clientes"
         description="Gestioná usuarios, planes y accesos de clientes."
         actions={

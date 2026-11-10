@@ -299,7 +299,6 @@ export default function AdminTestsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Diagnóstico"
         title="Tests"
         description={
           <>

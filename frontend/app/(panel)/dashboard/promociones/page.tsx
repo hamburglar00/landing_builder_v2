@@ -727,7 +727,6 @@ export default function DashboardPromocionesPage() {
   return (
     <div className="space-y-6 pb-8">
       <PageHeader
-        eyebrow="Engagement"
         title="Promociones"
         description="Creá experiencias de sorteo y compartilas con tus jugadores."
         actions={

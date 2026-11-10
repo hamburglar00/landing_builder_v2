@@ -42,7 +42,7 @@ const assetSource=path.join(root,'frontend/public/public-assets/template-entry')
 const assetTarget=path.join(classicRoot,'public/public-assets/template-entry');
 if(process.argv.includes('--write'))await mkdir(assetTarget,{recursive:true});
 for(const name of await readdir(assetSource)){
-  if(!/^(?:t[78]-(?:classic|builder)-[a-f0-9]{24}\.js|landing-[a-f0-9]{24}\.(?:js|css))$/.test(name))continue;
+  if(!/^(?:t[78]-(?:classic|builder)-[a-f0-9]{24}\.js|landing-[a-f0-9]{24}\.(?:js|css)|landingbuilder-favicon-[a-f0-9]{24}\.svg)$/.test(name))continue;
   const contents=await readFile(path.join(assetSource,name),'utf8');
   if(process.argv.includes('--write'))await writeFile(path.join(assetTarget,name),contents);
   else if(await readFile(path.join(assetTarget,name),'utf8')!==contents)throw Error('Classic entry asset out of sync: '+name);

@@ -97,7 +97,6 @@ export default function AdminPlanPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Suscripciones"
         title="Planes"
         description="Catálogo de planes disponibles para clientes."
       />

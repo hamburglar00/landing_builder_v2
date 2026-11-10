@@ -891,7 +891,6 @@ export function TelefonosPageContent({
         onGerenciaChanged={async () => { if (userId) await loadData(userId); bots.reload(); }} onAtrioChanged={bots.reload} formatPhone={formatPhone}
       /> : <>
       <PageHeader
-        eyebrow="Operación"
         title={title}
         description={
           <>

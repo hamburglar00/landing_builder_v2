@@ -995,7 +995,6 @@ export default function IntegracionesMetaCapi() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Ecosistema"
         title={
           activeIntegration === "meta"
             ? "Meta Conversions API"

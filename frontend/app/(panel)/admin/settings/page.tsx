@@ -81,7 +81,6 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Sistema"
         title="Configuración"
         description="Parámetros globales de la aplicación, disponibles solo para administradores."
       />

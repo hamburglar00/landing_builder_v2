@@ -1632,7 +1632,6 @@ export default function DashboardConversionesPage() {
   return (
     <div className="space-y-6 pb-8">
       <PageHeader
-        eyebrow="Performance"
         title="Conversiones"
         description="Tu pipeline de contactos, leads, compras y métricas comerciales."
       />
