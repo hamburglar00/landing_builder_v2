@@ -3,6 +3,7 @@
 ### CTA de WhatsApp y edición de vínculos (10/11/2026)
 
 - Templates 4, 5 y 6: aumentar el texto del CTA y su peso, aprovechar mejor su espacio y ampliar el icono de WhatsApp, conservando las dimensiones de los botones. Aplicar al constructor, al motor clásico y a la vista previa del editor. Contener textos excepcionalmente largos con elipsis, sin desbordes. Template 8 conserva su presentación anterior.
+- Ajuste posterior del logo: ampliar a 32 px en 4/5 y 24 px en 6, y reforzar el contorno blanco con trazo de 0,6 unidades y uniones redondeadas. Conservar los paths originales de WhatsApp y usar las mismas dos capas de marca en las vistas previas de 4/5. Mantener tamaño del botón y texto; el refuerzo queda limitado a estos CTA, sin modificar el recurso de marca compartido ni otros productos.
 - En Redirección, distinguir las etiquetas del modal «Editar vínculo de Atrio» de los valores editables mediante separación, fondo y borde propios de los inputs y foco visible. Mantener los mismos campos, validaciones y guardado para ambos roles.
 - Fuente canónica de los CTA: CSS público de Builder; sincronizar renderer y recurso versionado hacia `landing-prueba-1`. Publicar ambos productos por separado. El modal es exclusivo del panel Builder. No hay cambios de eventos, redirección, proveedores, Meta, recursos de marca, NexoBet ni gateways. [Validación del lote](validation/cta-modal-ui-20261110.md).
 

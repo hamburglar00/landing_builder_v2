@@ -1676,8 +1676,8 @@ body.public-lead-capture-open {
 }
 
 .public-landing.template5 .template5__cta-icon {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   flex: none;
 }
 
@@ -2095,8 +2095,8 @@ body.public-lead-capture-open {
 }
 
 .public-landing.template4 .template4__cta-icon {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   flex: 0 0 auto;
   color: inherit;
 }
@@ -2775,7 +2775,17 @@ body.public-lead-capture-open {
   line-height: 1.15;
 }
 .public-landing.template6:not(.template8) .template6__cta span { min-width: 0; max-width: 100%; }
-.public-landing.template6:not(.template8) .template6__cta-icon { width: 20px; height: 20px; }
+.public-landing.template6:not(.template8) .template6__cta-icon { width: 24px; height: 24px; }
+
+/* Keep the original brand paths; reinforce only the white CTA contours. */
+.public-landing.template4 .template4__cta-icon > path:last-child,
+.public-landing.template5 .template5__cta-icon > path:last-child,
+.public-landing.template6:not(.template8) .template6__cta-icon > path:last-child {
+  stroke: #fff;
+  stroke-width: 0.6;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
 .public-landing.template7 {
   --template7-top-space: clamp(12px, 3svh, 42px);
   --template7-bottom-space: max(48px, calc(env(safe-area-inset-bottom) + 38px));

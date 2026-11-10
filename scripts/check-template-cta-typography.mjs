@@ -76,11 +76,12 @@ async function inspect(page,template,kind,label){
    let span=button.querySelector('span');
    if(!span){span=document.createElement('span');for(const n of [...button.childNodes])if(n.nodeType===Node.TEXT_NODE)span.append(n);button.append(span);}
    const b=button.getBoundingClientRect(),s=span.getBoundingClientRect(),icon=button.querySelector('svg'),svg=icon?.getBoundingClientRect();
-   const style=getComputedStyle(span),bs=getComputedStyle(button),rect=r=>r?{x:r.x,y:r.y,width:r.width,height:r.height}:null;
+   const style=getComputedStyle(span),bs=getComputedStyle(button),iconStyle=icon?getComputedStyle(icon.querySelector('path:last-of-type')):null,
+    rect=r=>r?{x:r.x,y:r.y,width:r.width,height:r.height}:null;
    return {button:rect(b),label:rect(s),icon:rect(svg),fontSize:parseFloat(style.fontSize),weight:Number(style.fontWeight),
      fontFamily:style.fontFamily,lineHeight:style.lineHeight,buttonScroll:button.scrollWidth,buttonClient:button.clientWidth,
      textClipped:span.scrollWidth>span.clientWidth+1,overflowX:style.overflowX,textOverflow:style.textOverflow,
-     buttonMinHeight:bs.minHeight,text:span.textContent};
+     buttonMinHeight:bs.minHeight,text:span.textContent,iconStroke:iconStyle?.stroke,iconStrokeWidth:iconStyle?parseFloat(iconStyle.strokeWidth):null};
   });
  },{template,kind});
 }
@@ -107,7 +108,9 @@ for(const [engine,type] of [['chromium',chromium],['webkit',webkit]]){
      assert.ok(c.label.x>=c.button.x-1&&c.label.x+c.label.width<=c.button.x+c.button.width+1,key+' label stays inside');
      assert.ok(c.label.y>=c.button.y-1&&c.label.y+c.label.height<=c.button.y+c.button.height+1,key+' vertical label stays inside');
      assert.ok(c.buttonScroll<=c.buttonClient+1,key+' button has no horizontal overflow');
-     if(c.icon){assert.ok(c.icon.width>b.icon.width,key+' larger WhatsApp icon');assert.ok(c.icon.y>=c.button.y-1&&c.icon.y+c.icon.height<=c.button.y+c.button.height+1,key+' icon stays inside');}
+     if(c.icon){assert.ok(c.icon.width>b.icon.width,key+' larger WhatsApp icon');assert.equal(c.icon.width,template===6?24:32,key+' final icon size');
+      assert.equal(c.iconStroke,'rgb(255, 255, 255)',key+' white reinforced outline');assert.ok(Math.abs(c.iconStrokeWidth-.6)<.01,key+' thicker outline');
+      assert.ok(c.icon.y>=c.button.y-1&&c.icon.y+c.icon.height<=c.button.y+c.button.height+1,key+' icon stays inside');}
     }
    }
    observations.push({key,data});
