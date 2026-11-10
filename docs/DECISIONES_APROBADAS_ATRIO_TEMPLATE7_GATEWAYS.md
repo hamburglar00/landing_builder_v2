@@ -1,5 +1,11 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Favicon de LandingBuilder en ambos motores (10/11/2026)
+
+- Usar el favicon SVG de LandingBuilder en las nueve plantillas del constructor y del motor clásico, incluidas sus páginas legales. El usuario elige este recurso común en lugar de los logos particulares de las landings. Optimizar sin cambiar su apariencia y servir un archivo estático con nombre basado en su contenido y caché prolongada.
+- Fuente canónica: `frontend/public/favicon.svg` y generador `scripts/build-public-landing-favicon.mjs` de Builder. Compartir el enlace de cabecera y copiar el recurso generado al clásico con su sincronizador existente. Conservar título, contenido, estilos, eventos, identidad y comportamiento de cada landing. Publicar Builder y clásico por separado.
+- El favicon pertenece a las landings de estos dos motores. NexoBet conserva su propia identidad; sus 24 archivos de marketing fijados no cambian. No modificar el widget, los SDK, los cuatro gateways, el Worker, Atrio ni API2. [Validación](validation/public-favicon-20261110.md).
+
 ### CTA de WhatsApp y edición de vínculos (10/11/2026)
 
 - Templates 4, 5 y 6: aumentar el texto del CTA y su peso, aprovechar mejor su espacio y ampliar el icono de WhatsApp, conservando las dimensiones de los botones. Aplicar al constructor, al motor clásico y a la vista previa del editor. Contener textos excepcionalmente largos con elipsis, sin desbordes. Template 8 conserva su presentación anterior.
