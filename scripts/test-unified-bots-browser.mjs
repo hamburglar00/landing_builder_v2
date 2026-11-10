@@ -708,14 +708,14 @@ try {
       assert.equal(await header.nth(1).getAttribute('aria-sort'),'ascending');assert.equal(await page.locator('tr[data-gerencia] td:nth-child(2)').first().innerText(),'10','ID is sorted numerically');
       await updateDirectory(page,()=>id.click());assert.equal(await header.nth(1).getAttribute('aria-sort'),'descending');
       assert.equal(await page.locator('tr[data-gerencia] td:nth-child(2)').first().innerText(),'1035');
+      const soloCells = row(page,'Solo Atrio').locator('td');
+      assert.deepEqual(await Promise.all([9,10,11].map(i=>soloCells.nth(i).innerText())),['2','3','9'],'cached metrics preserve live assignment, chat and historical values');
       assert.ok(f.pageCalls.at(-1).ids.includes(157),'descending ID returns off-page rows');
       await fillSearch(page,'Gerencia');assert.equal(f.pageCalls.at(-1).input.p_sort,'id');assert.equal(f.pageCalls.at(-1).input.p_direction,'desc');
       await fillSearch(page,'');await updateDirectory(page,()=>name.click());assert.equal(await header.nth(0).getAttribute('aria-sort'),'ascending');
       await id.focus();await updateDirectory(page,()=>id.press('Enter'));assert.equal(await header.nth(1).getAttribute('aria-sort'),'ascending','keyboard sorting works');
       assert.ok(f.pageCalls.every(call=>call.ids.length<=50&&['name','id'].includes(call.input.p_sort)),'bounded server requests carry the selected order');
       assert.equal(metricReads().length,warmedReads,'sorting, filtering and pagination reuse fresh Atrio metrics');
-      const soloCells = row(page,'Solo Atrio').locator('td');
-      assert.deepEqual(await Promise.all([9,10,11].map(i=>soloCells.nth(i).innerText())),['2','3','9'],'cached metrics preserve live assignment, chat and historical values');
       assert.equal(f.writes.length,0,'sorting and mkt display never mutate saved bots');
       await geometry(page,width);assert.deepEqual(f.errors,[]);
       await page.getByRole('button',{name:'Sincronizar ahora',exact:true}).click();
