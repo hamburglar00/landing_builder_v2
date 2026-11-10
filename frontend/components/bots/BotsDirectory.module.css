@@ -21,6 +21,7 @@
 [aria-checked="true"] > .switch { background: var(--color-primary); }
 [aria-checked="true"] > .switch::after { background: var(--color-primary-contrast); transform: translateX(12px); }
 .bulk { margin-left: auto; }
+.directoryBody { min-width: 0; }
 .scroll { overflow-x: auto; max-width: 100%; border-radius: 12px; scrollbar-width: thin; scrollbar-color: #3a4c54 #0e151a; }
 .table { width: max-content; min-width: 100%; table-layout: auto; border-collapse: separate; border-spacing: 0; color: #eef3ee; font-size: 12px; }
 .table thead th { padding: 16px 8px; text-align: left; white-space: nowrap; background: linear-gradient(180deg, #294b2f, #193224); border-top: 2px solid #8ee04e; border-bottom: 2px solid #8ee04e; color: #c8f7a6; font-size: 12px; font-weight: 800; letter-spacing: .06em; line-height: 1.5; box-shadow: inset 0 1px 0 #ffffff12; }

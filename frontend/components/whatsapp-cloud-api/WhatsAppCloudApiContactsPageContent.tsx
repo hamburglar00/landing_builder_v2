@@ -1,4 +1,5 @@
 "use client";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -201,7 +202,7 @@ export default function WhatsAppCloudApiContactsPageContent({ mode }: Props) {
           </p>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto loading-table-viewport">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-2)] text-xs uppercase text-[var(--color-text-muted)]">
               <tr>
@@ -215,12 +216,7 @@ export default function WhatsAppCloudApiContactsPageContent({ mode }: Props) {
             <tbody className="divide-y divide-[var(--color-border-subtle)]">
               {loading ? (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]"
-                  >
-                    Cargando contactos...
-                  </td>
+                  <td colSpan={5} className="p-0"><LandingBuilderLoading variant="dots" size="panel" className="loading-table-indicator" label="Cargando contactos" /></td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>

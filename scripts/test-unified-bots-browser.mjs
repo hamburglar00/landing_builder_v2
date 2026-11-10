@@ -394,7 +394,7 @@ async function fixture(width, role = "client", enabled = true, fillers = 0, mana
 
 const row = (page, name) => page.locator('tbody tr[data-gerencia]').filter({ has: page.getByText(name, { exact: true }) });
 async function openMenu(page, name) {
-  await page.getByText("Cargando página de bots...",{exact:true}).waitFor({state:"hidden"});
+  await page.locator('table[aria-label="Bots por gerencia"][aria-busy="false"]').waitFor();
   const trigger = page.getByRole("button", { name, exact: true });
   if (await trigger.getAttribute("aria-expanded") !== "true") await trigger.click();
   return page.getByRole("menu", { name, exact: true });
@@ -402,7 +402,7 @@ async function openMenu(page, name) {
 async function updateDirectory(page, action) {
   const response=page.waitForResponse(response=>["/rest/v1/rpc/read_bots_directory_page","/rest/v1/rpc/read_bots_directory_page_sorted"].includes(new URL(response.url()).pathname));
   await action();await response;
-  await page.getByText("Cargando página de bots...",{exact:true}).waitFor({state:"hidden"});
+  await page.locator('table[aria-label="Bots por gerencia"][aria-busy="false"]').waitFor();
 }
 async function fillSearch(page,value){
   const search=page.getByRole("textbox",{name:"Buscar gerencia, asesor, bot o teléfono",exact:true});
@@ -698,6 +698,9 @@ try {
       await updateDirectory(page,()=>name.click());
       assert.equal(await header.nth(0).getAttribute('aria-sort'),'descending');assert.equal(f.pageCalls.at(-1).input.p_direction,'desc');
       assert.equal(await page.locator('tr[data-gerencia] td:first-child').first().innerText(),'ZZ Gerencia 57','descending order includes a row from the old second page');
+      const metricReads = () => f.localCalls.filter(call => call.managerAction === 'directory');
+      const warmedReads = metricReads().length;
+      assert.equal(metricReads().filter(call => call.clientIds.includes('92000000-0000-4000-8000-000000000006')).length, 1, 'new advisors are fetched once, on demand');
       await updateDirectory(page,()=>page.getByRole('button',{name:'Página siguiente',exact:true}).click());
       assert.equal(f.pageCalls.at(-1).input.p_page,2);assert.equal(f.pageCalls.at(-1).input.p_direction,'desc');
       await updateDirectory(page,()=>id.click());
@@ -710,8 +713,14 @@ try {
       await fillSearch(page,'');await updateDirectory(page,()=>name.click());assert.equal(await header.nth(0).getAttribute('aria-sort'),'ascending');
       await id.focus();await updateDirectory(page,()=>id.press('Enter'));assert.equal(await header.nth(1).getAttribute('aria-sort'),'ascending','keyboard sorting works');
       assert.ok(f.pageCalls.every(call=>call.ids.length<=50&&['name','id'].includes(call.input.p_sort)),'bounded server requests carry the selected order');
+      assert.equal(metricReads().length,warmedReads,'sorting, filtering and pagination reuse fresh Atrio metrics');
+      const soloCells = row(page,'Solo Atrio').locator('td');
+      assert.deepEqual(await Promise.all([9,10,11].map(i=>soloCells.nth(i).innerText())),['2','3','9'],'cached metrics preserve live assignment, chat and historical values');
       assert.equal(f.writes.length,0,'sorting and mkt display never mutate saved bots');
       await geometry(page,width);assert.deepEqual(f.errors,[]);
+      await page.getByRole('button',{name:'Sincronizar ahora',exact:true}).click();
+      await waitUntil(()=>metricReads().length>warmedReads);
+      await page.locator('table[aria-label="Bots por gerencia"][aria-busy="false"]').waitFor();
       console.log(engineName+' sorting '+role+' '+width+': server order, page reset, keyboard and mkt passed');checks++;
     }finally{await f.context.close();}
   }

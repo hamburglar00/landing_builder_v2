@@ -1,4 +1,5 @@
 "use client";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 import { computeChannelFunnel, isStatisticsRepeat, type StatisticsChannel } from "@/lib/conversionJourneyStats";
 
 import { useState, useMemo, useEffect } from "react";
@@ -430,7 +431,7 @@ export default function ArgentinaMap({
   if (!geoData) {
     return (
       <div className="rounded-2xl border border-zinc-800/60 bg-[#0d0d11] p-5 flex items-center justify-center min-h-[300px]">
-        <p className="text-sm text-zinc-500">Cargando mapa...</p>
+        <LandingBuilderLoading variant="dots" size="panel" label="Cargando mapa" />
       </div>
     );
   }

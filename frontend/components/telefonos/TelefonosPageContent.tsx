@@ -877,7 +877,7 @@ export function TelefonosPageContent({
         countdown={nextSyncCountdown} metricsTime={phoneMetricsLabel}
         management={userId && <BotsManagement userId={userId} workspace={workspaceCurrency} gerencias={gerencias} isAdmin={isAdmin} canAtrio={canAtrio}
           onChanged={async () => { await loadData(userId); bots.reload(); }} onImported={async (gerenciaId, refreshInventory) => { await handleSync(gerenciaId ?? null, refreshInventory); bots.reload(); }} />}
-        feedback={<>{bots.busy && <p role="status" className="text-xs text-zinc-400">Cargando página de bots...</p>}
+        feedback={<>
           {!bots.busy && bots.projectionPending>0 && <p role="status" className="text-xs text-zinc-400">El directorio de Atrio se está actualizando en segundo plano.</p>}
           <ActionNotice message={bots.error} tone="error"><button type="button" className="ml-2 underline" onClick={bots.reload}>Reintentar</button></ActionNotice>
           <ActionNotice message={error} tone="error" /></>}

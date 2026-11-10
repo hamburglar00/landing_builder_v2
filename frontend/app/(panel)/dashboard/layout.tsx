@@ -537,7 +537,7 @@ export default function DashboardLayout({
   if (!modulePermissions || modulePermissionsError) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[var(--color-bg-0)] p-6">
-        <p className="text-sm text-zinc-400" role="alert">{modulePermissionsError ?? "Cargando permisos..."}</p>
+        {modulePermissionsError ? <p className="text-sm text-zinc-400" role="alert">{modulePermissionsError}</p> : <LandingBuilderLoading variant="dots" size="panel" label="Cargando permisos" />}
         <button type="button" onClick={() => window.location.reload()} className="ui-button ui-button-secondary">Reintentar</button>
       </div>
     );

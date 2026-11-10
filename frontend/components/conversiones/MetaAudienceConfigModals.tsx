@@ -1,4 +1,5 @@
 "use client";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useEffect, useState } from "react";
 import ModalPortal from "@/components/ui/ModalPortal";
@@ -71,7 +72,7 @@ export function SavedAudiencesModal({
   return (
     <ModalFrame title="Mis audiencias" onClose={onClose} width="max-w-3xl">
       {error ? <p className="mb-3 rounded-lg border border-red-900/60 bg-red-950/25 px-3 py-2 text-xs text-red-300" role="alert">{error}</p> : null}
-      {loading ? <p className="py-8 text-center text-xs text-zinc-500">Cargando audiencias…</p> : null}
+      {loading ? <LandingBuilderLoading variant="dots" size="panel" label="Cargando audiencias" /> : null}
       {!loading && items.length === 0 ? <p className="rounded-xl border border-dashed border-zinc-800 px-4 py-8 text-center text-xs text-zinc-500">Todavía no guardaste audiencias para esta moneda.</p> : null}
       {!loading && items.length > 0 ? (
         <div className="space-y-2">

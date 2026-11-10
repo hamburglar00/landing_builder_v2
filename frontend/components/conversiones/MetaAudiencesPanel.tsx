@@ -1,4 +1,5 @@
 "use client";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DateRange } from "@/components/conversiones/DateRangeFilter";
@@ -661,7 +662,7 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
           <button type="button" onClick={() => setPresetModalOpen(true)} className="inline-flex h-8 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-[11px] text-zinc-300 hover:bg-zinc-800">Usar preset</button>
           <button type="button" onClick={showSavedConfigs} className="inline-flex h-8 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-[11px] text-zinc-300 hover:bg-zinc-800">Mis audiencias</button>
           <button type="button" onClick={() => void handleSave()} disabled={saving || (!dirty && activeSaved != null)} className="inline-flex h-8 items-center justify-center rounded-lg bg-emerald-600 px-3 text-[11px] font-semibold text-white hover:bg-emerald-500 disabled:opacity-45">{saving ? "Guardando…" : activeSaved ? "Guardar cambios" : "Guardar audiencia"}</button>
-          <button type="button" onClick={() => void load()} disabled={loading} className="inline-flex h-8 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-[11px] text-zinc-300 hover:bg-zinc-800 disabled:opacity-50">{loading ? "Cargando..." : "Actualizar datos"}</button>
+          <button type="button" onClick={() => void load()} disabled={loading} className="inline-flex h-8 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-[11px] text-zinc-300 hover:bg-zinc-800 disabled:opacity-50">{loading ? <LandingBuilderLoading variant="dots" size="inline" label="Cargando audiencias" /> : "Actualizar datos"}</button>
         </div>
       </div>
 

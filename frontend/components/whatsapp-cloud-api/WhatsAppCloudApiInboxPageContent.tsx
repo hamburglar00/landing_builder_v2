@@ -1,4 +1,5 @@
 "use client";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import {
   useCallback,
@@ -1366,9 +1367,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
 
           <div className="min-h-0 max-h-[27.5rem] overflow-y-auto">
             {loading ? (
-              <div className="p-4 text-sm text-[var(--color-text-muted)]">
-                Cargando conversaciones...
-              </div>
+              <LandingBuilderLoading variant="dots" size="panel" label="Cargando conversaciones" />
             ) : filteredThreads.length === 0 ? (
               <div className="flex h-full items-center justify-center p-6 text-center">
                 <div className="max-w-xs">
@@ -1539,11 +1538,11 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                 {messagesCursor ? (
                   <button type="button" className="ui-button ui-button-secondary self-center"
                     onClick={() => void loadOlderMessages()} disabled={messagesLoading}>
-                    {messagesLoading ? "Cargando mensajes..." : "Mensajes anteriores"}
+                    {messagesLoading ? <LandingBuilderLoading variant="dots" size="inline" label="Cargando mensajes anteriores" /> : "Mensajes anteriores"}
                   </button>
                 ) : null}
                 {messagesLoading && selectedMessages.length === 0 ? (
-                  <p role="status" className="m-auto text-sm text-[#8696a0]">Cargando mensajes...</p>
+                  <LandingBuilderLoading variant="dots" size="panel" className="m-auto" label="Cargando mensajes" />
                 ) : selectedMessages.length === 0 ? (
                   <div className="m-auto max-w-sm rounded-xl border border-dashed border-[#2a3942] bg-[#111b21]/90 px-5 py-6 text-center shadow-lg">
                     <p className="text-sm font-semibold text-[#e9edef]">

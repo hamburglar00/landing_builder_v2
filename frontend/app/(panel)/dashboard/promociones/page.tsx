@@ -1,4 +1,5 @@
 "use client";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -1113,7 +1114,7 @@ export default function DashboardPromocionesPage() {
         )}
 
         <div className="mt-4 overflow-hidden rounded-xl border border-zinc-800">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto loading-table-viewport">
             <table className="w-full min-w-[900px] table-fixed text-left text-xs">
               <thead className="bg-zinc-900 text-zinc-400">
                 <tr>
@@ -1141,9 +1142,7 @@ export default function DashboardPromocionesPage() {
               <tbody>
                 {loadingTableParticipants ? (
                   <tr>
-                    <td colSpan={7} className="px-3 py-8 text-center text-zinc-500">
-                      Cargando participantes...
-                    </td>
+                    <td colSpan={7} className="p-0"><LandingBuilderLoading variant="dots" size="panel" className="loading-table-indicator" label="Cargando participantes" /></td>
                   </tr>
                 ) : tableParticipants.length === 0 ? (
                   <tr>

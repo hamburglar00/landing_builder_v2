@@ -1,4 +1,5 @@
 "use client";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -279,7 +280,7 @@ export default function WhatsAppCloudApiLogsPageContent({ mode }: Props) {
           </select>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto loading-table-viewport">
           <table className="min-w-[980px] w-full text-left text-sm">
             <thead className="bg-[rgba(148,163,184,0.08)] text-xs uppercase tracking-[0.12em] text-[var(--color-text-muted)]">
               <tr>
@@ -297,7 +298,7 @@ export default function WhatsAppCloudApiLogsPageContent({ mode }: Props) {
             <tbody className="divide-y divide-[var(--color-border-subtle)]">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-10 text-center text-sm text-[var(--color-text-muted)]">Cargando logs...</td>
+                  <td colSpan={9} className="p-0"><LandingBuilderLoading variant="dots" size="panel" className="loading-table-indicator" label="Cargando logs" /></td>
                 </tr>
               ) : filteredLogs.length === 0 ? (
                 <tr>

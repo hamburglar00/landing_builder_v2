@@ -1,4 +1,5 @@
 "use client";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useParams } from "next/navigation";
@@ -340,7 +341,7 @@ export default function PublicPromotionPage() {
     return (
       <main className="min-h-[100svh] bg-[#07100d] text-zinc-100">
         <div className="mx-auto flex min-h-[100svh] max-w-3xl items-center justify-center px-5">
-          <p className="text-sm text-emerald-200">Cargando promocion...</p>
+          <LandingBuilderLoading variant="dots" size="panel" label="Cargando promocion" />
         </div>
       </main>
     );

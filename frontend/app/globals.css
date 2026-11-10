@@ -398,6 +398,10 @@ a {
   font-size: 0.875rem;
 }
 
+/* Loading feedback stays centered in the visible part of horizontally scrolling tables. */
+.loading-table-viewport { container-type: inline-size; }
+.loading-table-indicator { position: sticky; left: 0; width: 100cqw; max-width: 100%; }
+
 .ui-card {
   min-width: 0;
   border: 1px solid var(--color-border);

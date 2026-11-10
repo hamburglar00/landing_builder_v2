@@ -1,4 +1,5 @@
 "use client";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -55,7 +56,7 @@ export default function AdminClienteLandingsPage() {
   if (!ready) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-zinc-400">Cargando...</p>
+        <LandingBuilderLoading variant="brand" label="Cargando landings" />
       </div>
     );
   }

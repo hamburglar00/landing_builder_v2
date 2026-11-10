@@ -1,4 +1,5 @@
 "use client";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -789,7 +790,7 @@ export default function WhatsAppCloudApiPageContent({
   };
 
   if (!ready) {
-    return <p className="text-sm text-[var(--color-text-muted)]">Cargando WhatsApp Cloud API...</p>;
+    return <LandingBuilderLoading variant="brand" label="Cargando WhatsApp Cloud API" />;
   }
 
   if (isAllCurrencies) {

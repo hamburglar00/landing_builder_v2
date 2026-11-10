@@ -5,6 +5,7 @@ import type { BotGerencia, BotsDirectorySort } from "@/lib/bots/workspace";
 import type { AtrioClient } from "@/lib/atrio/atrioDb";
 import type { GerenciaPhoneRow } from "@/components/telefonos/TelefonosPageContent";
 import { requestManagerDestinations, type AdvisorDirectory } from "@/lib/atrio/managerDestinations";
+import { advisorMetricsKey, AtrioMetricsCache } from "@/lib/bots/atrioMetricsCache";
 
 type PageData = {
   groups: BotGerencia[]; phones: GerenciaPhoneRow[];
@@ -24,6 +25,11 @@ export function usePagedBotsWorkspace(input: {
   const [data, setData] = useState(empty), [busy, setBusy] = useState(false), [error, setError] = useState("");
   const [loadedKey,setLoadedKey]=useState("");
   const loadedKeyRef=useRef("");
+  const [metricsCache] = useState(() => new AtrioMetricsCache((ids, signal) =>
+    requestManagerDestinations<{ advisors: AdvisorDirectory[]; directoryChanged?: boolean }>({ action: "directory", clientIds: ids }, signal)));
+  const scopeKey = JSON.stringify([input.userId, input.workspace, input.canAtrio]);
+  const metricsScope = useRef("");
+  const previousSearch = useRef(input.search);
   const [pageState, setPageState] = useState({ key: "", page: 1 });
   const filterKey = JSON.stringify([input.userId, input.workspace, input.canAtrio, input.search, input.channel, input.onlyActive, input.sort.column, input.sort.direction]);
   // Remember each filter transition, including returning to a previous query.
@@ -33,14 +39,26 @@ export function usePagedBotsWorkspace(input: {
   const latest = useRef({ ...input, page });
   latest.current = { ...input, page };
   const pending = useRef<{ key: string; controller: AbortController; promise: Promise<void> } | null>(null);
+  useEffect(() => () => {
+    if (metricsScope.current === scopeKey) {
+      metricsCache.clear();
+      metricsScope.current = "";
+    }
+  }, [scopeKey, metricsCache]);
+  useEffect(() => () => { pending.current?.controller.abort(); metricsCache.clear(); }, [metricsCache]);
 
-  const load = useCallback((uid?: string) => {
+  const read = useCallback((uid?: string, refreshMetrics = false) => {
     const query = latest.current;
     const userId = uid || query.userId;
     if (!query.enabled || !userId) return Promise.resolve();
     const key = JSON.stringify([userId, query.workspace, query.canAtrio, query.search, query.channel, query.onlyActive, query.sort.column, query.sort.direction, query.page]);
-    if (pending.current?.key === key) return pending.current.promise;
+    if (pending.current?.key === key && !refreshMetrics) return pending.current.promise;
     pending.current?.controller.abort();
+    const scope = JSON.stringify([userId, query.workspace, query.canAtrio]);
+    if (refreshMetrics || metricsScope.current !== scope) {
+      metricsCache.clear();
+      metricsScope.current = scope;
+    }
     const controller = new AbortController();
     setBusy(true); setError("");
     // Hide previous-page actions immediately while a different page is loading.
@@ -56,7 +74,7 @@ export function usePagedBotsWorkspace(input: {
         if (result.error) throw result.error;
         if (controller.signal.aborted) return;
         let next = result.data as PageData;
-        const advisors = new Map<string, AdvisorDirectory>();
+        const advisors = new Map<string, AdvisorDirectory | null>();
         try {
         for(let pass=0;pass<2;pass++){
         // Group by owner: Atrio validates each tenant independently.
@@ -67,10 +85,12 @@ export function usePagedBotsWorkspace(input: {
         }
           let directoryChanged=false;
           for (const clients of owners.values()) {
-            const ids = [...clients.values()].filter(client=>!advisors.has(client.atrio_id)).map(client=>client.id);
-            for (let offset = 0; offset < ids.length; offset += 100) {
-              const live = await requestManagerDestinations<{ advisors: AdvisorDirectory[];directoryChanged?:boolean }>({ action: "directory", clientIds: ids.slice(offset, offset + 100) }, controller.signal);
-              for (const advisor of live.advisors) advisors.set(advisor.id, advisor);
+            const wanted = [...clients.values()].filter(client=>!advisors.has(advisorMetricsKey(client)));
+            for (let offset = 0; offset < wanted.length; offset += 100) {
+              const batch = wanted.slice(offset, offset + 100);
+              const live = await metricsCache.read(batch);
+              if (controller.signal.aborted) return;
+              for (const [key, advisor] of live.advisors) advisors.set(key, advisor);
               directoryChanged=directoryChanged||live.directoryChanged===true;
             }
           }
@@ -86,10 +106,11 @@ export function usePagedBotsWorkspace(input: {
           setError(cause instanceof Error ? cause.message : "No se pudieron actualizar las métricas de Atrio.");
         }
         if (controller.signal.aborted) return;
+        for (const [key, advisor] of metricsCache.snapshot(next.groups.flatMap(group => group.atrioBots.map(entry => entry.client)))) advisors.set(key, advisor);
         next.groups = next.groups.map(group => ({ ...group, atrioBots: group.atrioBots.map(entry => {
-          const advisor = advisors.get(entry.client.atrio_id);
+          const advisor = advisors.get(advisorMetricsKey(entry.client));
           const connection = advisor?.connections.find(connection => connection.connection_id === entry.connection?.connection_id || connection.manager_id === entry.inventory?.manager_id);
-          // Never present cached metadata as a fresh metric value.
+          // Reuse actual metrics, never the metadata-only directory projection.
           return { ...entry, name: advisor?.name || entry.name, connection: connection || null };
         }) }));
         setData(next); setLoadedKey(key); loadedKeyRef.current=key; latest.current.onData(next);
@@ -101,13 +122,17 @@ export function usePagedBotsWorkspace(input: {
     })();
     pending.current = { key, controller, promise };
     return promise;
-  }, []);
+  }, [metricsCache]);
   useEffect(() => {
     if (!input.enabled || !input.userId) return;
-    const timeout = setTimeout(() => void load(), 200);
+    const searchChanged = previousSearch.current !== input.search;
+    previousSearch.current = input.search;
+    const timeout = setTimeout(() => void read(), searchChanged ? 200 : 0);
     return () => { clearTimeout(timeout); pending.current?.controller.abort(); pending.current = null; };
-  }, [filterKey, page, input.enabled, input.userId, load]);
-  const reload = useCallback(() => { void load(); }, [load]);
+  }, [filterKey, page, input.enabled, input.userId, input.search, read]);
+  // Imperative loads follow explicit actions or the scheduled refresh. Navigation only reuses/fills the cache.
+  const load = useCallback((uid?: string) => read(uid, true), [read]);
+  const reload = useCallback(() => { void read(undefined, true); }, [read]);
   const currentKey=JSON.stringify([input.userId,input.workspace,input.canAtrio,input.search,input.channel,input.onlyActive,input.sort.column,input.sort.direction,page]);
   const visible=loadedKey===currentKey?data:{...data,groups:[],phones:[],metrics:[]};
   const clients = [...new Map(visible.groups.flatMap(group => group.atrioBots.map(entry => [entry.client.id, entry.client] as const))).values()];

@@ -1,4 +1,5 @@
 ﻿"use client";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -278,7 +279,7 @@ export default function AdminClientManagePage() {
   };
 
   if (loading) {
-    return <p className="text-sm text-zinc-400">Cargando...</p>;
+    return <LandingBuilderLoading variant="brand" label="Cargando cliente" />;
   }
 
   return (

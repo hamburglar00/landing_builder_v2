@@ -13,6 +13,7 @@ import { AtrioWorkspaceActions } from "./AtrioWorkspaceActions";
 import { BotMenu } from "./BotMenu";
 import { BotResetIcon, BotTrashIcon } from "./BotActionIcons";
 import styles from "./BotsDirectory.module.css";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 type Channel = "all" | "whatsapp" | "atrio";
 type Metric = { messagesReceived: number; messagesReceivedHistorical: number; calculatedAt: string };
@@ -226,8 +227,8 @@ export function BotsDirectoryView(p: Props) {
       </button>
       <div className={styles.bulk}>{p.canAtrio && counts.atrio>0 ? <AtrioWorkspaceActions clients={p.clients} hasClients={counts.atrio>0} onReset={p.onResetAtrio} onChanged={p.onAtrioChanged} render={bulkMenu} /> : bulkMenu()}</div>
     </div>
-    <AtrioBotTable entries={p.filteredGroups.flatMap(group => group.atrioBots)} onChanged={p.onAtrioChanged} render={atrioActions => <div className={styles.scroll} tabIndex={0} aria-label="Directorio de bots, desplazamiento horizontal">
-      <table className={styles.table} aria-label="Bots por gerencia">
+    <AtrioBotTable entries={p.filteredGroups.flatMap(group => group.atrioBots)} onChanged={p.onAtrioChanged} render={atrioActions => <div className={styles.directoryBody}><div className={styles.scroll} tabIndex={0} aria-label="Directorio de bots, desplazamiento horizontal">
+      <table className={styles.table} aria-label="Bots por gerencia" aria-busy={p.loading}>
         <thead><tr>{labels.map((label, i) => {
           const column = i === 0 ? "name" : i === 1 ? "id" : null;
           const active = column === p.sort.column;
@@ -240,7 +241,7 @@ export function BotsDirectoryView(p: Props) {
             </button> : label}
           </th>;
         })}<th scope="col"><span className="sr-only">Acciones</span></th></tr></thead>
-          {!visible.length && <tbody><tr><td colSpan={labels.length + 1} className={styles.empty}>{p.loading ? "Cargando bots…" : !counts.all ? "Todavía no hay bots. Usá Vincular Bots para comenzar." : p.onlyActive ? "No hay gerencias con bots activos para mostrar." : "No hay gerencias que coincidan con la búsqueda."}</td></tr></tbody>}
+          {!visible.length && !p.loading && <tbody><tr><td colSpan={labels.length + 1} className={styles.empty}>{!counts.all ? "Todavía no hay bots. Usá Vincular Bots para comenzar." : p.onlyActive ? "No hay gerencias con bots activos para mostrar." : "No hay gerencias que coincidan con la búsqueda."}</td></tr></tbody>}
           {visible.map((group, index) => {
             const phones = (p.phones[group.id] ?? []).filter(phone => isValidPhone(phone.phone, group.workspace_currency));
             const items: Item[] = [
@@ -291,7 +292,7 @@ export function BotsDirectoryView(p: Props) {
             </tbody>;
           })}
       </table>
-    </div>} />
+    </div>{p.loading && !visible.length && <LandingBuilderLoading variant="rocket" size="panel" label="Cargando bots" />}</div>} />
     <footer className={styles.footer}>
       <span>{visible.length ? `${(page-1)*50+1}–${(page-1)*50+visible.length}` : "0"} de {p.total} gerencias · 50 por página{p.total !== counts.all ? ` · ${counts.all} en total` : ""}</span>
       <nav className={styles.pagination} aria-label="Paginación de gerencias">

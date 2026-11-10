@@ -1,4 +1,5 @@
 "use client";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import {
   useCallback,
@@ -11,7 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { LandingBuilderLogo } from "@/components/brand/LandingBuilderLogo";
+
 import {
   CURRENCY_ALL,
   REPORTING_CURRENCIES,
@@ -210,15 +211,7 @@ function WorkspaceSwitchOverlay({
           transition.fading ? "translate-y-2 scale-95 opacity-0" : "translate-y-0 scale-100 opacity-100"
         }`}
       >
-        <LandingBuilderLogo variant="vertical" className="h-auto w-48 max-w-full" />
-        <h2 className="mt-6 text-2xl font-black text-[var(--color-text-strong)]">
-          Cambiando de workspace
-        </h2>
-        {transition.target ? (
-          <p className="mt-2 text-sm font-medium text-[var(--color-text-muted)]">
-            Preparando inicio {transition.target}
-          </p>
-        ) : null}
+        <LandingBuilderLoading label={`Preparando inicio ${transition.target ?? ""}`} size="panel" />
       </div>
     </div>
   );

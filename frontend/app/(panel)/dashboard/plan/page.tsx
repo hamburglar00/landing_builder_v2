@@ -1,4 +1,5 @@
 "use client";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -181,7 +182,7 @@ export default function DashboardPlanPage() {
           Plan actual: {currentPlan.title}
         </h2>
         {loading ? (
-          <p className="mt-2 text-sm text-zinc-400">Cargando...</p>
+          <LandingBuilderLoading variant="dots" size="panel" label="Cargando plan" />
         ) : (
           <div className="mt-3 grid gap-2 text-sm text-zinc-200 sm:grid-cols-2">
             <p>
