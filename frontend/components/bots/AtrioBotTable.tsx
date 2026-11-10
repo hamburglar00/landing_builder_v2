@@ -15,6 +15,7 @@ import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import { ModalShell } from "@/components/ui/PanelPrimitives";
 import { BotResetIcon } from "./BotActionIcons";
 import { ActionNotice } from "@/components/ui/ActionNotice";
+import styles from "./AtrioBotTable.module.css";
 export const PLATFORM_NAMES: Record<number, string> = {
   1: "Ases del Norte",
   2: "Ganamos NET",
@@ -263,19 +264,19 @@ export function AtrioBotTable({
           </button>
         }
       >
-        <div className="space-y-3">
-          <label className="block text-xs text-zinc-400">
-            Slug del asesor
+        <div className={styles.fields}>
+          <label className={styles.field}>
+            <span className={styles.label}>Slug del asesor</span>
             <input
-              className="ui-input mt-2 w-full"
+              className={styles.input}
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
             />
           </label>
-          <label className="block text-xs text-zinc-400">
-            ID del asesor de Atrio
+          <label className={styles.field}>
+            <span className={styles.label}>ID del asesor de Atrio</span>
             <input
-              className="ui-input mt-2 w-full"
+              className={styles.input}
               value={atrioId}
               disabled={busy}
               onChange={(event) => setAtrioId(event.target.value)}

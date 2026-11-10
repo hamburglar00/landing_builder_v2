@@ -1659,9 +1659,26 @@ body.public-lead-capture-open {
 .public-landing.template5 .template5__cta {
   color: #ffffff;
   background: linear-gradient(180deg, #2af071 0%, #10c858 100%);
+  font-size: clamp(18px, 5.5vw, 22px);
+  font-weight: 900;
+  line-height: 1.1;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.24);
   transform: translateZ(0);
   animation: template5Pulse 2.3s ease-in-out infinite;
+}
+
+.public-landing.template5 .template5__cta [data-public-landing-cta-label] {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-landing.template5 .template5__cta-icon {
+  width: 28px;
+  height: 28px;
+  flex: none;
 }
 
 @media (max-height: 700px) {
@@ -1741,7 +1758,6 @@ body.public-lead-capture-open {
 
   .public-landing.template5 .template5__cta {
     min-height: 54px;
-    font-size: 16px;
   }
 }
 
@@ -2067,15 +2083,20 @@ body.public-lead-capture-open {
 
 .public-landing.template4 .template4__cta span {
   color: inherit;
-  font-size: 17px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(18px, 5.5vw, 22px);
   line-height: 1.15;
   font-weight: 900;
   letter-spacing: -0.01em;
 }
 
 .public-landing.template4 .template4__cta-icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   flex: 0 0 auto;
   color: inherit;
 }
@@ -2745,6 +2766,16 @@ body.public-lead-capture-open {
   .template6__caption { font-size: 11px; }
   .template6__cta { font-size: min(var(--template6-cta-size, 14px), 12px); }
 }
+
+/* Override the public button font reset without changing the card/button geometry or T8. */
+.public-landing.template6:not(.template8) .template6__cta {
+  min-width: 0;
+  font-size: clamp(18px, var(--template6-cta-size, 18px), 22px);
+  font-weight: 800;
+  line-height: 1.15;
+}
+.public-landing.template6:not(.template8) .template6__cta span { min-width: 0; max-width: 100%; }
+.public-landing.template6:not(.template8) .template6__cta-icon { width: 20px; height: 20px; }
 .public-landing.template7 {
   --template7-top-space: clamp(12px, 3svh, 42px);
   --template7-bottom-space: max(48px, calc(env(safe-area-inset-bottom) + 38px));

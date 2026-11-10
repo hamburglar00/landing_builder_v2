@@ -681,12 +681,12 @@ export function LandingPreview({
                   backgroundColor: template4CtaBackgroundColor,
                 }}
               >
-                <svg className="h-6 w-6" viewBox="0 0 48 48" aria-hidden="true">
+                <svg className="h-7 w-7 shrink-0" viewBox="0 0 48 48" aria-hidden="true">
                   <g transform="translate(-700 -360)">
                     <path fill="currentColor" fillRule="evenodd" d={WHATSAPP_ICON_PATH} />
                   </g>
                 </svg>
-                <span>{template4CtaText}</span>
+                <span className="min-w-0 truncate text-[20px] font-black">{template4CtaText}</span>
               </button>
             </div>
           )}
@@ -934,13 +934,13 @@ export function LandingPreview({
         </div>
         {!gallery && (
           <div className="absolute inset-x-0 bottom-[58px] z-20 bg-transparent px-4 pb-4 pt-9">
-            <button className="flex h-[58px] w-full items-center justify-center gap-3 rounded-full bg-[#25d366] text-[16px] font-black tracking-[-0.02em] text-white shadow-[0_0_0_9px_rgba(37,211,102,.13),0_14px_28px_rgba(37,211,102,.2)]">
-              <svg className="h-6 w-6" viewBox="0 0 48 48" aria-hidden="true">
+            <button className="flex h-[58px] w-full items-center justify-center gap-3 rounded-full bg-[#25d366] text-[20px] font-black tracking-[-0.02em] text-white shadow-[0_0_0_9px_rgba(37,211,102,.13),0_14px_28px_rgba(37,211,102,.2)]">
+              <svg className="h-7 w-7 shrink-0" viewBox="0 0 48 48" aria-hidden="true">
                 <g transform="translate(-700 -360)">
                   <path fill="currentColor" fillRule="evenodd" d={WHATSAPP_ICON_PATH} />
                 </g>
               </svg>
-              ENTRAR POR WHATSAPP
+              <span className="min-w-0 truncate">ENTRAR POR WHATSAPP</span>
             </button>
           </div>
         )}
@@ -1054,10 +1054,12 @@ export function LandingPreview({
                 <p className={`line-clamp-2 text-center font-semibold leading-tight ${gallery ? "min-h-4 py-1 text-[7px]" : "min-h-10 py-2 text-[12px]"}`} style={{ color: subtitleHex }}>
                   {card.text || `Opción ${index + 1}`}
                 </p>
-                <div className={`flex min-w-0 items-center justify-center gap-1 rounded-lg text-center font-bold ${gallery ? "px-1 py-1 text-[7px]" : "px-1 py-2 text-[11px]"}`} style={{ background: ctaBgHex, color: ctaTextHex }}>
+                <div className={`flex min-w-0 items-center justify-center gap-1 rounded-lg text-center font-bold ${gallery ? "px-1 py-1 text-[7px]" : "px-1 py-2 text-[11px]"}`} style={{ background: ctaBgHex, color: ctaTextHex,
+                  ...(template === 6 && !gallery ? { height: cover.showWhatsAppLogo ? 34 : 32.5, paddingTop: 0, paddingBottom: 0,
+                    fontSize: Math.min(22, Math.max(18, config.ctaFontSize || 18)), fontWeight: 800, lineHeight: 1.15 } : {}) }}>
                   <span className="min-w-0 truncate">{card.ctaText || config.ctaText || "Abrir WhatsApp"}</span>
                   {cover.showWhatsAppLogo ? (
-                    <svg className={`shrink-0 ${gallery ? "h-2.5 w-2.5" : "h-[18px] w-[18px]"}`} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+                    <svg className={`shrink-0 ${gallery ? "h-2.5 w-2.5" : template === 6 ? "h-5 w-5" : "h-[18px] w-[18px]"}`} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
                       <path fill="#25D366" d={WHATSAPP_GREEN_PATH} />
                       <path fill="#FFFFFF" d={WHATSAPP_WHITE_PATH} />
                     </svg>
