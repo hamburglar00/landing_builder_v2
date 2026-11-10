@@ -111,7 +111,8 @@ async function main() {
           await browser.send("Emulation.setDeviceMetricsOverride", { width: engine === "classic" ? 1280 : 390, height: 844, deviceScaleFactor: 1, mobile: engine !== "classic" });
           const slug = `attribution-${engine}-${template}-${provider}-${resolution}`;
           const config = fixture(template, provider);
-          const startPath = engine === "constructor" ? "/api/template7/prepare" : "/api/template7/start";
+          // Both production runtimes already used the preparation route before this repair.
+          const startPath = "/api/template7/prepare";
           const html = engine === "constructor" ? renderPublicLandingHtml({ slug, config })
             : template === 7 ? `<!doctype html><html><head></head><body>${renderClassicTemplate7InlineHtml({ slug, config }, 'function getOrCreateDeviceId(){return "a0000000-0000-4000-8000-000000000009";}')}</body></html>`
             : `<!doctype html><html><head></head><body><div id="root"></div><script>window.__slug=${JSON.stringify(slug)};window.__config=${JSON.stringify(config)}</script><script src="/classic.js"></script></body></html>`;

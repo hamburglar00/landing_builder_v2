@@ -28,9 +28,19 @@ Todas las pruebas usan transporte interceptado o fixtures; no asignan números r
 | Assets finales: T1–T9 × clásico/constructor × Chromium/WebKit | 36/36 recorridos; un Contact por recorrido |
 | Embudo, escritura temprana, privacidad y reanudación | 8/8 escenarios |
 | FBC acotado por landing, cuatro runtimes y dos navegadores | 208 comprobaciones, 26 casos |
+| Atribución, resolución y entrada a los cuatro proveedores | 50/50 escenarios Chromium |
+| CTA y aviso de espera a 390 px, con texto contenido | 12/12 renderers; suite 31/31 repetida tras integrar tipografía e iconos |
 | Generación y comparación del renderer y assets clásico/constructor | OK |
 | Emisor de preparación clásico | Sin diferencias |
 | Tipos del helper, encoding y diff-check | OK |
+
+La integración conserva los cambios concurrentes de tipografía e iconos publicados hasta Builder `4824c0a` y clásico `c22bcbe`. Se verificó nuevamente la igualdad de los assets y el renderer compartido tras cada fusión. El harness de atribución se actualizó para servir los assets con hash y validar `/api/template7/prepare`, recorrido que ya usaba la producción anterior; conserva las comprobaciones de proveedor, promo, atribución y un único Contact.
+
+## Compilación remota y entrega estática
+
+Las previews Builder `dpl_CVrbfntdTiJiZbpAE2rgce3Z97Vm` (fuente `aef3993`) y clásico `dpl_8odwyHqX2e3FCa62DhWbWcrFhEoi` (fuente `69aa483`) completaron su build en Vercel. Se verificaron 14 recursos: los cinco JS nuevos, el CSS de esa integración y un JS anterior en cada preview. Todos respondieron HTTP 200, con SHA256 idéntico al commit correspondiente y `Cache-Control: public, max-age=31536000, immutable`. La lectura no ejecutó JavaScript ni abrió landings ni asignó números.
+
+La actualización posterior de iconos conserva los cinco runtimes byte a byte; fue integrada desde main y validada de nuevo por los generadores y la suite móvil. La compilación productiva final usa las variables de producción, separadas de las previews. Los identificadores y el estado final del despliegue se conservan en la evidencia local del lote.
 
 Comandos principales, desde `frontend`:
 

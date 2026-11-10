@@ -95,6 +95,23 @@ test("browser: all six templates in both engines reuse late assignments and keep
         assert.equal(requests, 1, label + " must not reassign after timeout");
         assert.equal(await cta.isDisabled(), false, label + " CTA recovers");
         assert.equal((await cta.textContent())?.trim(), "Continuar");
+        for (const [name, element] of [["CTA", cta], ["notice", page.locator(".public-phone-notice")]] as const) {
+          const bounds = await element.evaluate(node => {
+            const rect = node.getBoundingClientRect();
+            const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+            const texts: Array<{ left: number; right: number }> = [];
+            let text: Node | null;
+            while ((text = walker.nextNode())) {
+              if (!text.textContent?.trim()) continue;
+              const range = document.createRange(); range.selectNodeContents(text);
+              for (const value of range.getClientRects()) if (value.width > 0) texts.push({ left: value.left, right: value.right });
+            }
+            return { left: rect.left, right: rect.right, width: rect.width, viewport: innerWidth, texts };
+          });
+          assert.equal(bounds.viewport, 390);
+          assert.ok(bounds.width > 0 && bounds.left >= -1 && bounds.right <= bounds.viewport + 1, label + " " + name + " fits the mobile viewport: " + JSON.stringify(bounds));
+          assert.ok(bounds.texts.length > 0 && bounds.texts.every(text => text.left >= bounds.left - 1 && text.right <= bounds.right + 1), label + " " + name + " text fits its box: " + JSON.stringify(bounds));
+        }
         assert.equal(await page.evaluate(() => (window as any).__pixelCalls.filter((call: any[]) => call.includes("Contact")).length), 0);
         assert.equal(await page.evaluate(() => (window as any).__outbound.length), 0);
         // Odd templates receive the late result while idle; even ones resume while it is pending.
