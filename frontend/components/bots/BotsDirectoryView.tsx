@@ -198,12 +198,14 @@ export function BotsDirectoryView(p: Props) {
 
   return <div className={styles.view}>
     <header className={styles.header}>
-      <h1 className={`ui-page-title ${styles.title}`}>Redirección</h1><div className={styles.headerDetails}><div className={styles.syncLine}>
-        <span>{p.canAtrio ? "WhatsApp y Atrio por gerencia" : "WhatsApp por gerencia"}</span><span aria-hidden="true">·</span>
+      <h1 className={`ui-page-title ${styles.title}`}>Redirección</h1><div className={styles.headerDetails}><div className={styles.headerCopy}>
+        <p className={styles.channelDescription}>{p.canAtrio ? "WhatsApp y Atrio por gerencia" : "WhatsApp por gerencia"}</p>
+        <div className={styles.syncLine}>
         <span title={`Métricas de mensajes calculadas por backend cada 30 min${p.metricsTime ? ` · última actualización ${p.metricsTime}` : ""}. El horario de sincronización corresponde al inventario o los teléfonos recibidos.`}>
           <span className={`${styles.dot} ${latestSync ? styles.positive : styles.neutral}`} aria-hidden="true" /> {p.globalSyncing ? "Sincronizando…" : syncTime ? `Sincronizado ${syncTime}` : "Sincronización pendiente"}, próxima en <span className="tabular-nums">{p.countdown}</span>
         </span>
         <button type="button" disabled={p.globalSyncing || !p.canSync} onClick={p.onSyncAll}>Sincronizar ahora</button>
+        </div>
       </div>
       {p.management}
       </div>
