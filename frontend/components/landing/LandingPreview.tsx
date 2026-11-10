@@ -681,10 +681,9 @@ export function LandingPreview({
                   backgroundColor: template4CtaBackgroundColor,
                 }}
               >
-                <svg className="h-7 w-7 shrink-0" viewBox="0 0 48 48" aria-hidden="true">
-                  <g transform="translate(-700 -360)">
-                    <path fill="currentColor" fillRule="evenodd" d={WHATSAPP_ICON_PATH} />
-                  </g>
+                <svg className="h-8 w-8 shrink-0" viewBox="0 0 32 32" aria-hidden="true">
+                  <path fill="#25D366" d={WHATSAPP_GREEN_PATH} />
+                  <path fill="#FFFFFF" stroke="#FFFFFF" strokeWidth="0.6" strokeLinejoin="round" paintOrder="stroke fill" d={WHATSAPP_WHITE_PATH} />
                 </svg>
                 <span className="min-w-0 truncate text-[20px] font-black">{template4CtaText}</span>
               </button>
@@ -935,10 +934,9 @@ export function LandingPreview({
         {!gallery && (
           <div className="absolute inset-x-0 bottom-[58px] z-20 bg-transparent px-4 pb-4 pt-9">
             <button className="flex h-[58px] w-full items-center justify-center gap-3 rounded-full bg-[#25d366] text-[20px] font-black tracking-[-0.02em] text-white shadow-[0_0_0_9px_rgba(37,211,102,.13),0_14px_28px_rgba(37,211,102,.2)]">
-              <svg className="h-7 w-7 shrink-0" viewBox="0 0 48 48" aria-hidden="true">
-                <g transform="translate(-700 -360)">
-                  <path fill="currentColor" fillRule="evenodd" d={WHATSAPP_ICON_PATH} />
-                </g>
+              <svg className="h-8 w-8 shrink-0" viewBox="0 0 32 32" aria-hidden="true">
+                <path fill="#25D366" d={WHATSAPP_GREEN_PATH} />
+                <path fill="#FFFFFF" stroke="#FFFFFF" strokeWidth="0.6" strokeLinejoin="round" paintOrder="stroke fill" d={WHATSAPP_WHITE_PATH} />
               </svg>
               <span className="min-w-0 truncate">ENTRAR POR WHATSAPP</span>
             </button>
@@ -1059,9 +1057,9 @@ export function LandingPreview({
                     fontSize: Math.min(22, Math.max(18, config.ctaFontSize || 18)), fontWeight: 800, lineHeight: 1.15 } : {}) }}>
                   <span className="min-w-0 truncate">{card.ctaText || config.ctaText || "Abrir WhatsApp"}</span>
                   {cover.showWhatsAppLogo ? (
-                    <svg className={`shrink-0 ${gallery ? "h-2.5 w-2.5" : template === 6 ? "h-5 w-5" : "h-[18px] w-[18px]"}`} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+                    <svg className={`shrink-0 ${gallery ? "h-2.5 w-2.5" : template === 6 ? "h-6 w-6" : "h-[18px] w-[18px]"}`} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
                       <path fill="#25D366" d={WHATSAPP_GREEN_PATH} />
-                      <path fill="#FFFFFF" d={WHATSAPP_WHITE_PATH} />
+                      <path fill="#FFFFFF" d={WHATSAPP_WHITE_PATH} style={template === 6 ? { stroke: "#FFFFFF", strokeWidth: 0.6, strokeLinejoin: "round", paintOrder: "stroke fill" } : undefined} />
                     </svg>
                   ) : null}
                 </div>

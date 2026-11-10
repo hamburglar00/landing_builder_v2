@@ -27,3 +27,11 @@ Publicación verificada el 10/11/2026 a las 15:06 UTC (12:06 de Buenos Aires), d
 Los tres dominios devuelven HTTP 200 para `landing-d7816d41a7dbda1fcbb0fac6.css`, con contenido idéntico al recurso validado y SHA-256 `d7816d41a7dbda1fcbb0fac6f859d4bac575a202a6768ac273f8c8a0aa202a90`. Evidencia de despliegues y lectura pública en `.vercel/cta-typography-20261110/release-observed.json` y `production-smoke.json`.
 
 No requiere migraciones ni despliegue de funciones. El registro documental posterior no modifica el código publicado.
+
+## Ajuste posterior: logo de WhatsApp más visible
+
+El usuario solicita más tamaño y espesor para el logo. Los CTA 4/5 pasan de 28 a 32 px y el 6 de 20 a 24 px, con un refuerzo blanco de 0,6 unidades y uniones redondeadas. Se conservan los paths canónicos de marca; el efecto se aplica solo a estos CTA. Las vistas previas 4/5 usan ahora las mismas dos capas que el renderer público. Se mantienen dimensiones del botón y tipografía del lote anterior, incluyendo el tratamiento de textos largos.
+
+Alcance: Builder y clásico, con CSS de Builder como fuente canónica y bundle/asset sincronizados al clásico. NexoBet no utiliza estos CTA; los 24 archivos de marketing fijados no presentan diferencias. Template 8, Atrio y los cuatro gateways no cambian.
+
+Verificación del ajuste: 216 casos Chromium/WebKit aprobados, ahora comprobando también los tamaños finales de icono y el trazo blanco de 0,6. Sin desbordes y con botones de igual tamaño. Las 16 pruebas públicas/Template 8 de Builder y 10 de entrega pública/Template 6 del clásico pasan. Los runtimes JS permanecen iguales; se regenera solo el CSS versionado y su referencia en el bundle. Publicación separada por push a `main` y comprobación READY/alias de ambos productos; registro actual en `.vercel/cta-typography-20261110/release-observed.json` y `production-smoke.json`.
