@@ -34,7 +34,6 @@ export default async function AdminDocumentacionPage() {
       </div>
       <div className="ui-page-header">
         <div>
-          <p className="ui-page-eyebrow">Base técnica</p>
           <h1 className="ui-page-title">Documentación</h1>
           <p className="ui-page-description">README y referencias internas del proyecto.</p>
         </div>

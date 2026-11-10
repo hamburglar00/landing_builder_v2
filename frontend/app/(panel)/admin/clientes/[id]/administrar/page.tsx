@@ -284,7 +284,6 @@ export default function AdminClientManagePage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Cuenta de cliente"
         title="Administrar cliente"
         description="Gestioná acceso, plan, permisos y visibilidad de módulos."
         actions={

@@ -153,7 +153,6 @@ export default function AdminLandingsPage() {
         </p>
       )}
       <PageHeader
-        eyebrow="Constructor global"
         title="Landings"
         description="Creá y administrá landings propias y de clientes."
         actions={

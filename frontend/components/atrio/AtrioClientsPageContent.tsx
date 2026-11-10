@@ -305,7 +305,6 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Integración"
         title="Atrio"
         description="Tus asesores y sus bots. Consultá las asignaciones y los chats de cada destino."
         actions={

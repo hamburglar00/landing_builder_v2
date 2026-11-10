@@ -1226,7 +1226,6 @@ export default function AdminConversionesPage() {
   return (
     <div className="space-y-6 pb-8">
       <PageHeader
-        eyebrow="Performance global"
         title="Conversiones"
         description="Pipeline consolidado de contactos, leads, compras y métricas comerciales."
       />

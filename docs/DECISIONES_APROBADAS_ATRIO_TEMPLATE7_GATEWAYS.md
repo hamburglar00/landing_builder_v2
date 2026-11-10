@@ -1,5 +1,11 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Encabezados uniformes y jerarquía de Redirección (10/11/2026)
+
+- Quitar de todas las secciones del panel el rótulo verde que antecede al título («Constructor», «Workspace», etc.) y mostrar sus títulos en mayúsculas, tanto en cliente como administrador. Aplicar al componente común, Documentación y vistas previas del editor; conservar descripciones y acciones. El cambio no incluye títulos de las landings públicas ni etiquetas de los modales.
+- Dar más jerarquía a la cabecera de la tabla de Redirección con fondo verde más contrastado, contorno de marca, texto de mayor peso y altura adicional. Mantener los grupos separados, su tamaño de fila, las columnas alineadas, los filtros, todas las acciones y la paginación de 50 por demanda. En móvil, el desplazamiento horizontal queda dentro de la tabla.
+- Alcance exclusivo del panel Builder. Sin cambios del clásico, NexoBet, Atrio, gateways, recursos de marca, tracking ni datos. [Validación](validation/panel-headings-20261110.md).
+
 ### Favicon de LandingBuilder en ambos motores (10/11/2026)
 
 - Usar el favicon SVG de LandingBuilder en las nueve plantillas del constructor y del motor clásico, incluidas sus páginas legales. El usuario elige este recurso común en lugar de los logos particulares de las landings. Optimizar sin cambiar su apariencia y servir un archivo estático con nombre basado en su contenido y caché prolongada.

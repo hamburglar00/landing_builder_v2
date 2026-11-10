@@ -231,7 +231,6 @@ export default function DashboardLandingsPage() {
         </p>
       )}
       <PageHeader
-        eyebrow="Constructor"
         title="Landings"
         description="Creá, conectá y administrá todas tus experiencias publicadas."
         actions={

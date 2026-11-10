@@ -537,7 +537,6 @@ export default function DashboardLandingEditarPage() {
 
         </div>
         <PageHeader
-          eyebrow="Editor"
           title="Editar landing"
           description="Configurá identidad, publicación, tracking y contenido visual."
         />

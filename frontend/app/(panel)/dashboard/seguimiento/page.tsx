@@ -247,7 +247,6 @@ export default function DashboardSeguimientoPage() {
   return (
     <div className="space-y-6 pb-8">
       <PageHeader
-        eyebrow="Retención"
         title="Seguimiento"
         description="Monitoreá jugadores, actividad reciente y señales de retención."
       />

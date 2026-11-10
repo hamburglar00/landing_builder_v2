@@ -387,6 +387,9 @@ a {
 
 .ui-page-title {
   margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
 }
 
 .ui-page-description {

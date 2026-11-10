@@ -61,7 +61,7 @@ export default function AdminLandingPreviewPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-100">
+          <h1 className="ui-page-title text-xl font-semibold text-zinc-100">
             Preview: {landing.name}
           </h1>
           {landing.comment ? (

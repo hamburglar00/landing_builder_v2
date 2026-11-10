@@ -172,7 +172,6 @@ export default function DashboardPlanPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Suscripción"
         title="Plan"
         description="Consultá tu plan actual y compará las alternativas disponibles."
       />

@@ -56,7 +56,6 @@ export function HomeOverview({
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow={role === "admin" ? "Control center" : "Workspace"}
         title="Inicio"
         description={`Resumen ejecutivo de landings y conversiones · ${scopeLabel} en ${currency}.`}
         actions={<span className="ui-badge">{currency} · Mes actual</span>}

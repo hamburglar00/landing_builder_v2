@@ -13,13 +13,11 @@ function cx(...values: Array<string | false | null | undefined>) {
 }
 
 export function PageHeader({
-  eyebrow,
   title,
   description,
   actions,
   className,
 }: {
-  eyebrow?: string;
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
@@ -28,7 +26,6 @@ export function PageHeader({
   return (
     <header className={cx("ui-page-header", className)}>
       <div className="min-w-0">
-        {eyebrow ? <p className="ui-page-eyebrow">{eyebrow}</p> : null}
         <h1 className="ui-page-title">{title}</h1>
         {description ? <p className="ui-page-description">{description}</p> : null}
       </div>

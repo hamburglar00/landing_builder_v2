@@ -166,7 +166,6 @@ export default function AdminSeguimientoPage() {
   return (
     <div className="space-y-6 pb-8">
       <PageHeader
-        eyebrow="Retención global"
         title="Seguimiento"
         description="Monitoreá jugadores, actividad reciente y señales de retención."
       />
