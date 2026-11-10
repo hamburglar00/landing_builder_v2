@@ -28,6 +28,7 @@ import { workspaceCapiEnabled, WORKSPACE_CAPI_DISABLED_STATUS } from "../convers
 import { resolvePurchaseEventSourceUrl, sourceUrlFromPayload } from "../conversions/purchase_source_url.ts";
 import { landingCtaCapiEnabled, capiEventStorage, frozenLandingCtaEvent } from "../conversions/landing_cta_event.ts";
 import { hasActivePurchaseIngestEvent } from "../conversions/purchase_ingest.ts";
+import { logRetryQueueSelectionFailure } from "./queue_diagnostics.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -124,6 +125,7 @@ Deno.serve(async (req) => {
       .limit(100);
 
     if (contactRetryError) {
+      logRetryQueueSelectionFailure("contact_selection", contactRetryError);
       return new Response(
         JSON.stringify({ error: "Error al buscar Contact CAPI retry" }),
         {
@@ -143,6 +145,7 @@ Deno.serve(async (req) => {
       .limit(100);
 
     if (leadRetryError) {
+      logRetryQueueSelectionFailure("lead_selection", leadRetryError);
       return new Response(
         JSON.stringify({ error: "Error al buscar Lead CAPI retry" }),
         {
@@ -170,10 +173,7 @@ Deno.serve(async (req) => {
       .limit(100);
 
     if (error) {
-      console.error(
-        "[retry-failed-conversions] purchase retry selection failed",
-        error.message,
-      );
+      logRetryQueueSelectionFailure("purchase_selection", error);
       return new Response(
         JSON.stringify({ error: "Error al buscar conversiones" }),
         {

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { build } from "esbuild";
@@ -33,7 +34,7 @@ async function main() {
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "synthetic-only";
   process.env.NEXT_PUBLIC_META_IP_COLLECTOR_URL = "";
   const root = path.resolve(process.cwd(), "..");
-  const classic = path.resolve(root, "../landing-prueba-1");
+  const classic = path.resolve(process.env.LANDING_CLASSIC_ROOT || path.join(root, "../landing-prueba-1"));
   const require = createRequire(path.join(classic, "package.json"));
   const { renderClassicTemplate7InlineHtml } = require("./lib/template7/shared.cjs");
   const { parsePayload: parseClassicPayload } = await import(pathToFileURL(path.join(classic, "lib/reyDeAses/start.server.ts")).href);
@@ -74,9 +75,12 @@ async function main() {
         content = await publicRuntimeResponse().text(); type = "text/javascript";
       } else if (url.pathname.endsWith("landing-styles-v3.css")) {
         content = PUBLIC_LANDING_CSS; type = "text/css";
+      } else if (/^\/public-assets\/template-entry\/(?:t[78]-(?:classic|builder)|landing|analytics)-[a-f0-9]{24}\.(?:js|css)$/.test(url.pathname)) {
+        content = await readFile(path.join(root, "frontend/public", url.pathname), "utf8");
+        type = url.pathname.endsWith(".css") ? "text/css" : "text/javascript";
       } else if (url.pathname.includes("landing-phone")) {
         content = JSON.stringify({ phone: "5491100000001", landingId, landingName: "Synthetic attribution", phoneMode: "random", phoneKind: "carga" });
-      } else if (url.pathname.includes("landing-atrio")) {
+      } else if (url.pathname.includes("landing-atrio") || url.pathname === "/api/template7/destination") {
         content = JSON.stringify({ atrioClientId: "a0000000-0000-4000-8000-000000000002", atrioId: "a0000000-0000-4000-8000-000000000003", atrioSlug: "synthetic" });
       } else if (url.pathname === "/api/client-identity/bootstrap") {
         content = JSON.stringify({ ok: true });

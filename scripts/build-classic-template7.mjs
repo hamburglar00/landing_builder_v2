@@ -5,19 +5,20 @@ import path from "node:path";
 import { createHash } from 'node:crypto';
 
 const root = fileURLToPath(new URL("../", import.meta.url));
+const classicRoot = path.resolve(process.env.LANDING_CLASSIC_ROOT || path.join(root, "../landing-prueba-1"));
 const require = createRequire(path.join(root, "frontend/package.json"));
 const { build } = require("esbuild");
-const target = path.resolve(root, "../landing-prueba-1/lib/template7/shared.cjs");
-const resolutionTarget = path.resolve(root, "../landing-prueba-1/lib/landing/resolution.ts");
+const target = path.join(classicRoot, "lib/template7/shared.cjs");
+const resolutionTarget = path.join(classicRoot, "lib/landing/resolution.ts");
 const resolutionSource = '// GENERATED from landing-builder/frontend/lib/landing/resolution.ts.\n' +
   await readFile(path.join(root, 'frontend/lib/landing/resolution.ts'), 'utf8');
-const handoffTarget = path.resolve(root, "../landing-prueba-1/lib/reyDeAses/handoff-url.ts");
+const handoffTarget = path.join(classicRoot, "lib/reyDeAses/handoff-url.ts");
 const handoffSource = '// GENERATED from landing-builder/frontend/lib/reyDeAses/handoff-url.ts.\n' +
   await readFile(path.join(root, 'frontend/lib/reyDeAses/handoff-url.ts'), 'utf8');
-const fbcTarget = path.resolve(root, "../landing-prueba-1/lib/tracking/landingFbc.ts");
+const fbcTarget = path.join(classicRoot, "lib/tracking/landingFbc.ts");
 const fbcSource = '// GENERATED from landing-builder/frontend/lib/tracking/landingFbc.ts.\n' +
   await readFile(path.join(root, 'frontend/lib/tracking/landingFbc.ts'), 'utf8');
-const registrationStatsTarget = path.resolve(root, "../landing-prueba-1/lib/reyDeAses/registrationStats.server.ts");
+const registrationStatsTarget = path.join(classicRoot, "lib/reyDeAses/registrationStats.server.ts");
 const registrationStatsSource = '// GENERATED from landing-builder/frontend/lib/reyDeAses/registrationStats.server.ts.\n' +
   await readFile(path.join(root, 'frontend/lib/reyDeAses/registrationStats.server.ts'), 'utf8');
 const result = await build({
@@ -28,7 +29,6 @@ const result = await build({
   banner: { js: "// GENERATED from landing-builder. Run scripts/build-classic-template7.mjs --write there.\n// Contains only public rendering/tracking logic; no environment values are embedded." },
 });
 const source = result.outputFiles[0].text;
-const classicRoot=path.resolve(root,'../landing-prueba-1');
 const analytics=await build({absWorkingDir:classicRoot,entryPoints:['lib/landing/analytics-runtime.ts'],bundle:true,write:false,platform:'browser',format:'iife',target:'es2020',minify:true,legalComments:'none',define:{'process.env.NODE_ENV':'"production"'}});
 const analyticsSource=analytics.outputFiles[0].text;
 const analyticsName=`analytics-${createHash('sha256').update(analyticsSource).digest('hex').slice(0,24)}.js`;
@@ -39,7 +39,7 @@ if(process.argv.includes('--write')){
   await writeFile(analyticsFile,analyticsSource);await writeFile(analyticsManifestFile,analyticsManifest);
 }else if(await readFile(analyticsFile,'utf8')!==analyticsSource||await readFile(analyticsManifestFile,'utf8')!==analyticsManifest)throw Error('Classic analytics adapter out of sync');
 const assetSource=path.join(root,'frontend/public/public-assets/template-entry');
-const assetTarget=path.resolve(root,'../landing-prueba-1/public/public-assets/template-entry');
+const assetTarget=path.join(classicRoot,'public/public-assets/template-entry');
 if(process.argv.includes('--write'))await mkdir(assetTarget,{recursive:true});
 for(const name of await readdir(assetSource)){
   if(!/^(?:t[78]-(?:classic|builder)-[a-f0-9]{24}\.js|landing-[a-f0-9]{24}\.(?:js|css))$/.test(name))continue;

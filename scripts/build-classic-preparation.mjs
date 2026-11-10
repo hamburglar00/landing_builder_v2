@@ -12,8 +12,9 @@ const result = await build({
   bundle: true, write: false, platform: "node", format: "cjs", target: "node20",
   banner: { js: "// GENERATED SERVER-ONLY issuer from landing-builder. Run scripts/build-classic-preparation.mjs --write there. No environment values are embedded." },
 });
-const directory = new URL("../../landing-prueba-1/lib/template7/", import.meta.url);
-const target = new URL("preparation.cjs", directory);
+const classicRoot = path.resolve(process.env.LANDING_CLASSIC_ROOT || path.join(root, "../landing-prueba-1"));
+const directory = path.join(classicRoot, "lib/template7");
+const target = path.join(directory, "preparation.cjs");
 const source = result.outputFiles[0].text;
 if (process.argv.includes("--write")) {
   await mkdir(directory, { recursive: true });

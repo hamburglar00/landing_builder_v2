@@ -7,6 +7,7 @@ import { ENTRY_REQUEST_RECOVERY_SCRIPT } from "@/lib/reyDeAses/request-recovery"
 import { buildEntryFunnelRuntimeScript } from "@/lib/landing/entryFunnel.client";
 import { buildLandingFbcFactoryScript } from "@/lib/tracking/landingFbc";
 import { META_EBP_COLLECTOR_URL } from "@/lib/meta/ebpAssetManifest";
+import { buildLandingPhoneRequestFactoryScript } from "@/lib/landing/landingPhoneRequest.client";
 
 type Props = {
   slug: string;
@@ -145,6 +146,9 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
       var template7ContactSent = false;
       var template7AttemptContext = null;
       var noPhoneTimer = null;
+      var phoneRequests = null;
+      var phoneVisualAttempt = 0;
+      var phoneDiagnosticSequence = 0;
       var scopedFbc = (${buildLandingFbcFactoryScript()})({landingId:cfg.landingId,slug:cfg.slug,workspaceCurrency:cfg.workspaceCurrency,pixelId:cfg.pixelId});
       var metaTracking = {
         fbp: "",
@@ -725,35 +729,35 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
         });
       }
 
+      function getPhoneRequests() {
+        if (!phoneRequests) phoneRequests = (${buildLandingPhoneRequestFactoryScript()})();
+        return phoneRequests;
+      }
+
+      function ensurePhoneRequest(retrySettledFailure) {
+        var request = getPhoneRequests().request(cfg, retrySettledFailure === true);
+        if (!request.reported && window.__entryFunnel) {
+          request.reported = true;
+          var sequence = ++phoneDiagnosticSequence;
+          request.promise.then(function (result) {
+            // The request may predate the click or finish after another attempt. Keep it flow scoped.
+            try {
+              if (Number.isSafeInteger(result.duration_ms)) window.__entryFunnel?.emit("stage_timing", {
+                phase: "destination_request", duration_ms: result.duration_ms, flow_scoped: true, resource_key: "phone-" + sequence
+              });
+            } catch (e) {}
+          });
+        }
+        return request;
+      }
+
       function ensurePhonePromise() {
         if (isAtrioDestination()) return Promise.resolve(null);
-        window.__PUBLIC_LANDING_PHONE_PROMISES = window.__PUBLIC_LANDING_PHONE_PROMISES || {};
-        var existing = window.__PUBLIC_LANDING_PHONE_PROMISES[cfg.slug];
-        if (existing) return existing;
-        var baseUrl = cfg.supabaseUrl;
-        var anonKey = cfg.supabaseAnonKey;
-        if (!baseUrl || !anonKey) return Promise.resolve(null);
-        var endpoint = baseUrl.replace(/\\/+$/, "") + "/functions/v1/landing-phone?name=" + encodeURIComponent(cfg.slug);
-        var promise = fetch(endpoint, {
-          headers: { apikey: anonKey, Authorization: "Bearer " + anonKey },
-          cache: "no-store",
-          keepalive: true
-        }).then(function (response) {
-          if (!response.ok) return null;
-          return response.json();
-        }).catch(function () {
-          return null;
-        });
-        window.__PUBLIC_LANDING_PHONE_PROMISES[cfg.slug] = promise;
-        return promise;
+        return ensurePhoneRequest(false).promise.then(function (result) { return result.outcome === "ready" ? result.data : null; });
       }
 
       function clearPrewarmedPhonePromise() {
-        try {
-          if (window.__PUBLIC_LANDING_PHONE_PROMISES) {
-            delete window.__PUBLIC_LANDING_PHONE_PROMISES[cfg.slug];
-          }
-        } catch (e) {}
+        try { getPhoneRequests().reset(cfg.slug); } catch (e) {}
       }
 
       function ensureAtrioPromise() {
@@ -1015,6 +1019,50 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
           clickLocked = false;
           noPhoneTimer = null;
         }, 2000);
+      }
+
+      function showPhoneNotice(button, message) {
+        var notice = button.__publicPhoneNotice;
+        if (!notice && message) {
+          notice = document.createElement("p");
+          notice.id = "public-phone-notice-" + (++phoneDiagnosticSequence);
+          notice.className = "public-phone-notice";
+          notice.setAttribute("role", "status");
+          notice.style.cssText = "margin:.5rem 0;font-size:.875rem;line-height:1.4;text-align:center;overflow-wrap:anywhere;max-width:100%";
+          button.insertAdjacentElement("afterend", notice);
+          button.setAttribute("aria-describedby", ((button.getAttribute("aria-describedby") || "") + " " + notice.id).trim());
+          button.__publicPhoneNotice = notice;
+        }
+        if (notice) { notice.textContent = message || ""; notice.hidden = !message; }
+      }
+
+      function renderPhoneFailure(button, outcome) {
+        setButtonText(button, outcome === "timeout" ? "Continuar" : "Reintentar");
+        showPhoneNotice(button, outcome === "timeout"
+          ? "La conexión está tardando. Tocá Continuar para seguir."
+          : outcome === "empty" ? "No hay un número disponible en este momento. Podés volver a intentar."
+          : "No pudimos completar la conexión. Tocá Reintentar.");
+      }
+
+      function failPhoneRequest(button, result, request, visualAttempt, tapStartedAt) {
+        if (visualAttempt !== phoneVisualAttempt) return;
+        var code = result.outcome === "timeout" ? "request_timeout"
+          : result.outcome === "network_error" ? "network_error"
+          : result.outcome === "legacy_unknown" ? "unknown"
+          : result.outcome === "invalid_response" || result.outcome === "unconfigured" ? "invalid_entry"
+          : result.status === 429 ? "rate_limited" : "destination_unavailable";
+        var details = { error_stage: "destination", error_code: code, duration_ms: Math.max(0, Date.now() - tapStartedAt) };
+        if (Number.isInteger(result.status)) details.status = result.status;
+        try { window.__entryFunnel?.emit("entry_error", details); } catch (e) {}
+        button.disabled = false;
+        clickLocked = false;
+        renderPhoneFailure(button, result.outcome);
+        if (result.outcome === "timeout") request.promise.then(function (late) {
+          // A late response can restore this idle CTA, never navigate or disturb a newer click.
+          if (visualAttempt !== phoneVisualAttempt || clickLocked) return;
+          if (late.outcome === "ready") { setButtonText(button, getRestButtonText(button)); showPhoneNotice(button, ""); }
+          else renderPhoneFailure(button, late.outcome);
+        });
       }
 
       function notifyPhoneClick(phoneData, phone) {
@@ -1316,6 +1364,8 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
         if (cfg.template === 7) setTemplate7Error("");
         clickLocked = true;
         button.disabled = true;
+        var phoneAttempt = ++phoneVisualAttempt;
+        if (!isAtrioDestination()) showPhoneNotice(button, "");
         setButtonText(button, getLoadingButtonText(button));
         notifyTemplate6CardClick(button);
         var tapStartedAt = Date.now();
@@ -1359,14 +1409,17 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
           var testEventCode = context.testEventCode;
           var shouldSkipContact = context.shouldSkipContact || (cfg.template === 7 && template7ContactSent);
 
+          var phoneRequest = isAtrioDestination() ? null : ensurePhoneRequest(true);
+          var phoneResult = null;
           Promise.all([
             refreshMetaTracking(params, tracking),
             isAtrioDestination()
               ? waitWithTimeout(ensureAtrioPromise(), 1500)
-              : waitWithTimeout(ensurePhonePromise(), 1500)
+              : getPhoneRequests().wait(phoneRequest, Math.max(0, 15000 - (Date.now() - tapStartedAt)))
           ])
             .then(function (resolved) {
               tracking = resolved[0];
+              if (phoneRequest) { phoneResult = resolved[1]; return phoneResult.data; }
               return resolved[1];
             })
             .then(function (targetData) {
@@ -1377,11 +1430,14 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
                 clearPrewarmedAtrioPromise();
                 return waitWithTimeout(ensureAtrioPromise(), 2500);
               }
-              if (targetData && targetData.phone) return targetData;
-              clearPrewarmedPhonePromise();
-              return waitWithTimeout(ensurePhonePromise(), 2500);
+              return targetData;
             })
             .then(function (targetData) {
+              if (phoneRequest && phoneAttempt !== phoneVisualAttempt) return;
+              if (phoneRequest && phoneResult.outcome !== "ready") {
+                failPhoneRequest(button, phoneResult, phoneRequest, phoneAttempt, tapStartedAt);
+                return;
+              }
               var atrioMode = isAtrioDestination();
               var gatewayMode = cfg.template === 7;
               var atrioData = atrioMode ? (targetData || {}) : null;
@@ -1400,7 +1456,11 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
               }
               if (gatewayMode && window.__entryFunnel) window.__entryFunnel.emit("destination_ready");
               if ((!atrioMode && !phone) || (atrioMode && !gatewayMode && !redirectUrl)) {
-                setNoPhoneState(button);
+                if (phoneRequest) {
+                  // Preserve the existing normalizer: malformed returned numbers cannot become destinations.
+                  clearPrewarmedPhonePromise();
+                  failPhoneRequest(button, { outcome: "invalid_response", status: phoneResult.status }, phoneRequest, phoneAttempt, tapStartedAt);
+                } else setNoPhoneState(button);
                 return;
               }
 
@@ -1543,9 +1603,11 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
         // necesita una asignacion nueva; la deduplicacion de Contact sigue en storage.
         window.addEventListener("pageshow", function (event) {
           if (!event.persisted || cfg.template !== 6) return;
+          phoneVisualAttempt++;
           clickLocked = false;
           ctas.forEach(function (button) {
             button.disabled = false;
+            showPhoneNotice(button, "");
             setButtonText(button, getRestButtonText(button));
           });
           clearPrewarmedPhonePromise();
