@@ -26,6 +26,23 @@ test("a CTA CompleteRegistration is a request, never a confirmed account or mess
   const result = computeChannelFunnel([contact("a", "atrio")], "atrio");
   assert.equal(result.contacts, 1); assert.equal(result.messages, 0); assert.equal(result.registrations, null);
 });
+
+test("canonical Atrio CTA columns never invent human messages or confirmed accounts", () => {
+  for (const event of ["Lead", "CompleteRegistration"] as const) {
+    const stage=event==="Lead"?"lead":"registration", id="cta-canonical";
+    const captured=contact("canonical","atrio",{
+      contact_event_id:id,estado:stage,
+      contact_payload_raw:JSON.stringify({source_platform:"landing",cta_destination:"atrio",landing_cta_event_version:1,
+        event_id:id,landing_cta_meta_event:event}),
+      [`${stage}_event_id`]:id,[`${stage}_event_time`]:time,
+    });
+    const result=computeChannelFunnel([captured],"atrio");
+    assert.equal(result.contacts,1);assert.equal(result.messages,0);assert.equal(result.registrations,null);
+    const confirmed=scopeStatisticsChannel([{...captured,confirmed_registration_event_id:"internal-account:real",
+      confirmed_registration_event_time:time+1}],[],"atrio",range);
+    assert.equal(confirmed.funnel.registrations,1);assert.equal(confirmed.funnel.registered,1);
+  }
+});
 test("no synthetic lead or registration is inferred from a purchase", () => {
   const rows = [contact("a", "whatsapp"), row("p", { purchase_event_id: "p", purchase_event_time: time + 30, purchase_type: "first" })];
   const result = computeChannelFunnel(rows, "whatsapp");

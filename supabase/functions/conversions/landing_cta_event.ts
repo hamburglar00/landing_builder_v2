@@ -2,6 +2,19 @@ type RecordValue = Record<string, unknown>;
 const object = (value: unknown): RecordValue => value && typeof value === "object" && !Array.isArray(value) ? value as RecordValue : {};
 export type LandingCtaEvent = "Lead" | "CompleteRegistration";
 
+type CaptureRow = {
+  contact_payload_raw?: unknown;
+  contact_event_id?: unknown;
+  contact_event_time?: unknown;
+  atrio_id?: unknown;
+  atrio_players_id?: unknown;
+  promo_code?: unknown;
+  assigned_gerencia_id?: unknown;
+  assigned_gerencia_external_id?: unknown;
+  assigned_gerencia_name?: unknown;
+  assigned_gerencia_label?: unknown;
+};
+
 /** Only the resolved, published landing can select the event. Strip browser markers. */
 export function freezeLandingCtaEvent(payload: RecordValue, publishedValue: unknown): RecordValue {
   const clean = { ...payload };
@@ -27,6 +40,35 @@ export function frozenLandingCtaEvent(row: { contact_payload_raw?: unknown; cont
       (payload.landing_cta_meta_event === "Lead" || payload.landing_cta_meta_event === "CompleteRegistration")
       ? payload.landing_cta_meta_event : null;
   } catch { return null; }
+}
+
+/** Keep the captured CTA identity for lineage/deduplication; store its actual Meta milestone separately. */
+export function landingCtaStoragePatch(row: CaptureRow): RecordValue {
+  const selected = frozenLandingCtaEvent(row);
+  if (!selected) return {};
+  const stage = selected === "Lead" ? "lead" : "registration";
+  return {
+    estado: stage,
+    [`${stage}_event_id`]: row.contact_event_id,
+    [`${stage}_event_time`]: row.contact_event_time,
+    [`${stage}_payload_raw`]: row.contact_payload_raw,
+    [`${stage}_atrio_id`]: row.atrio_id || "",
+    [`${stage}_atrio_players_id`]: row.atrio_players_id || "",
+    [`${stage}_incoming_promo_code`]: row.promo_code || "",
+    [`${stage}_agency_id`]: row.assigned_gerencia_external_id ? String(row.assigned_gerencia_external_id) : "",
+    [`${stage}_gerencia_id`]: row.assigned_gerencia_id ?? null,
+    [`${stage}_gerencia_external_id`]: row.assigned_gerencia_external_id ?? null,
+    [`${stage}_gerencia_name`]: row.assigned_gerencia_name || "",
+    [`${stage}_gerencia_label`]: row.assigned_gerencia_label || "",
+  };
+}
+
+/** Contact retry counters belong to the captured CTA, including a selected CompleteRegistration. */
+export function capiEventStorage(eventName: "Contact" | "Lead" | "CompleteRegistration" | "Purchase", row: CaptureRow) {
+  const deliveredEvent = eventName === "Contact" ? frozenLandingCtaEvent(row) || eventName : eventName;
+  const stage = deliveredEvent === "Contact" ? "contact" : deliveredEvent === "Lead" ? "lead"
+    : deliveredEvent === "CompleteRegistration" ? "registration" : "purchase";
+  return { eventName: deliveredEvent, stage, statusField: `${stage}_status_capi` } as const;
 }
 
 /** The old raw logger truncates at 4k. Keep a complete frozen envelope for retries. */

@@ -148,7 +148,14 @@ export function computeChannelFunnel(rows: ConversionRow[], channel: StatisticsC
   for (const row of rows) {
     for (const stage of stages) {
       if (!text(row[`${stage}_event_id`])) continue;
-      // CTA CompleteRegistration lives in contact_payload_raw, never in this confirmed stage.
+      // The canonical CTA milestone is advertising delivery, not a human message/account outcome.
+      const cta = payload(row.contact_payload_raw);
+      const isCtaMilestone = cta.landing_cta_event_version === 1 && cta.cta_destination === "atrio" &&
+        cta.source_platform === "landing" && text(cta.contact_event_id || cta.event_id) === text(row.contact_event_id) &&
+        text(row[`${stage}_event_id`]) === text(row.contact_event_id) &&
+        (stage === "lead" && cta.landing_cta_meta_event === "Lead" ||
+         stage === "registration" && cta.landing_cta_meta_event === "CompleteRegistration");
+      if (isCtaMilestone) continue;
       if (stage === "registration") registrationIds.add(`${row.user_id}::${row.registration_event_id}`);
       let candidates = stage === "contact" ? [row] : [contactsByEvent.get(text(row.contact_event_id)),
         contactsById.get(text(row[`${stage}_attribution_conversion_id`]))].filter((value): value is ConversionRow => !!value);

@@ -45,7 +45,7 @@ import {
 } from "./event_attribution.ts";
 
 import { urlAttribution } from "./url_attribution.ts";
-import { freezeLandingCtaEvent, landingCtaCapiEnabled, serializeLandingCtaCapture } from "./landing_cta_event.ts";
+import { freezeLandingCtaEvent, landingCtaCapiEnabled, serializeLandingCtaCapture, landingCtaStoragePatch, capiEventStorage } from "./landing_cta_event.ts";
 import { withOriginalEventTime } from "./event_time.ts";
 import { resolvePurchaseEventSourceUrl } from "./purchase_source_url.ts";
 import {
@@ -3381,15 +3381,14 @@ async function sendToMetaCAPI(
     pixelFallbackDisabledReason?: string;
   } = {},
 ): Promise<boolean> {
+  const delivery = capiEventStorage(eventName, row);
   if (!workspaceCapiEnabled(config, row.currency)) {
-    const statusField = eventName === "Contact" ? "contact_status_capi"
-      : eventName === "Lead" ? "lead_status_capi"
-      : eventName === "CompleteRegistration" ? "registration_status_capi" : "purchase_status_capi";
+    const statusField = delivery.statusField;
     const retryable = eventName === "Contact" ? { contact_capi_retryable: false }
       : eventName === "Lead" ? { lead_capi_retryable: false } : {};
     await db.from("conversions").update({ [statusField]: WORKSPACE_CAPI_DISABLED_STATUS, ...retryable }).eq("id", rowId);
     await writeLog(db, row.user_id, "sendToMetaCAPI", "INFO", "Meta CAPI desactivado para el workspace",
-      JSON.stringify({ workspace: normalizeCurrencyCode(row.currency, config.meta_currency), event_name: eventName }), rowId);
+      JSON.stringify({ workspace: normalizeCurrencyCode(row.currency, config.meta_currency), event_name: delivery.eventName }), rowId);
     return true; // An intentional skip is processed successfully, like other CAPI filters.
   }
   const sourcePlatform = normalizedSourcePlatform(row.source_platform);
@@ -3411,13 +3410,7 @@ async function sendToMetaCAPI(
     ? resolveEffectiveConfigForPixel(config, pixelConfigs, preferredPixelId)
     : { ...config, pixel_id: "" };
   const defaultPixel = norm(pixelConfigs.find((pc) => pc.is_default)?.pixel_id);
-  const statusField = eventName === "Contact"
-    ? "contact_status_capi"
-    : eventName === "Lead"
-    ? "lead_status_capi"
-    : eventName === "CompleteRegistration"
-    ? "registration_status_capi"
-    : "purchase_status_capi";
+  const statusField = delivery.statusField;
   const retryableField = eventName === "Contact"
     ? "contact_capi_retryable"
     : eventName === "Lead"
@@ -3427,21 +3420,21 @@ async function sendToMetaCAPI(
     ? resolvePurchaseType(row, customData)
     : null;
 
-  const okMsg = eventName === "Contact"
+  const okMsg = delivery.eventName === "Contact"
     ? "CONTACT OK"
-    : eventName === "Lead"
+    : delivery.eventName === "Lead"
     ? "LEAD OK"
-    : eventName === "CompleteRegistration"
+    : delivery.eventName === "CompleteRegistration"
     ? "COMPLETEREGISTRATION OK"
     : purchaseType === "repeat"
     ? "PURCHASE REPEAT OK"
     : "PURCHASE OK";
 
-  const errMsg = eventName === "Contact"
+  const errMsg = delivery.eventName === "Contact"
     ? "ERROR CONTACT"
-    : eventName === "Lead"
+    : delivery.eventName === "Lead"
     ? "ERROR LEAD"
-    : eventName === "CompleteRegistration"
+    : delivery.eventName === "CompleteRegistration"
     ? "ERROR COMPLETEREGISTRATION"
     : "ERROR PURCHASE";
 
@@ -3470,7 +3463,7 @@ async function sendToMetaCAPI(
         "INFO",
         "Meta CAPI Purchase omitido por monto minimo",
         JSON.stringify({
-          event_name: eventName,
+          event_name: delivery.eventName,
           row_id: rowId,
           event_id: eventId,
           source_platform: sourcePlatform,
@@ -3497,7 +3490,7 @@ async function sendToMetaCAPI(
       ).eq("id", rowId).single();
       const obs = appendObservation(
         current?.observaciones ?? "",
-        META_CRAWLER_CONTACT_OBSERVATION,
+        META_CRAWLER_CONTACT_OBSERVATION.replace(/\bCONTACT\b/g, delivery.eventName.toUpperCase()),
       );
       const updates: Record<string, unknown> = {
         [statusField]: META_CRAWLER_CONTACT_STATUS,
@@ -3512,7 +3505,7 @@ async function sendToMetaCAPI(
         "INFO",
         "Contact CAPI omitido por crawler de Meta",
         JSON.stringify({
-          event_name: eventName,
+          event_name: delivery.eventName,
           row_id: rowId,
           event_id: eventId,
           source_platform: sourcePlatform,
@@ -3541,7 +3534,7 @@ async function sendToMetaCAPI(
       chatraceConfig?.send_meta_capi_events === false)
   ) {
     const skippedMsg =
-      `${eventName.toUpperCase()} CAPI OMITIDO CHATRACE DESACTIVADO`;
+      `${delivery.eventName.toUpperCase()} CAPI OMITIDO CHATRACE DESACTIVADO`;
     const { data: current } = await db.from("conversions").select(
       "observaciones",
     ).eq("id", rowId).single();
@@ -3559,7 +3552,7 @@ async function sendToMetaCAPI(
       "INFO",
       "Meta CAPI omitido por config Chatrace",
       JSON.stringify({
-        event_name: eventName,
+        event_name: delivery.eventName,
         source_platform: row.source_platform,
       }),
       rowId,
@@ -3766,7 +3759,7 @@ async function sendToMetaCAPI(
   }
   if (shouldSkipCapiForNonMetaOrigin(effectiveConfig, row)) {
     const skippedMsg =
-      `${eventName.toUpperCase()} CAPI OMITIDO ORIGEN NO META ADS`;
+      `${delivery.eventName.toUpperCase()} CAPI OMITIDO ORIGEN NO META ADS`;
     const { data: current } = await db
       .from("conversions")
       .select("observaciones")
@@ -3786,7 +3779,7 @@ async function sendToMetaCAPI(
       "INFO",
       "Meta CAPI omitido por politica de origen",
       JSON.stringify({
-        event_name: eventName,
+        event_name: delivery.eventName,
         row_id: rowId,
         from_meta_ads: row.from_meta_ads === true,
         pixel_id: effectiveConfig.pixel_id,
@@ -3830,7 +3823,7 @@ async function sendToMetaCAPI(
       "WARN",
       "Meta CAPI omitido: pixel fallback deshabilitado",
       JSON.stringify({
-        event_name: eventName,
+        event_name: delivery.eventName,
         row_id: rowId,
         reason: options.pixelFallbackDisabledReason ||
           "pixel_fallback_disabled",
@@ -3953,7 +3946,7 @@ async function sendToMetaCAPI(
       "INFO",
       "Meta CAPI omitido por config del pixel",
       JSON.stringify({
-        event_name: eventName,
+        event_name: delivery.eventName,
         row_id: rowId,
         pixel_id: effectiveConfig.pixel_id,
         source_platform: sourcePlatform,
@@ -4012,7 +4005,7 @@ async function sendToMetaCAPI(
       "INFO",
       "Pixel resuelto por fallback",
       JSON.stringify({
-        event_name: eventName,
+        event_name: delivery.eventName,
         row_id: rowId,
         fallback_source: fallbackSource,
         selected_pixel_id: resolvedFallbackPixel,
@@ -4027,7 +4020,7 @@ async function sendToMetaCAPI(
 
   if (isEventTimeTooOldForMetaCapi(eventTime)) {
     const skippedMsg =
-      `${eventName.toUpperCase()} CAPI OMITIDO EVENT_TIME ANTIGUO`;
+      `${delivery.eventName.toUpperCase()} CAPI OMITIDO EVENT_TIME ANTIGUO`;
     const { data: current } = await db.from("conversions").select(
       "observaciones",
     ).eq("id", rowId).single();
@@ -4045,7 +4038,7 @@ async function sendToMetaCAPI(
       "WARN",
       "Meta CAPI omitido por event_time mayor a 7 dias",
       JSON.stringify({
-        event_name: eventName,
+        event_name: delivery.eventName,
         row_id: rowId,
         event_id: eventId,
         event_time: eventTime,
@@ -4066,11 +4059,11 @@ async function sendToMetaCAPI(
   const missingWebsiteConfig = !useBusinessMessaging &&
     (!effectiveConfig.meta_access_token || !effectiveConfig.pixel_id);
   if (missingBusinessMessagingConfig || missingWebsiteConfig) {
-    const missingCfgMsg = eventName === "Contact"
+    const missingCfgMsg = delivery.eventName === "Contact"
       ? "ERROR CONTACT NO CONFIG"
-      : eventName === "Lead"
+      : delivery.eventName === "Lead"
       ? "ERROR LEAD NO CONFIG"
-      : eventName === "CompleteRegistration"
+      : delivery.eventName === "CompleteRegistration"
       ? "ERROR COMPLETEREGISTRATION NO CONFIG"
       : "ERROR PURCHASE NO CONFIG";
     const { data: current } = await db.from("conversions").select(
@@ -4099,7 +4092,7 @@ async function sendToMetaCAPI(
           : !!effectiveConfig.pixel_id,
         has_waba: Boolean(businessMessagingConfig.wabaId),
         has_ctwa_clid: Boolean(ctwaClid),
-        event_name: eventName,
+        event_name: delivery.eventName,
         row_pixel_id: row.pixel_id ?? "",
         business_messaging_source: businessMessagingConfig.source,
       }),
@@ -4330,7 +4323,7 @@ async function sendToMetaCAPI(
             "WARN",
             "Meta CAPI OK sin log primario",
             JSON.stringify({
-              event_name: eventName,
+              event_name: delivery.eventName,
               row_id: rowId,
               event_id: eventId,
               note:
@@ -4343,7 +4336,7 @@ async function sendToMetaCAPI(
               "[sendToMetaCAPI] status enviado pero sin logs persistidos",
               {
                 row_id: rowId,
-                event_name: eventName,
+                event_name: delivery.eventName,
                 event_id: eventId,
               },
             );
@@ -4745,6 +4738,9 @@ async function handleContact(
     geo_country: geo.geo_country,
   };
 
+  Object.assign(row, landingCtaStoragePatch(row));
+  const delivery = capiEventStorage("Contact", row);
+
   const { data: inserted, error } = await db.from("conversions").insert(row)
     .select("id").single();
   if (error || !inserted) {
@@ -4854,6 +4850,7 @@ async function handleContact(
       phone: row.phone,
       landing: landing.name,
       contact_event_id: contactEventId,
+      event_name: delivery.eventName,
     }),
     rowId,
     undefined,
@@ -4909,10 +4906,10 @@ async function handleContact(
   } else {
     const skippedMsg = isWhatsappCloudApiContact
       ? "CONTACT CAPI OMITIDO WHATSAPP CLOUD API"
-      : "CONTACT CAPI OMITIDO CONFIG DESACTIVADA";
+      : `${delivery.eventName.toUpperCase()} CAPI OMITIDO CONFIG DESACTIVADA`;
     const skippedStatus = isWhatsappCloudApiContact
       ? "skipped_whatsapp_cloud_api_contact"
-      : "skipped_contact_capi_disabled";
+      : `skipped_${delivery.stage}_capi_disabled`;
     const skippedLogMessage = isWhatsappCloudApiContact
       ? "Contact CAPI omitido por WhatsApp Cloud API"
       : "Contact CAPI omitido por config del pixel";
@@ -4924,7 +4921,7 @@ async function handleContact(
     await db
       .from("conversions")
       .update({
-        contact_status_capi: skippedStatus,
+        [delivery.statusField]: skippedStatus,
         contact_capi_retryable: false,
         observaciones: appendObservation(
           current?.observaciones ?? "",

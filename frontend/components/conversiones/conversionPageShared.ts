@@ -121,8 +121,8 @@ const FRIENDLY_COLUMN_LABELS: Record<ConversionColumnKey, string> = {
   atrio_client_id: "Cliente Atrio interno",
   atrio_slug: "Slug de Atrio",
   atrio_players_id: "Jugador Atrio",
-  contact_event_id: "ID del evento Contact",
-  contact_event_time: "Hora del evento Contact",
+  contact_event_id: "ID de captura",
+  contact_event_time: "Hora de captura",
   sendContactPixel: "Contact enviado por Pixel",
   contact_payload_raw: "Datos técnicos de Contact",
   lead_event_id: "ID del evento Lead",
@@ -185,7 +185,7 @@ const FRIENDLY_COLUMN_LABELS: Record<ConversionColumnKey, string> = {
   inferred_sex: "Sexo inferido",
   sex_source: "Origen del sexo",
   lead_player_username: "Jugador recibido en Lead",
-  registration_event_id: "ID de registro completo",
+  registration_event_id: "ID de CompleteRegistration",
   registration_event_time: "Hora de registro completo",
   registration_player_username: "Jugador creado",
   registration_payload_raw: "Datos tecnicos de registro",
@@ -242,10 +242,10 @@ export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> =
   atrio_client_id: "UUID interno de la configuracion Atrio seleccionada en el constructor.",
   atrio_slug: "Slug publico de Atrio usado por la landing para redirigir al webchat.",
   atrio_players_id: "Identificador del jugador/cliente dentro de Atrio, si Atrio lo informa.",
-  contact_event_id: "Event ID del Contact (dedupe Pixel/CAPI).",
-  contact_event_time: "Event time (unix) del Contact.",
+  contact_event_id: "ID original de captura para atribucion y deduplicacion. En el CTA de Atrio, el evento publicitario se guarda tambien en Lead o CompleteRegistration; no implica otro envio Contact.",
+  contact_event_time: "Fecha original de la captura (unix). El CTA de Atrio conserva esta fecha al registrar su evento elegido.",
   sendContactPixel: "Bandera enviada por la fuente para indicar si Contact tambien salio por Pixel browser.",
-  contact_payload_raw: "Payload crudo recibido para Contact (trazabilidad).",
+  contact_payload_raw: "Captura original del CTA para trazabilidad, incluido el evento de Meta congelado cuando el destino es Atrio.",
   lead_event_id: "Event ID del Lead enviado por CAPI.",
   lead_event_time: "Event time (unix) del Lead.",
   lead_payload_raw: "Payload crudo recibido para action=LEAD (trazabilidad).",
@@ -254,7 +254,7 @@ export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> =
   purchase_payload_raw: "Payload crudo recibido para action=PURCHASE (trazabilidad).",
   clientIP: "IP recibida en payload (clientIP/client_ip_address).",
   agentuser: "User-Agent recibido en payload (agentuser/client_user_agent).",
-  estado: "Estado actual de la conversion (contact, lead o purchase).",
+  estado: "Etapa actual: contact, lead, registration (CompleteRegistration) o purchase. El clic de Atrio conserva el evento elegido.",
   valor: "Monto de compra/carga recibido para Purchase.",
   currency: "Workspace/moneda asociada a la conversion y al monto (por ejemplo ARS o PYG).",
   workspace_resolution_source: "Nota de trazabilidad sobre la senal usada por backend para separar ARS/PYG.",
@@ -301,7 +301,7 @@ export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> =
   geo_region: "Region/provincia enriquecida por geolocalizacion IP.",
   geo_country: "Pais enriquecido por geolocalizacion IP.",
   lead_player_username: "player_username recibido con action=LEAD. Puede venir vacio o igual al telefono.",
-  registration_event_id: "Event/action ID recibido con action=COMPLETEREGISTRATION.",
+  registration_event_id: "ID de CompleteRegistration recibido o elegido para el CTA de Atrio. El nombre publicitario no prueba por si solo un alta exitosa.",
   registration_event_time: "Event time (unix) del registro completo.",
   registration_player_username: "player_username creado por la gerencia para ese jugador.",
   registration_payload_raw: "Payload crudo recibido para action=COMPLETEREGISTRATION.",
@@ -329,7 +329,7 @@ const FRIENDLY_COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>>
   from_meta_ads: "Indica si el recorrido parece venir de una publicidad de Meta.",
   pixel_attribution_source: "De donde tomamos el Pixel usado para atribuir la conversion.",
   pixel_attribution_conversion_id: "Registro anterior usado como referencia para mantener la atribucion.",
-  estado: "Etapa actual del recorrido: contacto, lead o compra.",
+  estado: "Etapa actual del recorrido: Contact, Lead, CompleteRegistration o Purchase.",
   valor: "Monto cargado o comprado en este evento.",
   currency: "Workspace/moneda donde quedo registrado el movimiento.",
   workspace_resolution_source: "Como decidimos en que workspace guardar el registro.",
@@ -455,7 +455,7 @@ export function displayConversionStage(row: {
   ) {
     return "LeadSubmitted";
   }
-  return estado;
+  return estado === "registration" ? "CompleteRegistration" : estado;
 }
 
 export function todayRange(): DateRange {
