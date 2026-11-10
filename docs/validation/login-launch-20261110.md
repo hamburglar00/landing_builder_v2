@@ -13,6 +13,7 @@ Los motores públicos, NexoBet, Atrio, los cuatro gateways, su SDK/Worker y API2
 - La transición persiste al desmontarse el login; permanece durante validación, rol, redirecciones y carga de Inicio. Se retira después de que el contenido de destino pinte, con un fundido de 240 ms. No esperar un ciclo ni introducir un tiempo mínimo de carga.
 - Respetar los errores de autenticación y red, el fallback de rol existente, las comprobaciones de permisos y el bloqueo por plan. Permitir reintentar; impedir autenticaciones concurrentes por doble envío. Si se vuelve al login, limpiar la transición pendiente.
 - Durante la transición, contenido subyacente `inert`, foco en el estado accesible y scroll del cuerpo bloqueado/restaurado. Sin texto de carga visible. Movimiento reducido: cohete estático y gases sin movimiento. Composición adaptada a móvil y horizontal.
+- Ajuste posterior aprobado: eliminar el logo horizontal de la transición y mostrar solo el texto centrado «LandingBuilder», en blanco/verde. Se conserva un único cohete visible, animado o inmóvil según la preferencia de movimiento; no cambia el recorrido, la autenticación ni el cierre de la transición. Se reutilizan el isotipo y los estilos existentes, sin modificar archivos de marca compartidos.
 
 ## Validación
 
@@ -20,6 +21,7 @@ Los motores públicos, NexoBet, Atrio, los cuatro gateways, su SDK/Worker y API2
 - `node scripts/test-login-launch-browser.mjs`: 16 escenarios con componentes reales y autenticación/router sintéticos, red externa bloqueada. Chromium/WebKit, 320×820, 390×820, 1280×820 y 844×390, movimiento normal/reducido.
 - Se verifican mayúsculas de ambos CTA, inicio inmediato, ausencia de desborde, cobertura de pantalla, foco, bloqueo de interacción y doble envío; errores de credenciales y de red; reintento; espera de rol; persistencia entre rutas; regreso al login; retiro al estar listo el destino y restauración de scroll/interacción. Vuelo ascendente y lateral comprobado por posiciones del isotipo sobre la curva. Capturas móviles revisadas.
 - `node scripts/sync-nexobet-marketing.mjs`: 24 archivos verificados sin cambios. Guardas de encoding y diff antes de commit.
+- Revisión del ajuste de un solo cohete: componente real renderizado en Chromium/WebKit, 16 combinaciones de móvil/escritorio/horizontal y movimiento normal/reducido. Texto y contenedor centrados con menos de un píxel de diferencia, blanco/verde conservados, sin imagen de logo horizontal ni desbordes, un único isotipo visible. CSS y trayectoria del vuelo, proveedor y control del login sin modificaciones funcionales. ESLint del componente sin errores; capturas en `.vercel/login-single-rocket-20261110/`.
 
 ## Publicación
 

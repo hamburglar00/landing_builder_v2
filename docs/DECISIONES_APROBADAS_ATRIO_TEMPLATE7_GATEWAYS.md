@@ -9,6 +9,7 @@
 
 ### Login de Builder: CTA y despegue (10/11/2026)
 
+- Ajuste aprobado: dejar un solo cohete visible en la transición, el de la espiral (o su variante inmóvil al reducir movimiento). Quitar el isotipo que acompañaba al nombre y centrar el texto «LandingBuilder» debajo, conservando blanco/verde. La trayectoria y el acceso permanecen iguales.
 - Mostrar en mayúsculas los CTA del login, incluido PBAdmin cuando esté habilitado. Al ingresar por credenciales, usar el cohete de la marca con una trayectoria suave en espiral ascendente, llama, vapor y humo de despegue. Mantener la animación durante autenticación, lectura del rol y navegación, hasta que Inicio haya pintado su contenido o su estado de error. No agregar una demora mínima para completar el vuelo.
 - Conservar el acceso por rol y todos los controles de autenticación. Cancelar la transición y permitir reintentar ante credenciales inválidas, errores de red o regreso al login; revelar también errores de permisos/plan/acceso. El indicador bloquea dobles envíos y la interacción con la pantalla cubierta, conserva un estado accesible y usa una presentación inmóvil con movimiento reducido.
 - Alcance exclusivo del login y la llegada a Inicio de Builder, para cliente y administrador. Reutilizar los SVG oficiales sin modificarlos; sin cambios de marca pública, motores de landing, NexoBet, Atrio, gateways, Worker, API2 ni esquemas. [Validación](validation/login-launch-20261110.md).

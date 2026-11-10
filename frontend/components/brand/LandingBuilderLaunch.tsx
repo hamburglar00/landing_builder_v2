@@ -1,5 +1,4 @@
 import type { CSSProperties, Ref } from "react";
-import { LandingBuilderLogo } from "./LandingBuilderLogo";
 import styles from "./LandingBuilderLaunch.module.css";
 
 const flightPath = "M160 294C144 278 214 266 210 244S105 220 108 198S208 170 201 150S125 124 128 106S183 82 180 66S143 43 149 28S164 8 160-10";
@@ -42,7 +41,7 @@ export function LandingBuilderLaunch({ leaving = false, overlayRef }: {
             {[0, 1, 2, 3, 4, 5].map(i => <span key={i} style={{ "--i": i } as CSSProperties} />)}
           </div>
         </div>
-        <LandingBuilderLogo className={styles.wordmark} />
+        <div className={styles.wordmark}>Landing<span>Builder</span></div>
         <div className={styles.dots}><span /><span /><span /></div>
       </div>
       <span className={styles.caption}>Preparando tu inicio.</span>
