@@ -67,11 +67,11 @@ begin
     if stage='lead' then
       update public.conversions set
         lead_event_id=r.contact_event_id,lead_event_time=r.contact_event_time,lead_payload_raw=r.contact_payload_raw,
-        lead_status_capi=canonical_status,lead_atrio_id=r.atrio_id,lead_atrio_players_id=r.atrio_players_id,
-        lead_incoming_promo_code=r.promo_code,
+        lead_status_capi=canonical_status,lead_atrio_id=coalesce(r.atrio_id,''),lead_atrio_players_id=coalesce(r.atrio_players_id,''),
+        lead_incoming_promo_code=coalesce(r.promo_code,''),
         lead_agency_id=coalesce(r.assigned_gerencia_external_id::text,''),lead_gerencia_id=r.assigned_gerencia_id,
-        lead_gerencia_external_id=r.assigned_gerencia_external_id,lead_gerencia_name=r.assigned_gerencia_name,
-        lead_gerencia_label=r.assigned_gerencia_label,
+        lead_gerencia_external_id=r.assigned_gerencia_external_id,lead_gerencia_name=coalesce(r.assigned_gerencia_name,''),
+        lead_gerencia_label=coalesce(r.assigned_gerencia_label,''),
         estado=case when nullif(r.purchase_event_id,'') is not null or r.estado='purchase' then 'purchase'
           when r.estado='registration' then 'registration' else 'lead' end,
         contact_status_capi='',contact_capi_retryable=case when canonical_status='enviado' then false else r.contact_capi_retryable end,
@@ -80,11 +80,11 @@ begin
     else
       update public.conversions set
         registration_event_id=r.contact_event_id,registration_event_time=r.contact_event_time,registration_payload_raw=r.contact_payload_raw,
-        registration_status_capi=canonical_status,registration_atrio_id=r.atrio_id,registration_atrio_players_id=r.atrio_players_id,
-        registration_incoming_promo_code=r.promo_code,
+        registration_status_capi=canonical_status,registration_atrio_id=coalesce(r.atrio_id,''),registration_atrio_players_id=coalesce(r.atrio_players_id,''),
+        registration_incoming_promo_code=coalesce(r.promo_code,''),
         registration_agency_id=coalesce(r.assigned_gerencia_external_id::text,''),registration_gerencia_id=r.assigned_gerencia_id,
-        registration_gerencia_external_id=r.assigned_gerencia_external_id,registration_gerencia_name=r.assigned_gerencia_name,
-        registration_gerencia_label=r.assigned_gerencia_label,
+        registration_gerencia_external_id=r.assigned_gerencia_external_id,registration_gerencia_name=coalesce(r.assigned_gerencia_name,''),
+        registration_gerencia_label=coalesce(r.assigned_gerencia_label,''),
         estado=case when nullif(r.purchase_event_id,'') is not null or r.estado='purchase' then 'purchase' else 'registration' end,
         contact_status_capi='',contact_capi_retryable=case when canonical_status='enviado' then false else r.contact_capi_retryable end,
         observaciones=regexp_replace(coalesce(r.observaciones,''),'\mCONTACT\M','COMPLETEREGISTRATION','g')
