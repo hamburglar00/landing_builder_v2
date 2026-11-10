@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { RouteProgress } from "@/components/ui/RouteProgress";
 import { LandingBuilderLogo } from "@/components/brand/LandingBuilderLogo";
 import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
+import { useLoginArrival } from "@/components/brand/LoginTransitionProvider";
 import { CurrencyScopeSelector } from "@/components/currency/CurrencyScope";
 import { AppConfirmProvider } from "@/components/ui/AppConfirmDialog";
 import { ClientModulePermissionsContext } from "@/components/clients/ClientModulePermissions";
@@ -384,6 +385,7 @@ export default function AdminLayout({
   const [roleError, setRoleError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
+  useLoginArrival(!isCheckingSession && isAdmin === false);
 
   useEffect(() => {
     const checkSession = async () => {

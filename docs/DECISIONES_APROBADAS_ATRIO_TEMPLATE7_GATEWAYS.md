@@ -7,6 +7,12 @@
 - Completar los huecos de medición del recorrido en el mismo lote: navegación frente a recorrido/intento, correlación con solicitudes backend, versiones por componente, resultado bancario explícito y fiabilidad de recepción. La telemetría actual tiene hitos de extremo a extremo, pero no equivale a una traza completa de todas las peticiones ni garantiza recepción de cada evento.
 - Mantener separada la entrega operativa pendiente de NexoBet/API2/Panel3 y los experimentos apagados. Una entrega conjunta puede tener commits y regresiones intermedias para identificar fallos y permitir reversión, conservando Pixel, reparto y las restricciones de publicación vigentes.
 
+### Login de Builder: CTA y despegue (10/11/2026)
+
+- Mostrar en mayúsculas los CTA del login, incluido PBAdmin cuando esté habilitado. Al ingresar por credenciales, usar el cohete de la marca con una trayectoria suave en espiral ascendente, llama, vapor y humo de despegue. Mantener la animación durante autenticación, lectura del rol y navegación, hasta que Inicio haya pintado su contenido o su estado de error. No agregar una demora mínima para completar el vuelo.
+- Conservar el acceso por rol y todos los controles de autenticación. Cancelar la transición y permitir reintentar ante credenciales inválidas, errores de red o regreso al login; revelar también errores de permisos/plan/acceso. El indicador bloquea dobles envíos y la interacción con la pantalla cubierta, conserva un estado accesible y usa una presentación inmóvil con movimiento reducido.
+- Alcance exclusivo del login y la llegada a Inicio de Builder, para cliente y administrador. Reutilizar los SVG oficiales sin modificarlos; sin cambios de marca pública, motores de landing, NexoBet, Atrio, gateways, Worker, API2 ni esquemas. [Validación](validation/login-launch-20261110.md).
+
 ### Encabezados uniformes y jerarquía de Redirección (10/11/2026)
 
 - Al ordenar, paginar o filtrar Redirección, reutilizar las métricas reales de Atrio ya obtenidas en la sesión/workspace por hasta cinco minutos; solicitar solamente los asesores nuevos o vencidos de la página. Invalidar al sincronizar, realizar acciones, refrescar automáticamente o cambiar usuario, permisos/workspace; no compartir caché entre propietarios ni persistirla. Conservar la ordenación global en servidor y el límite de 50 por demanda.

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "../globals.css";
 import { CurrencyScopeProvider } from "@/components/currency/CurrencyScope";
+import { LoginTransitionProvider } from "@/components/brand/LoginTransitionProvider";
 
 export const metadata: Metadata = {
   title: "LandingBuilder",
@@ -51,7 +52,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body>
-        <CurrencyScopeProvider>{children}</CurrencyScopeProvider>
+        <CurrencyScopeProvider><LoginTransitionProvider>{children}</LoginTransitionProvider></CurrencyScopeProvider>
       </body>
     </html>
   );

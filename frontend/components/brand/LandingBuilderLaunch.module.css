@@ -1,0 +1,49 @@
+.overlay { position: fixed; inset: 0; z-index: 2147483000; display: grid; place-items: center; min-height: 100svh; overflow: hidden; background: #0a0f12; outline: none; animation: arrive 160ms ease-out both; }
+.leaving { pointer-events: none; animation: depart 240ms ease-in both; }
+.composition { display: flex; flex-direction: column; align-items: center; padding: 24px; max-width: 100%; transform: translateY(-3vh); }
+.scene { position: relative; width: 20em; height: 22em; max-width: 100%; font-size: clamp(12px, 4vw, 16px); isolation: isolate; }
+.halo { position: absolute; inset: 5% -10% -5%; border-radius: 50%; background: radial-gradient(ellipse at 50% 70%, #8ee04e12, #8ee04e04 40%, transparent 68%); }
+.stars { position: absolute; inset: 0; opacity: .65; background: radial-gradient(circle at 16% 28%, #cff6ac 0 1px, transparent 1.5px), radial-gradient(circle at 80% 15%, #8ee04e 0 1px, transparent 1.5px), radial-gradient(circle at 28% 66%, #8ee04e 0 1px, transparent 1.5px), radial-gradient(circle at 84% 59%, #cff6ac 0 1px, transparent 1.5px), radial-gradient(circle at 55% 9%, #8ee04e 0 1px, transparent 1.5px); animation: starlight 2600ms ease-in-out infinite alternate; }
+.orbit { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.orbitBack, .orbitFront { stroke: #8ee04e; stroke-width: 1; stroke-linecap: round; }
+.orbitBack { opacity: .1; stroke-dasharray: 2 8; }
+.orbitFront { opacity: .24; stroke-dasharray: 30 500; animation: orbit 3200ms linear infinite; }
+.pad { position: absolute; bottom: 2.6em; left: 50%; width: 8em; height: 1.3em; transform: translateX(-50%); border: 1px solid #8ee04e28; border-radius: 50%; background: radial-gradient(ellipse, #8ee04e23, transparent 65%); box-shadow: 0 0 28px #8ee04e0c; animation: pad 3200ms ease-out infinite; }
+.movingRocket { animation: flight-visibility 3200ms linear infinite; }
+.stillRocket { display: none; }
+.rocketDepth { animation: depth 3200ms ease-in-out infinite; }
+.rocketDepth image { filter: drop-shadow(0 0 8px #8ee04e38); }
+.jet, .jetCore { transform-origin: -18px 0; animation: combustion 150ms ease-in-out infinite alternate; }
+.jet { filter: blur(2px); }
+.vapor { fill: #c9e5b440; transform-origin: -42px 0; filter: blur(3px); opacity: 0; animation: vapor 1000ms ease-out infinite; animation-delay: calc(var(--i) * -200ms); }
+.groundSmoke { position: absolute; bottom: 2.9em; left: 50%; }
+.groundSmoke span { position: absolute; left: -1.5em; top: -.8em; width: 3em; height: 1.6em; border-radius: 50%; background: radial-gradient(ellipse, #bdd7ac33, #7a986c18 46%, transparent 72%); filter: blur(5px); opacity: 0; animation: ground-vapor 3200ms ease-out infinite; }
+.sparkles { position: absolute; left: 50%; bottom: 3.8em; }
+.sparkles span { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #d9ffad; opacity: 0; box-shadow: 0 0 6px #8ee04e; animation: sparks 3200ms ease-out infinite; animation-delay: calc(var(--i) * 55ms); }
+.wordmark { display: block; width: 184px; max-width: 65vw; height: auto; margin-top: -8px; }
+.dots { display: flex; gap: 7px; margin-top: 20px; }
+.dots span { width: 4px; height: 4px; border-radius: 50%; background: #8ee04e; animation: pulse 1200ms ease-in-out infinite; }
+.dots span:nth-child(2) { animation-delay: 160ms; }
+.dots span:nth-child(3) { animation-delay: 320ms; }
+.caption { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@keyframes arrive { from { opacity: 0; } to { opacity: 1; } }
+@keyframes depart { to { opacity: 0; transform: scale(1.025); } }
+@keyframes flight-visibility { 0%, 100% { opacity: 0; } 5%, 85% { opacity: 1; } }
+@keyframes depth { 0%, 29%, 55% { transform: scale(1); } 42%, 68% { transform: scale(.8); } 80% { transform: scale(.85); } 100% { transform: scale(.4); } }
+@keyframes combustion { from { transform: scaleX(.8); opacity: .7; } to { transform: scaleX(1.15); opacity: 1; } }
+@keyframes vapor { 0% { transform: translate(0, 0) scale(.35); opacity: 0; } 20% { opacity: .65; } 100% { transform: translate(-36px, var(--drift)) scale(2.3); opacity: 0; } }
+@keyframes ground-vapor { 0%, 8% { transform: translate(0, 0) scale(.4); opacity: 0; } 18% { opacity: .8; } 55%, 100% { transform: translate(calc(var(--side) * 4.2em), .4em) scale(2.7); opacity: 0; } }
+@keyframes sparks { 0%, 8% { opacity: 0; transform: translate(0, 0); } 12% { opacity: .65; } 35%, 100% { opacity: 0; transform: translate(calc((var(--i) - 2.5) * 1.6em), -2.3em); } }
+@keyframes orbit { to { stroke-dashoffset: -530; } }
+@keyframes pad { 0%, 12% { opacity: .35; } 22% { opacity: 1; } 80%, 100% { opacity: .35; } }
+@keyframes starlight { to { opacity: .28; } }
+@keyframes pulse { 0%, 80%, 100% { opacity: .3; } 40% { opacity: 1; } }
+@media (max-height: 580px) { .scene { font-size: 10px; height: 20em; } .composition { transform: none; padding: 12px; } .wordmark { width: 152px; } .dots { margin-top: 10px; } }
+@media (prefers-reduced-motion: reduce) {
+  .overlay, .overlay *, .leaving { animation: none; }
+  .movingRocket { display: none; }
+  .stillRocket { display: inline; }
+  .jet, .jetCore { transform: scaleX(.5); opacity: .7; }
+  .vapor, .groundSmoke, .sparkles { display: none; }
+  .leaving { opacity: 0; }
+}

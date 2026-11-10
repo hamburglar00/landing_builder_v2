@@ -10,6 +10,7 @@ import ConstructorSetupGuide from "@/components/onboarding/ConstructorSetupGuide
 import { RouteProgress } from "@/components/ui/RouteProgress";
 import { LandingBuilderLogo } from "@/components/brand/LandingBuilderLogo";
 import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
+import { useLoginArrival } from "@/components/brand/LoginTransitionProvider";
 import { RedirectionIcon } from "@/components/ui/RedirectionIcon";
 import { CurrencyScopeSelector } from "@/components/currency/CurrencyScope";
 import { AppConfirmProvider } from "@/components/ui/AppConfirmDialog";
@@ -341,6 +342,7 @@ export default function DashboardLayout({
   const [setupGuideOpen, setSetupGuideOpen] = useState(false);
   const [hideSetupGuide, setHideSetupGuide] = useState(false);
   const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
+  useLoginArrival(!isCheckingSession && (Boolean(modulePermissionsError) || isPlanBlocked));
 
   useEffect(() => {
     const checkSession = async () => {

@@ -7,6 +7,7 @@ import type { HomeOverviewStats } from "@/lib/conversionsDb";
 import { fetchHomeOverviewStats } from "@/lib/conversionsDb";
 import { HomeOverview } from "@/components/conversiones/HomeOverview";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
+import { useLoginArrival } from "@/components/brand/LoginTransitionProvider";
 import {
   SingleCurrencyRequired,
   useCurrencyScope,
@@ -20,6 +21,7 @@ export default function DashboardInicioPage() {
   const [overviewStats, setOverviewStats] = useState<HomeOverviewStats | null>(null);
   const { currencyScope, isAllCurrencies } = useCurrencyScope();
   const reportingCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
+  useLoginArrival(ready);
 
   useEffect(() => {
     if (isAllCurrencies) {

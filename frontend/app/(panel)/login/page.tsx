@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { LandingBuilderLogo } from "@/components/brand/LandingBuilderLogo";
+import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
+import { useLoginTransition } from "@/components/brand/LoginTransitionProvider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const transition = useLoginTransition();
+  const submitting = useRef(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -15,36 +19,36 @@ export default function LoginPage() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setError(null);
     setIsSubmitting(true);
+    transition.start();
 
-    const { data: signInData, error: signInError } =
-      await supabase.auth.signInWithPassword({ email, password });
+    try {
+      const { data: signInData, error: signInError } =
+        await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) throw signInError;
 
-    setIsSubmitting(false);
+      const userId = signInData.user?.id;
+      if (!userId) {
+        router.push("/admin");
+        return;
+      }
 
-    if (signInError) {
-      setError(signInError.message || "No se pudo iniciar sesión.");
-      return;
-    }
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .maybeSingle();
 
-    const userId = signInData.user?.id;
-    if (!userId) {
-      router.push("/admin");
-      return;
-    }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .maybeSingle();
-
-    const role = profile?.role ?? "client";
-    if (role === "admin") {
-      router.push("/admin");
-    } else {
-      router.push("/dashboard");
+      const role = profile?.role ?? "client";
+      router.push(role === "admin" ? "/admin" : "/dashboard");
+    } catch (cause) {
+      transition.cancel();
+      submitting.current = false;
+      setIsSubmitting(false);
+      setError(cause instanceof Error ? cause.message : "No se pudo iniciar sesión.");
     }
   };
 
@@ -152,11 +156,11 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <button type="submit" disabled={isSubmitting} className="ui-button ui-button-primary h-11 w-full">
-                {isSubmitting ? "Iniciando sesión…" : "Entrar al panel"}
+              <button type="submit" disabled={isSubmitting} className="ui-button ui-button-primary h-11 w-full uppercase">
+                {isSubmitting ? <LandingBuilderLoading variant="dots" size="inline" label="Iniciando sesión" /> : "ENTRAR AL PANEL"}
               </button>
             </form>
-            {process.env.NEXT_PUBLIC_PBADMIN_EXTENSIONS_ENABLED === "true" && <div className="mt-5 border-t border-[var(--color-border)] pt-5"><a href="/api/pbadmin/start" className="ui-button ui-button-secondary flex h-11 w-full items-center justify-center">Ingresar con PBAdmin</a><p className="mt-2 text-xs text-[var(--color-text-muted)]">Usá tu mismo usuario y contraseña de PBAdmin.</p></div>}
+            {process.env.NEXT_PUBLIC_PBADMIN_EXTENSIONS_ENABLED === "true" && <div className="mt-5 border-t border-[var(--color-border)] pt-5"><a href="/api/pbadmin/start" className="ui-button ui-button-secondary flex h-11 w-full items-center justify-center uppercase">INGRESAR CON PBADMIN</a><p className="mt-2 text-xs text-[var(--color-text-muted)]">Usá tu mismo usuario y contraseña de PBAdmin.</p></div>}
           </div>
         </section>
       </div>
