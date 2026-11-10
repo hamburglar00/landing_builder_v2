@@ -1,5 +1,13 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Avisos de LandingBuilder, Telegram y configuración interna (10/11/2026)
+
+- Ampliar el catálogo UX con comportamientos implementados y sus fuentes. En la guía básica del asesor, ofrecer push y Telegram usando las mismas tarjetas de Configuración; cualquiera de los dos canales confirmado y habilitado permite completar el paso.
+- Admin y Superadmin: reemplazar «Mi perfil» en navegación por «Configuración», con perfil primero y notificaciones después. Integraciones conserva una sección propia con icono de conexión. Renombrar la tarjeta Meta tracking como LandingBuilder y usar su marca; Mensajería PBAdmin usa la marca PBAdmin también en Superadmin. Mantener las claves internas y los enlaces antiguos.
+- Si un intento autorizado de LEAD/PURCHASE no puede salir por falta de URL POST de LandingBuilder, guardar un aviso urgente para el asesor y el administrador actual. Mostrarlo en el panel y enviar por push/Telegram habilitados; agrupar repeticiones y comprobar de nuevo configuración/pertenencia antes de entregar. No alertar como URL ausente cuando la integración está deshabilitada intencionalmente. Conservar los eventos y reintentos existentes, sin cambiar confirmaciones de carga, importes, OCR ni reglas financieras.
+- Atrio es la fuente. Nexo conserva su marketing directo, alta propia y Superadmin independientes: no importar avisos por URL POST externa ni el menú administrativo de Atrio. Revisar/sincronizar únicamente las tarjetas compartidas de notificaciones y sus adaptadores. Gateways y Worker mantienen sus contratos; probar los cuatro con el widget único. API2/Panel3 no cambian.
+- Entrega Atrio: implementación `41b15b4`, migración aplicada `20261110190613`, rama integrada con los nuevos diagnósticos de main en `25f7605`, publicación `dpl_EuEDSmytxzKKkpYBr9RMTbaAbfwQ` promovida a `www.atrio.website`. Nexo 1.9.0 preparado y pruebas focalizadas aprobadas; regresión completa y publicación pendientes de liberar espacio en C:. No cerrar el lote compartido ni declarar Nexo actualizado todavía. [Validación y estado por producto](../../internal-chat/docs/validation/internal-notifications-20261110.md).
+
 ### Configuración básica guiada y catálogo UX de Atrio (10/11/2026)
 
 - Documentar los comportamientos reutilizables en `internal-chat/docs/CATALOGO_UX.md`: propósito UX, disparador, estado confirmado, navegación, postergación, errores, fuentes y excepciones para importar a otros productos. Distinguir comportamiento UX de presentación UI.
