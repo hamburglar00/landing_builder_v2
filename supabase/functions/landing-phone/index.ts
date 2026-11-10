@@ -1,10 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createPhoneDiagnostics, logPhoneBackgroundFailure, phoneCorsHeaders } from "./diagnostics.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+const corsHeaders = phoneCorsHeaders;
 
 function jsonResponse(body: Record<string, unknown>, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -24,6 +21,7 @@ type DemandRecordInput = {
   name: string;
   source?: string;
   requestId: string;
+  diagnosticRequestId?: string;
   status: string;
   payload?: Record<string, unknown> | null;
 };
@@ -48,8 +46,10 @@ function needsFreshAssignment(
     String(payload?.phoneMode ?? "").toLowerCase() === "fair";
 }
 
-function scheduleBackground(promise: PromiseLike<unknown>) {
-  const task = Promise.resolve(promise);
+function scheduleBackground(promise: PromiseLike<unknown>, diagnosticRequestId?: string) {
+  const task = Promise.resolve(promise).catch(() => {
+    logPhoneBackgroundFailure("background", diagnosticRequestId);
+  });
   const runtime = (globalThis as unknown as {
     EdgeRuntime?: { waitUntil?: (promise: Promise<unknown>) => void };
   }).EdgeRuntime;
@@ -59,15 +59,14 @@ function scheduleBackground(promise: PromiseLike<unknown>) {
     return;
   }
 
-  task.catch((error) => {
-    console.error("Background task failed:", error);
-  });
+  // The same caught promise protects runtimes without waitUntil too.
 }
 
 function incrementChatraceScopeUsage(
   supabase: SupabaseClient,
   input: {
     ownerUserId: string;
+    diagnosticRequestId?: string;
     payload: Record<string, unknown> | null | undefined;
   },
 ): Promise<unknown> {
@@ -82,7 +81,7 @@ function incrementChatraceScopeUsage(
     p_gerencia_id: selectedGerenciaId(input.payload),
   })).then(({ error }) => {
     if (error) {
-      console.error("Error incrementing Chatrace scoped phone usage:", error);
+      logPhoneBackgroundFailure("scope_usage", input.diagnosticRequestId);
     }
     return null;
   });
@@ -106,7 +105,7 @@ function recordDemandAvailability(
     p_selected_phone: typeof input.payload?.phone === "string" ? input.payload.phone : null,
   })).then(({ error }) => {
     if (error) {
-      console.error("Error recording landing-phone demand availability:", error);
+      logPhoneBackgroundFailure("demand", input.diagnosticRequestId);
     }
     return null;
   });
@@ -119,7 +118,13 @@ function recordDemandAvailability(
  * Uso Chatrace: GET /functions/v1/landing-phone?name=MiCliente&source=chatrace
  */
 Deno.serve(async (req) => {
+  const diagnostic = createPhoneDiagnostics(req);
+  return diagnostic.finish(await handlePhoneRequest(req, diagnostic));
+});
+
+async function handlePhoneRequest(req: Request, diagnostic: ReturnType<typeof createPhoneDiagnostics>) {
   if (req.method === "OPTIONS") {
+    diagnostic.outcome("preflight");
     return new Response("ok", {
       status: 200,
       headers: corsHeaders,
@@ -127,6 +132,7 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "GET" && req.method !== "POST") {
+    diagnostic.outcome("method_not_allowed");
     return new Response(
       JSON.stringify({ error: "Solo se permiten GET y POST" }),
       {
@@ -139,6 +145,7 @@ Deno.serve(async (req) => {
   try {
     let name: string | undefined;
     let source: string | undefined;
+    // Business demand/reservation identity is never taken from a diagnostic header.
     const requestId = crypto.randomUUID();
 
     if (req.method === "GET") {
@@ -153,7 +160,9 @@ Deno.serve(async (req) => {
       source = body?.source?.trim().toLowerCase() || undefined;
     }
 
+    diagnostic.source(source);
     if (!name) {
+      diagnostic.outcome("invalid_request");
       return new Response(
         JSON.stringify({
           error: "Falta el nombre de la landing (parámetro 'name').",
@@ -169,6 +178,7 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY");
 
     if (!supabaseUrl || !serviceRoleKey) {
+      diagnostic.outcome("config_error");
       return new Response(
         JSON.stringify({
           error: "Configuración del servidor incompleta.",
@@ -187,9 +197,10 @@ Deno.serve(async (req) => {
     const ownerQuery = source === "chatrace"
       ? supabase.from("profiles").select("id").eq("nombre", name).limit(1).maybeSingle()
       : supabase.from("landings").select("user_id,publish_target").eq("name", name).limit(1).maybeSingle();
-    const { data: ownerRow, error: ownerError } = await ownerQuery;
+    const { data: ownerRow, error: ownerError } = await diagnostic.measure("owner", () => ownerQuery);
 
     if (ownerError) {
+      diagnostic.outcome("backend_error");
       return jsonResponse({ error: "Error al validar el plan del cliente." }, 500);
     }
 
@@ -198,22 +209,25 @@ Deno.serve(async (req) => {
       : String((ownerRow as { user_id?: unknown } | null)?.user_id ?? "");
 
     if (!ownerUserId) {
+      diagnostic.outcome("not_found");
       return jsonResponse(
         { error: source === "chatrace" ? "Cliente no encontrado." : "Landing no encontrada." },
         404,
       );
     }
 
-    const { data: isBlocked, error: planError } = await supabase.rpc(
+    const { data: isBlocked, error: planError } = await diagnostic.measure("plan", () => supabase.rpc(
       "is_client_access_blocked",
       { p_user_id: ownerUserId },
-    );
+    ));
 
     if (planError) {
+      diagnostic.outcome("backend_error");
       return jsonResponse({ error: "Error al validar el plan del cliente." }, 500);
     }
 
     if (isBlocked === true) {
+      diagnostic.outcome("blocked");
       return jsonResponse({ error: "Plan vencido o inactivo." }, 403);
     }
 
@@ -223,11 +237,12 @@ Deno.serve(async (req) => {
       );
 
       if (publishTarget === "constructor") {
-        const { data: cachePayload } = await supabase.rpc(
+        const { data: cachePayload } = await diagnostic.measure("cache", () => supabase.rpc(
           "get_cached_constructor_landing_phone",
           { p_landing_name: name },
-        );
+        ));
         const payload = cachePayload as Record<string, unknown> | null;
+        diagnostic.cache(payload?.phone ? "bypassed" : "miss");
 
         if (
           payload &&
@@ -235,13 +250,15 @@ Deno.serve(async (req) => {
           payload.phone &&
           !needsFreshAssignment(payload)
         ) {
+          diagnostic.cache("used");
           scheduleBackground(recordDemandAvailability(supabase, {
             name,
             source,
             requestId,
             status: "ok",
             payload,
-          }));
+            diagnosticRequestId: diagnostic.requestId,
+      }), diagnostic.requestId);
 
           return new Response(JSON.stringify(payload), {
             status: 200,
@@ -264,9 +281,10 @@ Deno.serve(async (req) => {
         p_landing_name: name,
         p_create_reservation: source !== "warmup",
       };
-    const { data, error } = await supabase.rpc(rpcName, rpcParams);
+    const { data, error } = await diagnostic.measure("select", () => supabase.rpc(rpcName, rpcParams));
 
     if (error) {
+      diagnostic.outcome("backend_error");
       return new Response(
         JSON.stringify({ error: "Error al obtener el teléfono." }),
         {
@@ -280,6 +298,7 @@ Deno.serve(async (req) => {
     const status = result?._status as string | undefined;
 
     if (status === "not_found") {
+      diagnostic.outcome("not_found");
       return new Response(
         JSON.stringify({ error: "Landing no encontrada." }),
         {
@@ -290,13 +309,15 @@ Deno.serve(async (req) => {
     }
 
     if (status === "no_assignments") {
+      diagnostic.outcome("no_assignments");
       scheduleBackground(recordDemandAvailability(supabase, {
         name,
         source,
         requestId,
         status,
         payload: result,
-      }));
+        diagnosticRequestId: diagnostic.requestId,
+      }), diagnostic.requestId);
 
       return new Response(
         JSON.stringify({ error: "La landing no tiene gerencias asignadas." }),
@@ -308,13 +329,15 @@ Deno.serve(async (req) => {
     }
 
     if (status === "no_phones") {
+      diagnostic.outcome("no_phones");
       scheduleBackground(recordDemandAvailability(supabase, {
         name,
         source,
         requestId,
         status,
         payload: result,
-      }));
+        diagnosticRequestId: diagnostic.requestId,
+      }), diagnostic.requestId);
 
       return new Response(
         JSON.stringify({
@@ -340,13 +363,15 @@ Deno.serve(async (req) => {
       requestId,
       status: "ok",
       payload,
-    }));
+      diagnosticRequestId: diagnostic.requestId,
+      }), diagnostic.requestId);
 
     if (source === "chatrace") {
       scheduleBackground(incrementChatraceScopeUsage(supabase, {
         ownerUserId,
         payload,
-      }));
+        diagnosticRequestId: diagnostic.requestId,
+      }), diagnostic.requestId);
     }
 
     return new Response(JSON.stringify(payload), {
@@ -357,8 +382,8 @@ Deno.serve(async (req) => {
         "Cache-Control": "no-store",
       },
     });
-  } catch (err) {
-    console.error(err);
+  } catch {
+    diagnostic.outcome("unexpected_error");
     return new Response(
       JSON.stringify({ error: "Error inesperado." }),
       {
@@ -367,4 +392,4 @@ Deno.serve(async (req) => {
       },
     );
   }
-});
+}

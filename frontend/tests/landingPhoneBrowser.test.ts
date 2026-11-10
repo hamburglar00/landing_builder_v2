@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createServer } from "node:http";
+import { createPhoneDiagnostics, phoneCorsHeaders } from "../../supabase/functions/landing-phone/diagnostics";
 import { renderClassicPublicLandingHtml, renderPublicLandingHtml } from "../components/public-landing/renderPublicLandingHtml";
 import { buildPublicLandingRuntimeSource } from "../components/public-landing/PublicLandingRuntimeScript";
 import { PUBLIC_LANDING_CSS } from "../components/public-landing/publicLandingCss";
@@ -21,6 +23,7 @@ test("browser: all six templates in both engines reuse late assignments and keep
     const scenarios = [false, true].flatMap(classic => [1, 2, 3, 4, 5, 6].map(template => ({ classic, template, outcome: "late" })))
       .concat([false, true].flatMap(classic => ["empty", "http_error", "network_error"].map(outcome => ({ classic, template: 2, outcome }))));
     for (const { classic, template, outcome } of scenarios) {
+      if (process.env.PHONE_SCENARIO && `${classic ? "classic" : "constructor"}-${template}-${outcome}` !== process.env.PHONE_SCENARIO) continue;
       const label = `${classic ? "classic" : "constructor"} T${template} ${outcome}`;
       const config: PublicLandingConfig = {
         schemaVersion: 1, updatedAt: "2026-11-10", id: "b453a8c5-a91a-4511-ac22-28bcfa4ea97c", name: "fixture", comment: "",
@@ -33,7 +36,12 @@ test("browser: all six templates in both engines reuse late assignments and keep
       const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
       const page = await context.newPage();
       const errors: string[] = [], telemetry: any[] = [], tracks: any[] = [];
+      const telemetryIds = new Set<string>();
       let requests = 0, release: (() => Promise<void>) | undefined;
+      let releaseCss!: () => void, sawCss!: () => void, sawPhone!: () => void;
+      const cssGate = new Promise<void>(done => { releaseCss = done; });
+      const cssStarted = new Promise<void>(done => { sawCss = done; });
+      const phoneStarted = new Promise<void>(done => { sawPhone = done; });
       page.on("pageerror", error => errors.push(error.message));
       await page.addInitScript(() => {
         const host = window as any;
@@ -44,11 +52,13 @@ test("browser: all six templates in both engines reuse late assignments and keep
       });
       await page.route("**/*", async route => {
         const url = new URL(route.request().url());
-        const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "apikey,authorization,content-type" };
+        const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "apikey,authorization,content-type,x-entry-request-id",
+          "Access-Control-Expose-Headers": "Server-Timing,X-Landing-Phone-Outcome", "Server-Timing": "phone-owner;dur=11, phone-plan;dur=12, phone-cache;dur=13, phone-select;dur=20, phone-total;dur=60" };
         if (url.pathname === "/fixture") { await route.fulfill({ contentType: "text/html", body: html }); return; }
         if (url.pathname === "/functions/v1/landing-phone") {
           if (route.request().method() === "OPTIONS") { await route.fulfill({ status: 200, headers }); return; }
           requests++;
+          sawPhone();
           await new Promise<void>(done => { release = async () => {
             if (outcome === "network_error") await route.abort("failed");
             else await route.fulfill({ status: outcome === "http_error" ? 503 : 200, contentType: "application/json", headers,
@@ -58,10 +68,14 @@ test("browser: all six templates in both engines reuse late assignments and keep
           return;
         }
         if (/\/public-assets\/template-entry\/landing-.*\.js$/.test(url.pathname)) { await route.fulfill({ contentType: "text/javascript", body: runtime }); return; }
-        if (url.pathname.endsWith(".css")) { await route.fulfill({ contentType: "text/css", body: PUBLIC_LANDING_CSS }); return; }
+        if (url.pathname.endsWith(".css")) { sawCss(); await cssGate; await route.fulfill({ contentType: "text/css", body: PUBLIC_LANDING_CSS }); return; }
         if (url.hostname === "wa.me") { await route.abort(); return; }
         if (url.pathname === "/api/entry-funnel") {
-          try { telemetry.push(...JSON.parse(route.request().postData() || "{}").events); } catch { /* empty diagnostics */ }
+          // The real SQL collector deduplicates acknowledged/replayed batches by event UUID.
+          const batch = JSON.parse(route.request().postData() || "{}").events || [];
+          for (const event of batch) if (!telemetryIds.has(event.id)) { telemetryIds.add(event.id); telemetry.push(event); }
+          await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ accepted: true, event_ids: batch.map((event: any) => event.id) }) });
+          return;
         }
         if (url.pathname === "/api/track") {
           try { tracks.push(JSON.parse(route.request().postData() || "{}")); } catch { /* empty tracking */ }
@@ -70,14 +84,19 @@ test("browser: all six templates in both engines reuse late assignments and keep
       });
       try {
         await page.clock.install();
-        await page.goto("https://fixture.invalid/fixture", { waitUntil: "domcontentloaded" });
+        await page.goto("https://fixture.invalid/fixture", { waitUntil: "commit" });
+        await Promise.all([phoneStarted, cssStarted]);
+        assert.equal(requests, 1, label + " starts phone request while stylesheet is still held");
+        releaseCss();
+        await page.waitForLoadState("domcontentloaded");
         await page.waitForFunction(() => Boolean((window as any).__PUBLIC_LANDING_PHONE_CLIENT__) && Boolean((window as any).__entryFunnel));
         const cta = page.locator("[data-public-landing-cta]").first();
         // Dispatch exercises the actual handlers without depending on an optional template curtain.
         await cta.dispatchEvent("click"); await page.clock.runFor(32);
         await cta.dispatchEvent("click");
         if (outcome !== "late") {
-          assert.ok(release); await release(); await page.clock.runFor(1500);
+          assert.ok(release); await release(); await page.clock.runFor(4500);
+          await page.waitForFunction(() => JSON.parse(sessionStorage.getItem("entry-funnel:v1:b453a8c5-a91a-4511-ac22-28bcfa4ea97c:pending") || "{}").events?.length === 0);
           assert.equal(requests, 1, label + " no automatic retry");
           assert.equal(await cta.isDisabled(), false);
           assert.equal((await cta.textContent())?.trim(), "Reintentar");
@@ -88,6 +107,18 @@ test("browser: all six templates in both engines reuse late assignments and keep
           assert.equal(event?.status, outcome === "network_error" ? undefined : outcome === "empty" ? 200 : 503);
           assert.equal(await page.evaluate(() => (window as any).__pixelCalls.filter((call: any[]) => call.includes("Contact")).length), 0);
           assert.equal(await page.evaluate(() => (window as any).__outbound.length), 0);
+          const wait = telemetry.find(event => event.name === "phone_wait_completed");
+          assert.equal(wait?.phone_outcome, outcome);
+          assert.equal(wait?.phone_readiness, "pending");
+          assert.equal(wait?.request_id, telemetry.find(event => event.name === "phone_at_click")?.request_id);
+          await cta.dispatchEvent("click"); await page.clock.runFor(32);
+          assert.equal(requests, 2, label + " a settled failure retries only on a manual click");
+          assert.ok(release); await release(); await page.clock.runFor(4500);
+          await page.waitForFunction(() => JSON.parse(sessionStorage.getItem("entry-funnel:v1:b453a8c5-a91a-4511-ac22-28bcfa4ea97c:pending") || "{}").events?.length === 0);
+          const clicks = telemetry.filter(event => event.name === "phone_at_click");
+          assert.equal(clicks.length, 2, label + " both manual attempts are delivered"); assert.equal(clicks[1].phone_readiness, "failed");
+          assert.notEqual(clicks[0].request_id, clicks[1].request_id);
+          assert.equal(await page.evaluate(() => (window as any).__pixelCalls.filter((call: any[]) => call.includes("Contact")).length), 0);
           assert.deepEqual(errors, []);
           continue;
         }
@@ -134,6 +165,23 @@ test("browser: all six templates in both engines reuse late assignments and keep
         assert.equal(requests, 1, label + " exactly one assignment");
         assert.ok(telemetry.some(event => event.name === "entry_error" && event.error_code === "request_timeout"));
         assert.ok(telemetry.some(event => event.name === "stage_timing" && event.phase === "destination_request"));
+        const clicks = telemetry.filter(event => event.name === "phone_at_click");
+        const waits = telemetry.filter(event => event.name === "phone_wait_completed");
+        assert.equal(clicks.length, 2, label + " disabled duplicate click is not another phone attempt");
+        assert.equal(clicks[0].phone_readiness, "pending");
+        assert.equal(clicks[1].phone_readiness, template % 2 ? "ready" : "pending");
+        assert.equal(waits.length, 2, label + " late resolution does not create another wait completion");
+        assert.equal(waits[0].phone_outcome, "timeout");
+        assert.ok(waits[0].duration_ms >= 14990 && waits[0].duration_ms <= 15020);
+        assert.equal(waits[1].phone_outcome, "ready");
+        if (template % 2) assert.equal(waits[1].duration_ms, 0);
+        assert.equal(clicks[0].request_id, clicks[1].request_id);
+        assert.ok(clicks.every(event => event.attempt_id && event.navigation_id));
+        for (const phase of ["phone_owner", "phone_plan", "phone_cache", "phone_select", "phone_total"]) {
+          const stage = telemetry.find(event => event.name === "stage_timing" && event.phase === phase);
+          assert.ok(stage, label + " " + phase); assert.equal(stage.request_id, clicks[0].request_id);
+        }
+        assert.ok(!JSON.stringify(telemetry).includes("occurred_at_ms"), "epoch timestamp stays local");
         assert.ok(!JSON.stringify(telemetry).includes("5491100000000"), "diagnostics omit phone numbers");
         assert.deepEqual(errors, [], label + " no browser errors");
         if (template === 6) {
@@ -145,11 +193,68 @@ test("browser: all six templates in both engines reuse late assignments and keep
           assert.equal(await page.evaluate(() => (window as any).__outbound.length), 1, "return prewarm cannot navigate");
           assert.equal(await page.evaluate(() => (window as any).__pixelCalls.filter((call: any[]) => call.includes("Contact")).length), 1, "return prewarm cannot duplicate Contact");
         }
-      } finally { await context.close(); }
+      } finally { releaseCss(); await context.close(); }
     }
   } finally {
     await browser.close();
     if (previous.url === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL; else process.env.NEXT_PUBLIC_SUPABASE_URL = previous.url;
     if (previous.key === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; else process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = previous.key;
+  }
+});
+
+test("browser: distinguishes preflight caching from fresh GET response transport", {
+  skip: process.env.RUN_PHONE_BROWSER !== "1", timeout: 60000,
+}, async () => {
+  for (const browserName of ["chromium", "webkit"] as const) {
+  const counts = { control: { OPTIONS: 0, GET: 0 }, optimized: { OPTIONS: 0, GET: 0 }, responseNoStore: { OPTIONS: 0, GET: 0 } };
+  const requestIds: string[] = [];
+  const server = createServer((req, res) => {
+    if (req.url === "/") { res.setHeader("Content-Type", "text/html"); res.end("<!doctype html><title>CORS fixture</title>"); return; }
+    const mode = req.url?.slice(1) as keyof typeof counts;
+    if (!Object.hasOwn(counts, mode)) { res.writeHead(404); res.end(); return; }
+    const method = req.method === "OPTIONS" ? "OPTIONS" : "GET";
+    counts[mode][method]++;
+    const request = new Request("http://127.0.0.1" + req.url, { method, headers: req.headers as Record<string, string> });
+    let response = new Response(method === "OPTIONS" ? "ok" : "{}", { headers: phoneCorsHeaders });
+    if (mode !== "control") {
+      const diagnostic = createPhoneDiagnostics(request);
+      if (method === "OPTIONS") diagnostic.outcome("preflight");
+      response = diagnostic.finish(response);
+    }
+    if (method !== "OPTIONS") response.headers.set("Cache-Control", "no-store");
+    if (method === "GET") requestIds.push(request.headers.get("x-entry-request-id")!);
+    response.headers.forEach((value, key) => res.setHeader(key, value));
+    res.end(method === "OPTIONS" ? "ok" : JSON.stringify({ sequence: counts[mode].GET }));
+  });
+  await new Promise<void>(done => server.listen(0, "0.0.0.0", done));
+  const port = (server.address() as { port: number }).port;
+  const playwright = await import("playwright");
+  const browser = await playwright[browserName].launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.goto(`http://localhost:${port}/`);
+    const send = () => page.evaluate(async port => {
+      const values = [];
+      for (const mode of ["control", "optimized", "responseNoStore"]) {
+        const response = await fetch(`http://127.0.0.1:${port}/${mode}`, {
+        headers: { apikey: "synthetic", Authorization: "Bearer synthetic", "x-entry-request-id": crypto.randomUUID() }, cache: mode === "responseNoStore" ? "default" : "no-store",
+        });
+        values.push(await response.json());
+      }
+      return values;
+    }, port);
+    assert.deepEqual(await send(), [{ sequence: 1 }, { sequence: 1 }, { sequence: 1 }]);
+    // Real browser CORS caching is deliberately not mocked by Playwright's virtual clock.
+    await new Promise(done => setTimeout(done, 6500));
+    assert.deepEqual(await send(), [{ sequence: 2 }, { sequence: 2 }, { sequence: 2 }], browserName + " always reads a fresh response");
+    assert.deepEqual(counts.responseNoStore, { OPTIONS: 1, GET: 2 }, browserName + " caches only permission, not selected result");
+    assert.deepEqual(counts.control, { OPTIONS: 2, GET: 2 }, browserName + " baseline default preflight expires");
+    if (browserName === "chromium") assert.deepEqual(counts.optimized, { OPTIONS: 2, GET: 2 }, "Chromium no-store bypasses the preflight cache");
+    console.log(JSON.stringify({ browser: browserName, preflightFixture: counts }));
+    assert.equal(new Set(requestIds).size, 6, "varying only diagnostic values does not defeat the preflight cache");
+  } finally {
+    await browser.close();
+    await new Promise<void>(done => { server.closeAllConnections(); server.close(() => done()); });
+  }
   }
 });

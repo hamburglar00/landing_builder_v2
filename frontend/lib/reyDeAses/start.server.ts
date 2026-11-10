@@ -10,6 +10,7 @@ import { logServerFlowTotal, timedServerStage, template7ServerTiming, type Templ
 import { allowTemplate7Start, template7StartRateLimitKeys } from "./rateLimit.server";
 import { api2Readiness, createProviderHandoff, gatewayReadiness, linkInternalChatProviderAccount, resolveInternalChatPlayer, resolveTargetAccount, TargetIntegrationError, validateResolvedPlayer } from "./integrations.server";
 import { parseTemplate7StartPayload } from "./start-payload.server";
+import { entryRequestTrace } from "../landing/entryFunnel.server";
 import type { EntryFunnelContext } from "../landing/entryFunnel";
 import { recordConfirmedAccountRegistration, type ConfirmedAccountRegistration } from "./registrationStats.server";
 export { parseTemplate7StartPayload } from "./start-payload.server";
@@ -47,6 +48,7 @@ export type StartDependencies = {
 
 export type Template7PreparedStart = {
   entryFunnel?: EntryFunnelContext;
+  diagnosticTrace?: Record<string, string>;
   provider: TargetProvider;
   advisor: AssignedAdvisor;
   deviceId: string;
@@ -117,7 +119,7 @@ export async function finalizeTemplate7PreparedStart(
       "template7_start",
       "internal_chat_account_link",
       () => deps.linkProviderAccount(prepared.advisor, prepared.player, prepared.account),
-      ms => { timings.link = ms; },
+      ms => { timings.link = ms; }, prepared.diagnosticTrace,
     ),
     timedServerStage(
       "template7_start",
@@ -132,7 +134,7 @@ export async function finalizeTemplate7PreparedStart(
         prepared.promoCode,
         prepared.entryFunnel,
       ),
-      ms => { timings.handoff = ms; },
+      ms => { timings.handoff = ms; }, prepared.diagnosticTrace,
     ),
   ]);
   timings.finalize = Math.round(performance.now() - startedAt);
@@ -159,6 +161,7 @@ async function handleTemplate7StartInner(
   if (!payload) return json({ error: "invalid_request" }, 400);
 
   const flowStartedAt = performance.now();
+  const trace = entryRequestTrace(request, payload.entry_funnel);
   const stageTimings: Template7StageTimings = {};
   try {
     let landing: LandingRow;
@@ -171,7 +174,7 @@ async function handleTemplate7StartInner(
         "template7_start",
         "context_transaction",
         () => deps.resolveContext!(request, payload!, identity),
-        ms => { stageTimings.context = ms; },
+        ms => { stageTimings.context = ms; }, trace,
       ));
       if (context.status !== "ok") {
         const status = context.status === "landing_not_found" ? 404
@@ -241,14 +244,14 @@ async function handleTemplate7StartInner(
       "template7_start",
       "internal_chat_resolve",
       () => deps.resolvePlayer(resolveInput),
-      ms => { stageTimings.identity = ms; },
+      ms => { stageTimings.identity = ms; }, trace,
     ), resolveInput);
     const accountStartedAt = performance.now();
     const account = await timedServerStage("template7_start", "account_resolve", () => deps.resolveAccount({
       external_user_id: player.player_id, manager_id: player.manager_id, agency_id: player.agency_id,
       name: payload.name, target_provider: provider, advisor_id: resolvedAdvisor.advisorId,
       advisor_slug: resolvedAdvisor.advisorSlug, ...(skinCode ? { skin_code: skinCode } : {}),
-    }));
+    }), undefined, trace);
     if (account.platform !== provider || (!account.username || !account.password)) {
       throw new TargetIntegrationError("upstream_unavailable");
     }
@@ -259,6 +262,7 @@ async function handleTemplate7StartInner(
       } catch { /* Internal statistics must not change the result of an account operation. */ }
     }
     const prepared: Template7PreparedStart = {
+      diagnosticTrace: trace,
       ...(payload.entry_funnel ? { entryFunnel: { ...payload.entry_funnel, account_kind: account.created ? "new" : "existing" } } : {}),
       provider,
       advisor: resolvedAdvisor,
@@ -279,7 +283,7 @@ async function handleTemplate7StartInner(
     if (error instanceof TargetIntegrationError) return json({ error: error.code, retryable: error.retryable }, 503);
     return json({ error: "service_unavailable" }, 503);
   } finally {
-    logServerFlowTotal("template7_start", flowStartedAt);
+    logServerFlowTotal("template7_start", flowStartedAt, trace);
   }
 }
 

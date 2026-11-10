@@ -1,3 +1,5 @@
+import { entryLogTrace } from "../landing/entryFunnel.server";
+
 export type Template7StageTimings = Partial<Record<"context" | "identity" | "link" | "handoff" | "finalize" | "total", number>>;
 
 export function template7ServerTiming(accountMs: number, created: boolean, stages: Template7StageTimings, providerTimings?: string): string {
@@ -16,11 +18,13 @@ export async function timedServerStage<T>(
   stage: string,
   task: () => Promise<T>,
   recordDuration?: (durationMs: number) => void,
+  trace?: unknown,
 ): Promise<T> {
   const startedAt = performance.now();
   try {
     const result = await task();
     console.info(JSON.stringify({
+      ...entryLogTrace(trace),
       source: "landing_builder.performance",
       flow,
       stage,
@@ -30,6 +34,7 @@ export async function timedServerStage<T>(
     return result;
   } catch (error) {
     console.info(JSON.stringify({
+      ...entryLogTrace(trace),
       source: "landing_builder.performance",
       flow,
       stage,
@@ -42,8 +47,9 @@ export async function timedServerStage<T>(
   }
 }
 
-export function logServerFlowTotal(flow: string, startedAt: number): void {
+export function logServerFlowTotal(flow: string, startedAt: number, trace?: unknown): void {
   console.info(JSON.stringify({
+    ...entryLogTrace(trace),
     source: "landing_builder.performance",
     flow,
     stage: "total",

@@ -222,6 +222,25 @@ test("renewing an expired pass preserves the account and never resolves or provi
   assert.deepEqual(trace,{links:2,handoffs:2});
 });
 
+test("renewal logs the current physical request instead of replaying the account request trace", async () => {
+  const token = await prepareToken(), logs: string[] = [], original = console.info;
+  console.info = (value: string) => { logs.push(value); };
+  try {
+    const account = await handleTemplate7PreparationAccount(new Request("https://mkt.example.com/api/template7/preparations/account", {
+      method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}`, "x-entry-request-id": clientId }, body: JSON.stringify({ token }),
+    }), env, deps(), now + 1000);
+    const { continuation_token } = await account.json();
+    assert.ok(logs.some(value => JSON.parse(value).request_id === clientId));
+    logs.length = 0;
+    const renewed = await handleTemplate7PreparationFinalize(new Request("https://mkt.example.com/api/template7/preparations/finalize", {
+      method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}`, "x-entry-request-id": advisorId }, body: JSON.stringify({ continuation_token, renew_handoff: true }),
+    }), env, deps(), now + 2000);
+    assert.equal(renewed.status, 200);
+    assert.ok(logs.length > 0); assert.ok(logs.every(value => JSON.parse(value).request_id === advisorId));
+    assert.doesNotMatch(logs.join(""), /secret|password|username|Martin/);
+  } finally { console.info = original; }
+});
+
 test("finalize and renewal ignore unrelated parameters while preserving the signed account and strict access fields", async () => {
   const token = await prepareToken();
   for (const suffix of ["&ef=e1.diagnostic", "&ef=e1.one&ef=e1.two", "&fbclid=foreign", "&new_meta_field=x&new_meta_field=y&provider=evil&advisor_id=foreign&return_to=https://evil.test", "#unexpected"]) {

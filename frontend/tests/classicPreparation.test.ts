@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createRequire } from "node:module";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { handleClassicTemplate7Prepare } from "../lib/reyDeAses/classic-preparation-issue.server";
 import { decryptClaims } from "../lib/reyDeAses/preparation-issue.server";
 
-const compiled = createRequire(import.meta.url)("../../../landing-prueba-1/lib/template7/preparation.cjs") as {
+const classicRoot = process.env.LANDING_CLASSIC_ROOT || fileURLToPath(new URL("../../../landing-prueba-1/", import.meta.url));
+const compiled = createRequire(import.meta.url)(path.join(classicRoot, "lib/template7/preparation.cjs")) as {
   handleClassicTemplate7Prepare: typeof handleClassicTemplate7Prepare;
 };
 const device = "44444444-4444-4444-8444-444444444444";

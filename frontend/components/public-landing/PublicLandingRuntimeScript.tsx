@@ -736,14 +736,21 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
 
       function ensurePhoneRequest(retrySettledFailure) {
         var request = getPhoneRequests().request(cfg, retrySettledFailure === true);
+        // Early prewarm can precede the telemetry bootstrap; bind it once to this navigation.
+        if (!request.navigation_id && window.__ENTRY_FUNNEL_NAVIGATION__) request.navigation_id = window.__ENTRY_FUNNEL_NAVIGATION__.id;
         if (!request.reported && window.__entryFunnel) {
           request.reported = true;
           var sequence = ++phoneDiagnosticSequence;
           request.promise.then(function (result) {
             // The request may predate the click or finish after another attempt. Keep it flow scoped.
             try {
-              if (Number.isSafeInteger(result.duration_ms)) window.__entryFunnel?.emit("stage_timing", {
-                phase: "destination_request", duration_ms: result.duration_ms, flow_scoped: true, resource_key: "phone-" + sequence
+              var measured = { flow_scoped: true, resource_key: "phone-" + sequence, request_id: request.request_id,
+                navigation_id: request.navigation_id, occurred_at_ms: result.completed_at };
+              if (Number.isSafeInteger(result.duration_ms)) window.__entryFunnel?.emit("stage_timing", Object.assign({}, measured, {
+                phase: "destination_request", duration_ms: result.duration_ms
+              }));
+              Object.keys(result.server_timings || {}).forEach(function (phase) {
+                window.__entryFunnel?.emit("stage_timing", Object.assign({}, measured, { phase: phase, duration_ms: result.server_timings[phase] }));
               });
             } catch (e) {}
           });
@@ -1369,6 +1376,16 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
         setButtonText(button, getLoadingButtonText(button));
         notifyTemplate6CardClick(button);
         var tapStartedAt = Date.now();
+        var phoneRequest = null;
+        var phoneReadiness = "unknown";
+        var phoneNavigationId = window.__ENTRY_FUNNEL_NAVIGATION__ && window.__ENTRY_FUNNEL_NAVIGATION__.id;
+        if (!isAtrioDestination()) {
+          var atClick = ensurePhoneRequest(false);
+          phoneReadiness = atClick.settled ? (atClick.result.outcome === "ready" ? "ready" : "failed") : atClick.legacy ? "unknown" : "pending";
+          phoneRequest = ensurePhoneRequest(true);
+          window.__entryFunnel?.emit("phone_at_click", { phone_readiness: phoneReadiness, request_id: phoneRequest.request_id,
+            navigation_id: phoneNavigationId, occurred_at_ms: tapStartedAt });
+        }
 
         window.requestAnimationFrame(function () {
           var context = consumeContactContext();
@@ -1409,13 +1426,18 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
           var testEventCode = context.testEventCode;
           var shouldSkipContact = context.shouldSkipContact || (cfg.template === 7 && template7ContactSent);
 
-          var phoneRequest = isAtrioDestination() ? null : ensurePhoneRequest(true);
           var phoneResult = null;
           Promise.all([
             refreshMetaTracking(params, tracking),
             isAtrioDestination()
               ? waitWithTimeout(ensureAtrioPromise(), 1500)
-              : getPhoneRequests().wait(phoneRequest, Math.max(0, 15000 - (Date.now() - tapStartedAt)))
+              : getPhoneRequests().wait(phoneRequest, Math.max(0, 15000 - (Date.now() - tapStartedAt))).then(function (result) {
+                var completedAt = Date.now();
+                if (phoneAttempt === phoneVisualAttempt) window.__entryFunnel?.emit("phone_wait_completed", { phone_readiness: phoneReadiness, phone_outcome: result.outcome,
+                  request_id: phoneRequest.request_id, status: result.status, navigation_id: phoneNavigationId,
+                  occurred_at_ms: completedAt, duration_ms: phoneReadiness === "ready" ? 0 : Math.max(0, completedAt - tapStartedAt) });
+                return result;
+              })
           ])
             .then(function (resolved) {
               tracking = resolved[0];

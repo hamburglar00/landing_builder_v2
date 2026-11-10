@@ -5,7 +5,11 @@ export type EntryFunnelBackend = { write(batch: EntryFunnelBatch): Promise<boole
 const headers = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
 /** No CORS, cookies, client-selected tenant or authentication identity. Service RPC derives ownership. */
 export async function handleEntryFunnel(request: Request, backend: EntryFunnelBackend): Promise<Response> {
-  const reply = (status: number) => new Response(null, { status, headers });
+  const reply = (status: number) => {
+    const reason = status === 422 ? "collector_rejected" : status === 429 ? "rate_limited" : status === 503 ? "delivery_failed" : "invalid_batch";
+    console.info(JSON.stringify({ source: "entry_funnel.collector", result: "rejected", reason, status }));
+    return Response.json({ accepted: false, reason }, { status, headers });
+  };
   if (request.method !== "POST" || request.headers.get("origin") !== new URL(request.url).origin ||
     !["application/json", "text/plain"].includes(request.headers.get("content-type")?.split(";")[0].trim() || "")) return reply(400);
   if (Number(request.headers.get("content-length") || 0) > 16_384) return reply(413);
@@ -25,9 +29,11 @@ export async function handleEntryFunnel(request: Request, backend: EntryFunnelBa
     const bytes = new Uint8Array(size);
     let offset = 0;
     for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
-    const batch = validateEntryFunnelBatch(JSON.parse(new TextDecoder().decode(bytes)));
+    let payload: unknown;
+    try { payload = JSON.parse(new TextDecoder().decode(bytes)); } catch { return reply(400); }
+    const batch = validateEntryFunnelBatch(payload);
     if (!batch) return reply(400);
-    return reply(await backend.write(batch) ? 204 : 429);
+    return await backend.write(batch) ? Response.json({ accepted: true, event_ids: [...new Set(batch.events.map(event => event.id))] }, { status: 200, headers }) : reply(422);
   } catch { return reply(503); }
   finally { reader?.releaseLock(); }
 }
@@ -46,4 +52,27 @@ export function productionEntryFunnelBackend(): EntryFunnelBackend {
     if (error) throw new Error("entry_funnel_unavailable");
     return data === true;
   } };
+}
+
+/** Closed diagnostic trace; no client value changes authorization or business identity. */
+export function entryRequestTrace(request: Request, context?: { flow_id?: string; attempt_id?: string } | null) {
+  const trace: Record<string, string> = {};
+  for (const field of ["flow", "attempt", "navigation", "request"]) {
+    const value = request.headers.get("x-entry-" + field + "-id");
+    if (value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) trace[field + "_id"] = value;
+  }
+  if (context?.flow_id) trace.flow_id = context.flow_id;
+  if (context?.attempt_id) trace.attempt_id = context.attempt_id;
+  const release = process.env.VERCEL_GIT_COMMIT_SHA || process.env.ENTRY_FUNNEL_RELEASE;
+  return { ...trace, component: "landing", ...(release && /^[0-9a-f]{7,40}$/.test(release) ? { component_release: release } : {}) };
+}
+export function entryLogTrace(input: unknown): Record<string, string> {
+  if (!input || typeof input !== "object") return {};
+  const value = input as Record<string, unknown>, out: Record<string, string> = {};
+  for (const field of ["flow_id", "attempt_id", "navigation_id", "request_id"]) {
+    if (typeof value[field] === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value[field] as string)) out[field] = value[field] as string;
+  }
+  if (value.component === "landing") out.component = "landing";
+  if (typeof value.component_release === "string" && /^[0-9a-f]{7,40}$/.test(value.component_release)) out.component_release = value.component_release;
+  return out;
 }

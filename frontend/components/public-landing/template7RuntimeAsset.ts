@@ -49,7 +49,7 @@ function t7AssetFailure(){
 }
 window.__T7_ASSET_FAILED__=t7AssetFailure;
 t7AssetTimer=setTimeout(t7AssetFailure,10000);
-window.__ENTRY_FUNNEL_EARLY__={started_at:Math.round(performance.timeOrigin||Date.now()),events:[]};
+window.__ENTRY_FUNNEL_EARLY__=window.__ENTRY_FUNNEL_EARLY__||{started_at:Math.round(performance.timeOrigin||Date.now()),events:[]};
 function t7Provenance(value){
   value=value||{};var result={};
   if(typeof value.engine==='string'&&['classic','constructor','nexobet'].includes(value.engine))result.engine=value.engine;
@@ -64,32 +64,37 @@ try{
   t7Metadata.environment=t7Metadata.environment||'unknown';
   t7Metadata.source=navigator.webdriver===true?'synthetic':t7Metadata.source||'unknown';
   var t7Uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  if(t7Uuid.test(String(t7Cfg.landingId))&&crypto.randomUUID){
+  if(!window.__ENTRY_FUNNEL_EARLY__.context&&t7Uuid.test(String(t7Cfg.landingId))&&crypto.randomUUID){
     var t7Key='entry-funnel:v1:'+t7Cfg.landingId,t7Template=t7Cfg.entryTemplate===9?9:t7Cfg.template8?8:7,t7Flow=null,t7Now=Date.now();
     try{t7Flow=JSON.parse(sessionStorage.getItem(t7Key)||'null')}catch(e){}
     if(!t7Flow||!t7Uuid.test(String(t7Flow.flow_id))||t7Flow.landing_id!==t7Cfg.landingId||t7Flow.template!==t7Template||t7Flow.telemetry_origin!==location.origin||!Number.isSafeInteger(t7Flow.started_at)||t7Flow.started_at>t7Now||t7Flow.started_at<t7Now-86400000||(t7Flow.engine&&t7Metadata.engine&&t7Flow.engine!==t7Metadata.engine)||(t7Flow.release&&t7Metadata.release&&t7Flow.release!==t7Metadata.release))
       t7Flow={flow_id:crypto.randomUUID(),landing_id:t7Cfg.landingId,template:t7Template,telemetry_origin:location.origin,started_at:window.__ENTRY_FUNNEL_EARLY__.started_at};
     Object.assign(t7Flow,t7Metadata);
+    var nav=window.__ENTRY_FUNNEL_NAVIGATION__=window.__ENTRY_FUNNEL_NAVIGATION__||{id:crypto.randomUUID(),started_at:Math.round(performance.timeOrigin||t7Now)};t7Flow.navigation_id=nav.id;
     window.__ENTRY_FUNNEL_EARLY__.context=t7Flow;window.__ENTRY_FUNNEL_EARLY__.started_at=t7Flow.started_at;
     try{sessionStorage.setItem(t7Key,JSON.stringify(t7Flow))}catch(e){}
   }
 }catch(e){}
 function t7EarlyStage(name,errorCode){
   var early=window.__ENTRY_FUNNEL_EARLY__;
+  if(early&&typeof early.record==='function'){early.record(name,errorCode);return;}
   if(!early||early.events.some(function(item){return item.name===name}))return;
-  if(early.events.length<8)early.events.push({id:crypto.randomUUID?crypto.randomUUID():undefined,name:name,at:Date.now(),...(errorCode?{error_code:errorCode}:{})});
+  if(early.events.length<8)early.events.push({id:crypto.randomUUID?crypto.randomUUID():undefined,name:name,at:Date.now(),navigation_id:window.__ENTRY_FUNNEL_NAVIGATION__?.id,navigation_started_at:window.__ENTRY_FUNNEL_NAVIGATION__?.started_at,...(errorCode?{error_code:errorCode}:{})});
 }
 function t7EarlyFlush(){
   if(window.__T7_RUNTIME_READY__)return;
   try{
     var early=window.__ENTRY_FUNNEL_EARLY__,flow=early&&early.context;
+    if(early&&typeof early.flush==='function'){early.flush();return;}
     if(!flow||!early.events.length||!navigator.sendBeacon)return;
-    var events=early.events.filter(function(event){return event.id}).map(function(event){return Object.assign(t7Provenance(flow),{id:event.id,name:event.name,elapsed_ms:Math.max(0,Math.min(86400000,event.at-flow.started_at)),...(event.error_code?{error_code:event.error_code}:{})})});
+    var events=early.events.filter(function(event){return event.id}).map(function(event){return Object.assign(t7Provenance(flow),{id:event.id,name:event.name,elapsed_ms:Math.max(0,Math.min(86400000,event.at-flow.started_at)),navigation_id:event.navigation_id,navigation_elapsed_ms:Math.max(0,Math.min(86400000,event.at-event.navigation_started_at)),component:'landing',...(flow.release?{component_release:flow.release}:{}),...(event.error_code?{error_code:event.error_code}:{})})});
     navigator.sendBeacon('/api/entry-funnel',new Blob([JSON.stringify({landing_id:flow.landing_id,flow_id:flow.flow_id,template:flow.template,events:events})],{type:'text/plain'}));
   }catch(e){}
 }
+if(typeof window.__ENTRY_FUNNEL_EARLY__.flush!=='function'){
 window.addEventListener('pagehide',t7EarlyFlush);
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')t7EarlyFlush()});
+}
 requestAnimationFrame(function(){if(document.visibilityState!=='hidden')t7EarlyStage('page_visible')});
 function t7Early(event){
   var target=event.target;

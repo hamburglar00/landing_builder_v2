@@ -1,3 +1,4 @@
+import { entryRequestTrace } from "../landing/entryFunnel.server";
 import { createCipheriv, createDecipheriv, randomBytes, timingSafeEqual } from "node:crypto";
 import { isMultiSkinCode } from "../multi-skin-catalog";
 import { validateEntryFunnelContext, type EntryFunnelContext } from "../landing/entryFunnel";
@@ -141,6 +142,7 @@ export async function handleTemplate7PreparationComplete(
     if (!data || typeof data !== "object" || typeof data.token !== "string") return json({ error: "invalid_request" }, 400);
     const claims = decryptClaims(data.token, env, now);
     const headers = new Headers({ "Content-Type": "application/json", Origin: "https://template7.internal" });
+    for (const [field, value] of Object.entries(entryRequestTrace(request))) if (["flow_id", "attempt_id", "navigation_id", "request_id"].includes(field)) headers.set("x-entry-" + field.replace(/_/g, "-"), value);
     const cookies = [`${CLIENT_ID_COOKIE_NAME}=${claims.identity.deviceId}`];
     headers.set("Cookie", cookies.join("; "));
     if (claims.client_ip) headers.set("X-Vercel-Forwarded-For", claims.client_ip);
@@ -178,6 +180,7 @@ export async function handleTemplate7PreparationAccount(
     const claims = decryptClaims(data.token, env, now);
     diagnosticContext = validateEntryFunnelContext(claims.payload.entry_funnel, now);
     const headers = new Headers({ "Content-Type": "application/json", Origin: "https://template7.internal" });
+    for (const [field, value] of Object.entries(entryRequestTrace(request))) if (["flow_id", "attempt_id", "navigation_id", "request_id"].includes(field)) headers.set("x-entry-" + field.replace(/_/g, "-"), value);
     const cookies = [`${CLIENT_ID_COOKIE_NAME}=${claims.identity.deviceId}`];
     headers.set("Cookie", cookies.join("; "));
     if (claims.client_ip) headers.set("X-Vercel-Forwarded-For", claims.client_ip);
@@ -258,6 +261,8 @@ export async function handleTemplate7PreparationFinalize(
     // Renew only the pass for this authenticated continuation. Do not resolve a
     // name, provision a player, or return the already consumed/expired pass.
     const prepared = renewHandoff ? { ...claims.prepared, completedHandoff: undefined } : claims.prepared;
+    // A renewed transport is a new request, even though the account/attempt are unchanged.
+    prepared.diagnosticTrace = entryRequestTrace(request, prepared.entryFunnel);
     const handoff = await finalizeTemplate7PreparedStart(prepared, deps);
     // Real integrations already canonicalize; apply it again to a renewed
     // handoff so continuation output cannot reintroduce unrelated parameters.

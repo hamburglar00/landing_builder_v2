@@ -23,7 +23,7 @@ import {
 } from "./metaPixelHtml";
 import type { PublicLandingConfig, PublicLandingPhoneResponse } from "./types";
 import { WHATSAPP_GREEN_PATH, WHATSAPP_WHITE_PATH } from "./whatsAppBrandIcon";
-import { buildEntryFunnelMetadataScript, buildLandingEntryFunnelScript } from '../../lib/landing/entryFunnel.bootstrap';
+import { buildLandingEntryFunnelScript } from '../../lib/landing/entryFunnel.bootstrap';
 import type { EntryFunnelTemplate } from '../../lib/landing/entryFunnel';
 
 type RenderParams = {
@@ -796,12 +796,12 @@ export function renderPublicLandingHtml(params: RenderParams) {
   const runtimeAsset = isTemplate7 ? renderTemplate7RuntimeAsset(slug, config) : null;
   const runtimeScript = runtimeAsset
       ? runtimeAsset.script
-    : `<script>${buildLandingEntryFunnelScript({ landingId: config.id || '', template: (config.layout?.template || 1) as EntryFunnelTemplate, engine })}</script>${renderScriptElement(PublicLandingRuntimeScript({ slug, config, engine }))}<script data-public-landing-runtime src="/public-assets/template-entry/${publicLandingRuntimeAsset.name}" defer></script>`;
+    : `${renderScriptElement(PublicLandingRuntimeScript({ slug, config, engine }))}<script data-public-landing-runtime src="/public-assets/template-entry/${publicLandingRuntimeAsset.name}" defer></script>`;
   const template7PlaceholderScript = isTemplate7 && config.layout?.template !== 9
     ? `<script>(()=>{const input=document.querySelector('[data-template7-name]');if(!input)return;const names=${JSON.stringify(TEMPLATE7_EXAMPLE_NAMES)};input.placeholder='Ej.: '+names[Math.floor(Math.random()*names.length)];})();</script>`
     : "";
 
-  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">${isTemplate7 ? `<script>${buildEntryFunnelMetadataScript(engine)}</script>` : ''}<title>${escapeHtml(
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><script>${buildLandingEntryFunnelScript({ landingId: config.id || '', template: (config.layout?.template || 1) as EntryFunnelTemplate, engine })}</script><title>${escapeHtml(
     metadata.title,
   )}</title>${buildPublicMetadataTags(
     config,
@@ -819,7 +819,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     pixelId
       ? '<link rel="preconnect" href="https://www.facebook.com"><link rel="preconnect" href="https://connect.facebook.net">'
       : ""
-  }${runtimeAsset ? runtimeAsset.preload + runtimeAsset.config : ""}${isTemplate7 ? buildClientIdentityBootstrapScript(isTemplate8 ? undefined : { slug, landingId: config.id || "" }) + (isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug, landingId: config.id || "" }))) : ""}${buildPreloadLinks(config)}${isTemplate7 ? `<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS + (config.layout?.template === 9 ? TEMPLATE9_CSS : "")}</style>` : `<link rel="stylesheet" href="/public-assets/template-entry/${publicLandingStyleAsset.name}">`}${phonePrewarmScript}${pixelScriptForTemplate(
+  }${runtimeAsset ? runtimeAsset.preload + runtimeAsset.config : ""}${isTemplate7 ? buildClientIdentityBootstrapScript(isTemplate8 ? undefined : { slug, landingId: config.id || "" }) + (isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug, landingId: config.id || "" }))) : ""}${phonePrewarmScript}${buildPreloadLinks(config)}${isTemplate7 ? `<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS + (config.layout?.template === 9 ? TEMPLATE9_CSS : "")}</style>` : `<link rel="stylesheet" href="/public-assets/template-entry/${publicLandingStyleAsset.name}">`}${pixelScriptForTemplate(
     pixelId,
     slug,
     config.tracking?.phoneCountryCode || "54",
@@ -834,12 +834,12 @@ export function renderPublicLandingHtml(params: RenderParams) {
 }
 
 /** Classic keeps its existing start endpoint/identity, but no longer waits for React. */
-export function renderClassicTemplate7InlineHtml(params: RenderParams, deviceIdScript: string) {
+export function renderClassicTemplate7InlineHtml(params: RenderParams, deviceIdScript: string, includeTelemetryBootstrap = true) {
   const config = optimizeTemplate7Images(params.config);
   const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
   const isTemplate8 = config.layout?.template === 8;
   const originalAsset = renderTemplate7RuntimeAsset(params.slug, config, deviceIdScript);
-  const runtimeAsset = { ...originalAsset, preload: `<script>${buildEntryFunnelMetadataScript('classic')}</script>` + originalAsset.preload };
+  const runtimeAsset = { ...originalAsset, preload: (includeTelemetryBootstrap ? `<script>${buildLandingEntryFunnelScript({ landingId: config.id || '', template: (config.layout?.template || 7) as EntryFunnelTemplate, engine: 'classic' })}</script>` : '') + originalAsset.preload };
   const html = `${runtimeAsset.preload}${runtimeAsset.config}${isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug: params.slug, landingId: config.id || "", deviceIdScript }))}${buildPreloadLinks(config)}<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS + (config.layout?.template === 9 ? TEMPLATE9_CSS : "")}</style>${pixelScriptForTemplate(pixelId, params.slug, config.tracking?.phoneCountryCode || "54", 7)}${buildPixelNoscript(pixelId)}${renderTemplate({ ...params, config, legalBasePath: `/${encodeURIComponent(params.slug)}` })}${renderPrivacyFooter(config.layout?.template === 9 ? config : { ...config, layout: { ...config.layout, template: 0 } })}${runtimeAsset.script}${resourceWarmup(config)}`;
   if (isTemplate8) return html;
   const reentry = buildTemplate7ReentryScript(template7GatewayOrigin(config), `/${encodeURIComponent(params.slug)}`, config.tracking?.target_provider !== "multi_skin");
@@ -851,7 +851,7 @@ export function renderClassicTemplate7Html(params: RenderParams, deviceIdScript:
   const metadata = publicMetadata(params.config, params.slug);
   const origins = [process.env.NEXT_PUBLIC_SUPABASE_URL, template7GatewayOrigin(params.config), ...(params.config.tracking?.pixelId ? ['https://www.facebook.com', 'https://connect.facebook.net'] : [])];
   const connections = [...new Set(origins.flatMap(origin => { try { return origin ? [new URL(origin).origin] : []; } catch { return []; } }))].map(origin => `<link rel="preconnect" href="${escapeHtml(origin)}" crossorigin>`).join('');
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">${PUBLIC_LANDING_FAVICON_LINK}<meta name="theme-color" content="${params.config.layout?.template === 9 ? getTemplate9Brand(params.config.tracking?.target_provider || "rey_de_ases", params.config.tracking?.skin_code).deep : "#000000"}"><title>${escapeHtml(metadata.title)}</title>${buildPublicMetadataTags(params.config, params.slug, params.canonicalUrl)}${connections}</head><body>${renderClassicTemplate7InlineHtml(params, deviceIdScript)}</body></html>`;
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">${PUBLIC_LANDING_FAVICON_LINK}<meta name="theme-color" content="${params.config.layout?.template === 9 ? getTemplate9Brand(params.config.tracking?.target_provider || "rey_de_ases", params.config.tracking?.skin_code).deep : "#000000"}"><title>${escapeHtml(metadata.title)}</title>${buildPublicMetadataTags(params.config, params.slug, params.canonicalUrl)}${connections}<script>${buildLandingEntryFunnelScript({ landingId: params.config.id || '', template: (params.config.layout?.template || 7) as EntryFunnelTemplate, engine: 'classic' })}</script></head><body>${renderClassicTemplate7InlineHtml(params, deviceIdScript, false)}</body></html>`;
 }
 
 /** All templates share delivery/assets; classic retains its identity and API adapter. */

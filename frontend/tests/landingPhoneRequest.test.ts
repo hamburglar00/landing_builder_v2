@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import vm from "node:vm";
 import { buildLandingPhoneRequestFactoryScript } from "../lib/landing/landingPhoneRequest.client";
+import { canUseCachedLandingPhone } from "../lib/landing/phoneCachePolicy";
 
 const config = { slug: "fixture", supabaseUrl: "https://synthetic.invalid/", supabaseAnonKey: "synthetic-public-key" };
 const payload = { phone: "5491100000000", gerenciaId: 17, assignedGerenciaName: "fixture" };
@@ -27,7 +28,7 @@ function fixture(legacy?: Promise<unknown>) {
   };
 }
 
-test("prewarm, journey and clicks share exactly one pending request and the unchanged transport", async () => {
+test("prewarm, journey and clicks share one pending request with the same endpoint and authentication", async () => {
   const f = fixture(), first = f.client.request(config);
   assert.equal(f.install(), f.client);
   assert.equal(f.client.request(config, true), first);
@@ -35,7 +36,7 @@ test("prewarm, journey and clicks share exactly one pending request and the unch
   await drain();
   assert.equal(f.requests.length, 1);
   assert.equal(f.requests[0].url, "https://synthetic.invalid/functions/v1/landing-phone?name=fixture");
-  assert.deepEqual(JSON.parse(JSON.stringify(f.requests[0].init)), { method: "GET", headers: { apikey: config.supabaseAnonKey, Authorization: "Bearer " + config.supabaseAnonKey }, cache: "no-store", keepalive: true });
+  assert.deepEqual(JSON.parse(JSON.stringify(f.requests[0].init)), { method: "GET", headers: { apikey: config.supabaseAnonKey, Authorization: "Bearer " + config.supabaseAnonKey }, cache: "default", keepalive: true });
   f.respond(0);
   assert.equal((await first.promise).outcome, "ready");
   assert.deepEqual(await f.context.__PUBLIC_LANDING_PHONE_PROMISES.fixture, payload);
@@ -105,4 +106,45 @@ test("explicit return reset permits a new completed assignment and never invalid
   assert.equal(f.client.reset(config.slug), true);
   const next = f.client.request(config); await drain();
   assert.equal(f.requests.length, 2); assert.notEqual(next, first);
+});
+
+test("SSR and prewarm cache policy bypass fair and weighted quota without extending freshness", async () => {
+  const initial = { ...payload, cacheRefreshedAt: new Date(100000).toISOString() };
+  assert.equal(canUseCachedLandingPhone(initial, 100000), true);
+  assert.equal(canUseCachedLandingPhone(initial, 190001), false);
+  for (const policy of [{ phoneMode: "fair" }, { gerenciaSelectionMode: "fair" }, { gerenciaSelectionMode: "weighted_quota" }]) {
+    assert.equal(canUseCachedLandingPhone({ ...initial, ...policy }, 100000), false);
+    const f = fixture(), request = f.client.request({ ...config, initialPhone: { ...initial, ...policy } });
+    await drain(); assert.equal(f.requests.length, 1);
+    f.respond(0); await request.promise;
+  }
+});
+
+test("diagnostic UUID and original navigation correlate whitelisted server phases with actual completion", async () => {
+  const f = fixture();
+  const requestId = "11111111-1111-4111-8111-111111111111";
+  f.context.crypto = { randomUUID: () => requestId };
+  f.context.__ENTRY_FUNNEL_NAVIGATION__ = { id: "22222222-2222-4222-8222-222222222222", started_at: 90000 };
+  const request = f.client.request(config); await drain();
+  assert.equal((f.requests[0].init.headers as Record<string, string>)["x-entry-request-id"], requestId);
+  await f.advance(250);
+  f.requests[0].resolve({ ok: false, status: 503, headers: new Headers({ "X-Landing-Phone-Outcome": "no_phones",
+    "Server-Timing": 'phone-owner;dur=12.5, phone-select;dur=123.1, phone-total;dur=200, secret;desc="private", phone-plan;dur=999999999' }) });
+  const result = await request.promise;
+  assert.equal(result.outcome, "empty"); assert.equal(result.status, 503);
+  assert.equal(result.duration_ms, 250); assert.equal(result.completed_at, 100250);
+  assert.deepEqual(JSON.parse(JSON.stringify(result.server_timings)), { phone_owner: 13, phone_select: 123, phone_total: 200 });
+  assert.equal(request.navigation_id, "22222222-2222-4222-8222-222222222222");
+  assert.ok(!JSON.stringify(result).includes("private"));
+});
+
+test("upgrade adopts the previous client's pending promise instead of issuing another assignment", async () => {
+  let resolve!: (data: unknown) => void;
+  const f = fixture(new Promise(done => { resolve = done; }));
+  f.context.__PUBLIC_LANDING_PHONE_CLIENT__ = { version: 1 };
+  const client = f.install();
+  const request = client.request(config); await drain();
+  assert.equal(request.legacy, true); assert.equal(f.requests.length, 0);
+  resolve(payload); assert.equal((await request.promise).outcome, "ready");
+  assert.equal(client.version, 2);
 });

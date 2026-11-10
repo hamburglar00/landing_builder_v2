@@ -1,4 +1,5 @@
 import type { PublicLandingPhoneResponse } from "./types";
+import { canUseCachedLandingPhone } from "@/lib/landing/phoneCachePolicy";
 
 type RpcResponse = PublicLandingPhoneResponse & {
   cacheRefreshedAt?: string;
@@ -34,7 +35,7 @@ export async function getCachedLandingPhone(
     if (!response.ok) return null;
 
     const data = (await response.json()) as RpcResponse | null;
-    return data?.phone ? data : null;
+    return canUseCachedLandingPhone(data as Record<string, unknown> | null) ? data : null;
   } catch {
     return null;
   }

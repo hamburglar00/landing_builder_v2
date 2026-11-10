@@ -1,7 +1,10 @@
 import { createRequire } from "node:module";
 import { readFile, writeFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-const canonical = new URL("../../landing-autologuin/", import.meta.url);
+import { fileURLToPath, pathToFileURL } from "node:url";
+import path from "node:path";
+import { loadProductPaths } from "./product-worktrees.mjs";
+const productPath = loadProductPaths();
+const canonical = pathToFileURL(productPath("landing-autologuin") + path.sep);
 const source = await readFile(new URL("src/lib/gateway-entry-transition.ts", canonical), "utf8");
 const { build } = createRequire(new URL("../frontend/package.json", import.meta.url))("esbuild");
 const bundled = await build({ absWorkingDir: fileURLToPath(canonical), entryPoints: ["src/lib/gateway-entry-transition.ts"],
@@ -15,7 +18,7 @@ async function sync(target, expected) {
   else await writeFile(target, expected);
 }
 for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "multi-skin-gateway"]) {
-  const root = new URL(`../../${repo}/`, import.meta.url);
+  const root = pathToFileURL(productPath(repo) + path.sep);
   if (repo !== "landing-autologuin") {
     await sync(new URL("src/lib/gateway-entry-transition.ts", root), source);
     for (const file of ["preparation-page.ts", "preparation-page.test.ts", "transition-layout.ts", "gateway-entry-transition.test.ts", "gateway-entry-settings.ts", "gateway-entry-settings.test.ts", "gateway-entry-response.ts", "gateway-entry-response.test.ts"]) await sync(new URL(`src/lib/${file}`, root), await readFile(new URL(`src/lib/${file}`, canonical), "utf8"));
@@ -33,5 +36,5 @@ for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "mu
 const builderSource = source.replace('import { GATEWAY_ENTRY_FUNNEL_SCRIPT } from "@/lib/entry-funnel-client";\n', '')
   .replace('GATEWAY_ENTRY_TRANSITION_RUNTIME = GATEWAY_ENTRY_FUNNEL_SCRIPT + ', 'GATEWAY_ENTRY_TRANSITION_RUNTIME = ')
   .replace("} as const;", "} as const;\nexport { brands as GATEWAY_ENTRY_BRANDS };");
-await sync(new URL("../frontend/lib/gateway-entry-transition.ts", import.meta.url), builderSource);
+await sync(pathToFileURL(productPath("landing-builder", "frontend/lib/gateway-entry-transition.ts")), builderSource);
 console.log("Transición compartida verificada: constructor, clásico y cuatro gateways.");

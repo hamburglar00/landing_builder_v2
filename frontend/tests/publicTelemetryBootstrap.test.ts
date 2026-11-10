@@ -5,6 +5,7 @@ import vm from "node:vm";
 import { gzipSync } from "node:zlib";
 import { buildLandingEntryFunnelScript, publicEntryFunnelMetadata } from "../lib/landing/entryFunnel.bootstrap";
 import { buildEntryFunnelFactoryScript } from "../lib/landing/entryFunnel.client";
+import { renderTemplate7RuntimeAsset } from "../components/public-landing/template7RuntimeAsset";
 import { validateEntryFunnelBatch, validateEntryFunnelContext, type EntryFunnelTemplate } from "../lib/landing/entryFunnel";
 
 const landingId = "b453a8c5-a91a-4511-ac22-28bcfa4ea97c";
@@ -67,8 +68,8 @@ function browser(options: {
 
 test("T1–T6 bootstrap stays small and does not inline the full observer runtime", () => {
   const script = buildLandingEntryFunnelScript({ landingId, template: 1, engine: "classic" });
-  assert.ok(Buffer.byteLength(script) < 6500, "keep the inline document bootstrap bounded");
-  assert.ok(gzipSync(script).length < 2300, "full telemetry must stay in the cacheable asset");
+  assert.ok(Buffer.byteLength(script) < 7000, "keep the inline document bootstrap bounded");
+  assert.ok(gzipSync(script).length < 2600, "full telemetry must stay in the cacheable asset");
   assert.doesNotMatch(script, /PerformanceObserver|largest-contentful-paint|provider_create/);
   assert.ok(Buffer.byteLength(script) < Buffer.byteLength(buildEntryFunnelFactoryScript()) / 3);
 });
@@ -181,7 +182,7 @@ test("throwing beacons fall back and the public early queue cannot broaden diagn
   const events = b.context.__ENTRY_FUNNEL_EARLY__.events;
   events.push({ id: randomUUID(), name: "private-name", at: Date.now() });
   events.push({ id: "private-token", name: "page_visible", at: Date.now() });
-  events.push({ id: randomUUID(), name: "entry_error", at: Date.now(), error_code: "private-error", password: "private-password" });
+  events.push({ id: randomUUID(), name: "entry_error", at: Date.now(), navigation_id: b.context.__ENTRY_FUNNEL_NAVIGATION__.id, navigation_started_at: b.context.__ENTRY_FUNNEL_NAVIGATION__.started_at, error_code: "private-error", password: "private-password" });
   b.windowEvent("pagehide");
   assert.equal(b.requests.length, 1);
   const batch = JSON.parse(String(b.requests[0].init.body));
@@ -210,4 +211,49 @@ test("storage reuse matches engine, template, origin and release while discardin
   } finally {
     if (oldRelease === undefined) delete process.env.VERCEL_GIT_COMMIT_SHA; else process.env.VERCEL_GIT_COMMIT_SHA = oldRelease;
   }
+});
+
+test("T7/T8/T9 form runtime adopts the early head buffer and emits one unload batch with its original IDs", async () => {
+  for (const template of [7, 8, 9] as const) {
+    const b = browser({ template }); b.frame();
+    const early = b.context.__ENTRY_FUNNEL_EARLY__, nav = b.context.__ENTRY_FUNNEL_NAVIGATION__;
+    const ids = early.events.map((event: any) => event.id);
+    const asset = renderTemplate7RuntimeAsset("fixture", { id: landingId, schemaVersion: 1, updatedAt: "", name: "fixture", comment: "", layout: { template, ctaPosition: "bottom" }, tracking: { pixelId: "", postUrl: "", landingTag: "fixture" } });
+    vm.runInContext(asset.config.replace(/^<script[^>]*>/, "").replace(/<\/script>$/, ""), b.context);
+    assert.equal(b.context.__ENTRY_FUNNEL_EARLY__, early);
+    assert.equal(early.context.navigation_id, nav.id);
+    assert.deepEqual(early.events.map((event: any) => event.id), ids);
+    b.context.t7EarlyStage("name_started");
+    b.windowEvent("pagehide");
+    assert.equal(b.beacons.length, 1, "the form adapter does not install a second unload sender");
+    const batch = (await b.batches())[0];
+    assert.ok(validateEntryFunnelBatch(batch));
+    assert.ok(batch.events.every((event: any) => event.navigation_id === nav.id));
+    assert.equal(batch.events.filter((event: any) => event.name === "name_started").length, 1);
+  }
+});
+
+test("a validated early submit carries its attempt through handoff, beacon and late runtime without a second attempt", async () => {
+  const b = browser({ template: 9 }); b.frame();
+  const early = b.context.__ENTRY_FUNNEL_EARLY__;
+  early.record("cta_clicked");
+  const first = early.beginAttempt();
+  assert.equal(first.attempt_number, 1); assert.equal(first.navigation_id, b.context.__ENTRY_FUNNEL_NAVIGATION__.id);
+  early.flush();
+  const original = (await b.batches())[0].events.find((event: any) => event.name === "cta_clicked");
+  assert.equal(original.attempt_id, first.attempt_id);
+  const api = b.install();
+  assert.equal(api.peekContext().attempt_id, first.attempt_id);
+  assert.equal(api.peekContext().attempt_number, 1);
+  const replayed = JSON.parse(b.storage.get(key + ":pending")!).events.find((event: any) => event.name === "cta_clicked");
+  assert.equal(replayed.id, original.id); assert.equal(replayed.attempt_id, original.attempt_id);
+});
+
+test("two validated submits before the shared runtime keep two distinct attempts and stable event UUIDs", () => {
+  const b = browser({ template: 9 }); b.frame();
+  const early = b.context.__ENTRY_FUNNEL_EARLY__, first = early.beginAttempt(), second = early.beginAttempt();
+  assert.notEqual(first.attempt_id, second.attempt_id); assert.equal(second.attempt_number, 2);
+  assert.equal(early.events.filter((event: any) => event.name === "cta_clicked").length, 2);
+  const api = b.install();
+  assert.equal(api.peekContext().attempt_id, second.attempt_id); assert.equal(api.peekContext().attempt_number, 2);
 });

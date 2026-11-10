@@ -1,12 +1,12 @@
 import type { EntryFunnelContext, EntryFunnelProvenance, EntryFunnelTemplate } from "./entryFunnel";
-export type EntryFunnelClient = { flowId: string; beginAttempt(): void; emit(name: string, details?: Record<string, unknown>): void; flush(beacon?: boolean): void; context(): EntryFunnelContext; timings(header: string | null): void; adopt(context: EntryFunnelContext): void; stop(): void };
+export type EntryFunnelClient = { flowId: string; beginAttempt(): void; emit(name: string, details?: Record<string, unknown>): void; flush(beacon?: boolean): void; context(): EntryFunnelContext; peekContext(): EntryFunnelContext; timings(header: string | null, details?: Record<string, unknown>): void; adopt(context: EntryFunnelContext): void; stop(): void };
 
 /** Self-contained to embed into the existing public runtime; no additional blocking request. */
 export function installEntryFunnel(config: {
   navigationKind?: "preparation" | "gateway"; landingId?: string; template?: number; entryTemplate?: number; template8?: boolean; targetProvider?: string; skinCode?: string;
-  telemetry?: EntryFunnelProvenance;
+  telemetry?: EntryFunnelProvenance; componentRelease?: string; diagnosticProof?: () => string | undefined;
 }, suppliedContext?: EntryFunnelContext, endpoint = "/api/entry-funnel"): EntryFunnelClient | undefined {
-  const browser = window as typeof window & { __entryFunnel?: EntryFunnelClient; __ENTRY_FUNNEL_METADATA__?: EntryFunnelProvenance; __ENTRY_FUNNEL_EARLY__?: { started_at?: number; context?: EntryFunnelContext; timings?: string[]; events?: Array<{ name: string; at: number; id?: string; error_code?: string }> } };
+  const browser = window as typeof window & { __entryFunnel?: EntryFunnelClient; __ENTRY_FUNNEL_NAVIGATION__?: { id: string; started_at: number }; __ENTRY_FUNNEL_METADATA__?: EntryFunnelProvenance; __ENTRY_FUNNEL_EARLY__?: { started_at?: number; context?: EntryFunnelContext; timings?: string[]; events?: Array<{ name: string; at: number; id?: string; error_code?: string; navigation_id?: string; navigation_started_at?: number; attempt_id?: string; attempt_number?: number }> } };
   if (browser.__entryFunnel) {
     if (!suppliedContext || browser.__entryFunnel.flowId === suppliedContext.flow_id) {
       if (suppliedContext) browser.__entryFunnel.adopt(suppliedContext);
@@ -31,8 +31,8 @@ export function installEntryFunnel(config: {
     metadata.environment ||= "unknown";
     metadata.source = navigator.webdriver === true ? "synthetic" : metadata.source || "unknown";
   }
-  const allowed = ["page_visible", "form_visible", "name_focus", "name_started", "name_valid", "skin_selected", "cta_clicked", "destination_ready", "account_ready", "login_confirmed", "gateway_loaded", "iframe_loaded", "chat_bootstrap_ready", "welcome_ready", "wallet_ready", "chat_usable", "chat_ready", "entry_error", "visibility_hidden", "resumed", "stage_timing", "casino_account_ready", "entry_retry", "attempt_started", "cta_available", "outbound_requested"];
-  const phases = ["landing_dns", "landing_connect", "landing_tls", "landing_ttfb", "landing_download", "landing_navigation",
+  const allowed = ["navigation_started", "phone_at_click", "phone_wait_completed", "wallet_result", "welcome_visible", "wallet_visible", "telemetry_loss", "page_visible", "form_visible", "name_focus", "name_started", "name_valid", "skin_selected", "cta_clicked", "destination_ready", "account_ready", "login_confirmed", "gateway_loaded", "iframe_loaded", "chat_bootstrap_ready", "welcome_ready", "wallet_ready", "chat_usable", "chat_ready", "entry_error", "visibility_hidden", "resumed", "stage_timing", "casino_account_ready", "entry_retry", "attempt_started", "cta_available", "outbound_requested"];
+  const phases = ["phone_owner", "phone_plan", "phone_cache", "phone_select", "phone_total", "landing_dns", "landing_connect", "landing_tls", "landing_ttfb", "landing_download", "landing_navigation",
     "gateway_dns", "gateway_connect", "gateway_tls", "gateway_ttfb", "gateway_download", "gateway_navigation",
     "casino_ttfb", "casino_download", "casino_navigation",
   "preparation_dns", "preparation_connect", "preparation_tls", "preparation_ttfb", "preparation_download", "preparation_navigation",
@@ -57,6 +57,16 @@ export function installEntryFunnel(config: {
     const hex = Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
     return hex.slice(0, 8) + "-" + hex.slice(8, 12) + "-" + hex.slice(12, 16) + "-" + hex.slice(16, 20) + "-" + hex.slice(20);
   }
+  const navigationStarts = new Map<string, number>();
+  function newNavigation(resumed = false) {
+    const existing = !resumed && browser.__ENTRY_FUNNEL_NAVIGATION__;
+    const started = resumed ? Date.now() : Math.round(performance.timeOrigin || Date.now());
+    const nav = existing && uuid.test(existing.id) && Number.isSafeInteger(existing.started_at) ? existing : { id: id(), started_at: started };
+    browser.__ENTRY_FUNNEL_NAVIGATION__ = nav; navigationStarts.set(nav.id, nav.started_at);
+    if (navigationStarts.size > 4) navigationStarts.delete(navigationStarts.keys().next().value!);
+    return nav;
+  }
+  let navigation = newNavigation(), restored = false;
   const early = browser.__ENTRY_FUNNEL_EARLY__;
   let context: EntryFunnelContext | undefined = suppliedContext;
   try {
@@ -102,11 +112,40 @@ export function installEntryFunnel(config: {
   let attemptStartedAt = 0;
   let retries = 0;
   const seen = new Set<string>();
+  const losses = new Map<string, number>();
+  const recordedLosses = new Set<string>();
+  function loss(reason: string, amount = 1) { if (amount < 1) return; losses.set(reason, Math.min(10000, (losses.get(reason) || 0) + amount)); }
+  function queueLosses() {
+    for (const [reason, amount] of losses) {
+      if (queue.length >= 80 || count >= 300 || recordedLosses.has(reason)) continue;
+      losses.delete(reason); recordedLosses.add(reason);
+      emit("telemetry_loss", { loss_reason: reason, loss_count: amount, flow_scoped: true });
+    }
+  }
+  function body(events: Array<Record<string, unknown>>) {
+    const proof = config.diagnosticProof?.();
+    return JSON.stringify({ landing_id: flow.landing_id, flow_id: flow.flow_id, template: flow.template, events,
+      ...(typeof proof === "string" && /^e1\.[A-Za-z0-9_-]{1,2000}$/.test(proof) ? { diagnostic_proof: proof } : {}) });
+  }
   const pendingKey = key + ":pending";
+  function storedEvent(e: Record<string, unknown>): Record<string, unknown> | null {
+    if (!e || !uuid.test(String(e.id)) || !allowed.includes(String(e.name)) || !Number.isSafeInteger(e.elapsed_ms) || Number(e.elapsed_ms) < 0 || Number(e.elapsed_ms) > 86400000) return null;
+    const out: Record<string, unknown> = { ...provenance(e), id: e.id, name: e.name, elapsed_ms: e.elapsed_ms };
+    for (const field of ["navigation_id", "request_id"]) if (typeof e[field] === "string" && uuid.test(e[field] as string)) out[field] = e[field];
+    for (const [field, values] of Object.entries({ provider: providers, skin: skins, error_code: errors, error_stage: stages, component: ["landing", "gateway", "chat"], phone_readiness: ["ready", "pending", "failed", "unknown"], phone_outcome: ["ready", "empty", "http_error", "network_error", "invalid_response", "legacy_unknown", "unconfigured", "timeout"], wallet_outcome: ["available", "not_applicable", "unavailable", "error"], loss_reason: ["overflow", "invalid_batch", "context_mismatch", "rate_limited", "collector_rejected", "delivery_failed"], account_kind: ["new", "existing"] })) {
+      if (typeof e[field] === "string" && values.includes(e[field] as string)) out[field] = e[field];
+    }
+    for (const [field, min, max] of [["navigation_elapsed_ms", 0, 86400000], ["duration_ms", 0, 86400000], ["loss_count", 1, 10000], ["status", 100, 599]] as const) if (Number.isSafeInteger(e[field]) && Number(e[field]) >= min && Number(e[field]) <= max) out[field] = e[field];
+    if (typeof e.component_release === "string" && /^[0-9a-f]{7,40}$/.test(e.component_release)) out.component_release = e.component_release;
+    if (typeof e.attempt_id === "string" && uuid.test(e.attempt_id) && Number.isInteger(e.attempt_number) && Number(e.attempt_number) >= 1 && Number(e.attempt_number) <= 1000) { out.attempt_id = e.attempt_id; out.attempt_number = e.attempt_number; }
+    if (e.name === "stage_timing") { if (!phases.includes(String(e.phase)) || out.duration_ms === undefined) return null; out.phase = e.phase; }
+    if (e.name === "wallet_result" && !out.wallet_outcome || e.name === "telemetry_loss" && (!out.loss_reason || !out.loss_count)) return null;
+    return out;
+  }
   try {
     const pending = JSON.parse(sessionStorage.getItem(pendingKey) || "null");
     if (pending?.flow_id === flow.flow_id && Array.isArray(pending.events)) {
-      queue = pending.events.slice(0, 80).filter((e: Record<string, unknown>) => uuid.test(String(e.id)) && allowed.includes(String(e.name)));
+      queue = pending.events.slice(0, 80).map(storedEvent).filter((e: Record<string, unknown> | null): e is Record<string, unknown> => !!e);
     }
   } catch { /* best effort */ }
   function saveQueue() {
@@ -114,6 +153,7 @@ export function installEntryFunnel(config: {
   }
   function flush(beacon = false) {
     if (!active) return;
+    queueLosses();
     if (timer) { clearTimeout(timer); timer = undefined; }
     if (!queue.length || inflight && !beacon) return;
     const events = queue.slice(0, 20);
@@ -122,7 +162,7 @@ export function installEntryFunnel(config: {
         // Retain until an acknowledged fetch. Replays carry the same IDs and SQL deduplicates.
         let accepted = true;
         for (let offset = 0; offset < queue.length; offset += 20) {
-          const batch = JSON.stringify({ landing_id: flow.landing_id, flow_id: flow.flow_id, template: flow.template, events: queue.slice(offset, offset + 20) });
+          const batch = body(queue.slice(offset, offset + 20));
           if (!navigator.sendBeacon(endpoint, new Blob([batch], { type: "text/plain" }))) { accepted = false; break; }
         }
         if (accepted) return;
@@ -131,36 +171,62 @@ export function installEntryFunnel(config: {
     inflight = true;
     const batches = beacon ? Array.from({ length: Math.ceil(queue.length / 20) }, (_, index) => queue.slice(index * 20, index * 20 + 20)) : [events];
     Promise.all(batches.map(batch => fetch(endpoint, {
-      method: "POST", body: JSON.stringify({ landing_id: flow.landing_id, flow_id: flow.flow_id, template: flow.template, events: batch }),
+      method: "POST", body: body(batch),
       headers: { "Content-Type": "application/json" }, credentials: "same-origin", keepalive: true, cache: "no-store"
-    }).then(response => {
-        if (!response.ok) throw new Error("unavailable");
+    }).then(async response => {
+        const result = await response.json().catch(() => null);
+        if (!response.ok || result?.accepted !== true || !Array.isArray(result.event_ids)) {
+          throw new Error(["collector_rejected", "invalid_batch", "context_mismatch", "rate_limited", "delivery_failed"].includes(result?.reason) ? result.reason : response.status === 429 ? "rate_limited" : response.status === 409 ? "context_mismatch" : response.status === 400 ? "invalid_batch" : "delivery_failed");
+        }
         const sent = new Set(batch.map(e => e.id));
-        queue = queue.filter(e => !sent.has(e.id)); saveQueue();
-      }))).then(() => { retries = 0; }).catch(() => { retries += 1; })
+        const acknowledged = new Set(result.event_ids.filter((value: unknown) => typeof value === "string" && sent.has(value)));
+        if (!acknowledged.size) throw new Error("unacknowledged");
+        queue = queue.filter(e => !acknowledged.has(e.id)); saveQueue();
+      }))).then(() => { retries = 0; queueLosses(); }).catch(error => { retries += 1; if (batches.some(batch => batch.some(event => event.name !== "telemetry_loss"))) loss(["rate_limited", "context_mismatch", "invalid_batch", "collector_rejected"].includes(error?.message) ? error.message : "delivery_failed"); })
       .finally(() => {
         inflight = false;
         if (active && queue.length && retries <= 1 && document.visibilityState !== "hidden") timer = setTimeout(() => flush(), 1800);
       });
   }
   function emit(name: string, details: Record<string, unknown> = {}) {
-    if (!active || !allowed.includes(name) || count >= 120) return;
+    if (!active || !allowed.includes(name) || count >= 300) return;
+    if (name !== "telemetry_loss") queueLosses();
     if (name === "stage_timing" && (!phases.includes(String(details.phase)) || !Number.isSafeInteger(details.duration_ms) || Number(details.duration_ms) < 0 || Number(details.duration_ms) > 86400000)) return;
-    if (name === "cta_clicked") { reportVisual(); beginAttempt(); }
+    if (name === "cta_clicked") {
+      reportVisual();
+      if (uuid.test(String(details.replay_attempt_id)) && Number.isInteger(details.replay_attempt_number) && Number(details.replay_attempt_number) >= 1 && Number(details.replay_attempt_number) <= 1000) {
+        flow.attempt_id = String(details.replay_attempt_id); flow.attempt_number = Number(details.replay_attempt_number); persistContext(); emit("attempt_started");
+      } else beginAttempt();
+    }
     if (name === "outbound_requested" && !flow.attempt_id) beginAttempt();
     if (name === "chat_usable") reportVisual();
     if (details.account_kind === "new" || details.account_kind === "existing") { flow.account_kind = details.account_kind; persistContext(); }
     const provider = details.provider || config.targetProvider;
     const skin = details.skin || config.skinCode;
-    const once = !["cta_clicked", "entry_retry", "entry_error", "visibility_hidden", "resumed"].includes(name);
-    const attemptScoped = details.flow_scoped !== true && !(name === 'stage_timing' && String(details.phase).startsWith('landing_')) && !["page_visible", "form_visible", "cta_available", "name_focus", "name_started", "name_valid", "skin_selected"].includes(name);
-    const stageKey = name + ":" + String(provider || "") + ":" + String(skin || "") + ":" + (attemptScoped ? flow.attempt_id || "" : "") + ":" + String(details.phase || "") + ":" + String(details.resource_key || "");
+    const once = !["cta_clicked", "entry_retry", "entry_error", "visibility_hidden", "resumed", "telemetry_loss"].includes(name);
+    const attemptScoped = details.flow_scoped !== true && !(name === 'stage_timing' && String(details.phase).startsWith('landing_')) && !["navigation_started", "telemetry_loss", "page_visible", "form_visible", "cta_available", "name_focus", "name_started", "name_valid", "skin_selected"].includes(name);
+    const navId = uuid.test(String(details.navigation_id)) ? String(details.navigation_id) : navigation.id;
+    const component = ["landing", "gateway", "chat"].includes(String(details.component)) ? String(details.component) : suppliedContext ? "gateway" : "landing";
+    const occurred = Number.isSafeInteger(details.occurred_at_ms) && Number(details.occurred_at_ms) <= Date.now() ? Number(details.occurred_at_ms) : Date.now();
+    const stageKey = navId + ":" + component + ":" + String(details.request_id || "") + ":" + name + ":" + String(provider || "") + ":" + String(skin || "") + ":" + (attemptScoped ? flow.attempt_id || "" : "") + ":" + String(details.phase || "") + ":" + String(details.resource_key || "");
     if (once && seen.has(stageKey)) return;
     seen.add(stageKey); count += 1;
     const event: Record<string, unknown> = {
       ...provenance(flow),
-      id: uuid.test(String(details.event_id)) ? details.event_id : id(), name, elapsed_ms: Math.max(0, Math.min(86400000, Number.isSafeInteger(details.elapsed_ms) ? Number(details.elapsed_ms) : Date.now() - flow.started_at)),
+      id: uuid.test(String(details.event_id)) ? details.event_id : id(), name, elapsed_ms: Math.max(0, Math.min(86400000, Number.isSafeInteger(details.elapsed_ms) ? Number(details.elapsed_ms) : occurred - flow.started_at)),
+      navigation_id: navId, component,
     };
+    const navStart = navigationStarts.get(navId);
+    if (Number.isSafeInteger(details.navigation_elapsed_ms) && Number(details.navigation_elapsed_ms) >= 0 && Number(details.navigation_elapsed_ms) <= 86400000) event.navigation_elapsed_ms = details.navigation_elapsed_ms;
+    else if (navStart !== undefined) event.navigation_elapsed_ms = Math.max(0, Math.min(86400000, occurred - navStart));
+    const componentRelease = details.component_release || (component === "landing" ? flow.release : component === "gateway" ? config.componentRelease : undefined);
+    if (typeof componentRelease === "string" && /^[0-9a-f]{7,40}$/.test(componentRelease)) event.component_release = componentRelease;
+    if (uuid.test(String(details.request_id))) event.request_id = details.request_id;
+    for (const [field, values] of Object.entries({ phone_readiness: ["ready", "pending", "failed", "unknown"], phone_outcome: ["ready", "empty", "http_error", "network_error", "invalid_response", "legacy_unknown", "unconfigured", "timeout"], wallet_outcome: ["available", "not_applicable", "unavailable", "error"], loss_reason: ["overflow", "invalid_batch", "context_mismatch", "rate_limited", "collector_rejected", "delivery_failed"] })) {
+      if (values.includes(String(details[field]))) event[field] = details[field];
+    }
+    if (Number.isInteger(details.loss_count) && Number(details.loss_count) >= 1 && Number(details.loss_count) <= 10000) event.loss_count = details.loss_count;
+    if (name === "wallet_result" && !event.wallet_outcome || name === "telemetry_loss" && (!event.loss_reason || !event.loss_count)) return;
     if (attemptScoped && flow.attempt_id && uuid.test(flow.attempt_id)) { event.attempt_id = flow.attempt_id; event.attempt_number = flow.attempt_number; }
     if (flow.account_kind) event.account_kind = flow.account_kind;
     if (name === "stage_timing") event.phase = details.phase;
@@ -170,22 +236,23 @@ export function installEntryFunnel(config: {
     if (["entry_error", "entry_retry"].includes(name) && stages.includes(String(details.error_stage))) event.error_stage = details.error_stage;
     if (Number.isSafeInteger(details.duration_ms) && Number(details.duration_ms) >= 0 && Number(details.duration_ms) <= 86400000) event.duration_ms = details.duration_ms;
     if (Number.isInteger(details.status) && Number(details.status) >= 100 && Number(details.status) <= 599) event.status = details.status;
-    queue.push(event); if (queue.length > 80) queue = queue.slice(-80); saveQueue();
+    queue.push(event); if (queue.length > 80) { const removed = queue.splice(0, queue.length - 80); loss("overflow", removed.filter(e => e.name !== "telemetry_loss").length); } saveQueue();
     if (!timer) timer = setTimeout(() => flush(), 500);
   }
-  function timings(header: string | null) {
+  function timings(header: string | null, details: Record<string, unknown> = {}) {
     if (!header || header.length > 2048) return;
     const account = /(?:^|,\s*)t7-account;dur=[0-9]+;desc="(created|recovered)"/.exec(header);
     if (account) { flow.account_kind = account[1] === "created" ? "new" : "existing"; persistContext(); emit("casino_account_ready"); }
-    const map: Record<string, string> = { "t7-destination-scope": "destination_scope", "t7-destination-resolve": "destination_resolve", "t7-destination-fallback": "destination_fallback", "t7-destination-total": "destination_total", "t7-identity-bootstrap": "identity_bootstrap", "t7-context": "builder_context", "t7-identity": "atrio_identity", "t7-account": "casino_account",
+    const map: Record<string, string> = { "phone-owner": "phone_owner", "phone-plan": "phone_plan", "phone-cache": "phone_cache", "phone-select": "phone_select", "phone-total": "phone_total", "t7-destination-scope": "destination_scope", "t7-destination-resolve": "destination_resolve", "t7-destination-fallback": "destination_fallback", "t7-destination-total": "destination_total", "t7-identity-bootstrap": "identity_bootstrap", "t7-context": "builder_context", "t7-identity": "atrio_identity", "t7-account": "casino_account",
       "t7-link": "atrio_link", "t7-handoff": "gateway_handoff", "t7-finalize": "entry_finalize", "t7-total": "entry_total",
       "atrio_database_lookup": "account_lookup", "atrio_provider_create": "provider_create", "atrio_provider_verify": "provider_verify", "atrio_local_finalize": "account_finalize" };
     for (const part of header.split(",")) {
       const match = /^\s*([a-z0-9_-]+);dur=([0-9]+)(?:;desc="(?:created|recovered)")?\s*$/.exec(part);
-      if (match && map[match[1]]) emit("stage_timing", { phase: map[match[1]], duration_ms: Number(match[2]) });
+      if (match && map[match[1]]) emit("stage_timing", { ...details, phase: map[match[1]], duration_ms: Number(match[2]) });
     }
   }
   function navigationTiming() {
+    if (restored) return;
     try {
       const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
       if (!navigation || !navigation.responseEnd) return;
@@ -236,7 +303,7 @@ export function installEntryFunnel(config: {
         // Attribute late buffered records to their real attempt only; pre-CTA warmup
         // remains flow scoped. Resource URLs are discarded here.
         const resource = entry as PerformanceResourceTiming;
-        if (resource.responseEnd > 0) metric(paths[url.pathname], resource.responseEnd - resource.startTime, {
+        if (resource.responseEnd > 0 && performance.timeOrigin + resource.startTime >= navigation.started_at) metric(paths[url.pathname], resource.responseEnd - resource.startTime, {
           resource_key: resource.startTime,
           elapsed_ms: Math.max(0, Math.round(performance.timeOrigin + resource.responseEnd - flow.started_at)),
           flow_scoped: !suppliedContext && (!attemptStartedAt || resource.startTime < attemptStartedAt),
@@ -244,12 +311,13 @@ export function installEntryFunnel(config: {
       } catch { /* Unsupported resource records are omitted. */ }
     }
   }
-  const api = { flowId: flow.flow_id, beginAttempt, emit, flush, timings, adopt, context: () => { if (!flow.attempt_id) beginAttempt(); return { ...flow }; }, stop: () => { active = false; if (timer) clearTimeout(timer); observers.forEach(observer => observer.disconnect()); } };
+  const api = { flowId: flow.flow_id, beginAttempt, emit, flush, timings, adopt, peekContext: () => ({ ...flow, navigation_id: navigation.id }), context: () => { if (!flow.attempt_id) beginAttempt(); return { ...flow, navigation_id: navigation.id }; }, stop: () => { active = false; if (timer) clearTimeout(timer); observers.forEach(observer => observer.disconnect()); } };
   browser.__entryFunnel = api;
+  emit("navigation_started", { flow_scoped: true });
   if (!suppliedContext) {
     if (Array.isArray(early?.events)) early.events.slice(0, 8).forEach(event => {
       if (["page_visible", "form_visible", "name_focus", "name_started", "name_valid", "cta_clicked", "entry_error"].includes(event.name) &&
-        Number.isSafeInteger(event.at) && event.at >= flow.started_at && event.at <= Date.now()) emit(event.name, { elapsed_ms: event.at - flow.started_at, event_id: event.id, error_code: event.error_code });
+        Number.isSafeInteger(event.at) && event.at >= flow.started_at && event.at <= Date.now()) emit(event.name, { occurred_at_ms: event.at, replay_attempt_id: event.attempt_id, replay_attempt_number: event.attempt_number, navigation_id: event.navigation_id, navigation_elapsed_ms: Number.isSafeInteger(event.navigation_started_at) ? Math.max(0, event.at - Number(event.navigation_started_at)) : undefined, elapsed_ms: event.at - flow.started_at, event_id: event.id, error_code: event.error_code });
     });
     early?.timings?.slice(0, 8).forEach(header => timings(header));
     delete browser.__ENTRY_FUNNEL_EARLY__;
@@ -292,7 +360,7 @@ export function installEntryFunnel(config: {
     else { emit("resumed"); if (!suppliedContext) emit("page_visible"); flush(); }
   });
   window.addEventListener("pagehide", () => { reportVisual(); flush(true); });
-  window.addEventListener("pageshow", event => { if (event.persisted) { emit("resumed"); flush(); } });
+  window.addEventListener("pageshow", event => { if (event.persisted) { restored = true; navigation = newNavigation(true); count = 0; seen.clear(); recordedLosses.clear(); lcp = undefined; blocked = 0; emit("navigation_started", { flow_scoped: true }); emit("resumed"); flush(); } });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", navigationTiming, { once: true });
   else navigationTiming();
   window.addEventListener('load', () => setTimeout(navigationTiming, 0), { once: true });

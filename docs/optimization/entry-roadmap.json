@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-10T15:35:00Z",
+  "updated_at": "2026-11-10T16:48:00Z",
   "title": "Seguimiento de optimización: landings, gateways, chat y NexoBet",
   "current_phase": {
     "number": 2,
     "name": "Resolver cuellos de botella con medición comparable",
     "initial_audit": "completada con límites de cobertura",
     "next_batch": "PREWARM-OBS",
-    "next_batch_implementation_started": false
+    "next_batch_implementation_started": true
   },
   "rules": [
     "Cada idea conserva un identificador, alcance, estado, autorización, dependencia y criterio de cierre.",
@@ -86,76 +86,135 @@
     {
       "id": "PREWARM-OBS",
       "title": "Número preparado antes del clic y recorrido medible",
-      "status": "alcance_definido_sin_implementar",
-      "authorization": "Los cuatro puntos de precarga fueron aceptados por el usuario; completar mediciones es prioridad explícita. Esta revisión registra el alcance sin modificar producción.",
+      "status": "implementado_backend_y_atrio_publicados_cierre_conjunto_pendiente",
+      "authorization": "Lote PREWARM-OBS autorizado por el usuario; checkpoint de diez repositorios verificado antes de implementar. La publicación se coordina por producto sin incluir API2/Panel3.",
       "products": [
         "landing-builder",
         "clásico",
         "Atrio",
-        "NexoBet según módulo afectado",
-        "cuatro gateways si cambia el contrato común"
+        "NexoBet: chat compartido y landing nativa T9 con ingesta propia",
+        "cuatro gateways y transporte Worker Ganamos+"
       ],
       "tasks": [
         {
           "id": "PRE-01",
-          "status": "pendiente",
+          "status": "implementado_validado_publicacion_frontend_pendiente",
           "title": "Iniciar prewarm antes del CSS",
-          "acceptance": "Una hoja de estilos retrasada no demora el inicio de la consulta; doce variantes T1–T6 conservan un solo pedido y el comportamiento de Pixel."
+          "acceptance": "Una hoja de estilos retrasada no demora el inicio de la consulta; doce variantes T1–T6 conservan un solo pedido y el comportamiento de Pixel.",
+          "result": "Bootstrap único en head T1–T9 y prewarm T1–T6 antes de CSS; 12 combinaciones motor/plantilla verificadas con CSS retenido y una sola consulta. Pixel permanece activo.",
+          "evidence": [
+            "../../.local/prewarm-obs-20261110/phone-validation.md"
+          ]
         },
         {
           "id": "PRE-02",
-          "status": "pendiente_de_medición",
+          "status": "instrumentado_transporte_validado_comparacion_productiva_pendiente",
           "title": "Separar y optimizar el tiempo del servidor y transporte",
-          "acceptance": "Medir validación de acceso, caché y selección; elegir cambios con evidencia sin alterar elegibilidad ni reservas. Comparar la ruta completa antes/después, incluidos casos fríos."
+          "acceptance": "Medir validación de acceso, caché y selección; elegir cambios con evidencia sin alterar elegibilidad ni reservas. Comparar la ruta completa antes/después, incluidos casos fríos.",
+          "result": "Fases owner/plan/cache/select/total correlacionadas. CORS local Chromium/WebKit: dos GET con respuestas diferentes y un OPTIONS final frente a dos de baseline. landing-phone v27 ya aplicada con respuestas GET/POST no-store; no se cambió selector ni se justificó otro índice.",
+          "limit": "El ahorro de un preflight en un fixture no demuestra segundos productivos ni mejora p50/p95 del backend. Requiere cohortes comparables después de publicar los emisores.",
+          "evidence": [
+            "../../.local/prewarm-obs-20261110/phone-validation.md",
+            "../../../.local/prewarm-obs-20261110/backend-rollout.json"
+          ]
         },
         {
           "id": "PRE-03",
-          "status": "pendiente",
+          "status": "implementado_validado_publicacion_frontend_pendiente",
           "title": "Auditar y alinear caché compatible entre motores",
           "acceptance": "Verificar los modos fair, weighted_quota y el resto de configuraciones contra la implementación remota; nunca compartir una asignación entre visitantes cuando el reparto exige selección individual.",
-          "note": "La diferencia de guardas detectada en código local es un hallazgo por verificar, no un incidente productivo confirmado."
+          "note": "La diferencia de guardas se corrigió y verificó localmente; no se atribuye retrospectivamente un incidente a usuarios productivos.",
+          "result": "Guarda compartida SSR/inline de 90 segundos; excluye gerencia fair/weighted_quota y teléfono fair. Sin ampliar caché clásica, cambiar RPC ni compartir selecciones individuales.",
+          "evidence": [
+            "../../.local/prewarm-obs-20261110/phone-validation.md"
+          ]
         },
         {
           "id": "PRE-04",
-          "status": "pendiente",
+          "status": "implementado_validado_publicacion_frontend_pendiente",
           "title": "Medir número listo al clic y espera restante",
-          "acceptance": "Porcentaje listo con denominador explícito; tiempo hasta respuesta y clic→salida; separar éxito, espera, fallo, primer intento y clic posterior. Sin atribuir apertura de WhatsApp sólo a outbound_requested."
+          "acceptance": "Porcentaje listo con denominador explícito; tiempo hasta respuesta y clic→salida; separar éxito, espera, fallo, primer intento y clic posterior. Sin atribuir apertura de WhatsApp sólo a outbound_requested.",
+          "result": "phone_at_click y phone_wait_completed con readiness/outcome cerrados, espera restante y request UUID. Reporte por primer clic de intento, con denominador conocido, faltantes explícitos y clic→outbound dentro del mismo documento.",
+          "limit": "Una solicitud outbound no confirma que se abrió WhatsApp; no hay comparación productiva antes/después todavía.",
+          "evidence": [
+            "../../scripts/entry-performance-report.sql",
+            "../../.local/prewarm-obs-20261110/phone-validation.md"
+          ]
         },
         {
           "id": "OBS-01",
-          "status": "pendiente",
+          "status": "implementado_validado_publicacion_frontend_pendiente",
           "title": "Separar navegación, recorrido e intento",
-          "acceptance": "Recargar o volver no infla el tiempo de carga; conservar correlación del recorrido e identificar cada navegación y cada intento."
+          "acceptance": "Recargar o volver no infla el tiempo de carga; conservar correlación del recorrido e identificar cada navegación y cada intento.",
+          "result": "flow24h, navegación/documento/BFCache e intento tienen UUID y relojes separados. Bootstrap y runtime adoptan los mismos eventos/intentos; un envío válido previo al runtime conserva correlación.",
+          "evidence": [
+            "../validation/entry-observability-20261110.md"
+          ]
         },
         {
           "id": "OBS-02",
-          "status": "pendiente",
+          "status": "implementado_validado_publicacion_parcial",
           "title": "Relacionar etapas del navegador con peticiones y errores del servidor",
-          "acceptance": "Un intento se puede seguir por landing, destino, gateway y chat con identificadores técnicos; documentar límites internos de API2 mientras sus cambios nuevos sean locales."
+          "acceptance": "Un intento se puede seguir por landing, destino, gateway y chat con identificadores técnicos; documentar límites internos de API2 mientras sus cambios nuevos sean locales.",
+          "result": "UUID de flow/attempt/navigation/request viajan por las rutas propias landing→gateway→chat y se registran en fases backend; reintento cambia request, no attempt. Cuatro adaptadores preservan identidad y origen. Nexo T9 incorpora collector y tablas nx propios, sin escribir en Builder.",
+          "limit": "La correlación nueva dentro de API2 no está publicada. El relay al casino externo excluye estos headers. Los UUID son diagnóstico y nunca autorización.",
+          "evidence": [
+            "../validation/entry-observability-20261110.md",
+            "../validation/prewarm-obs-checklist-20261110.md"
+          ]
         },
         {
           "id": "OBS-03",
-          "status": "pendiente",
+          "status": "implementado_validado_publicacion_parcial",
           "title": "Guardar versión de cada componente y contexto de comparación",
-          "acceptance": "Versiones de landing, gateway y chat distinguibles; informe por motor, plantilla, proveedor/skin, cuenta nueva/existente, intento y entorno, conservando origen desconocido cuando corresponda."
+          "acceptance": "Versiones de landing, gateway y chat distinguibles; informe por motor, plantilla, proveedor/skin, cuenta nueva/existente, intento y entorno, conservando origen desconocido cuando corresponda.",
+          "result": "release de landing y component/component_release de gateway/chat separados; source desconocido y cohortes de entorno no se convierten en usuarios reales.",
+          "limit": "El dominio/alias público no se persiste; el reporte separa base/collector, landing y motor sin inventar un origen histórico.",
+          "evidence": [
+            "../validation/entry-observability-20261110.md",
+            "../../scripts/entry-performance-report.sql"
+          ]
         },
         {
           "id": "OBS-04",
-          "status": "pendiente",
+          "status": "implementado_validado_atrio_publicado_nexo_pendiente",
           "title": "Distinguir chat utilizable, bienvenida y resultado bancario",
-          "acceptance": "Chat utilizable no depende de la billetera; banco disponible/no aplicable/no disponible/error explícito. Distinguir evento lógico de contenido programado y visibilidad comprobada."
+          "acceptance": "Chat utilizable no depende de la billetera; banco disponible/no aplicable/no disponible/error explícito. Distinguir evento lógico de contenido programado y visibilidad comprobada.",
+          "result": "chat_usable independiente de banco; wallet_result enum available/not_applicable/unavailable/error. welcome_visible y wallet_visible comprueban visibilidad tras render, separados de los hitos lógicos.",
+          "evidence": [
+            "../validation/entry-observability-20261110.md",
+            "../../../.local/prewarm-obs-20261110/release-status-internal-chat.json"
+          ]
         },
         {
           "id": "OBS-05",
-          "status": "pendiente",
+          "status": "implementado_validado_backend_publicado_frontends_pendientes",
           "title": "Comprobar entrega y límites de telemetría",
-          "acceptance": "Pruebas de cierre temprano, fallos de red, varias pestañas, reintentos, límites de cola y respuesta del colector. Un evento faltante queda como observación incompleta, no como fallo o abandono demostrado."
+          "acceptance": "Pruebas de cierre temprano, fallos de red, varias pestañas, reintentos, límites de cola y respuesta del colector. Un evento faltante queda como observación incompleta, no como fallo o abandono demostrado.",
+          "result": "ACK por UUID persistido, proof por pestaña, cola80/batch20/16KiB y límites300nav/2000flow24h/3000landingminuto con replays sin doble cuenta. RPC false se informa collector_rejected422; pérdidas acotadas sin bucles. SQL32 verificaciones aprobadas.",
+          "limit": "Cierre/offline puede impedir entregar incluso el informe de pérdida. Si el runtime nativo Nexo nunca descarga, ready/outbound del navegador pueden faltar: se conservan contexto temprano y trazas servidor/gateway sin bloquear el alta.",
+          "evidence": [
+            "../validation/entry-observability-20261110.md",
+            "../../../.local/prewarm-obs-20261110/backend-rollout.json"
+          ]
         },
         {
           "id": "REG-01",
-          "status": "pendiente",
+          "status": "en_curso",
           "title": "Regresión y cierre conjunto",
-          "acceptance": "Checkpoint, casos de carga fría/caliente, clic inmediato, red lenta, retorno, números no disponibles, Pixel/atribución/reparto y coherencia entre productos. Cada punto termina publicado y verificado o queda pendiente con causa explícita."
+          "acceptance": "Checkpoint, casos de carga fría/caliente, clic inmediato, red lenta, retorno, números no disponibles, Pixel/atribución/reparto y coherencia entre productos. Cada punto termina publicado y verificado o queda pendiente con causa explícita.",
+          "result": "Checkpoint diez repositorios; Builder492, clásico47, teléfono42 y suites finales Rey550/Ases475/NET481/Multi517 aprobadas. Nexo nativo17 pruebas con6 escenarios browser aprobadas. Tipos de ambos motores aprobados; revisión integrada en curso.",
+          "pending": [
+            "Completar matriz final de los 18 casos por navegador y atribución.",
+            "Completar regresión global Nexo y verificación final de todos sus módulos.",
+            "Publicar/verificar Builder, clásico, Nexo y cuatro gateways/Worker por la coordinación acordada.",
+            "Auditar cobertura posterior con muestras comparables; conservar lo desconocido."
+          ],
+          "evidence": [
+            "../validation/prewarm-obs-checklist-20261110.md",
+            "../validation/entry-observability-20261110.md",
+            "../../../.local/prewarm-obs-20261110/preparation-report.json"
+          ]
         }
       ],
       "implementation_order": [
@@ -164,7 +223,28 @@
         "Optimización PRE-02 basada en resultados y cierre OBS-02/OBS-03/OBS-04/OBS-05",
         "REG-01 y publicación coordinada"
       ],
-      "success_criterion": "Demostrar más números listos antes del clic y menos espera, con trazabilidad suficiente para explicar demoras, sin empeorar carga, Pixel o reglas de negocio."
+      "success_criterion": "Demostrar más números listos antes del clic y menos espera, con trazabilidad suficiente para explicar demoras, sin empeorar carga, Pixel o reglas de negocio. La implementación y los fixtures locales no acreditan todavía esa mejora productiva.",
+      "delivery": {
+        "checkpoint": "20261110T154506Z_pre-prewarm-obs",
+        "backend": {
+          "builder_migration": "20261110163119_entry_funnel_navigation_delivery_observability",
+          "nexo_migration": "20261110163133_nexobet_entry_funnel_observability",
+          "landing_phone_version": 27,
+          "status": "aplicado_y_permisos_verificados"
+        },
+        "atrio": {
+          "status": "publicado_READY",
+          "commit": "7514116c8de28057fec70b3f36be427565ba0488",
+          "deployment": "dpl_57haNjcq8cZ9Q28H4Hj7wqE8H8jv",
+          "origin": "https://www.atrio.website"
+        },
+        "remaining_frontends": "Publicación pendiente de confirmación por producto; ninguna prueba local o preview implica despliegue productivo.",
+        "nexo_native_gap": {
+          "status": "implementado_validado_backend_aplicado_frontend_pendiente",
+          "scope": "Landing nativa T9; collector/RPC nx y ownership nx_landings/nx_accounts. Contrato/bootstrap/runtime vendorizados con SHA256 verificados, API independiente de Builder.",
+          "evidence": "../../../nexobet-prewarm-obs-20261110/.local/prewarm-obs-20261110/nexo-native-funnel-validation.md"
+        }
+      }
     },
     {
       "id": "COMPARE",

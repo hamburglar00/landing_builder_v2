@@ -45,6 +45,8 @@ function createGatewayEntryTransition(root) {
   var title=root.querySelector("[data-entry-title]"),description=root.querySelector("[data-entry-description]");
   var spinner=root.querySelector(".entry-spinner"),actions=root.querySelector(".entry-actions");
   function milestone(name,details){try{if(window.__gatewayEntryFunnel)window.__gatewayEntryFunnel.emit(name,details)}catch(e){}}
+  function chatDetails(data){var details={component:"chat"},uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;["navigation_id","request_id"].forEach(function(key){if(typeof data[key]==="string"&&uuid.test(data[key]))details[key]=data[key].toLowerCase()});if(typeof data.component_release==="string"&&/^[a-f0-9]{7,40}$/i.test(data.component_release))details.component_release=data.component_release.toLowerCase();if(Number.isSafeInteger(data.navigation_elapsed_ms)&&data.navigation_elapsed_ms>=0&&data.navigation_elapsed_ms<=86400000)details.navigation_elapsed_ms=data.navigation_elapsed_ms;return details}
+  function traceUrl(value){try{var url=new URL(value);if(url.origin!==origin||!/^\/embed\//.test(url.pathname)||!window.crypto||typeof window.crypto.randomUUID!=="function")return value;var funnel=window.__gatewayEntryFunnel,context=funnel&&typeof funnel.context==="function"?funnel.context():null;var uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;if(context&&uuid.test(context.flow_id))url.searchParams.set("ef_flow",context.flow_id);if(context&&uuid.test(context.attempt_id))url.searchParams.set("ef_attempt",context.attempt_id);url.searchParams.set("ef_navigation",window.crypto.randomUUID());url.searchParams.set("ef_request",window.crypto.randomUUID());return url.href}catch(_){return value}}
   function cancelRefresh(){refreshGeneration++;if(refreshController)refreshController.abort();refreshController=null}
   function finish(){clearTimeout(timer);clearTimeout(retryTimer);retryTimer=0;cancelRefresh();if(root.hidden)return;root.hidden=true;restorePalette();if(previous&&previous.isConnected)previous.focus({preventScroll:true})}
   function fail(message,details){if(root.hidden)return;clearTimeout(timer);clearTimeout(retryTimer);retryTimer=0;cancelRefresh();milestone("entry_error",details||{error_code:"chat_unavailable",error_stage:"chat"});root.dataset.stage="error";title.textContent="No pudimos completar la conexión";description.textContent=message;spinner.hidden=true;actions.hidden=false}
@@ -65,7 +67,7 @@ function createGatewayEntryTransition(root) {
       })();
       var refreshed=await Promise.race([pending,new Promise(function(_,reject){timeout=setTimeout(function(){timedOut=true;controller.abort();reject(new Error("timeout"))},Math.min(6000,remaining))})]);
       if(generation!==refreshGeneration||root.hidden||frame!==currentFrame||frame.src!==currentSource||entryReady)return;
-      refreshController=null;start("connecting",true);frame.src=refreshed;
+      refreshController=null;start("connecting",true);frame.src=traceUrl(refreshed);
     }catch(error){
       if(generation!==refreshGeneration||root.hidden||frame!==currentFrame||entryReady)return;
       var details={error_stage:"chat_iframe",error_code:timedOut||error.message==="timeout"?"request_timeout":error.name==="TypeError"?"network_error":error.status===429?"rate_limited":"chat_unavailable"};
@@ -88,19 +90,20 @@ function createGatewayEntryTransition(root) {
     // Emitted only after the authorized, visible composer has painted. It is
     // independent of deferred welcome and bank data, unlike legacy chat_ready.
     if(data.type==="atrio.widget.usable"&&data.visibleEntry===true){
-      milestone("chat_usable",{duration_ms:Math.max(0,Date.now()-frameBoundAt)});return
+      milestone("chat_usable",Object.assign(chatDetails(data),{duration_ms:Math.max(0,Date.now()-frameBoundAt)}));return
     }
     if(data.type==="atrio.widget.entry-diagnostic"){
       // Render/load diagnostics can arrive after the usable composer and welcome.
       if(data.name==="stage_timing"){
         if(["chat_dns","chat_connect","chat_tls","chat_ttfb","chat_download","chat_navigation","chat_dom","chat_load","chat_fcp","chat_hydration","chat_visible_to_usable"].includes(data.phase)&&Number.isSafeInteger(data.duration_ms)&&data.duration_ms>=0&&data.duration_ms<=86400000)
-          milestone("stage_timing",{phase:data.phase,duration_ms:data.duration_ms});
+          milestone("stage_timing",Object.assign(chatDetails(data),{phase:data.phase,duration_ms:data.duration_ms}));
         return
       }
-      if(entryReady)return;
-      var details={};
+      var details=chatDetails(data);
       if(Number.isSafeInteger(data.duration_ms)&&data.duration_ms>=0&&data.duration_ms<=86400000)details.duration_ms=data.duration_ms;else return;
-      if(["chat_bootstrap_ready","welcome_ready","wallet_ready"].includes(data.name)){milestone(data.name,details);return}
+      if(entryReady&&["chat_bootstrap_ready","welcome_ready","wallet_ready"].includes(data.name))return;
+      if(["navigation_started","chat_bootstrap_ready","welcome_ready","wallet_ready","welcome_visible","wallet_visible"].includes(data.name)){milestone(data.name,details);return}
+      if(data.name==="wallet_result"&&["available","not_applicable","unavailable","error"].includes(data.wallet_outcome)){details.wallet_outcome=data.wallet_outcome;milestone("wallet_result",details);return}
       if(data.name==="entry_error"&&["chat_bootstrap","welcome","wallet"].includes(data.error_stage)&&["chat_unavailable","request_timeout","network_error","rate_limited","session_unavailable","unknown"].includes(data.error_code)){
         details.error_stage=data.error_stage;details.error_code=data.error_code;
         if(Number.isInteger(data.status)&&data.status>=100&&data.status<=599)details.status=data.status;
@@ -110,10 +113,10 @@ function createGatewayEntryTransition(root) {
     }
     if(data.type!=="atrio.widget.entry-ready")return;
     if(!wallet||(data.walletReady===true&&data.walletRequestCompleted===true)||data.walletAvailable===false){
-      milestone("chat_ready",{duration_ms:Math.max(0,Date.now()-frameBoundAt)});entryReady=true;finish();return
+      milestone("chat_ready",Object.assign(chatDetails(data),{duration_ms:Math.max(0,Date.now()-frameBoundAt)}));entryReady=true;finish();return
     }
     if(data.walletRequestCompleted===true&&data.walletAvailable===true&&data.walletReady===false)reconnect("El chat está disponible, pero no pudimos obtener los datos para cargar. Podés reintentar o continuar al chat.")
   });
-  return {start:start,finish:finish,fail:fail,bind:function(value,allowedOrigin,needsWallet){if(frame&&frameLoadHandler&&frame.removeEventListener)frame.removeEventListener("load",frameLoadHandler);frame=value;origin=allowedOrigin;wallet=needsWallet;entryReady=false;frameBoundAt=Date.now();var boundFrame=frame;frameLoadHandler=function(){if(frame===boundFrame)milestone("iframe_loaded",{duration_ms:Math.max(0,Date.now()-frameBoundAt)})};if(frame&&frame.addEventListener)frame.addEventListener("load",frameLoadHandler);milestone("gateway_loaded")}};
+  return {start:start,finish:finish,fail:fail,traceUrl:traceUrl,bind:function(value,allowedOrigin,needsWallet){if(frame&&frameLoadHandler&&frame.removeEventListener)frame.removeEventListener("load",frameLoadHandler);frame=value;origin=allowedOrigin;wallet=needsWallet;entryReady=false;frameBoundAt=Date.now();var boundFrame=frame;frameLoadHandler=function(){if(frame===boundFrame)milestone("iframe_loaded",{duration_ms:Math.max(0,Date.now()-frameBoundAt)})};if(frame&&frame.addEventListener)frame.addEventListener("load",frameLoadHandler);milestone("gateway_loaded")}};
 }
 `;

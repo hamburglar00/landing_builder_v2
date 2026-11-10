@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test, { beforeEach, afterEach, mock } from "node:test";
 import { handleReyStart as builderStart, type StartDependencies as BuilderDependencies } from "../lib/reyDeAses/start.server";
-import { handleReyStart as classicStart, type StartDependencies as ClassicDependencies } from "../../../landing-prueba-1/lib/reyDeAses/start.server";
+import type { handleReyStart as ClassicStart, StartDependencies as ClassicDependencies } from "../../../landing-prueba-1/lib/reyDeAses/start.server";
+import { createRequire } from "node:module";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+const classicRoot = process.env.LANDING_CLASSIC_ROOT || fileURLToPath(new URL("../../../landing-prueba-1/", import.meta.url));
+const classicStart = createRequire(import.meta.url)(path.join(classicRoot, "lib/reyDeAses/start.server.ts")).handleReyStart as typeof ClassicStart;
 import { MULTI_SKIN_CODES } from "../lib/multi-skin-catalog";
 import { handleTemplate7Destination } from "../lib/atrio/template7Destination.server";
 

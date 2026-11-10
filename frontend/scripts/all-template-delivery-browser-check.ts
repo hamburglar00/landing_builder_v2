@@ -37,13 +37,18 @@ async function main(){
       try{
         const page=await context.newPage(),errors:string[]=[],pixels:any[][]=[],beacons:{url:string;body:Payload}[]=[],requests:{path:string;payload:Payload}[]=[];
         page.on('pageerror',error=>errors.push(error.message));
+        page.on('console',message=>{const prefix='__delivery_beacon__';if(message.text().startsWith(prefix)){const captured=JSON.parse(message.text().slice(prefix.length));beacons.push({url:captured.url,body:JSON.parse(captured.body)});}});
         await context.exposeBinding('__deliveryPixel',(_source,args:any[])=>{pixels.push(args)});
-        await context.exposeBinding('__deliveryBeacon',(_source,url:string,body:string)=>{beacons.push({url,body:JSON.parse(body)})});
         await context.addInitScript(({blockedMeta})=>{
           if(!blockedMeta)(window as any).fbq=(...args:any[])=>(window as any).__deliveryPixel(args);
+          // WebKit does not expose every native beacon body through its request API.
+          // Capture the original JSON parts synchronously, without reading a Blob
+          // after navigation has destroyed its document. The native call is retained.
+          const NativeBlob=Blob,payloads=new WeakMap<Blob,string>();
+          (window as any).Blob=new Proxy(NativeBlob,{construct(target,args){const blob=Reflect.construct(target,args) as Blob;if(Array.isArray(args[0])&&args[0].every((part:unknown)=>typeof part==='string'))payloads.set(blob,args[0].join(''));return blob;}});
           const native=navigator.sendBeacon.bind(navigator);
           navigator.sendBeacon=(url,data)=>{
-            if(['/api/track','/api/entry-funnel'].includes(String(url))&&data instanceof Blob)data.text().then(body=>(window as any).__deliveryBeacon(String(url),body));
+            if(['/api/track','/api/entry-funnel'].includes(String(url))&&data instanceof NativeBlob){const body=payloads.get(data);if(body===undefined)throw new Error('Fixture beacon must contain captured JSON string parts');console.debug('__delivery_beacon__'+JSON.stringify({url:String(url),body}));}
             return native(url,data);
           };
         },{blockedMeta});

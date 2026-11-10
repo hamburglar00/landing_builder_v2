@@ -79,7 +79,7 @@ async function main() {
         content = await readFile(path.join(root, "frontend/public", url.pathname), "utf8");
         type = url.pathname.endsWith(".css") ? "text/css" : "text/javascript";
       } else if (url.pathname.includes("landing-phone")) {
-        content = JSON.stringify({ phone: "5491100000001", landingId, landingName: "Synthetic attribution", phoneMode: "random", phoneKind: "carga" });
+        content = JSON.stringify({ phone: "5491100000001", landingId, landingName: "Synthetic attribution", phoneMode: "random", phoneKind: "advertising" });
       } else if (url.pathname.includes("landing-atrio") || url.pathname === "/api/template7/destination") {
         content = JSON.stringify({ atrioClientId: "a0000000-0000-4000-8000-000000000002", atrioId: "a0000000-0000-4000-8000-000000000003", atrioSlug: "synthetic" });
       } else if (url.pathname === "/api/client-identity/bootstrap") {
@@ -91,7 +91,7 @@ async function main() {
       }
       await browser.send("Fetch.fulfillRequest", { requestId: event.requestId, responseCode: 200,
         responseHeaders: [{ name: "Content-Type", value: type }, { name: "Access-Control-Allow-Origin", value: "*" },
-          { name: "Access-Control-Allow-Headers", value: "authorization,apikey,content-type" }],
+          { name: "Access-Control-Allow-Headers", value: "authorization,apikey,content-type,x-entry-flow-id,x-entry-attempt-id,x-entry-navigation-id,x-entry-request-id" }],
         body: Buffer.from(content).toString("base64") });
     })().catch((error: Error) => current?.errors.push(error.message));
     pending.add(run); void run.finally(() => pending.delete(run));

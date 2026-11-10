@@ -41,11 +41,11 @@ test("context only permits diagnostic UUIDs, current lifetime and fixed collecto
   assert.equal(validateEntryFunnelContext({ ...ctx, flow_id: "authentication-token" }), null);
   assert.deepEqual(validateEntryFunnelContext({ ...ctx, password: "ignored-not-copied" }), ctx);
 });
-test("collector only writes same-origin bounded allowlisted batches; response never returns data", async () => {
+test("collector only writes same-origin bounded allowlisted batches; response acknowledges only persisted event IDs", async () => {
   let written = 0;
   const backend = { async write(value: unknown) { written++; assert.deepEqual(value, batch); return true; } };
   let result = await handleEntryFunnel(request(batch), backend);
-  assert.equal(result.status, 204); assert.equal(await result.text(), "");
+  assert.equal(result.status, 200); assert.deepEqual(await result.json(), { accepted: true, event_ids: [event.id] });
   assert.equal(result.headers.get("Cache-Control"), "no-store");
   assert.equal((await handleEntryFunnel(request(batch, "https://evil.test"), backend)).status, 400);
   assert.equal((await handleEntryFunnel(request({ ...batch, token: "secret" }), backend)).status, 400);
@@ -54,8 +54,8 @@ test("collector only writes same-origin bounded allowlisted batches; response ne
 });
 test("beacons are accepted; database refusal and outages remain bounded diagnostics responses", async () => {
   const beacon = new Request("https://landing.panelbotadmin.com/api/entry-funnel", { method: "POST", headers: { Origin: "https://landing.panelbotadmin.com", "Content-Type": "text/plain;charset=UTF-8" }, body: JSON.stringify(batch) });
-  assert.equal((await handleEntryFunnel(beacon, { async write() { return true; } })).status, 204);
-  assert.equal((await handleEntryFunnel(request(batch), { async write() { return false; } })).status, 429);
+  assert.equal((await handleEntryFunnel(beacon, { async write() { return true; } })).status, 200);
+  assert.equal((await handleEntryFunnel(request(batch), { async write() { return false; } })).status, 422);
   assert.equal((await handleEntryFunnel(request(batch), { async write() { throw new Error("sensitive database detail"); } })).status, 503);
 });
 
