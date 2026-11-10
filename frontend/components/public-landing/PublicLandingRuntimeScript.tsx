@@ -1665,13 +1665,33 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
           var index = initialRotatingIndex(images, hours);
           var mobileSource = node.parentElement && node.parentElement.querySelector("[data-template7-mobile-background]");
           var variants = parseImages(node.getAttribute("data-template7-background-variants"));
+          var initialIndex = index;
+          var initialFallback = node.getAttribute("data-image-fallback") || "";
+          var failedImages = Object.create(null);
           function showImage() {
+            var source = images[index];
+            var fallback = variants[index] ? variants[index].original || "" : index === initialIndex ? initialFallback : "";
+            // An inline handler may already have recovered before this asset
+            // downloaded. Do not select the same failed derivative again.
+            if (fallback && fallback !== source && node.getAttribute("src") === fallback) failedImages[source] = true;
+            function showOriginal() {
+              // The original gets one attempt, without recursive error retries.
+              node.onerror = null;
+              node.removeAttribute("srcset");
+              if (mobileSource) mobileSource.removeAttribute("srcset");
+              if (fallback && fallback !== source) {
+                failedImages[source] = true;
+                if (node.getAttribute("src") !== fallback) node.setAttribute("src", fallback);
+              }
+            }
+            node.setAttribute("data-image-fallback", fallback);
+            node.onerror = showOriginal;
+            if (failedImages[source]) { showOriginal(); return; }
             if (mobileSource) mobileSource.setAttribute("srcset", images[index]);
             if (variants[index]) {
               node.setAttribute("srcset", variants[index].srcSet || "");
-              node.setAttribute("data-image-fallback", variants[index].original || "");
             }
-            node.setAttribute("src", images[index]);
+            node.setAttribute("src", source);
           }
           showImage();
           if (images.length <= 1) return;

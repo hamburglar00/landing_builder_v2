@@ -1,3 +1,5 @@
 vercel-deploy.log
 *.log
 .local
+.env*
+**/.env*

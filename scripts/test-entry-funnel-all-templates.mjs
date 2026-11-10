@@ -6,7 +6,7 @@ const { build } = require('esbuild');
 let playwright;
 try { playwright = require(path.join(process.env.APPDATA, 'npm/node_modules/playwright')); }
 catch { playwright = require('playwright'); }
-const compiled = await build({ entryPoints: [new URL('../frontend/lib/landing/entryFunnel.bootstrap.ts', import.meta.url).pathname.replace(/^\/(?=[A-Za-z]:)/, '')],
+const compiled = await build({ stdin: { contents: "export * from './lib/landing/entryFunnel.bootstrap'; export {buildEntryFunnelFactoryScript} from './lib/landing/entryFunnel.client';", resolveDir: new URL('../frontend/',import.meta.url).pathname.replace(/^\/(?=[A-Za-z]:)/,''), loader:'ts' },
   bundle: true, write: false, platform: 'node', format: 'esm', target: 'es2022', keepNames: true });
 const helper = await import('data:text/javascript;base64,' + Buffer.from(compiled.outputFiles[0].text).toString('base64'));
 const landingId = 'f0000000-0000-4000-8000-000000000001';
@@ -30,7 +30,10 @@ for (const [browserName, browserType] of [['Chromium',playwright.chromium],['Web
             return native(url,data);
           };
         });
-        let script = helper.buildLandingEntryFunnelScript({landingId,template,engine});
+        const script = template<=6 ? helper.buildLandingEntryFunnelScript({landingId,template,engine}) : helper.buildEntryFunnelMetadataScript(engine);
+        // The complete observer is installed by the deferred static runtime;
+        // the inline T1–T6 bootstrap now only captures early events/failures.
+        const install = `(${helper.buildEntryFunnelFactoryScript()})(${JSON.stringify({landingId,template})});`;
         await page.route('**/*', async route => {
           if (new URL(route.request().url()).pathname === '/api/entry-funnel') {
             const body=route.request().postData();
@@ -39,7 +42,7 @@ for (const [browserName, browserType] of [['Chromium',playwright.chromium],['Web
           }
           return route.fulfill({contentType:'text/html',body:`<!doctype html><html><head><script>${script}</script></head><body>
             <form data-entry-funnel-form><input data-entry-funnel-name required><button type="button" data-public-landing-cta>Continuar</button></form>
-            <script>document.querySelector('button').addEventListener('click',function(){
+            <script>${install}document.querySelector('button').addEventListener('click',function(){
               ${template>6 ? "window.__entryFunnel.emit('cta_clicked');" : ''}
               window.__entryFunnel.emit(${JSON.stringify(template<=6?'outbound_requested':'chat_usable')});
               window.__entryFunnel.flush(true);

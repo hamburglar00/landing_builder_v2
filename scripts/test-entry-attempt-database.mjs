@@ -51,7 +51,7 @@ try {
   for(const [n,phase] of ['landing_dom','landing_load','landing_fcp','landing_lcp','landing_blocked','landing_runtime','gateway_dom','preparation_runtime','account_request','identity_request','chat_session_request','chat_dns','chat_ttfb','chat_hydration','chat_fcp','chat_visible_to_usable'].entries()) {
     assert.equal(await record([{...measured,id:id(100+n),phase}]),true,phase);checks++;
   }
-  await db.exec(await readFile(new URL("../supabase/migrations/20261110014924_entry_funnel_all_templates_provenance.sql", import.meta.url), "utf8"));
+  await db.exec(await readFile(new URL("../supabase/migrations/20261110025708_entry_funnel_all_templates_provenance.sql", import.meta.url), "utf8"));
   assert.deepEqual((await db.query("select engine,release,environment,source,entry_strategy from entry_funnel_events where event_id=$1",[original.id])).rows[0],{engine:null,release:null,environment:null,source:null,entry_strategy:null}); checks++;
   let sequence = 400;
   for (let template=1;template<=9;template++) {

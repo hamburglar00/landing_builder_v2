@@ -27,4 +27,9 @@ for(const template of [1,2,3,4,5,6,7,8,9])for(const classic of [false,true]){
 const assets=JSON.parse(fs.readFileSync(path.join(frontend,'components/public-landing/template7RuntimeAssets.generated.json'),'utf8'));
 const priorAssets=JSON.parse(execFileSync('git',['show',baselineRef+':frontend/components/public-landing/template7RuntimeAssets.generated.json'],{cwd:root,encoding:'utf8'}));
 const cacheable_assets=Object.entries(assets).map(([variant,asset])=>({variant,name:asset.name,before:{js_bytes:Buffer.byteLength(priorAssets[variant].source),js_gzip_bytes:gzipSync(priorAssets[variant].source).length},after:{js_bytes:Buffer.byteLength(asset.source),js_gzip_bytes:gzipSync(asset.source).length}}));
+const publicName=JSON.parse(fs.readFileSync(path.join(frontend,'components/public-landing/publicLandingRuntimeAsset.generated.json'),'utf8')).name;
+const priorPublicName=JSON.parse(execFileSync('git',['show',baselineRef+':frontend/components/public-landing/publicLandingRuntimeAsset.generated.json'],{cwd:root,encoding:'utf8'})).name;
+const priorPublic=execFileSync('git',['show',baselineRef+':frontend/public/public-assets/template-entry/'+priorPublicName],{cwd:root});
+const publicBytes=fs.readFileSync(path.join(frontend,'public/public-assets/template-entry',publicName));
+cacheable_assets.push({variant:'t1-t6',name:publicName,before:{js_bytes:priorPublic.length,js_gzip_bytes:gzipSync(priorPublic).length},after:{js_bytes:publicBytes.length,js_gzip_bytes:gzipSync(publicBytes).length}});
 console.log(JSON.stringify({baseline:execFileSync('git',['rev-parse',baselineRef],{cwd:root,encoding:'utf8'}).trim(),kind:'same-fixture-generated-html-not-network-or-CPA',results:result,cacheable_assets},null,2));
