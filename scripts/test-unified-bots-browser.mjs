@@ -16,7 +16,7 @@ const screenshots = new URL(
 );
 await mkdir(screenshots, { recursive: true });
 let checks = 0;
-async function fixture(width, role = "client", enabled = true, fillers = 0) {
+async function fixture(width, role = "client", enabled = true, fillers = 0, managerType = "full_carga") {
   const context = await browser.newContext({
       viewport: { width, height: 950 },
     }),
@@ -107,7 +107,7 @@ async function fixture(width, role = "client", enabled = true, fillers = 0) {
     agency_id: 10,
     agency_name: "Gerencia uno",
     target_provider: "multi_skin",
-    manager_type: "full_carga",
+    manager_type: managerType,
     active: true,
     verified_at: null,
     usage_count: 2,
@@ -187,7 +187,16 @@ async function fixture(width, role = "client", enabled = true, fillers = 0) {
     const isActive=(group,channel)=>((channel!=="atrio")&&phones.some(phone=>phone.gerencia_id===group.id&&phone.status==="active"&&phone.source_available!==false))||((channel!=="whatsapp")&&group.atrioBots.some(entry=>entry.connection?.active||entry.inventory?.active));
     const counts={all:rows.length,whatsapp:rows.filter(g=>!g.virtual).length,atrio:rows.filter(g=>g.atrioBots.length).length};
     const search=input.p_search.toLowerCase(),digits=search.replace(/\D/g,"");
-    const filtered=rows.filter(group=>(input.p_channel!=="whatsapp"||!group.virtual)&&(input.p_channel!=="atrio"||group.atrioBots.length)&&(!input.p_active||isActive(group,input.p_channel))&&(!search||JSON.stringify(group).toLowerCase().includes(search)||(digits&&phones.some(phone=>phone.gerencia_id===group.id&&phone.phone.includes(digits))))).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+    const filtered=rows.filter(group=>(input.p_channel!=="whatsapp"||!group.virtual)&&(input.p_channel!=="atrio"||group.atrioBots.length)&&(!input.p_active||isActive(group,input.p_channel))&&(!search||JSON.stringify(group).toLowerCase().includes(search)||(digits&&phones.some(phone=>phone.gerencia_id===group.id&&phone.phone.includes(digits))))).sort((a,b)=>{
+      const direction=input.p_direction==='desc'?-1:1;
+      const displayedId=g=>g.gerencia_id??(!g.virtual?g.id:null);
+      const nameOrder=a.nombre.toLowerCase().localeCompare(b.nombre.toLowerCase());
+      if(input.p_sort==='id'){
+        const ai=displayedId(a),bi=displayedId(b);if(ai===null&&bi!==null)return 1;if(bi===null&&ai!==null)return -1;
+        if(ai!==null&&bi!==null&&ai!==bi)return direction*(ai-bi);
+      }
+      return (input.p_sort==='id'?1:direction)*nameOrder||String(a.uiKey??a.id).localeCompare(String(b.uiKey??b.id));
+    });
     const page=Math.min(input.p_page,Math.max(1,Math.ceil(filtered.length/50)));
     const selected=filtered.slice((page-1)*50,page*50);
     const selectedPhones=phones.filter(phone=>selected.some(g=>g.id===phone.gerencia_id));
@@ -308,7 +317,7 @@ async function fixture(width, role = "client", enabled = true, fillers = 0) {
         },
       });
     if (url.pathname === "/auth/v1/user") return json(user);
-    if(url.pathname==="/rest/v1/rpc/read_bots_directory_page")return json(directoryPage(request.postDataJSON()));
+    if(["/rest/v1/rpc/read_bots_directory_page","/rest/v1/rpc/read_bots_directory_page_sorted"].includes(url.pathname))return json(directoryPage(request.postDataJSON()));
     if (url.pathname === "/rest/v1/profiles")
       return json({ id, role, nombre: "synthetic" });
     if (url.pathname === "/rest/v1/client_module_permissions")
@@ -391,7 +400,7 @@ async function openMenu(page, name) {
   return page.getByRole("menu", { name, exact: true });
 }
 async function updateDirectory(page, action) {
-  const response=page.waitForResponse(response=>new URL(response.url()).pathname==="/rest/v1/rpc/read_bots_directory_page");
+  const response=page.waitForResponse(response=>["/rest/v1/rpc/read_bots_directory_page","/rest/v1/rpc/read_bots_directory_page_sorted"].includes(new URL(response.url()).pathname));
   await action();await response;
   await page.getByText("Cargando página de bots...",{exact:true}).waitFor({state:"hidden"});
 }
@@ -441,7 +450,7 @@ try {
     const { page } = f;
     try {
       await page.goto(base + "/dashboard/bots", { timeout: 120000 });
-      await page.getByRole("heading", { name: "Redirección", exact: true }).waitFor();
+      await page.getByRole("heading", { name: /Redirección/i, exact: true }).waitFor();
       await row(page, "Solo Atrio").waitFor();
       console.log(`${engineName} ${width}: verifying presentation and current actions`);
       await page.screenshot({ path: new URL(`${engineName}-initial-${width}.png`, screenshots).pathname.replace(/^\/C:/, "C:"), fullPage: true });
@@ -643,7 +652,7 @@ try {
         await page.waitForLoadState("networkidle");
         await page.goto(base + "/dashboard/" + path);
         await page.waitForURL("**/dashboard/bots");
-        await page.getByRole("heading", { name: "Redirección", exact: true }).waitFor();
+        await page.getByRole("heading", { name: /Redirección/i, exact: true }).waitFor();
         await page.waitForLoadState("networkidle");
       }
       assert.deepEqual(f.errors, []);
@@ -677,6 +686,35 @@ try {
     assert.equal(await pagination.page.getByRole("button", { name: "Página 1", exact: true }).getAttribute("aria-current"), "page", "clearing search keeps pagination on the first page");
     checks++;
   } finally { await pagination.context.close(); }
+
+  for(const role of ['client','admin'])for(const width of [390,1280]){
+    const f=await fixture(width,role,true,58,'mkt'),{page}=f;
+    try{
+      await page.goto(base+(role==='admin'?'/admin':'/dashboard')+'/bots');await row(page,'Solo Atrio').waitFor();
+      assert.equal(await row(page,'Solo Atrio').locator('td').nth(6).innerText(),'mkt','Atrio label MKT is normalized only for display');
+      assert.equal(await row(page,'Gerencia manual').locator('td').nth(6).innerText(),'mkt','WhatsApp uses the same mkt label');
+      const name=page.getByRole('button',{name:/Ordenar por gerencia/}),id=page.getByRole('button',{name:/Ordenar por ID/});
+      const header=page.locator('thead th');assert.equal(await header.nth(0).getAttribute('aria-sort'),'ascending');assert.equal(await header.nth(1).getAttribute('aria-sort'),'none');
+      await updateDirectory(page,()=>name.click());
+      assert.equal(await header.nth(0).getAttribute('aria-sort'),'descending');assert.equal(f.pageCalls.at(-1).input.p_direction,'desc');
+      assert.equal(await page.locator('tr[data-gerencia] td:first-child').first().innerText(),'ZZ Gerencia 57','descending order includes a row from the old second page');
+      await updateDirectory(page,()=>page.getByRole('button',{name:'Página siguiente',exact:true}).click());
+      assert.equal(f.pageCalls.at(-1).input.p_page,2);assert.equal(f.pageCalls.at(-1).input.p_direction,'desc');
+      await updateDirectory(page,()=>id.click());
+      assert.equal(f.pageCalls.at(-1).input.p_sort,'id');assert.equal(f.pageCalls.at(-1).input.p_page,1,'changing sort resets pagination');
+      assert.equal(await header.nth(1).getAttribute('aria-sort'),'ascending');assert.equal(await page.locator('tr[data-gerencia] td:nth-child(2)').first().innerText(),'10','ID is sorted numerically');
+      await updateDirectory(page,()=>id.click());assert.equal(await header.nth(1).getAttribute('aria-sort'),'descending');
+      assert.equal(await page.locator('tr[data-gerencia] td:nth-child(2)').first().innerText(),'1035');
+      assert.ok(f.pageCalls.at(-1).ids.includes(157),'descending ID returns off-page rows');
+      await fillSearch(page,'Gerencia');assert.equal(f.pageCalls.at(-1).input.p_sort,'id');assert.equal(f.pageCalls.at(-1).input.p_direction,'desc');
+      await fillSearch(page,'');await updateDirectory(page,()=>name.click());assert.equal(await header.nth(0).getAttribute('aria-sort'),'ascending');
+      await id.focus();await updateDirectory(page,()=>id.press('Enter'));assert.equal(await header.nth(1).getAttribute('aria-sort'),'ascending','keyboard sorting works');
+      assert.ok(f.pageCalls.every(call=>call.ids.length<=50&&['name','id'].includes(call.input.p_sort)),'bounded server requests carry the selected order');
+      assert.equal(f.writes.length,0,'sorting and mkt display never mutate saved bots');
+      await geometry(page,width);assert.deepEqual(f.errors,[]);
+      console.log(engineName+' sorting '+role+' '+width+': server order, page reset, keyboard and mkt passed');checks++;
+    }finally{await f.context.close();}
+  }
 
   const actions = await fixture(1440);
   try {
@@ -761,7 +799,7 @@ try {
     const f = await fixture(1280, role, enabled);
     try {
       await f.page.goto(`${base}/${role === "admin" ? "admin" : "dashboard"}/bots`);
-      await f.page.getByRole("heading", { name: "Redirección", exact: true }).waitFor();
+      await f.page.getByRole("heading", { name: /Redirección/i, exact: true }).waitFor();
       await row(f.page, "Gerencia uno").waitFor();
       assert.equal(await f.page.getByRole("group", { name: "Canal de los bots" }).count(), enabled ? 1 : 0);
       if (!enabled) assert.equal(f.localCalls.includes("/api/atrio/manager-destinations"), false);

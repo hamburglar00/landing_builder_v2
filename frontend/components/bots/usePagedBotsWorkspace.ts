@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import type { BotGerencia } from "@/lib/bots/workspace";
+import type { BotGerencia, BotsDirectorySort } from "@/lib/bots/workspace";
 import type { AtrioClient } from "@/lib/atrio/atrioDb";
 import type { GerenciaPhoneRow } from "@/components/telefonos/TelefonosPageContent";
 import { requestManagerDestinations, type AdvisorDirectory } from "@/lib/atrio/managerDestinations";
@@ -18,14 +18,14 @@ const empty: PageData = { groups: [], phones: [], metrics: [], total: 0, page: 1
  * metric calculations are limited to advisors occurring on that page. */
 export function usePagedBotsWorkspace(input: {
   enabled: boolean; userId: string | null; workspace: string; canAtrio: boolean;
-  search: string; channel: string; onlyActive: boolean;
+  search: string; channel: string; onlyActive: boolean; sort: BotsDirectorySort;
   onData: (data: PageData) => void;
 }) {
   const [data, setData] = useState(empty), [busy, setBusy] = useState(false), [error, setError] = useState("");
   const [loadedKey,setLoadedKey]=useState("");
   const loadedKeyRef=useRef("");
   const [pageState, setPageState] = useState({ key: "", page: 1 });
-  const filterKey = JSON.stringify([input.userId, input.workspace, input.canAtrio, input.search, input.channel, input.onlyActive]);
+  const filterKey = JSON.stringify([input.userId, input.workspace, input.canAtrio, input.search, input.channel, input.onlyActive, input.sort.column, input.sort.direction]);
   // Remember each filter transition, including returning to a previous query.
   // Otherwise clearing a search could resurrect that query's old page number.
   if(pageState.key!==filterKey)setPageState({key:filterKey,page:1});
@@ -38,7 +38,7 @@ export function usePagedBotsWorkspace(input: {
     const query = latest.current;
     const userId = uid || query.userId;
     if (!query.enabled || !userId) return Promise.resolve();
-    const key = JSON.stringify([userId, query.workspace, query.canAtrio, query.search, query.channel, query.onlyActive, query.page]);
+    const key = JSON.stringify([userId, query.workspace, query.canAtrio, query.search, query.channel, query.onlyActive, query.sort.column, query.sort.direction, query.page]);
     if (pending.current?.key === key) return pending.current.promise;
     pending.current?.controller.abort();
     const controller = new AbortController();
@@ -47,9 +47,10 @@ export function usePagedBotsWorkspace(input: {
     if(loadedKeyRef.current!==key)setData(previous => ({ ...previous, groups: [], phones: [], metrics: [] }));
     const promise = (async () => {
       try {
-        const readPage=()=>supabase.rpc("read_bots_directory_page", {
+        const readPage=()=>supabase.rpc("read_bots_directory_page_sorted", {
           p_workspace: query.workspace, p_page: query.page, p_search: query.search.trim(),
           p_channel: query.channel, p_active: query.onlyActive, p_include_atrio: query.canAtrio,
+          p_sort: query.sort.column, p_direction: query.sort.direction,
         }).abortSignal(controller.signal);
         const result = await readPage();
         if (result.error) throw result.error;
@@ -107,7 +108,7 @@ export function usePagedBotsWorkspace(input: {
     return () => { clearTimeout(timeout); pending.current?.controller.abort(); pending.current = null; };
   }, [filterKey, page, input.enabled, input.userId, load]);
   const reload = useCallback(() => { void load(); }, [load]);
-  const currentKey=JSON.stringify([input.userId,input.workspace,input.canAtrio,input.search,input.channel,input.onlyActive,page]);
+  const currentKey=JSON.stringify([input.userId,input.workspace,input.canAtrio,input.search,input.channel,input.onlyActive,input.sort.column,input.sort.direction,page]);
   const visible=loadedKey===currentKey?data:{...data,groups:[],phones:[],metrics:[]};
   const clients = [...new Map(visible.groups.flatMap(group => group.atrioBots.map(entry => [entry.client.id, entry.client] as const))).values()];
   return { ...visible, clients, busy:busy||(!error&&!!input.userId&&input.enabled&&loadedKey!==currentKey), error, load, reload, filterKey, requestedPage: page,
