@@ -39,6 +39,9 @@ try{
  await db.exec(`set role authenticated;select set_config('request.jwt.claim.sub','${owner}',false)`);
  const page=async(n=1,search='',channel='all',active=false,workspace='ARS')=>(await db.query('select read_bots_directory_page($1,$2,$3,$4,$5,true) as data',[workspace,n,search,channel,active])).rows[0].data;
  const first=await page();assert.equal(first.groups.length,50);assert.equal(first.total,121);assert.deepEqual(first.phones.map(p=>p.id),[1]);assert.equal(first.metrics.length,1);assert.equal(first.activePhones,1);assert.equal(first.inactivePhones,1);checks+=6;
+ await db.exec('reset role');
+ await db.exec(await readFile(new URL('../supabase/migrations/20261110163651_bots_directory_sorting.sql',import.meta.url),'utf8'));
+ await db.exec('set role authenticated');assert.deepEqual(await page(),first,'previous RPC keeps its complete response');checks++;
  const second=await page(2);assert.equal(second.groups.length,50);assert.equal(second.phones.length,0);assert.equal(second.groups[0].id,51);checks+=3;
  const third=await page(3);assert.equal(third.groups.length,21);assert.equal(third.phones[0].id,2);checks+=2;
  assert.equal((await page(1,'Group 121')).groups[0].id,121);assert.equal((await page(1,'54 9 1112 34-5678')).groups[0].id,121);assert.equal((await page(1,'Gera')).groups[0].id,1);checks+=3;
@@ -50,6 +53,38 @@ try{
  await db.exec('set role authenticated');
  const atrioPage=await page(1,'','atrio');assert.equal(atrioPage.total,2);assert.equal(atrioPage.groups.find(g=>g.nombre==='Virtual agency').virtual,true);
  assert.equal((await page(1,'Bot 1080')).groups[0].nombre,'Virtual agency');checks+=3;
+ await db.exec('reset role');
+ await db.query('select cache_atrio_bot_directory($1)',[JSON.stringify([{id:advisor,connections:[
+  {connection_id:owner,agency_id:1,agency_name:'Group 001',active:true,manager_id:1035},
+  {connection_id:other,agency_id:800,agency_name:'Virtual agency',active:false,manager_id:1080},
+  {connection_id:advisor,agency_id:null,agency_name:'No agency',active:false,manager_id:1090}
+ ]}])]);await db.exec('set role authenticated');
+ const sorted=async(sort,direction,n=1,search='',workspace='ARS')=>(await db.query('select read_bots_directory_page_sorted($1,$2,$3,$4,false,true,$5,$6) data',[workspace,n,search,'all',sort,direction])).rows[0].data;
+ const displayedId=g=>g.gerencia_id??(g.virtual?null:g.id);
+ for(const sort of ['name','id'])for(const direction of ['asc','desc']){
+  const all=[];let total=0;
+  for(let n=1;n<=3;n++){
+   const current=await sorted(sort,direction,n);total=current.total;
+   assert.ok(current.groups.length<=50,'only a page of details');
+   assert.ok(current.phones.every(p=>current.groups.some(g=>!g.virtual&&g.id===p.gerencia_id)),'phones only from selected page');
+   assert.ok(current.metrics.every(m=>current.phones.some(p=>p.id===m.gerencia_phone_id)),'metrics only from selected page');
+   assert.ok(current.groups.every(g=>g.user_id===owner),'sort preserves RLS');all.push(...current.groups);checks+=4;
+  }
+  assert.equal(all.length,total);assert.equal(new Set(all.map(g=>g.uiKey??g.id)).size,total,'stable ties prevent duplicates across pages');checks+=2;
+  if(sort==='id'){
+   const ids=all.map(displayedId),numericIds=ids.filter(x=>x!==null);
+   assert.deepEqual(numericIds,[...numericIds].sort((a,b)=>direction==='asc'?a-b:b-a),'numeric display ID ordering');
+   assert.equal(ids.at(-1),null,'N.A. always last');
+   if(direction==='desc')assert.deepEqual(ids.slice(0,2),[800,800],'display IDs override internal and virtual IDs');checks+=3;
+  }else{
+   const names=all.map(g=>g.nombre.toLowerCase());assert.deepEqual(names,[...names].sort((a,b)=>direction==='asc'?(a<b?-1:a>b?1:0):(a>b?-1:a<b?1:0)));checks++;
+  }
+ }
+ for(const args of [['invalid','asc'],['id','invalid'],[null,'asc'],['id',null]]){await assert.rejects(sorted(...args));checks++;}
+ assert.equal((await sorted('id','desc',1,'Foreign secret')).total,0);
+ assert.equal((await sorted('name','desc',1,'','PYG')).total,1);
+ const grants=(await db.query("select has_function_privilege('anon','read_bots_directory_page_sorted(text,integer,text,text,boolean,boolean,text,text)','execute') anon,has_function_privilege('authenticated','read_bots_directory_page_sorted(text,integer,text,text,boolean,boolean,text,text)','execute') allowed")).rows[0];assert.deepEqual(grants,{anon:false,allowed:true});checks+=3;
+ await db.exec("select set_config('request.jwt.claim.sub','',false)");await assert.rejects(sorted('id','asc'));await db.query("select set_config('request.jwt.claim.sub',$1,false)",[owner]);checks++;
  await db.exec('reset role');
  const allScope=await page(1,'Foreign secret');assert.equal(allScope.groups[0].atrioBots.length,0,'same agency owned by another client never receives these advisors');checks++;
  await db.query('delete from gerencias where id=122');

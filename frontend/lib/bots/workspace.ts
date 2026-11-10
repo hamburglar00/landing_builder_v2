@@ -5,6 +5,8 @@ import type {
   AdvisorDirectory,
   ManagerDestination,
 } from "@/lib/atrio/managerDestinations";
+export type BotsDirectorySort = { column: "name" | "id"; direction: "asc" | "desc" };
+export const DEFAULT_BOTS_DIRECTORY_SORT: BotsDirectorySort = { column: "name", direction: "asc" };
 export type AtrioBotEntry = {
   client: AtrioClient;
   connection: ManagerDestination | null;

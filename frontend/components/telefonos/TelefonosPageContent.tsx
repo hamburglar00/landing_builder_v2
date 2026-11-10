@@ -23,7 +23,7 @@ import { BotsDirectoryView } from "@/components/bots/BotsDirectoryView";
 import {BotsManagement,GerenciaActions} from '@/components/bots/BotsManagement';
 import {AtrioBotTable} from '@/components/bots/AtrioBotTable';
 import {AtrioWorkspaceActions} from '@/components/bots/AtrioWorkspaceActions';
-import {botSearchText,type BotGerencia} from '@/lib/bots/workspace';
+import {botSearchText,DEFAULT_BOTS_DIRECTORY_SORT,type BotGerencia,type BotsDirectorySort} from '@/lib/bots/workspace';
 
 export type GerenciaPhoneRow = {
   id: number;
@@ -178,11 +178,12 @@ export function TelefonosPageContent({
   const [openGerenciaId, setOpenGerenciaId] = useState<number | string | null>(null);
   const [gerenciaSearch, setGerenciaSearch] = useState("");
   const [channelFilter,setChannelFilter]=useState<'all'|'whatsapp'|'atrio'>('all');
+  const [directorySort,setDirectorySort]=useState<BotsDirectorySort>(DEFAULT_BOTS_DIRECTORY_SORT);
   const permissions=useClientModulePermissions();
   const canAtrio=unifiedBots&&(isAdmin||permissions.show_atrio);
   const [showOnlyActiveGerencias, setShowOnlyActiveGerencias] = useState(false);
   const bots=usePagedBotsWorkspace({enabled:unifiedBots&&!isAllCurrencies,userId,workspace:workspaceCurrency,canAtrio,
-    search:gerenciaSearch,channel:channelFilter,onlyActive:showOnlyActiveGerencias,onData(data){
+    search:gerenciaSearch,channel:channelFilter,onlyActive:showOnlyActiveGerencias,sort:directorySort,onData(data){
       setGerencias(data.groups.filter(group=>!group.virtual));
       const phones:Record<number,GerenciaPhoneRow[]>={};
       for(const phone of data.phones)(phones[phone.gerencia_id]??=[]).push(phone);
@@ -868,10 +869,11 @@ export function TelefonosPageContent({
       {unifiedBots ? <BotsDirectoryView
         groups={displayGerencias} filteredGroups={displayGerencias} phones={phonesByGerencia} metrics={phoneMetricsById}
         page={bots.page} total={bots.total} counts={bots.counts} loading={bots.busy} onPage={bots.setPage}
+        sort={directorySort} onSort={column=>setDirectorySort(current=>({column,direction:current.column===column&&current.direction==='asc'?'desc':'asc'}))}
         clients={bots.clients} isAdmin={isAdmin} canAtrio={canAtrio}
         search={gerenciaSearch} onSearch={setGerenciaSearch} channel={channelFilter} onChannel={setChannelFilter}
         onlyActive={showOnlyActiveGerencias} onOnlyActive={() => setShowOnlyActiveGerencias(value => !value)} activeCount={bots.activeCount}
-        filterKey={`${workspaceCurrency}:${gerenciaSearch}:${channelFilter}:${showOnlyActiveGerencias}`}
+        filterKey={bots.filterKey}
         countdown={nextSyncCountdown} metricsTime={phoneMetricsLabel}
         management={userId && <BotsManagement userId={userId} workspace={workspaceCurrency} gerencias={gerencias} isAdmin={isAdmin} canAtrio={canAtrio}
           onChanged={async () => { await loadData(userId); bots.reload(); }} onImported={async (gerenciaId, refreshInventory) => { await handleSync(gerenciaId ?? null, refreshInventory); bots.reload(); }} />}
