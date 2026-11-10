@@ -10,7 +10,7 @@ const require=createRequire(join(root,'frontend/package.json'));
 const {createClient}=require('@supabase/supabase-js');
 const owner='19000000-0000-4000-8000-000000000001',landing='19000000-0000-4000-8000-000000000003';
 const advisor='19000000-0000-4000-8000-000000000004',builderClient='19000000-0000-4000-8000-000000000005';
-const migrations=['supabase/migrations/20261110021406_atrio_cta_canonical_event_history.sql','supabase/migrations/20261110022534_normalize_atrio_cta_event_history.sql'];
+const migrations=['supabase/migrations/20261110023716_atrio_cta_canonical_event_history.sql','supabase/migrations/20261110024223_normalize_atrio_cta_event_history.sql'];
 const migrationSql=()=>migrations.map(read).join('\n');
 const quote=value=>"'"+String(value).replaceAll("'","''")+"'";
 const db=await localDatabase();let api,app,passed=0;
@@ -20,6 +20,9 @@ const capture=(id,event='Lead')=>({source_platform:'landing',cta_destination:'at
 const check=(name,fn)=>Promise.resolve().then(fn).then(()=>{passed++;console.log('PASS '+name);});
 try{
  handlerSchema(db);
+ for(const column of ['lead_gerencia_name','lead_gerencia_label','registration_gerencia_name','registration_gerencia_label','lead_atrio_players_id','registration_atrio_players_id','lead_incoming_promo_code','registration_incoming_promo_code']) {
+  db.sql(`alter table public.conversions alter column ${column} set default '', alter column ${column} set not null`);
+ }
  db.sql('alter table public.conversion_inbox add column purchase_ingest_job_id uuid;');
  db.sql(`alter table public.landings add column landing_config jsonb;
  insert into auth.users(id) values('${owner}');
@@ -52,6 +55,7 @@ try{
   const before=scalar('select md5(jsonb_agg(to_jsonb(c) order by id)::text) from conversions c');
   db.sql(migrationSql());assert.equal(scalar('select md5(jsonb_agg(to_jsonb(c) order by id)::text) from conversions c'),before);
  });
+ if (!process.argv.includes('--history-only')) {
  db.sql('truncate public.conversion_logs,public.conversions cascade;');
  api=await localApi(db,'service_role',owner);
  const client=createClient(api.url,api.jwt,{auth:{persistSession:false},global:{fetch:(input,init)=>{const u=new URL(typeof input==='string'?input:input.url);assert.equal(u.origin,api.url);u.pathname=u.pathname.replace(/^\/rest\/v1/,'');return fetch(u,init);}}});
@@ -65,7 +69,7 @@ try{
   const r=await app.modules.conversions.handleContact(client,p,l,config,[]);assert.equal(r.status,200,await r.text());
   return {row:object(`select * from conversions where contact_event_id=${quote(id)}`),p,l};
  };
- for(const template of [7,8,9])for(const event of ['Lead','CompleteRegistration'])for(const provider of ['rey_de_ases','ases_del_norte','ganamos_net','ganamos_plus'])await check(`T${template} ${provider}: ${event} storage, CAPI result and duplicate identity`,async()=>{
+ for(const template of [7,8,9])for(const event of ['Lead','CompleteRegistration'])for(const provider of ['rey_de_ases','ases_del_norte','ganamos_net','multi_skin'])await check(`T${template} ${provider}: ${event} storage, CAPI result and duplicate identity`,async()=>{
   const before=app.sent.length,{row,p,l}=await invoke({template,event,provider}),stage=event==='Lead'?'lead':'registration';
   assert.equal(row.estado,stage);assert.equal(row[stage+'_event_id'],p.event_id);assert.equal(row[stage+'_status_capi'],'enviado');
   assert.equal(row.contact_status_capi,'');assert.equal(row.contact_event_id,p.event_id);
@@ -94,5 +98,6 @@ try{
   const {row}=await invoke({template,legacy:true});assert.equal(row.estado,'contact');assert.equal(row.contact_status_capi,'enviado');assert.equal(app.sent.at(-1).events[0].event_name,'Contact');
  });
  assert.deepEqual(app.blocked,[]);assert.deepEqual(app.dbErrors,[]);
+ }
  console.log(JSON.stringify({passed,externalRequests:0,productionWrites:0},null,2));
 }finally{await app?.close();await api?.close();db.close();}
