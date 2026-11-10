@@ -52,7 +52,11 @@ Lectura de los siete días previos a esta publicación: T9/Rey, 15 intentos comp
 
 Para comparar después: `scripts/entry-performance-report.sql`, separando motor, SHA, entorno, muestra sintética/desconocida, proveedor, cuenta nueva/existente, reintento y estrategia. Las fases que se solapan no se suman. `outbound_requested` indica intención de navegación; no prueba que WhatsApp abrió o recibió un mensaje.
 
-## Publicación verificada de chat y gateways
+## Publicación verificada
+
+Builder `ce8ec6e` y clásico `3509175` se publicaron desde `main`, con builds productivos READY. Se comprobaron los alias `mkt.panelbotadmin.com`, `constructor.panelbotadmin.com` y `landing.panelbotadmin.com`, además del contenido y caché inmutable de los seis assets compartidos. Evidencia: `production-builder-classic-final.json`. La publicación posterior del cierre documental de Builder no modifica esos runtimes; su deployment se verifica por separado.
+
+La comprobación pública del clásico leyó únicamente HTML, sin ejecutar JavaScript, Pixel ni conversiones: distintas campañas y el override de landing devolvieron HTML idéntico, sin parámetros privados incorporados. Se observaron HIT y STALE de ISR con la misma antigüedad/entrada compartida; STALE sirve la copia mientras se revalida. Las respuestas incluyeron motor, entorno y SHA `3509175`. No se encontró una landing activa con `publish_target=constructor` para repetir ese smoke productivo específico: su renderer se verificó en la matriz de 18 combinaciones y sus assets en ambos dominios. No se creó ni alteró una configuración de cliente para fabricar esa muestra.
 
 Se hizo fast-forward de `main` y push sin force, preservando worktrees y ramas anteriores. Los cinco deployments Vercel quedaron READY y sus dominios resuelven al commit indicado: Atrio `07da684`, Rey `148c397`, Ases `d38a5ff`, NET `b8d7f77` y Ganamos+ `effcb5b`. El SDK público coincide con los blobs Git de los cuatro.
 
@@ -60,9 +64,19 @@ Ganamos+ también se reconstruyó con OpenNext desde `effcb5b`: build, TypeScrip
 
 Se agregaron exclusiones explícitas de archivos `.env*`, logs y estado local a las cargas Vercel que las necesitaban: la CLI no aplica las reglas de `.gitignore`. No se incluyen secretos ni snapshots privados en las fuentes del deployment.
 
+NexoBet conserva el registro de su regresión completa, las revisiones compartidas y su publicación independiente en `NexoBet/docs/validation/widget-optimization-20261109.md`. Ese registro es la referencia específica de Nexo; publicar Atrio no publica Nexo. El cierre requiere comprobar también su build y alias productivo, además de los siete productos detallados arriba.
+
+La auditoría de fuentes de esos siete productos confirmó igualdad entre HEAD, `main`, `origin/main` y la rama remota consultada directamente. GitHub y Vercel tienen `main` como rama predeterminada/productiva. Sus 17 worktrees continúan presentes, incluidos los de otro trabajo en curso. Las ramas remotas de API2 (`87f2a59`) y Panel3 (`ffca989`) permanecen exactamente como en el checkpoint; el commit local de API2 no se publicó.
+
 ## Base de datos publicada
 
 Se aplicaron individualmente las tres migraciones revisadas, sin ejecutar pendientes ajenos: Builder `20261110025708_entry_funnel_all_templates_provenance`, Atrio `20261110025716_gateway_chat_preparation_scope` y Nexo `20261110025722_gateway_chat_preparation_scope`. La verificación confirmó las cinco columnas de diagnóstico, rechazo de un lote inválido, ejecución del RPC restringida a servicio y cuatro triggers por fila/índice por asesor en cada backend de chat. `anon` y `authenticated` no pueden ejecutar el RPC ni la función privada de invalidación. No hubo escritura de cuentas, conversiones o movimientos financieros de prueba.
+
+Los avisos de seguridad de Supabase se compararon antes y después en los tres proyectos: no aparecieron avisos nuevos. Los avisos preexistentes no se consideran resueltos por este lote.
+
+## Espacio local
+
+Se recuperó margen mediante compresión NTFS de archivos de compilaciones archivadas, conservando su contenido. Al terminar quedaban aproximadamente 5,4 GB libres en C:; la cifra puede variar con compilaciones y el archivo de paginación. No se borraron código, configuraciones, checkpoints ni archivos personales. La revisión automática rechazó el borrado recursivo de cachés, por lo que se utilizó compresión. Evidencia: `space-recovered-20261110.json`.
 
 ## Reversión
 
