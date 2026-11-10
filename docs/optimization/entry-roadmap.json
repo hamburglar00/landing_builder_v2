@@ -1,0 +1,218 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-11-10T15:35:00Z",
+  "title": "Seguimiento de optimización: landings, gateways, chat y NexoBet",
+  "current_phase": {
+    "number": 2,
+    "name": "Resolver cuellos de botella con medición comparable",
+    "initial_audit": "completada con límites de cobertura",
+    "next_batch": "PREWARM-OBS",
+    "next_batch_implementation_started": false
+  },
+  "rules": [
+    "Cada idea conserva un identificador, alcance, estado, autorización, dependencia y criterio de cierre.",
+    "Las ideas nuevas se agregan al registro; no desplazan silenciosamente puntos del lote acordado.",
+    "Cerrar un punto exige evidencia de implementación, regresión y publicación por producto, o un estado pendiente con motivo explícito.",
+    "Una sola entrega puede contener varios commits revisables y pruebas intermedias; no requiere aprobación del usuario por cada microcambio autorizado.",
+    "Una hipótesis medida sin beneficio puede cerrarse como evaluada con evidencia; no se declara optimizada sin resultados.",
+    "Las muestras sintéticas, históricas y de procedencia desconocida no se presentan como visitas reales comparables."
+  ],
+  "constraints": [
+    "Pixel/CAPI, atribución y deduplicación se conservan.",
+    "No cambiar filtros de uso publicitario, disponibilidad, cuotas ni reparto de números.",
+    "Mejoras comunes para ambas arquitecturas y todas las plantillas aplicables; regresión T1–T9.",
+    "Cambios compartidos de gateway se aplican a los cuatro proveedores, incluido Worker Ganamos+.",
+    "Atrio/Nexo se verifican por separado; respetar sus módulos fijados y diferencias de arquitectura.",
+    "API2 y Panel3: los cambios nuevos permanecen locales, sin push ni despliegue.",
+    "Conservar checkpoints y trabajo concurrente; publicar por main mediante integración sin force.",
+    "Registrar etapas, duraciones, resultados y códigos cerrados; excluir mensajes, contraseñas, teléfonos y datos bancarios."
+  ],
+  "completed": [
+    {
+      "id": "BASE-01",
+      "status": "publicado",
+      "title": "Optimización común de HTML, assets, imágenes e invalidación",
+      "evidence": [
+        "../validation/landing-optimization-20261109.md"
+      ]
+    },
+    {
+      "id": "BASE-02",
+      "status": "publicado",
+      "title": "Bienvenida/compositor progresivos y banco posterior en Atrio/Nexo; cuatro gateways",
+      "evidence": [
+        "../validation/landing-optimization-20261109.md",
+        "../../../NexoBet/docs/validation/widget-optimization-20261109.md"
+      ]
+    },
+    {
+      "id": "BASE-03",
+      "status": "verificado",
+      "title": "Checkpoints y main productiva por repositorio",
+      "evidence": [
+        "../validation/landing-optimization-20261109.md"
+      ]
+    },
+    {
+      "id": "AUD-01",
+      "status": "completado",
+      "title": "Primer corte de auditoría productiva",
+      "limit": "La muestra nueva del corte 14:13 UTC cubre clásico T2/T5; no permite concluir qué motor es más rápido.",
+      "evidence": [
+        "../../../.local/postdeploy-audit-20261110/INFORME.md"
+      ]
+    },
+    {
+      "id": "REL-01",
+      "status": "publicado",
+      "title": "Consulta única de número, recuperación de demoras y diagnóstico",
+      "builder_commit": "d5e138fd861810f730681a7e180e10c292fd1cc0",
+      "classic_commit": "3675e1d979a02c9c75c66b60796d9f12837a7bc4",
+      "evidence": [
+        "../validation/landing-phone-reliability-20261110.md"
+      ]
+    },
+    {
+      "id": "REL-02",
+      "status": "publicado",
+      "title": "Índice de cola CAPI y logs de selección; cron posterior HTTP 200",
+      "worker_version": 54,
+      "evidence": [
+        "../validation/capi-retry-queue-20261110.md"
+      ]
+    }
+  ],
+  "batches": [
+    {
+      "id": "PREWARM-OBS",
+      "title": "Número preparado antes del clic y recorrido medible",
+      "status": "alcance_definido_sin_implementar",
+      "authorization": "Los cuatro puntos de precarga fueron aceptados por el usuario; completar mediciones es prioridad explícita. Esta revisión registra el alcance sin modificar producción.",
+      "products": [
+        "landing-builder",
+        "clásico",
+        "Atrio",
+        "NexoBet según módulo afectado",
+        "cuatro gateways si cambia el contrato común"
+      ],
+      "tasks": [
+        {
+          "id": "PRE-01",
+          "status": "pendiente",
+          "title": "Iniciar prewarm antes del CSS",
+          "acceptance": "Una hoja de estilos retrasada no demora el inicio de la consulta; doce variantes T1–T6 conservan un solo pedido y el comportamiento de Pixel."
+        },
+        {
+          "id": "PRE-02",
+          "status": "pendiente_de_medición",
+          "title": "Separar y optimizar el tiempo del servidor y transporte",
+          "acceptance": "Medir validación de acceso, caché y selección; elegir cambios con evidencia sin alterar elegibilidad ni reservas. Comparar la ruta completa antes/después, incluidos casos fríos."
+        },
+        {
+          "id": "PRE-03",
+          "status": "pendiente",
+          "title": "Auditar y alinear caché compatible entre motores",
+          "acceptance": "Verificar los modos fair, weighted_quota y el resto de configuraciones contra la implementación remota; nunca compartir una asignación entre visitantes cuando el reparto exige selección individual.",
+          "note": "La diferencia de guardas detectada en código local es un hallazgo por verificar, no un incidente productivo confirmado."
+        },
+        {
+          "id": "PRE-04",
+          "status": "pendiente",
+          "title": "Medir número listo al clic y espera restante",
+          "acceptance": "Porcentaje listo con denominador explícito; tiempo hasta respuesta y clic→salida; separar éxito, espera, fallo, primer intento y clic posterior. Sin atribuir apertura de WhatsApp sólo a outbound_requested."
+        },
+        {
+          "id": "OBS-01",
+          "status": "pendiente",
+          "title": "Separar navegación, recorrido e intento",
+          "acceptance": "Recargar o volver no infla el tiempo de carga; conservar correlación del recorrido e identificar cada navegación y cada intento."
+        },
+        {
+          "id": "OBS-02",
+          "status": "pendiente",
+          "title": "Relacionar etapas del navegador con peticiones y errores del servidor",
+          "acceptance": "Un intento se puede seguir por landing, destino, gateway y chat con identificadores técnicos; documentar límites internos de API2 mientras sus cambios nuevos sean locales."
+        },
+        {
+          "id": "OBS-03",
+          "status": "pendiente",
+          "title": "Guardar versión de cada componente y contexto de comparación",
+          "acceptance": "Versiones de landing, gateway y chat distinguibles; informe por motor, plantilla, proveedor/skin, cuenta nueva/existente, intento y entorno, conservando origen desconocido cuando corresponda."
+        },
+        {
+          "id": "OBS-04",
+          "status": "pendiente",
+          "title": "Distinguir chat utilizable, bienvenida y resultado bancario",
+          "acceptance": "Chat utilizable no depende de la billetera; banco disponible/no aplicable/no disponible/error explícito. Distinguir evento lógico de contenido programado y visibilidad comprobada."
+        },
+        {
+          "id": "OBS-05",
+          "status": "pendiente",
+          "title": "Comprobar entrega y límites de telemetría",
+          "acceptance": "Pruebas de cierre temprano, fallos de red, varias pestañas, reintentos, límites de cola y respuesta del colector. Un evento faltante queda como observación incompleta, no como fallo o abandono demostrado."
+        },
+        {
+          "id": "REG-01",
+          "status": "pendiente",
+          "title": "Regresión y cierre conjunto",
+          "acceptance": "Checkpoint, casos de carga fría/caliente, clic inmediato, red lenta, retorno, números no disponibles, Pixel/atribución/reparto y coherencia entre productos. Cada punto termina publicado y verificado o queda pendiente con causa explícita."
+        }
+      ],
+      "implementation_order": [
+        "OBS-01 y medición inicial PRE-02/PRE-04",
+        "PRE-01 y auditoría PRE-03 en paralelo donde no haya dependencias",
+        "Optimización PRE-02 basada en resultados y cierre OBS-02/OBS-03/OBS-04/OBS-05",
+        "REG-01 y publicación coordinada"
+      ],
+      "success_criterion": "Demostrar más números listos antes del clic y menos espera, con trazabilidad suficiente para explicar demoras, sin empeorar carga, Pixel o reglas de negocio."
+    },
+    {
+      "id": "COMPARE",
+      "status": "pendiente_de_muestras_comparables",
+      "title": "Comparar constructor y clásico con tráfico posterior",
+      "depends_on": [
+        "PREWARM-OBS"
+      ],
+      "acceptance": "Comparar cohortes equivalentes, tamaños de muestra, medianas y percentiles; no sumar fases solapadas ni presentar desconocido como cliente real."
+    },
+    {
+      "id": "NEXO-OPS",
+      "status": "pendiente_de_revisión_del_lote_local",
+      "title": "Entrega operativa de NexoBet y cambios nuevos de API2/Panel3",
+      "acceptance": "Inventariar estado local, integrar cambios del programador sin perder trabajo, documentar dependencias, migraciones y pruebas. El funcionamiento real de las rutas nuevas requiere su despliegue por la vía acordada.",
+      "constraint": "El API2 existente ya sirve al circuito público; pendiente de publicación no significa que todo API2 esté fuera de servicio."
+    }
+  ],
+  "deferred_evaluations": [
+    {
+      "id": "EXP-01",
+      "status": "preparado_apagado",
+      "title": "Dos fases del clásico T7–T9",
+      "dependency": "Configuración/clave existente y verificación específica; no habilitar por omisión."
+    },
+    {
+      "id": "EXP-02",
+      "status": "preparado_apagado",
+      "title": "Login combinado",
+      "dependency": "GATEWAY_EARLY_SESSION_ENABLED=0; coordinación durable pendiente para ampliar anticipación en Ases/NET/Multi."
+    },
+    {
+      "id": "EXP-03",
+      "status": "propuesto_no_activado",
+      "title": "Documento único, cuentas precreadas, Redis y cambios globales de región",
+      "dependency": "Evaluaciones independientes con evidencia, no incluir silenciosamente en PREWARM-OBS."
+    },
+    {
+      "id": "FOLLOW-01",
+      "status": "evaluar_más_adelante",
+      "title": "Duplicación restante de CSS base/embed del widget",
+      "dependency": "Es mejora posterior, no parte incompleta de la entrega ya publicada."
+    },
+    {
+      "id": "FOLLOW-02",
+      "status": "evaluar_más_adelante",
+      "title": "Retención y agregados de mediciones",
+      "dependency": "Revisar horizonte de conservación antes de comparar periodos largos; la definición actual del funnel prevé purga de eventos de más de 90 días."
+    }
+  ]
+}

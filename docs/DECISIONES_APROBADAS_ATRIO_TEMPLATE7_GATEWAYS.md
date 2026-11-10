@@ -1,5 +1,12 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Seguimiento de lotes y cobertura de medición (10/11/2026)
+
+- El usuario acepta los cuatro puntos de la siguiente mejora: adelantar la precarga, medir y acelerar servidor/transporte, revisar la caché de ambos motores y medir el número listo al clic. Solicita trabajar en lotes mayores sin que se pierdan pendientes; esta revisión registra el alcance, sin iniciar su implementación.
+- Mantener un único [registro de seguimiento](optimization/entry-roadmap.json) con identificadores, estados, productos, dependencias y criterios de cierre. No retirar ideas silenciosamente ni llamar publicado a un cambio sólo preparado o validado en local. Los nuevos hallazgos se agregan al registro sin desplazar puntos acordados.
+- Completar los huecos de medición del recorrido en el mismo lote: navegación frente a recorrido/intento, correlación con solicitudes backend, versiones por componente, resultado bancario explícito y fiabilidad de recepción. La telemetría actual tiene hitos de extremo a extremo, pero no equivale a una traza completa de todas las peticiones ni garantiza recepción de cada evento.
+- Mantener separada la entrega operativa pendiente de NexoBet/API2/Panel3 y los experimentos apagados. Una entrega conjunta puede tener commits y regresiones intermedias para identificar fallos y permitir reversión, conservando Pixel, reparto y las restricciones de publicación vigentes.
+
 ### CTA de WhatsApp y edición de vínculos (10/11/2026)
 
 - Templates 4, 5 y 6: aumentar el texto del CTA y su peso, aprovechar mejor su espacio y ampliar el icono de WhatsApp, conservando las dimensiones de los botones. Aplicar al constructor, al motor clásico y a la vista previa del editor. Contener textos excepcionalmente largos con elipsis, sin desbordes. Template 8 conserva su presentación anterior.
