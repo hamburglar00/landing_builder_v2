@@ -1,5 +1,12 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Configuración básica guiada y catálogo UX de Atrio (10/11/2026)
+
+- Documentar los comportamientos reutilizables en `internal-chat/docs/CATALOGO_UX.md`: propósito UX, disparador, estado confirmado, navegación, postergación, errores, fuentes y excepciones para importar a otros productos. Distinguir comportamiento UX de presentación UI.
+- Unificar el aviso de billetera y la activación de push del asesor en un único diálogo con los pasos pendientes, contador «Paso X de Y», regreso y continuación. Billetera sólo para MKT activo sin billetera activa; Full Carga conserva su medio de ingreso de PBAdmin/API2. Reutilizar el formulario de Cargas y la tarjeta de notificaciones de Configuración.
+- Considerar push activo por dispositivo sólo después de comprobar permiso, suscripción y guardado autorizado. Pedir permiso únicamente desde «Activar notificaciones»; no desde el primer clic o tecla genéricos. Explicar bloqueo, falta de conexión y requisito de app en iOS. Conservar «Más tarde» por visita y no superponer otros diálogos ni perder campos ante un error.
+- Fuente del recorrido: Atrio. NexoBet conserva su alta obligatoria propia y su recordatorio Telegram; sincronizar únicamente la tarjeta y la lógica compartida de push, manteniendo sus adaptadores, permisos y temas. Sus clientes no reciben el onboarding MKT de Extensiones. Los cuatro gateways consumen el mismo chat de Atrio sin cambios de SDK, Worker, sesiones o finanzas. API2/Panel3 no cambian.
+
 ### Encabezados uniformes y jerarquía de Redirección (10/11/2026)
 
 - Ordenar GERENCIA e ID desde botones con triángulo a la derecha del texto, alternando ascendente/descendente, con indicador del orden activo y soporte de teclado. Gerencia ordena por nombre e ID por el número mostrado; N.A. queda al final. El servidor ordena antes de paginar, devuelve como máximo 50 grupos y calcula detalles/métricas solo para la página solicitada. Cambiar el orden vuelve a la página 1; conservarlo al paginar, filtrar y refrescar. Mantener la consulta previa compatible con pestañas ya abiertas y conservar RLS/permisos.
