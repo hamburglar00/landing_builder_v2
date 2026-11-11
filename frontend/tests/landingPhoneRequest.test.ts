@@ -129,11 +129,13 @@ test("diagnostic UUID and original navigation correlate whitelisted server phase
   assert.equal((f.requests[0].init.headers as Record<string, string>)["x-entry-request-id"], requestId);
   await f.advance(250);
   f.requests[0].resolve({ ok: false, status: 503, headers: new Headers({ "X-Landing-Phone-Outcome": "no_phones",
-    "Server-Timing": 'phone-owner;dur=12.5, phone-select;dur=123.1, phone-total;dur=200, secret;desc="private", phone-plan;dur=999999999' }) });
+    // The new combined phase remains in correlated Edge logs; the browser
+    // collector stores its established select/total phases without rejecting it.
+    "Server-Timing": 'phone-preflight;dur=12.5, phone-select;dur=123.1, phone-total;dur=200, secret;desc="private", phone-plan;dur=999999999' }) });
   const result = await request.promise;
   assert.equal(result.outcome, "empty"); assert.equal(result.status, 503);
   assert.equal(result.duration_ms, 250); assert.equal(result.completed_at, 100250);
-  assert.deepEqual(JSON.parse(JSON.stringify(result.server_timings)), { phone_owner: 13, phone_select: 123, phone_total: 200 });
+  assert.deepEqual(JSON.parse(JSON.stringify(result.server_timings)), { phone_select: 123, phone_total: 200 });
   assert.equal(request.navigation_id, "22222222-2222-4222-8222-222222222222");
   assert.ok(!JSON.stringify(result).includes("private"));
 });

@@ -194,47 +194,36 @@ async function handlePhoneRequest(req: Request, diagnostic: ReturnType<typeof cr
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const ownerQuery = source === "chatrace"
-      ? supabase.from("profiles").select("id").eq("nombre", name).limit(1).maybeSingle()
-      : supabase.from("landings").select("user_id,publish_target").eq("name", name).limit(1).maybeSingle();
-    const { data: ownerRow, error: ownerError } = await diagnostic.measure("owner", () => ownerQuery);
+    const { data: preflight, error: preflightError } = await diagnostic.measure("preflight", () => supabase.rpc(
+      "landing_phone_preflight",
+      { p_landing_name: name, p_source: source ?? null },
+    ));
 
-    if (ownerError) {
+    if (preflightError) {
       diagnostic.outcome("backend_error");
       return jsonResponse({ error: "Error al validar el plan del cliente." }, 500);
     }
 
-    const ownerUserId = source === "chatrace"
-      ? String((ownerRow as { id?: unknown } | null)?.id ?? "")
-      : String((ownerRow as { user_id?: unknown } | null)?.user_id ?? "");
-
-    if (!ownerUserId) {
+    const checked = preflight as { status?: unknown; ownerUserId?: unknown; publishTarget?: unknown } | null;
+    if (checked?.status === "not_found") {
       diagnostic.outcome("not_found");
       return jsonResponse(
         { error: source === "chatrace" ? "Cliente no encontrado." : "Landing no encontrada." },
         404,
       );
     }
-
-    const { data: isBlocked, error: planError } = await diagnostic.measure("plan", () => supabase.rpc(
-      "is_client_access_blocked",
-      { p_user_id: ownerUserId },
-    ));
-
-    if (planError) {
+    if (checked?.status === "blocked") {
+      diagnostic.outcome("blocked");
+      return jsonResponse({ error: "Plan vencido o inactivo." }, 403);
+    }
+    const ownerUserId = typeof checked?.ownerUserId === "string" ? checked.ownerUserId : "";
+    if (checked?.status !== "ok" || !ownerUserId) {
       diagnostic.outcome("backend_error");
       return jsonResponse({ error: "Error al validar el plan del cliente." }, 500);
     }
 
-    if (isBlocked === true) {
-      diagnostic.outcome("blocked");
-      return jsonResponse({ error: "Plan vencido o inactivo." }, 403);
-    }
-
     if (source !== "chatrace") {
-      const publishTarget = String(
-        (ownerRow as { publish_target?: unknown } | null)?.publish_target ?? "classic",
-      );
+      const publishTarget = String(checked.publishTarget ?? "classic");
 
       if (publishTarget === "constructor") {
         const { data: cachePayload } = await diagnostic.measure("cache", () => supabase.rpc(

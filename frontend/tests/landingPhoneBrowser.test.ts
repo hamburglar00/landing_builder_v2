@@ -53,7 +53,7 @@ test("browser: all six templates in both engines reuse late assignments and keep
       await page.route("**/*", async route => {
         const url = new URL(route.request().url());
         const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "apikey,authorization,content-type,x-entry-request-id",
-          "Access-Control-Expose-Headers": "Server-Timing,X-Landing-Phone-Outcome", "Server-Timing": "phone-owner;dur=11, phone-plan;dur=12, phone-cache;dur=13, phone-select;dur=20, phone-total;dur=60" };
+          "Access-Control-Expose-Headers": "Server-Timing,X-Landing-Phone-Outcome", "Server-Timing": "phone-preflight;dur=23, phone-cache;dur=13, phone-select;dur=20, phone-total;dur=60" };
         if (url.pathname === "/fixture") { await route.fulfill({ contentType: "text/html", body: html }); return; }
         if (url.pathname === "/functions/v1/landing-phone") {
           if (route.request().method() === "OPTIONS") { await route.fulfill({ status: 200, headers }); return; }
@@ -177,10 +177,11 @@ test("browser: all six templates in both engines reuse late assignments and keep
         if (template % 2) assert.equal(waits[1].duration_ms, 0);
         assert.equal(clicks[0].request_id, clicks[1].request_id);
         assert.ok(clicks.every(event => event.attempt_id && event.navigation_id));
-        for (const phase of ["phone_owner", "phone_plan", "phone_cache", "phone_select", "phone_total"]) {
+        for (const phase of ["phone_cache", "phone_select", "phone_total"]) {
           const stage = telemetry.find(event => event.name === "stage_timing" && event.phase === phase);
           assert.ok(stage, label + " " + phase); assert.equal(stage.request_id, clicks[0].request_id);
         }
+        assert.ok(!telemetry.some(event => event.phase === "phone_preflight"), "unregistered phase stays in Edge diagnostics");
         assert.ok(!JSON.stringify(telemetry).includes("occurred_at_ms"), "epoch timestamp stays local");
         assert.ok(!JSON.stringify(telemetry).includes("5491100000000"), "diagnostics omit phone numbers");
         assert.deepEqual(errors, [], label + " no browser errors");

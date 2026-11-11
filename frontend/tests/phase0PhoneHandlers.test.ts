@@ -9,7 +9,7 @@ import ts from "typescript";
 function handler(name: "landing-phone" | "phone-click", options: {
   result?: Record<string, unknown>; cache?: Record<string, unknown>; blocked?: boolean;
   ownerMissing?: boolean; ownerError?: boolean; missingEnv?: boolean; rpcError?: string; landingMode?: string;
-  landingCriterion?: string; rpcThrow?: string; waitUntil?: boolean;
+  landingCriterion?: string; publishTarget?: string; rpcThrow?: string; waitUntil?: boolean;
 } = {}) {
   const calls: {name:string;params:Record<string,unknown>}[] = [];
   const logs: string[] = [];
@@ -29,7 +29,10 @@ function handler(name: "landing-phone" | "phone-click", options: {
       calls.push({name,params});
       if (name === options.rpcThrow) throw Error("private SDK failure with sensitive URL");
       if (name === options.rpcError) return {data:null,error:{message:"synthetic error"}};
-      if (name === "is_client_access_blocked") return {data:options.blocked ?? false,error:null};
+      if (name === "landing_phone_preflight") return options.ownerError
+        ? {data:null,error:{message:"private owner error"}}
+        : {data:options.ownerMissing ? {status:"not_found"} : options.blocked ? {status:"blocked"} :
+          {status:"ok",ownerUserId:"owner",publishTarget:options.publishTarget ?? "constructor"},error:null};
       if (name === "get_cached_constructor_landing_phone") {
         const cache = options.cache;
         return {
@@ -77,7 +80,7 @@ test("background demand failures keep the diagnostic UUID and catch private SDK 
  }
 });
 
-test("phone diagnostics expose closed phases/outcome and preflight caching without changing reservation identity", async () => {
+test("phone diagnostics expose the combined preflight phase and keep reservation identity", async () => {
   const requestId = "11111111-1111-4111-8111-111111111111";
   const h = handler("landing-phone");
   const response = await h.serve(new Request("https://example.invalid?name=synthetic", { headers: { "x-entry-request-id": requestId } }));
@@ -85,11 +88,13 @@ test("phone diagnostics expose closed phases/outcome and preflight caching witho
   assert.equal(response.headers.get("x-entry-request-id"), requestId);
   assert.equal(response.headers.get("x-landing-phone-outcome"), "ok");
   assert.equal(response.headers.get("access-control-max-age"), null);
-  for (const phase of ["owner", "plan", "cache", "select", "total"]) assert.match(response.headers.get("server-timing")!, new RegExp(`phone-${phase};dur=[0-9.]+`));
+  for (const phase of ["preflight", "cache", "select", "total"]) assert.match(response.headers.get("server-timing")!, new RegExp(`phone-${phase};dur=[0-9.]+`));
   const record = JSON.parse(h.logs.find(line => line.includes('"landing_phone_request"'))!);
   assert.equal(record.request_id, requestId);
   assert.equal(record.source, "landing");
   assert.equal(record.cache, "miss");
+  assert.equal(h.calls.filter(call => call.name === "landing_phone_preflight").length, 1);
+  assert.equal(h.calls.some(call => call.name === "is_client_access_blocked"), false);
   assert.ok(!JSON.stringify(record).includes("synthetic"));
   assert.notEqual(h.calls.find(call => call.name === "record_landing_phone_availability_demand")?.params.p_request_id, requestId);
   const preflight = await h.serve(new Request("https://example.invalid", { method: "OPTIONS" }));
@@ -108,7 +113,7 @@ test("every non-preflight Edge return forbids caching, including POST, cache hit
     { path: "", status: 400 }, { init: { method: "DELETE" }, status: 405 },
     { options: { missingEnv: true }, status: 500 }, { options: { ownerError: true }, status: 500 },
     { options: { ownerMissing: true }, status: 404 }, { options: { blocked: true }, status: 403 },
-    { options: { rpcError: "is_client_access_blocked" }, status: 500 }, { options: { rpcError: "get_phone_for_landing" }, status: 500 },
+    { options: { rpcError: "landing_phone_preflight" }, status: 500 }, { options: { rpcError: "get_phone_for_landing" }, status: 500 },
     { options: { result: { _status: "not_found" } }, status: 404 },
     { options: { result: { _status: "no_assignments" } }, status: 404 }, { options: { result: { _status: "no_phones" } }, status: 503 },
     { init: { method: "POST", body: JSON.stringify({ name: { private: "private@example.invalid" } }) }, status: 500 },
@@ -129,6 +134,36 @@ test("Phase 0: landing-phone methods, missing name, blocked/missing owner", asyn
   assert.equal((await handler("landing-phone").serve(new Request("https://example.invalid"))).status,400);
   assert.equal((await handler("landing-phone",{blocked:true}).serve(new Request("https://example.invalid?name=synthetic"))).status,403);
   assert.equal((await handler("landing-phone",{ownerMissing:true}).serve(new Request("https://example.invalid?name=synthetic"))).status,404);
+});
+
+test("preflight blocks selection before any reservation and preserves source", async () => {
+  for (const source of [undefined, "chatrace", "warmup"]) {
+    const suffix = source ? `&source=${source}` : "";
+    const h = handler("landing-phone", { blocked: true });
+    const response = await h.serve(new Request(`https://example.invalid?name=synthetic${suffix}`));
+    assert.equal(response.status, 403);
+    assert.equal(h.calls.filter(call => call.name === "landing_phone_preflight").length, 1);
+    assert.equal(h.calls.find(call => call.name === "landing_phone_preflight")?.params.p_source, source ?? null);
+    assert.equal(h.calls.some(call => call.name === "get_phone_for_landing" || call.name === "get_phone_for_chatrace_client"), false);
+  }
+});
+
+test("chatrace keeps its selector and records scope usage for the checked owner", async () => {
+  const h = handler("landing-phone");
+  const response = await h.serve(new Request("https://example.invalid?name=synthetic&source=chatrace"));
+  assert.equal(response.status, 200);
+  assert.equal(h.calls.find(call => call.name === "landing_phone_preflight")?.params.p_source, "chatrace");
+  assert.equal(h.calls.some(call => call.name === "get_cached_constructor_landing_phone"), false);
+  assert.equal(h.calls.some(call => call.name === "get_phone_for_chatrace_client"), true);
+  assert.equal(h.calls.find(call => call.name === "increment_phone_assignment_scope_usage")?.params.p_user_id, "owner");
+});
+
+test("classic skips constructor cache after preflight and keeps one selection", async () => {
+  const h = handler("landing-phone", { publishTarget: "classic" });
+  assert.equal((await h.serve(new Request("https://example.invalid?name=synthetic"))).status, 200);
+  assert.equal(h.calls.some(call => call.name === "get_cached_constructor_landing_phone"), false);
+  assert.equal(h.calls.filter(call => call.name === "get_phone_for_landing").length, 1);
+  assert.equal(h.calls.find(call => call.name === "get_phone_for_landing")?.params.p_create_reservation, true);
 });
 
 test("Phase 0: assignment status maps to HTTP without fabricating a phone", async () => {

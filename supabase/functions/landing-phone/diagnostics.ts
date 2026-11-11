@@ -1,5 +1,5 @@
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-type Phase = "owner" | "plan" | "cache" | "select";
+type Phase = "preflight" | "cache" | "select";
 type Outcome = "ok" | "preflight" | "method_not_allowed" | "invalid_request" | "config_error" | "backend_error" | "unexpected_error" | "not_found" | "blocked" | "no_assignments" | "no_phones";
 export const phoneCorsHeaders = {
   "Access-Control-Allow-Origin": "*",

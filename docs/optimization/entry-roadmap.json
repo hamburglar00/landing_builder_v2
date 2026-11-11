@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-10T19:33:47.399Z",
+  "updated_at": "2026-11-11T00:17:24.000Z",
   "title": "Seguimiento de optimización: landings, gateways, chat y NexoBet",
   "current_phase": {
     "number": 2,
@@ -23,7 +23,7 @@
     "Mejoras comunes para ambas arquitecturas y todas las plantillas aplicables; regresión T1–T9.",
     "Cambios compartidos de gateway se aplican a los cuatro proveedores, incluido Worker Ganamos+.",
     "Atrio/Nexo se verifican por separado; respetar sus módulos fijados y diferencias de arquitectura.",
-    "API2 y Panel3: los cambios nuevos permanecen locales, sin push ni despliegue.",
+    "API2 y Panel3: la entrega puntual a Git fue autorizada el 10/11; los cambios posteriores requieren una decisión propia y el despliegue sigue a cargo del programador.",
     "Conservar checkpoints y trabajo concurrente; publicar por main mediante integración sin force.",
     "Registrar etapas, duraciones, resultados y códigos cerrados; excluir mensajes, contraseñas, teléfonos y datos bancarios."
   ],
@@ -501,18 +501,22 @@
     {
       "id": "COMPARE",
       "status": "pendiente_de_muestras_comparables",
-      "title": "Comparar constructor y clásico con tráfico posterior",
+      "title": "Comparar el Clásico en producción y validar Constructor/NexoBet localmente",
       "depends_on": [
         "PREWARM-OBS"
       ],
-      "acceptance": "Comparar cohortes equivalentes, tamaños de muestra, medianas y percentiles; no sumar fases solapadas ni presentar desconocido como cliente real."
+      "acceptance": "Comparar cohortes equivalentes del Clásico, tamaños de muestra, medianas y percentiles; validar Constructor y NexoBet localmente mientras no estén activos en producción. No sumar fases solapadas ni presentar desconocido como cliente real.",
+      "latest_observation": "Corte 10/11 17:03–23:25 UTC: 98 intentos Clásico T2/T5, 68 con teléfono listo al clic; en los otros 30 el pedido empezó antes del clic y terminó después. Fuente unknown. No acredita mejora productiva antes/después. Constructor sin clientes activos y NexoBet en desarrollo.",
+      "optimization_candidate": "PHONE-PREFLIGHT: búsqueda de dueño y comprobación del plan unificadas en una RPC de servicio, conservando caché y selector. Migración 20261111002218 aplicada y landing-phone v28 activa en Builder; latencia y errores pendientes de medición productiva comparable.",
+      "optimization_evidence": "phone-preflight-rpc-20261110.md",
+      "evidence": ["../validation/entry-compare-20261110.md"]
     },
     {
       "id": "NEXO-OPS",
-      "status": "pendiente_de_revisión_del_lote_local",
+      "status": "entregado_en_git_pendiente_de_deploy",
       "title": "Entrega operativa de NexoBet y cambios nuevos de API2/Panel3",
       "acceptance": "Inventariar estado local, integrar cambios del programador sin perder trabajo, documentar dependencias, migraciones y pruebas. El funcionamiento real de las rutas nuevas requiere su despliegue por la vía acordada.",
-      "constraint": "El API2 existente ya sirve al circuito público; pendiente de publicación no significa que todo API2 esté fuera de servicio."
+      "constraint": "El API2 existente ya sirve al circuito público; la nueva entrega requiere migraciones selectivas y despliegue del programador. API2 feature/atrio-integration en 1dfd760c; Panel3 fix/atrio-bot-form en 16f3967."
     }
   ],
   "deferred_evaluations": [
