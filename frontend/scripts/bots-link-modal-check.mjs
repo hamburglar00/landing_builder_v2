@@ -17,17 +17,18 @@ import{AppConfirmProvider}from'./components/ui/AppConfirmDialog';
 window.fixtureWrites=[];window.fixtureChanged=0;window.fixtureSync=[];
 const params=new URLSearchParams(location.search);
 createRoot(document.getElementById('root')).render(<AppConfirmProvider><BotsManagement userId="fixture-user" workspace="ARS" gerencias={params.has('existing')?[{id:777,gerencia_id:777,source_type:'pbadmin',user_id:'fixture-user',workspace_currency:'ARS',nombre:'Nombre guardado'}]:[]} isAdmin={params.has('admin')} canAtrio={!params.has('no-atrio')} onChanged={async()=>{window.fixtureChanged++}} onImported={async(id,refresh)=>{window.fixtureSync.push({id,refresh})}}/><GerenciaActions gerencia={{id:1,nombre:'Gerencia fixture',gerencia_id:184,source_type:'pbadmin'}} onChanged={async()=>{}}/></AppConfirmProvider>);
-`},bundle:true,write:false,platform:'browser',format:'iife',jsx:'automatic',define:{'process.env':'{}','process.env.NODE_ENV':'"production"'},plugins:[{name:'isolated-persistence',setup(b){
+`},bundle:true,write:false,outfile:path.join(directory,'fixture.js'),platform:'browser',format:'iife',jsx:'automatic',define:{'process.env':'{}','process.env.NODE_ENV':'"production"'},plugins:[{name:'isolated-persistence',setup(b){
  b.onResolve({filter:/^@\/lib\/(supabaseClient|gerencias\/gerenciasDb|atrio\/atrioDb)$/},args=>({path:args.path,namespace:'fixture'}));
  b.onLoad({filter:/.*/,namespace:'fixture'},args=>({loader:'js',contents:args.path.endsWith('supabaseClient')
- ? 'export const supabase={auth:{getSession:async()=>({data:{session:{access_token:"fixture"}}})}};'
+ ? 'export const supabase={auth:{getSession:async()=>({data:{session:{access_token:"fixture"}}})},from(table){if(table!=="gerencias")throw Error("Unexpected table");const query={select(){return query},eq(){return query},async maybeSingle(){return {data:new URLSearchParams(location.search).has("existing")?{id:777,user_id:"fixture-user",source_type:"pbadmin",gerencia_id:777,workspace_currency:"ARS"}:null,error:null}}};return query}};'
  : args.path.endsWith('atrioDb')
  ? 'export async function createAtrioClient(user,payload){window.fixtureWrites.push({kind:"atrio",user,payload})}'
  : 'export async function createGerencia(user,payload){if(new URLSearchParams(location.search).has("conflict"))throw {code:"23505"};window.fixtureWrites.push({kind:"manual",user,payload})};export async function updateGerencia(){};export async function deleteGerencia(){};export async function fetchGerenciaWorkGroups(){return []};export async function createGerenciaWorkGroup(){};export async function updateGerenciaWorkGroup(){};export async function deleteGerenciaWorkGroup(){};export function formatGerenciaError(){return "fixture"}'}));
 }}]});
 const postcss=require('postcss');
 const css=(await postcss([require('@tailwindcss/postcss')()]).process(await readFile('app/globals.css','utf8'),{from:path.resolve('app/globals.css')})).css;
-const html=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style></head><body><main style="padding:16px"><div id="root"></div></main><script src="/fixture.js"></script></body></html>`;
+const html=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}
+${compiled.outputFiles.find(file=>file.path.endsWith('.css'))?.text??''}</style></head><body><main style="padding:16px"><div id="root"></div></main><script src="/fixture.js"></script></body></html>`;
 const results=[];
 for(const [name,engine]of [['Chromium',playwright.chromium],['WebKit',playwright.webkit]]){
  const browser=await engine.launch({headless:true});
@@ -89,12 +90,12 @@ for(const [name,engine]of [['Chromium',playwright.chromium],['WebKit',playwright
    await choose('Agency ID · una gerencia');
    await dialog.getByLabel('Agency ID',{exact:true}).fill('778');
    await dialog.getByRole('button',{name:'Buscar bots',exact:true}).click();
-   await dialog.getByRole('alert').filter({hasText:'Error de transporte'}).waitFor();
+   await page.getByRole('alert').filter({hasText:'Error de transporte'}).waitFor();
    assert.equal(await dialog.getByRole('button',{name:'Vincular gerencia',exact:true}).count(),0,'no fallback for arbitrary failures');
    await choose('Owner ID · todas sus gerencias');
    await dialog.getByLabel('Owner ID',{exact:true}).fill('777');
    await dialog.getByRole('button',{name:'Buscar bots',exact:true}).click();
-   await dialog.getByRole('alert').filter({hasText:'por propietario'}).waitFor();
+   await page.getByRole('alert').filter({hasText:'por propietario'}).waitFor();
    assert.equal(await dialog.getByRole('button',{name:'Vincular gerencia',exact:true}).count(),0,'never use an owner ID as an agency');
    await choose('Agency ID · una gerencia');
    await dialog.getByLabel('Agency ID',{exact:true}).fill('777');
@@ -141,7 +142,7 @@ for(const [name,engine]of [['Chromium',playwright.chromium],['WebKit',playwright
        await dialog.waitFor({state:'hidden'});
        assert.deepEqual(await page.evaluate(()=>window.fixtureSync),[{id:777,refresh:false}]);
      } else {
-       await dialog.getByRole('alert').filter({hasText:'fixture'}).waitFor();
+       await page.getByRole('alert').filter({hasText:'fixture'}).waitFor();
        assert.deepEqual(await page.evaluate(()=>window.fixtureSync),[],'conflict cannot run phone sync');
      }
      assert.deepEqual(await page.evaluate(()=>window.fixtureWrites),[],'existing names and foreign links cannot be overwritten');

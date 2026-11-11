@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { useActionMessage, ActionNotice, useActionFeedback } from "@/components/ui/ActionNotice";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -48,7 +49,8 @@ export default function NuevoClientePage() {
   const [moduleVisibility, setModuleVisibility] = useState(DEFAULT_CLIENT_MODULE_PERMISSIONS);
   const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(new Set(DEFAULT_VISIBLE_COLUMNS));
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError, errorNoticeKey] = useActionMessage<string | null>(null);
+  const notify = useActionFeedback();
 
   const toggleColumn = (col: ColKey) => {
     setVisibleCols((prev) => {
@@ -94,7 +96,10 @@ export default function NuevoClientePage() {
     }
 
     if (data?.id) {
+      notify("Cliente creado.");
       router.push("/admin/clientes");
+    } else {
+      setError("No se pudo confirmar la creación del cliente.");
     }
   };
 
@@ -219,9 +224,7 @@ export default function NuevoClientePage() {
           </div>
 
           {error && (
-            <p className="text-xs text-red-400" role="alert">
-              {error}
-            </p>
+            <ActionNotice message={error} tone={"error"} noticeKey={errorNoticeKey} />
           )}
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">

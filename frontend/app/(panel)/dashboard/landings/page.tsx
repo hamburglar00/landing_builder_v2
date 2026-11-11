@@ -1,5 +1,6 @@
 "use client";
 
+import { useActionMessage, ActionNotice, useActionFeedback } from "@/components/ui/ActionNotice";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -25,7 +26,8 @@ export default function DashboardLandingsPage() {
   const [landings, setLandings] = useState<Landing[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError, errorNoticeKey] = useActionMessage<string | null>(null);
+  const notify = useActionFeedback();
   const [creating, setCreating] = useState(false);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [urlBase, setUrlBase] = useState<string | null>(null);
@@ -61,7 +63,7 @@ export default function DashboardLandingsPage() {
     };
 
     void init();
-  }, [router, workspaceCurrency]);
+  }, [router, workspaceCurrency, setError]);
 
   const handleCreate = async () => {
     if (!userId) return;
@@ -86,6 +88,7 @@ export default function DashboardLandingsPage() {
         comment: "",
         config: { ...DEFAULT_CONFIG, marketCountry: workspaceCurrency === "PYG" ? "PY" : "AR" },
       });
+      notify("Landing creada. Completá su configuración.");
       router.push(`/dashboard/landing/${id}/editar`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al crear la landing";
@@ -127,6 +130,7 @@ export default function DashboardLandingsPage() {
         comment: "",
         config: { ...DEFAULT_CONFIG, marketCountry: workspaceCurrency === "PYG" ? "PY" : "AR" },
       });
+      notify("Landing externa creada. Completá su configuración.");
       router.push(`/dashboard/landing/${id}/editar`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al conectar landing existente";
@@ -199,6 +203,7 @@ export default function DashboardLandingsPage() {
       if (["template7", "template9"].includes(landing.config.template)) {
         await copyTemplate7ManagerDestinations(landing.id, id, landing.config.targetProvider || "rey_de_ases");
       }
+      notify("Landing duplicada. Revisá su configuración.");
       router.push(`/dashboard/landing/${id}/editar`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al duplicar la landing";
@@ -226,9 +231,7 @@ export default function DashboardLandingsPage() {
   return (
     <div className="space-y-6">
       {error && (
-        <p className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-sm text-[var(--color-danger)]" role="alert">
-          {error}
-        </p>
+        <ActionNotice message={error} tone={"error"} noticeKey={errorNoticeKey} />
       )}
       <PageHeader
         title="Landings"

@@ -1,7 +1,8 @@
-.notice { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid; border-radius: 10px; font-size: 13px; line-height: 1.5; animation: disappear 550ms ease 4900ms forwards; }
+.stack { position: fixed; z-index: 2000; top: max(16px, env(safe-area-inset-top)); right: max(16px, env(safe-area-inset-right)); display: grid; gap: 10px; width: min(420px, calc(100vw - 32px)); pointer-events: none; }
+.notice { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid; border-radius: 10px; font-size: 13px; line-height: 1.5; box-shadow: 0 8px 28px #0004; pointer-events: auto; animation: disappear 300ms ease 3000ms forwards; }
 .notice[data-tone="success"] { color: #86efac; background: #123524; border-color: #347b4c; }
 .notice[data-tone="error"] { color: #fecaca; background: #3c1c23; border-color: #a34851; }
-.message { flex: 1; min-width: 0; }
+.message { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .icon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 20px; width: 20px; height: 20px; border: 1px solid currentColor; border-radius: 50%; font-weight: 700; }
 .close { flex: 0 0 28px; height: 28px; border-radius: 5px; color: inherit; font-size: 20px; }
 .close:hover, .close:focus-visible { background: #ffffff12; }

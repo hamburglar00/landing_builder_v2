@@ -1,5 +1,6 @@
 "use client";
 
+import { useActionMessage, ActionNotice } from "@/components/ui/ActionNotice";
 import { useCallback, useMemo, useState } from "react";
 import ModalPortal from "@/components/ui/ModalPortal";
 
@@ -81,7 +82,7 @@ export default function ConstructorSetupGuide({
   onClose,
 }: ConstructorSetupGuideProps) {
   const [stepIndex, setStepIndex] = useState(0);
-  const [copyMsg, setCopyMsg] = useState<string | null>(null);
+  const [copyMsg, setCopyMsg, copyMsgNoticeKey] = useActionMessage<string | null>(null);
 
   const step = steps[stepIndex];
   const isFirst = stepIndex === 0;
@@ -96,7 +97,7 @@ export default function ConstructorSetupGuide({
     } catch {
       setCopyMsg("No se pudo copiar. Selecciona y copia el endpoint manualmente.");
     }
-  }, [endpointUrl]);
+  }, [endpointUrl, setCopyMsg]);
 
   const goNext = () => {
     setCopyMsg(null);
@@ -171,9 +172,7 @@ export default function ConstructorSetupGuide({
                   </button>
                 </div>
                 {copyMsg && (
-                  <p className={`mt-2 text-xs ${copyMsg.includes("copiado") ? "text-emerald-400" : "text-amber-300"}`}>
-                    {copyMsg}
-                  </p>
+                  <ActionNotice message={copyMsg} tone={copyMsg.includes("copiado") ? "success" : "error"} noticeKey={copyMsgNoticeKey} />
                 )}
               </div>
             )}

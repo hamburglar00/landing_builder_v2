@@ -1974,14 +1974,14 @@ ${TEMPLATE4_BUBBLE_MOTION_CSS}
   align-self: center;
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   max-width: 100%;
-  padding: 8px 13px;
+  padding: 4px 6.5px;
   border: 1px solid rgba(37, 211, 102, 0.3);
   border-radius: 999px;
   color: #eef7f1;
   background: rgba(37, 211, 102, 0.11);
-  font-size: clamp(18px, 5.12vw, 25px);
+  font-size: clamp(9px, 2.56vw, 12.5px);
   line-height: 1.2;
   font-weight: 700;
   text-align: center;
@@ -2002,8 +2002,8 @@ ${TEMPLATE4_BUBBLE_MOTION_CSS}
 }
 
 .public-landing.template4 .template4__live-pill i {
-  width: 12px;
-  height: 12px;
+  width: 6px;
+  height: 6px;
 }
 
 .public-landing.template4 .template4__live-pill b {

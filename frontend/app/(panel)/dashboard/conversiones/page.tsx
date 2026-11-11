@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { ActionNotice, useActionResult } from "@/components/ui/ActionNotice";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -435,8 +436,8 @@ export default function DashboardConversionesPage() {
   const [clientName, setClientName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState<string | null>(null);
-  const [clearMsg, setClearMsg] = useState<string | null>(null);
+  const [saveMsg, setSaveMsg, saveMsgNoticeKey, saveMsgTone] = useActionResult();
+  const [clearMsg, setClearMsg, clearMsgNoticeKey, clearMsgTone] = useActionResult();
   const [clearViewOpen, setClearViewOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("funnel");
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
@@ -1470,7 +1471,7 @@ export default function DashboardConversionesPage() {
         pixelConfigs,
       });
       setPixelConfigs(pixels);
-      setSaveMsg("Configuracion guardada.");
+      setSaveMsg("Configuracion guardada.", "success");
     } catch (e) {
       setSaveMsg(e instanceof Error ? e.message : "Error al guardar");
     } finally { setSaving(false); }
@@ -1608,9 +1609,9 @@ export default function DashboardConversionesPage() {
       setClearMsg(
         mode === "keep_current_month"
           ? "Vista limpiada. Se conserva únicamente el mes actual."
-          : "Vista limpiada. Las conversiones nuevas seguirán apareciendo.",
+          : "Vista limpiada. Las conversiones nuevas seguirán apareciendo.", "success",
       );
-      setTimeout(() => setClearMsg(null), 4000);
+
     } catch (e) {
       console.error(e);
       const msg = e instanceof Error ? e.message : String(e);
@@ -1621,7 +1622,7 @@ export default function DashboardConversionesPage() {
       setHidingStats(false);
       setHidingLogs(false);
     }
-  }, [userId, refreshTable]);
+  }, [userId, refreshTable, setClearMsg]);
 
   if (loading) {
     return <DashboardSkeleton title="Cargando conversiones..." />;
@@ -1637,14 +1638,10 @@ export default function DashboardConversionesPage() {
       />
 
       {saveMsg && (
-        <p className={`ui-alert text-sm ${saveMsg.includes("Error") ? "border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-[var(--color-danger)]" : "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-[var(--color-success)]"}`} role="alert">
-          {saveMsg}
-        </p>
+        <ActionNotice message={saveMsg} tone={saveMsgTone} noticeKey={saveMsgNoticeKey} />
       )}
       {clearMsg && (
-        <p className={`ui-alert text-sm ${clearMsg.includes("Error") ? "border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-[var(--color-danger)]" : "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-[var(--color-success)]"}`} role="alert">
-          {clearMsg}
-        </p>
+        <ActionNotice message={clearMsg} tone={clearMsgTone} noticeKey={clearMsgNoticeKey} />
       )}
       <ClearConversionsViewModal
         open={clearViewOpen}

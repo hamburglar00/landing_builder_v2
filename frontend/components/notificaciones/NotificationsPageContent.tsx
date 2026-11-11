@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { useActionMessage, ActionNotice } from "@/components/ui/ActionNotice";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   NotificationBotConfig,
@@ -32,6 +33,10 @@ function notificationSettingsKey(cfg: NotificationSettings | null) {
     notify_hour: cfg.notify_hour,
     timezone: cfg.timezone,
   });
+}
+
+function hasSavedBot(config: NotificationBotConfig | null) {
+  return Boolean(config?.telegram_bot_token?.trim() || config?.telegram_bot_username?.trim());
 }
 
 function ToggleSwitch({
@@ -88,9 +93,11 @@ export default function NotificationsPageContent({
     botConfig ?? { telegram_bot_token: "", telegram_bot_username: "" },
   );
   const [cfg, setCfg] = useState<NotificationSettings | null>(settings);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [sourceBot, setSourceBot] = useState(botConfig);
+  const [sourceSettings, setSourceSettings] = useState(settings);
+  const [msg, setMsg, msgNoticeKey] = useActionMessage<string | null>(null);
   const [msgType, setMsgType] = useState<"success" | "error">("success");
-  const [botEditable, setBotEditable] = useState(false);
+  const [botEditable, setBotEditable] = useState(() => !hasSavedBot(botConfig));
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [copyOk, setCopyOk] = useState(false);
   const onSaveSettingsRef = useRef(onSaveSettings);
@@ -100,17 +107,19 @@ export default function NotificationsPageContent({
     onSaveSettingsRef.current = onSaveSettings;
   }, [onSaveSettings]);
 
-  useEffect(() => {
+  // Reconcile refreshed server props before rendering the editable draft.
+  if (sourceBot !== botConfig) {
+    setSourceBot(botConfig);
     setBot(botConfig ?? { telegram_bot_token: "", telegram_bot_username: "" });
-    const hasSavedBot = Boolean(
-      String(botConfig?.telegram_bot_token ?? "").trim() ||
-      String(botConfig?.telegram_bot_username ?? "").trim(),
-    );
-    setBotEditable(!hasSavedBot);
-  }, [botConfig]);
+    setBotEditable(!hasSavedBot(botConfig));
+  }
+
+  if (sourceSettings !== settings) {
+    setSourceSettings(settings);
+    setCfg(settings);
+  }
 
   useEffect(() => {
-    setCfg(settings);
     lastSavedSettingsKeyRef.current = notificationSettingsKey(settings);
   }, [settings]);
 
@@ -122,15 +131,17 @@ export default function NotificationsPageContent({
       try {
         await onSaveSettingsRef.current(cfg);
         lastSavedSettingsKeyRef.current = notificationSettingsKey(cfg);
+        setMsgType("success");
+        setMsg("Configuración de notificaciones guardada.");
       } catch (e) {
         console.error(e);
         setMsgType("error");
         setMsg("No se pudo guardar la configuracion de notificaciones.");
-        setTimeout(() => setMsg(null), 3000);
+
       }
     }, 700);
     return () => window.clearTimeout(timeout);
-  }, [cfg]);
+  }, [cfg, setMsg]);
 
   const connectUrl = useMemo(() => {
     const username = String(bot.telegram_bot_username || "").trim().replace(/^@/, "");
@@ -173,16 +184,7 @@ export default function NotificationsPageContent({
       />
 
       {msg && (
-        <p
-          className={`ui-alert text-sm ${
-            msgType === "error"
-              ? "border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-[var(--color-danger)]"
-              : "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-[var(--color-success)]"
-          }`}
-          role="alert"
-        >
-          {msg}
-        </p>
+        <ActionNotice message={msg} tone={msgType} noticeKey={msgNoticeKey} />
       )}
 
       {isAdmin && (
@@ -237,8 +239,6 @@ export default function NotificationsPageContent({
                   console.error(e);
                   setMsgType("error");
                   setMsg("No se pudo guardar el bot. Revisa permisos o intenta nuevamente.");
-                } finally {
-                  setTimeout(() => setMsg(null), 3000);
                 }
               }}
               className="rounded-lg border border-zinc-700 bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50"
@@ -341,8 +341,6 @@ export default function NotificationsPageContent({
                         console.error(e);
                         setMsgType("error");
                         setMsg("No se pudo desconectar el Telegram.");
-                      } finally {
-                        setTimeout(() => setMsg(null), 2500);
                       }
                     }}
                     className="rounded-md border border-red-700/60 px-2 py-1 text-[11px] font-medium text-red-300 hover:bg-red-950/40 disabled:opacity-50"
@@ -366,8 +364,6 @@ export default function NotificationsPageContent({
                         console.error(e);
                         setMsgType("error");
                         setMsg("No se pudo desconectar el Telegram.");
-                      } finally {
-                        setTimeout(() => setMsg(null), 2500);
                       }
                     }}
                     className="rounded-md border border-red-700/60 px-2 py-1 text-[11px] font-medium text-red-300 hover:bg-red-950/40 disabled:opacity-50"

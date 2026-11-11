@@ -1,4 +1,5 @@
 "use client";
+import { useActionMessage, ActionNotice } from "@/components/ui/ActionNotice";
 import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import {
@@ -619,7 +620,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const [gerenciaFilterOpen, setGerenciaFilterOpen] = useState(false);
   const [threadActionsOpen, setThreadActionsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError, errorNoticeKey] = useActionMessage<string | null>(null);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [messagesError, setMessagesError] = useState<string | null>(null);
   const [messagesCursor, setMessagesCursor] = useState<WhatsappCloudApiInboxCursor | null>(null);
@@ -635,7 +636,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const [manualMessage, setManualMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [markingAllRead, setMarkingAllRead] = useState(false);
-  const [sendNotice, setSendNotice] = useState<string | null>(null);
+  const [sendNotice, setSendNotice, sendNoticeNoticeKey] = useActionMessage<string | null>(null);
   const { hiddenContactIds, hideContactId } = useWhatsappCloudApiHiddenContacts(
     workspaceCurrency,
   );
@@ -707,7 +708,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     } finally {
       if (!options.silent && request === listRequestRef.current) setLoading(false);
     }
-  }, [dateRange, mode, pageIndex, router, serverTagFilter, tagFilter, unreadOnly, workspaceCurrency]);
+  }, [dateRange, mode, pageIndex, router, serverTagFilter, tagFilter, unreadOnly, workspaceCurrency, setError]);
 
   useEffect(() => {
     void loadThreads();
@@ -737,13 +738,9 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   useEffect(() => {
     setManualMessage("");
     setSendNotice(null);
-  }, [selectedId]);
+  }, [selectedId, setSendNotice]);
 
-  useEffect(() => {
-    if (!sendNotice) return;
-    const timeout = window.setTimeout(() => setSendNotice(null), 3500);
-    return () => window.clearTimeout(timeout);
-  }, [sendNotice]);
+
 
   const gerenciaOptions = useMemo(() => {
     return Array.from(
@@ -1294,9 +1291,9 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         }
       />
 
-      {error ? <div className="ui-alert-error">{error}</div> : null}
+      {error ? <ActionNotice message={error} tone={"error"} noticeKey={errorNoticeKey} /> : null}
       {sendNotice ? (
-        <div className="ui-alert ui-alert-success text-sm">{sendNotice}</div>
+        <ActionNotice message={sendNotice} noticeKey={sendNoticeNoticeKey} />
       ) : null}
 
       <SurfaceCard className="grid grid-cols-1 overflow-hidden xl:h-[38rem] xl:grid-cols-[20rem_minmax(0,1fr)_18rem]">

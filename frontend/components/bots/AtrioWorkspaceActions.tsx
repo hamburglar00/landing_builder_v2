@@ -7,7 +7,7 @@ import {
 } from "@/lib/atrio/managerDestinations";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import { BotResetIcon } from "./BotActionIcons";
-import { ActionNotice } from "@/components/ui/ActionNotice";
+import { ActionNotice, useActionMessage } from "@/components/ui/ActionNotice";
 export function AtrioWorkspaceActions({
   clients,
   onChanged,
@@ -24,8 +24,8 @@ export function AtrioWorkspaceActions({
   const confirm = useAppConfirm(),
     inFlight = useRef(false),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+    [error, setError, errorNoticeKey] = useActionMessage("");
+  const [notice, setNotice, noticeNoticeKey] = useActionMessage("");
   async function reset(metric: BotResetMetric) {
     if (inFlight.current || !(hasClients ?? !!clients.length)) return;
     inFlight.current = true;
@@ -81,7 +81,7 @@ export function AtrioWorkspaceActions({
   </>;
   return <div className="space-y-2">
     {render ? render(actions) : <details className="w-fit rounded-lg border border-zinc-800 px-3 py-2 text-xs text-zinc-400"><summary className="cursor-pointer">Métricas de Atrio</summary><div className="mt-3 flex flex-wrap gap-3">{actions}</div></details>}
-      <ActionNotice message={notice} />
-      <ActionNotice message={error} tone="error" />
+      <ActionNotice noticeKey={noticeNoticeKey} message={notice} />
+      <ActionNotice noticeKey={errorNoticeKey} message={error} tone="error" />
   </div>;
 }

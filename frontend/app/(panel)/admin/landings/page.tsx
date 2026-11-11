@@ -1,5 +1,6 @@
 "use client";
 
+import { useActionMessage, ActionNotice, useActionFeedback } from "@/components/ui/ActionNotice";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -26,7 +27,8 @@ export default function AdminLandingsPage() {
   const [clientLandings, setClientLandings] = useState<Landing[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError, errorNoticeKey] = useActionMessage<string | null>(null);
+  const notify = useActionFeedback();
   const [creating, setCreating] = useState(false);
   const [urlBase, setUrlBase] = useState<string | null>(null);
   const [clientLabelsByUserId, setClientLabelsByUserId] = useState<Record<string, string>>({});
@@ -84,7 +86,7 @@ export default function AdminLandingsPage() {
     };
 
     void init();
-  }, [router, workspaceCurrency]);
+  }, [router, workspaceCurrency, setError]);
 
   const handleCreate = async () => {
     if (!userId) return;
@@ -96,6 +98,7 @@ export default function AdminLandingsPage() {
         comment: "",
         config: { ...DEFAULT_CONFIG, marketCountry: workspaceCurrency === "PYG" ? "PY" : "AR" },
       });
+      notify("Landing creada. Completá su configuración.");
       router.push(`${BASE}/${id}/editar`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al crear la landing");
@@ -116,6 +119,7 @@ export default function AdminLandingsPage() {
         comment: "",
         config: { ...DEFAULT_CONFIG, marketCountry: workspaceCurrency === "PYG" ? "PY" : "AR" },
       });
+      notify("Landing externa creada. Completá su configuración.");
       router.push(`${BASE}/${id}/editar`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al conectar landing existente");
@@ -148,9 +152,7 @@ export default function AdminLandingsPage() {
   return (
     <div className="space-y-6">
       {error && (
-        <p className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-sm text-[var(--color-danger)]" role="alert">
-          {error}
-        </p>
+        <ActionNotice message={error} tone={"error"} noticeKey={errorNoticeKey} />
       )}
       <PageHeader
         title="Landings"

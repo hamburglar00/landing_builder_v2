@@ -1,5 +1,6 @@
 "use client";
 
+import { useActionMessage, ActionNotice } from "@/components/ui/ActionNotice";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
@@ -122,8 +123,8 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
       .finally(() => { if (!controller.signal.aborted) setDirectoryBusy(false); });
     return () => controller.abort();
   }, [directoryClientIds, refreshDirectory]);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError, errorNoticeKey] = useActionMessage<string | null>(null);
+  const [success, setSuccess, successNoticeKey] = useActionMessage<string | null>(null);
 
   const loadClients = async (nextUserId = userId) => {
     if (!nextUserId || isAllCurrencies) return;
@@ -164,11 +165,7 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, workspaceCurrency, isAllCurrencies, mode]);
 
-  useEffect(() => {
-    if (!success) return;
-    const timeoutId = window.setTimeout(() => setSuccess(null), 2600);
-    return () => window.clearTimeout(timeoutId);
-  }, [success]);
+
 
   const normalizedSlug = normalizeAtrioSlug(form.slug);
   const previewUrl = buildAtrioUrl(normalizedSlug);
@@ -315,15 +312,11 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
       />
 
       {error ? (
-        <p className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-sm text-[var(--color-danger)]" role="alert">
-          {error}
-        </p>
+        <ActionNotice message={error} tone={"error"} noticeKey={errorNoticeKey} />
       ) : null}
 
       {success ? (
-        <p className="ui-alert border-[rgba(0,214,143,0.35)] bg-[rgba(0,214,143,0.08)] text-sm text-[var(--color-primary)]" role="status">
-          {success}
-        </p>
+        <ActionNotice message={success} noticeKey={successNoticeKey} />
       ) : null}
 
       <div className={styles.toolbar}>

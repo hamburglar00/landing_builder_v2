@@ -1,5 +1,7 @@
 "use client";
 
+import { TrashIcon } from "@/components/ui/TrashIcon";
+import { useActionMessage, ActionNotice, useActionFeedback } from "@/components/ui/ActionNotice";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { invokeFunction } from "@/lib/supabaseFunctions";
@@ -31,7 +33,8 @@ export default function AdminClientesPage() {
   const confirmAction = useAppConfirm();
   const [clients, setClients] = useState<ClientUser[]>([]);
   const [isLoadingClients, setIsLoadingClients] = useState(false);
-  const [clientsError, setClientsError] = useState<string | null>(null);
+  const [clientsError, setClientsError, clientsErrorNoticeKey] = useActionMessage<string | null>(null);
+  const notify = useActionFeedback();
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -88,7 +91,7 @@ export default function AdminClientesPage() {
         last_sign_in_at: u.last_sign_in_at,
       })),
     );
-  }, []);
+  }, [setClientsError]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -125,6 +128,7 @@ export default function AdminClientesPage() {
     }
 
     setClients((prev) => prev.filter((client) => client.id !== clientId));
+    notify("Cliente eliminado.");
   };
 
   return (
@@ -251,8 +255,9 @@ export default function AdminClientesPage() {
                         type="button"
                         onClick={() => void handleDeleteClient(client.id)}
                         disabled={deletingClientId === client.id}
-                        className="rounded-md border border-red-700 px-3 py-1 text-xs font-medium text-red-300 transition hover:bg-red-800/60 disabled:cursor-not-allowed disabled:opacity-70"
+                        className="rounded-md border border-red-700 px-3 py-1 text-xs font-medium text-red-300 transition hover:bg-red-800/60 disabled:cursor-not-allowed disabled:opacity-70 ui-button-danger inline-flex items-center gap-1.5"
                       >
+              <TrashIcon />
                         {deletingClientId === client.id
                           ? "Eliminando..."
                           : "Eliminar"}
@@ -266,9 +271,7 @@ export default function AdminClientesPage() {
         </div>
 
         {clientsError && (
-          <p className="mt-3 text-xs text-red-400" role="alert">
-            {clientsError}
-          </p>
+          <ActionNotice message={clientsError} tone={"error"} noticeKey={clientsErrorNoticeKey} />
         )}
       </section>
     </div>

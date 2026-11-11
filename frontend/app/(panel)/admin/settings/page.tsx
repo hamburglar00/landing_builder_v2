@@ -1,5 +1,6 @@
 "use client";
 
+import { useActionMessage, ActionNotice, useActionFeedback } from "@/components/ui/ActionNotice";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { getSettings, updateSettings } from "@/lib/settingsDb";
@@ -8,6 +9,7 @@ import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 
 export default function AdminSettingsPage() {
+  const notify = useActionFeedback();
   const [urlBase, setUrlBase] = useState("");
   const [showClientLandingPreview, setShowClientLandingPreview] =
     useState(true);
@@ -15,7 +17,7 @@ export default function AdminSettingsPage() {
   const [adminNombre, setAdminNombre] = useState("");
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError, errorNoticeKey] = useActionMessage<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -47,7 +49,7 @@ export default function AdminSettingsPage() {
       }
     };
     void init();
-  }, []);
+  }, [setError]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -62,11 +64,13 @@ export default function AdminSettingsPage() {
         showClientLandingPreview,
       });
       if (user) {
-        await supabase
+        const { error: profileError } = await supabase
           .from("profiles")
           .update({ nombre: adminNombre.trim() })
           .eq("id", user.id);
+        if (profileError) throw profileError;
       }
+      notify("Configuración guardada.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al guardar");
     } finally {
@@ -85,12 +89,7 @@ export default function AdminSettingsPage() {
         description="Parámetros globales de la aplicación, disponibles solo para administradores."
       />
       {error && (
-        <p
-          className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-sm text-[var(--color-danger)]"
-          role="alert"
-        >
-          {error}
-        </p>
+        <ActionNotice message={error} tone={"error"} noticeKey={errorNoticeKey} />
       )}
       <form onSubmit={handleSubmit} className="ui-card max-w-2xl space-y-5 p-5 sm:p-6">
         <div>

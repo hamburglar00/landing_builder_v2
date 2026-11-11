@@ -1,4 +1,5 @@
 "use client";
+import { useActionMessage, ActionNotice } from "@/components/ui/ActionNotice";
 import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useEffect, useState } from "react";
@@ -20,7 +21,7 @@ export default function AdminClienteLandingsPage() {
   const [landings, setLandings] = useState<Landing[]>([]);
   const [clientName, setClientName] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError, errorNoticeKey] = useActionMessage<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -51,7 +52,7 @@ export default function AdminClienteLandingsPage() {
     };
 
     void init();
-  }, [router, clientId, workspaceCurrency]);
+  }, [router, clientId, workspaceCurrency, setError]);
 
   if (!ready) {
     return (
@@ -81,9 +82,7 @@ export default function AdminClienteLandingsPage() {
       />
 
       {error && (
-        <p className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-sm text-[var(--color-danger)]" role="alert">
-          {error}
-        </p>
+        <ActionNotice message={error} tone={"error"} noticeKey={errorNoticeKey} />
       )}
 
       {landings.length === 0 ? (

@@ -1,4 +1,5 @@
 "use client";
+import { useActionMessage, ActionNotice } from "@/components/ui/ActionNotice";
 import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -90,7 +91,7 @@ export default function WhatsAppCloudApiContactsPageContent({ mode }: Props) {
   const [pageIndex, setPageIndex] = useState(0);
   const [totalContacts, setTotalContacts] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError, errorNoticeKey] = useActionMessage<string | null>(null);
   const [contactToHide, setContactToHide] =
     useState<WhatsappCloudApiContactsPageRow | null>(null);
   const { hiddenContactIds, hideContactId } = useWhatsappCloudApiHiddenContacts(
@@ -129,7 +130,7 @@ export default function WhatsAppCloudApiContactsPageContent({ mode }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [mode, pageIndex, router, workspaceCurrency]);
+  }, [mode, pageIndex, router, workspaceCurrency, setError]);
 
   useEffect(() => {
     void loadContacts();
@@ -185,7 +186,7 @@ export default function WhatsAppCloudApiContactsPageContent({ mode }: Props) {
         }
       />
 
-      {error ? <div className="ui-alert-error">{error}</div> : null}
+      {error ? <ActionNotice message={error} tone={"error"} noticeKey={errorNoticeKey} /> : null}
 
       <SurfaceCard className="overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border-subtle)] p-4">

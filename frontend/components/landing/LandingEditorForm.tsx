@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { useActionMessage, ActionNotice } from "@/components/ui/ActionNotice";
 import { useId, useState } from "react";
 import type {
   LandingTemplate4ChatConfig,
@@ -220,7 +221,7 @@ export function LandingEditorForm({
   const formId = useId();
   const fieldId = (name: string) => `${formId}-${name}`;
   const [probarLoading, setProbarLoading] = useState(false);
-  const [probarError, setProbarError] = useState<string | null>(null);
+  const [probarError, setProbarError, probarErrorNoticeKey] = useActionMessage<string | null>(null);
   const [showJsonModal, setShowJsonModal] = useState(false);
   const [copying, setCopying] = useState(false);
   const [copyOk, setCopyOk] = useState(false);
@@ -569,7 +570,7 @@ export function LandingEditorForm({
                 </button>
               </div>
               {probarError && (
-                <p className="text-[11px] text-red-300">{probarError}</p>
+                <ActionNotice message={probarError} tone={"error"} noticeKey={probarErrorNoticeKey} />
               )}
             </div>
           )}

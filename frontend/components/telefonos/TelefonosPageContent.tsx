@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { TrashIcon } from "@/components/ui/TrashIcon";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -10,7 +11,7 @@ import { fetchGerencias, fetchGerenciasForAdmin } from "@/lib/gerencias/gerencia
 import type { PhoneKind } from "@/lib/landing/types";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { ModalShell, PageHeader } from "@/components/ui/PanelPrimitives";
-import { ActionNotice } from "@/components/ui/ActionNotice";
+import { ActionNotice, useActionMessage } from "@/components/ui/ActionNotice";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import ModalPortal from "@/components/ui/ModalPortal";
 import { CURRENCY_ALL } from "@/lib/currency";
@@ -157,8 +158,8 @@ export function TelefonosPageContent({
   >({});
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [error, setError, errorNoticeKey] = useActionMessage<string | null>(null);
+  const [notice, setNotice, noticeNoticeKey] = useActionMessage<string | null>(null);
   const [syncingGerenciaId, setSyncingGerenciaId] = useState<number | null>(
     null,
   );
@@ -329,7 +330,7 @@ export function TelefonosPageContent({
       }
     };
     void init();
-  }, [loadData]);
+  }, [loadData, setError, setNotice]);
 
   // Cuenta regresiva hasta la próxima ejecución real del cron (*/5 en UTC: :00, :05, :10, ...)
   // Cuando llega a 00:00 se recargan los datos para mostrar los teléfonos actualizados por el cron.
@@ -855,7 +856,7 @@ export function TelefonosPageContent({
 
   return (
     <div className="space-y-6">
-      <ActionNotice message={notice} />
+      <ActionNotice noticeKey={noticeNoticeKey} message={notice} />
       {backLink && backLabel ? (
         <div className="flex flex-wrap items-center justify-between gap-4">
           <a
@@ -880,7 +881,7 @@ export function TelefonosPageContent({
         feedback={<>
           {!bots.busy && bots.projectionPending>0 && <p role="status" className="text-xs text-zinc-400">El directorio de Atrio se está actualizando en segundo plano.</p>}
           <ActionNotice message={bots.error} tone="error"><button type="button" className="ml-2 underline" onClick={bots.reload}>Reintentar</button></ActionNotice>
-          <ActionNotice message={error} tone="error" /></>}
+          <ActionNotice noticeKey={errorNoticeKey} message={error} tone="error" /></>}
         globalSyncing={globalSyncing} canSync={bots.hasPbadmin || canAtrio}
         resettingCounters={globalResetting} resettingMessages={globalResettingMessages} deletingInactive={globalDeletingInactive}
         hasPhoneGroups={bots.counts.whatsapp>0} autoReset={autoResetDaily} autoResetSaving={autoResetSaving}
@@ -917,7 +918,7 @@ export function TelefonosPageContent({
       {unifiedBots&&bots.error&&<p role="alert" className="text-xs text-amber-300">{bots.error} <button type="button" className="underline" onClick={bots.reload}>Reintentar</button></p>}
       {unifiedBots&&canAtrio&&!!bots.clients.length&&<AtrioWorkspaceActions clients={bots.clients} onChanged={bots.reload}/>}
 
-      <ActionNotice message={error} tone="error" />
+      <ActionNotice noticeKey={errorNoticeKey} message={error} tone="error" />
 
       {/* Botones globales */}
       <div className="ui-card p-4">
@@ -1018,8 +1019,9 @@ export function TelefonosPageContent({
               onClick={() => void handleDeleteInactive()}
               disabled={globalDeletingInactive || !gerencias.length}
               title="Borra de forma permanente los telefonos inactivos de todas las gerencias."
-              className="rounded-lg border border-red-700 bg-red-900/20 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-900/35 disabled:opacity-60"
+              className="rounded-lg border border-red-700 bg-red-900/20 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-900/35 disabled:opacity-60 ui-button-danger inline-flex items-center gap-1.5"
             >
+              <TrashIcon />
               {globalDeletingInactive ? "Borrando..." : "Borrar telefonos inactivos"}
             </button>
           </div>

@@ -1,4 +1,7 @@
 "use client";
+import { TrashIcon } from "@/components/ui/TrashIcon";
+import { ActionNotice, useActionMessage, useActionFeedback } from "@/components/ui/ActionNotice";
+import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -278,7 +281,8 @@ function RuleRow({
             />
           </label>
         ) : <div className="hidden lg:block" />}
-        <button type="button" onClick={onRemove} className="h-9 rounded-lg border border-red-900/60 px-3 text-xs text-red-300 hover:bg-red-950/30">
+        <button type="button" onClick={onRemove} className="h-9 rounded-lg border border-red-900/60 px-3 text-xs text-red-300 hover:bg-red-950/30 ui-button-danger inline-flex items-center gap-1.5">
+              <TrashIcon />
           Quitar
         </button>
       </div>
@@ -364,6 +368,8 @@ function ConditionsHelpModal({
 }
 
 export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
+  const notify = useActionFeedback();
+  const confirmAction = useAppConfirm();
   const initialConfig = useMemo(() => createDefaultMetaAudienceConfig(currency), [currency]);
   const initialRange = useMemo(() => resolveMetaAudiencePeriod(initialConfig.period), [initialConfig]);
   const [config, setConfig] = useState<MetaAudienceConfig>(initialConfig);
@@ -372,7 +378,7 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
   const [draftEndDate, setDraftEndDate] = useState(() => dateInputValue(initialRange.end));
   const [buyers, setBuyers] = useState<MetaAudiencePerson[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError, errorNoticeKey] = useActionMessage<string | null>(null);
   const [conditionsHelpOpen, setConditionsHelpOpen] = useState(false);
   const [presetModalOpen, setPresetModalOpen] = useState(false);
   const [savedModalOpen, setSavedModalOpen] = useState(false);
@@ -428,7 +434,7 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
     } finally {
       if (loadRequestId.current === requestId) setLoading(false);
     }
-  }, [config.currency, config.period, loadBuyers]);
+  }, [config.currency, config.period, loadBuyers, setError]);
 
   useEffect(() => {
     void load();
@@ -548,7 +554,7 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
     } finally {
       setSavedLoading(false);
     }
-  }, [currency]);
+  }, [currency, setError]);
 
   const showSavedConfigs = () => {
     setModalError(null);
@@ -585,6 +591,7 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
       setDraftLabel(saved.name);
       setBaselineFingerprint(metaAudienceConfigFingerprint(saved.config));
       setSavedConfigs((current) => current.map((item) => item.id === saved.id ? saved : item));
+      notify("Audiencia guardada.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo guardar la audiencia.");
     } finally {
@@ -616,6 +623,7 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
         setSavedConfigs((current) => [saved, ...current]);
       }
       setNameModal(null);
+      notify("Configuración de audiencia guardada.");
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "No se pudo completar la operación.";
       setError(message);
@@ -626,10 +634,11 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
   };
 
   const removeSavedConfig = async (saved: SavedMetaAudienceConfig) => {
-    if (!window.confirm(`¿Eliminar la audiencia “${saved.name}”?`)) return;
+    if (!(await confirmAction({ title: "Eliminar audiencia", description: `Se eliminará “${saved.name}”.`, confirmLabel: "Eliminar audiencia", danger: true }))) return;
     setError(null);
     try {
       await deleteSavedMetaAudienceConfig(saved);
+      notify("Audiencia eliminada.");
       setSavedConfigs((current) => current.filter((item) => item.id !== saved.id));
       if (activeSaved?.id === saved.id) {
         setActiveSaved(null);
@@ -666,7 +675,7 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
         </div>
       </div>
 
-      {error ? <div className="mt-4 rounded-lg border border-red-900/60 bg-red-950/25 px-3 py-2 text-xs text-red-300" role="alert">Error al cargar los datos: {error}</div> : null}
+      <ActionNotice message={error} tone="error" noticeKey={errorNoticeKey} />
 
       <div className="mt-5">
         <p className="text-xs font-semibold text-zinc-200">1. Tipo de audiencia</p>

@@ -586,8 +586,8 @@ export function LandingPreview({
               </div>
             </div>
             <div className="flex flex-col gap-2 px-3 pt-5">
-              <div className="mx-auto inline-flex max-w-full items-center gap-3 rounded-full border border-[#25d366]/30 bg-[#25d366]/10 px-3 py-2 text-center text-[18px] font-bold text-slate-100">
-                <span className="h-3 w-3 shrink-0 rounded-full bg-[#25d366]" />
+              <div className="mx-auto inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#25d366]/30 bg-[#25d366]/10 px-1.5 py-1 text-center text-[9px] font-bold text-slate-100">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25d366]" />
                 <span className="min-w-0"><b>{template4LiveCount}</b> personas están escribiendo en este momento</span>
               </div>
               <div className="max-w-[82%] rounded-[12px] rounded-bl bg-[#223237] px-2.5 py-2 text-[10px] font-semibold leading-snug text-white shadow-[0_3px_12px_rgba(0,0,0,0.34)]">
@@ -658,8 +658,8 @@ export function LandingPreview({
           </div>
           <div ref={template4Thread} className="relative z-[1] min-h-0 flex-1 overflow-hidden px-4 py-3">
             <div data-template4-stack className="relative flex flex-col gap-[calc(9px*var(--template4-fit,0.6))]">
-              <div className="template4__live-pill mx-auto inline-flex max-w-full items-center gap-3 rounded-full border border-[#25d366]/30 bg-[#25d366]/10 px-3 py-2 text-center text-[clamp(18px,5.12cqw,25px)] font-bold leading-[1.2] text-slate-100">
-                <span className="h-3 w-3 shrink-0 rounded-full bg-[#25d366]" />
+              <div className="template4__live-pill mx-auto inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#25d366]/30 bg-[#25d366]/10 px-1.5 py-1 text-center text-[clamp(9px,2.56cqw,12.5px)] font-bold leading-[1.2] text-slate-100">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25d366]" />
                 <span className="min-w-0">
                   <b>{template4LiveCount}</b> personas están escribiendo en este momento
                 </span>

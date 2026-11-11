@@ -1,5 +1,7 @@
 ﻿"use client";
 
+import { TrashIcon } from "@/components/ui/TrashIcon";
+import { useActionMessage, ActionNotice, useActionResult } from "@/components/ui/ActionNotice";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/lib/supabaseClient";
@@ -285,18 +287,18 @@ export default function IntegracionesMetaCapi() {
   const [pixelConfigs, setPixelConfigs] = useState<PixelConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [saveMsg, setSaveMsg, saveMsgNoticeKey, saveMsgTone] = useActionResult();
 
   const [quickOpen, setQuickOpen] = useState(false);
   const [quickPixelId, setQuickPixelId] = useState("");
   const [quickToken, setQuickToken] = useState("");
   const [quickComment, setQuickComment] = useState("");
   const [quickCurrency, setQuickCurrency] = useState("ARS");
-  const [quickErr, setQuickErr] = useState<string | null>(null);
+  const [quickErr, setQuickErr, quickErrNoticeKey] = useActionMessage<string | null>(null);
   const [quickTestCode, setQuickTestCode] = useState("");
   const [needsTestCode, setNeedsTestCode] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
-  const [connectionResult, setConnectionResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [connectionResult, setConnectionResult, connectionResultNoticeKey] = useActionMessage<{ ok: boolean; message: string } | null>(null);
   const connectionVersion = useRef(0);
   const testConnection = async () => {
     if (needsTestCode && !quickTestCode.trim()) {
@@ -332,13 +334,13 @@ export default function IntegracionesMetaCapi() {
   }
   const [selectedIntegration, setActiveIntegration] = useState<ActiveIntegration>("menu");
   const activeIntegration = canViewClientIntegration(selectedIntegration, modulePermissions) ? selectedIntegration : "menu";
-  const [constructorCopyMsg, setConstructorCopyMsg] = useState<string | null>(null);
+  const [constructorCopyMsg, setConstructorCopyMsg, constructorCopyMsgNoticeKey] = useActionMessage<string | null>(null);
   const [kommoConfig, setKommoConfig] = useState<KommoClientConfig | null>(null);
   const [kommoBaseUrl, setKommoBaseUrl] = useState("");
   const [kommoToken, setKommoToken] = useState("");
   const [kommoActive, setKommoActive] = useState(true);
   const [kommoSaving, setKommoSaving] = useState(false);
-  const [kommoMsg, setKommoMsg] = useState<string | null>(null);
+  const [kommoMsg, setKommoMsg, kommoMsgNoticeKey, kommoMsgTone] = useActionResult();
   const [editKommoUrl, setEditKommoUrl] = useState(false);
   const [editKommoToken, setEditKommoToken] = useState(false);
   const [chatraceConfig, setChatraceConfig] = useState<ChatraceClientConfig | null>(null);
@@ -350,7 +352,7 @@ export default function IntegracionesMetaCapi() {
   const [chatraceMessagingDatasetId, setChatraceMessagingDatasetId] = useState("");
   const [chatraceMessagingAccessToken, setChatraceMessagingAccessToken] = useState("");
   const [chatraceSaving, setChatraceSaving] = useState(false);
-  const [chatraceMsg, setChatraceMsg] = useState<string | null>(null);
+  const [chatraceMsg, setChatraceMsg, chatraceMsgNoticeKey, chatraceMsgTone] = useActionResult();
   const [chatraceGerencias, setChatraceGerencias] = useState<Gerencia[]>([]);
   const [chatraceAssignments, setChatraceAssignments] = useState<LandingGerenciaAssignment[]>([]);
   const [chatraceGerenciaSelectionMode, setChatraceGerenciaSelectionMode] = useState<"weighted_random" | "fair">("weighted_random");
@@ -359,7 +361,7 @@ export default function IntegracionesMetaCapi() {
   const [chatraceTrackingOpen, setChatraceTrackingOpen] = useState(true);
   const [chatraceRedirectOpen, setChatraceRedirectOpen] = useState(true);
   const [chatraceDetailsOpen, setChatraceDetailsOpen] = useState(false);
-  const [chatraceCopyMsg, setChatraceCopyMsg] = useState<string | null>(null);
+  const [chatraceCopyMsg, setChatraceCopyMsg, chatraceCopyMsgNoticeKey] = useActionMessage<string | null>(null);
 
   const endpointBase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const endpointUrl = useMemo(
@@ -528,7 +530,7 @@ export default function IntegracionesMetaCapi() {
           sync_error: null,
           last_synced_at: new Date().toISOString(),
         });
-        setKommoMsg("Configuración de Kommo guardada y sincronizada.");
+        setKommoMsg("Configuración de Kommo guardada y sincronizada.", "success");
         setEditKommoUrl(false);
         setEditKommoToken(false);
       } else {
@@ -549,7 +551,7 @@ export default function IntegracionesMetaCapi() {
     } finally {
       setKommoSaving(false);
     }
-  }, [userId, clientName, kommoBaseUrl, kommoToken, kommoActive, validateKommoInput, syncKommoRemote, loadAll]);
+  }, [userId, clientName, kommoBaseUrl, kommoToken, kommoActive, validateKommoInput, syncKommoRemote, loadAll, setKommoMsg]);
 
   const handleChatraceSave = useCallback(async () => {
     if (!userId) return;
@@ -613,7 +615,7 @@ export default function IntegracionesMetaCapi() {
         const { error: asgErr } = await supabase.from("chatrace_gerencias").insert(rows);
         if (asgErr) throw asgErr;
       }
-      setChatraceMsg("Configuración de Chatrace guardada.");
+      setChatraceMsg("Configuración de Chatrace guardada.", "success");
       await loadAll(userId);
     } catch (e) {
       setChatraceMsg(e instanceof Error ? e.message : "Error al guardar Chatrace.");
@@ -636,6 +638,7 @@ export default function IntegracionesMetaCapi() {
     chatraceGerenciaFairCriterion,
     chatraceAssignments,
     loadAll,
+    setChatraceMsg,
   ]);
 
   const handleKommoRetrySync = useCallback(async () => {
@@ -663,7 +666,7 @@ export default function IntegracionesMetaCapi() {
           sync_error: null,
           last_synced_at: new Date().toISOString(),
         });
-        setKommoMsg("Sincronización Kommo OK.");
+        setKommoMsg("Sincronización Kommo OK.", "success");
       } else {
         await upsertKommoClientConfig({
           user_id: userId,
@@ -679,7 +682,7 @@ export default function IntegracionesMetaCapi() {
     } finally {
       setKommoSaving(false);
     }
-  }, [userId, clientName, kommoBaseUrl, kommoToken, kommoActive, validateKommoInput, syncKommoRemote, loadAll]);
+  }, [userId, clientName, kommoBaseUrl, kommoToken, kommoActive, validateKommoInput, syncKommoRemote, loadAll, setKommoMsg]);
 
   const handleCopyConstructorEndpoint = useCallback(async () => {
     if (!endpointUrl) return;
@@ -689,17 +692,17 @@ export default function IntegracionesMetaCapi() {
     } catch {
       setConstructorCopyMsg("No se pudo copiar. Selecciona y copia el endpoint manualmente.");
     }
-  }, [endpointUrl]);
+  }, [endpointUrl, setConstructorCopyMsg]);
 
   const handleCopyChatraceText = useCallback(async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
       setChatraceCopyMsg(`${label} copiado.`);
-      setTimeout(() => setChatraceCopyMsg(null), 2200);
+
     } catch {
       setChatraceCopyMsg("No se pudo copiar. Selecciona y copia manualmente.");
     }
-  }, []);
+  }, [setChatraceCopyMsg]);
 
   useEffect(() => {
     const section = resolveIntegrationSection(new URLSearchParams(window.location.search).get("section"));
@@ -725,7 +728,7 @@ export default function IntegracionesMetaCapi() {
       }
     };
     void run();
-  }, [loadAll]);
+  }, [loadAll, setSaveMsg]);
 
   const openQuickModal = useCallback(() => {
     connectionVersion.current++;
@@ -738,7 +741,7 @@ export default function IntegracionesMetaCapi() {
     setQuickCurrency(config?.meta_currency ?? "ARS");
     setQuickErr(null);
     setQuickOpen(true);
-  }, [config]);
+  }, [config, setConnectionResult, setQuickErr]);
 
   const handleQuickSave = useCallback(async () => {
     if (!userId || !config) return;
@@ -787,7 +790,7 @@ export default function IntegracionesMetaCapi() {
 
       await loadAll(userId);
       setQuickOpen(false);
-      setSaveMsg("Pixel guardado.");
+      setSaveMsg("Pixel guardado.", "success");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al guardar";
       setQuickErr(msg);
@@ -795,7 +798,7 @@ export default function IntegracionesMetaCapi() {
     } finally {
       setSaving(false);
     }
-  }, [userId, config, quickPixelId, quickToken, quickComment, quickCurrency, pixelConfigs.length, loadAll]);
+  }, [userId, config, quickPixelId, quickToken, quickComment, quickCurrency, pixelConfigs.length, loadAll, setQuickErr, setSaveMsg]);
 
   const handleEdit = useCallback((px: PixelConfig) => {
     setDraft({
@@ -903,13 +906,13 @@ export default function IntegracionesMetaCapi() {
       setEditOpen(false);
       setDraft(null);
       setEditSensitiveFields(false);
-      setSaveMsg("Pixel actualizado.");
+      setSaveMsg("Pixel actualizado.", "success");
     } catch (e) {
       setSaveMsg(e instanceof Error ? e.message : "Error al actualizar");
     } finally {
       setSaving(false);
     }
-  }, [userId, draft, config, loadAll, isAdmin, pixelConfigs]);
+  }, [userId, draft, config, loadAll, isAdmin, pixelConfigs, setSaveMsg]);
 
   const handleSetDefault = useCallback(async (px: PixelConfig) => {
     if (!userId || !config) return;
@@ -958,13 +961,13 @@ export default function IntegracionesMetaCapi() {
       await upsertConversionsConfig(next);
       setConfig(next);
       await loadAll(userId);
-      setSaveMsg("Pixel por defecto actualizado.");
+      setSaveMsg("Pixel por defecto actualizado.", "success");
     } catch (e) {
       setSaveMsg(e instanceof Error ? e.message : "Error al actualizar default");
     } finally {
       setSaving(false);
     }
-  }, [userId, config, loadAll]);
+  }, [userId, config, loadAll, setSaveMsg]);
 
   const handleDelete = useCallback(async (px: PixelConfig) => {
     if (!userId || !config) return;
@@ -980,13 +983,13 @@ export default function IntegracionesMetaCapi() {
     try {
       await deletePixelConfig(userId, px.pixel_id);
       await loadAll(userId);
-      setSaveMsg("Pixel eliminado.");
+      setSaveMsg("Pixel eliminado.", "success");
     } catch (e) {
       setSaveMsg(e instanceof Error ? e.message : "Error al eliminar");
     } finally {
       setSaving(false);
     }
-  }, [userId, config, loadAll, confirmAction]);
+  }, [userId, config, loadAll, confirmAction, setSaveMsg]);
 
   if (loading) {
     return <DashboardSkeleton title="Cargando integraciones..." />;
@@ -1020,9 +1023,7 @@ export default function IntegracionesMetaCapi() {
       />
 
       {saveMsg && (
-        <div className={`ui-alert text-sm ${saveMsg.toLowerCase().includes("error") ? "border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-[var(--color-danger)]" : "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-[var(--color-success)]"}`}>
-          {saveMsg}
-        </div>
+        <ActionNotice message={saveMsg} tone={saveMsgTone} noticeKey={saveMsgNoticeKey} />
       )}
 
       {activeIntegration === "menu" ? (
@@ -1079,9 +1080,7 @@ export default function IntegracionesMetaCapi() {
             </div>
 
             {constructorCopyMsg && (
-              <p className={`mt-2 text-xs ${constructorCopyMsg.includes("copiado") ? "text-emerald-400" : "text-amber-300"}`}>
-                {constructorCopyMsg}
-              </p>
+              <ActionNotice message={constructorCopyMsg} tone={constructorCopyMsg.includes("copiado") ? "success" : "error"} noticeKey={constructorCopyMsgNoticeKey} />
             )}
           </div>
         </div>
@@ -1102,15 +1101,7 @@ export default function IntegracionesMetaCapi() {
 
         <div className="space-y-4 text-sm text-zinc-300">
           {kommoMsg && (
-            <div
-              className={`rounded-lg border px-3 py-2 text-xs ${
-                kommoMsg.toLowerCase().includes("error") || kommoMsg.toLowerCase().includes("fall")
-                  ? "border-amber-800 bg-amber-950/40 text-amber-300"
-                  : "border-emerald-800 bg-emerald-950/40 text-emerald-300"
-              }`}
-            >
-              {kommoMsg}
-            </div>
+            <ActionNotice message={kommoMsg} tone={kommoMsgTone} noticeKey={kommoMsgNoticeKey} />
           )}
 
           <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
@@ -1262,15 +1253,7 @@ export default function IntegracionesMetaCapi() {
 
         <div className="space-y-4 text-sm text-zinc-300">
           {chatraceMsg && (
-            <div
-              className={`rounded-lg border px-3 py-2 text-xs ${
-                chatraceMsg.toLowerCase().includes("error")
-                  ? "border-red-800 bg-red-950/40 text-red-300"
-                  : "border-emerald-800 bg-emerald-950/40 text-emerald-300"
-              }`}
-            >
-              {chatraceMsg}
-            </div>
+            <ActionNotice message={chatraceMsg} tone={chatraceMsgTone} noticeKey={chatraceMsgNoticeKey} />
           )}
 
           <section className="rounded-xl border border-sky-900/70 bg-sky-950/20 p-4">
@@ -1299,7 +1282,7 @@ export default function IntegracionesMetaCapi() {
                 >
                   Descargar plantilla
                 </a>
-                {chatraceCopyMsg && <span className="basis-full text-xs text-emerald-300">{chatraceCopyMsg}</span>}
+                {chatraceCopyMsg && <ActionNotice message={chatraceCopyMsg} tone={chatraceCopyMsg.includes("copiado") ? "success" : "error"} noticeKey={chatraceCopyMsgNoticeKey} />}
               </div>
             </div>
             {chatraceDetailsOpen && (
@@ -1945,8 +1928,8 @@ export default function IntegracionesMetaCapi() {
                       <button type="button" onClick={() => handleEdit(px)} aria-label={`Editar píxel ${px.pixel_id}`} title="Editar píxel" className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg border border-zinc-700 text-[11px] text-zinc-300 transition hover:bg-zinc-800 sm:h-auto sm:w-auto sm:px-2 sm:py-1 sm:text-[10px]">
                         <span className="sm:hidden">✎</span><span className="hidden sm:inline">Editar</span>
                       </button>
-                      <button type="button" onClick={() => void handleDelete(px)} aria-label={`Eliminar píxel ${px.pixel_id}`} title="Eliminar píxel" className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg border border-red-700/80 text-[11px] text-red-300 transition hover:bg-red-950/30 sm:h-auto sm:w-auto sm:px-2 sm:py-1 sm:text-[10px]">
-                        <span className="sm:hidden">×</span><span className="hidden sm:inline">Eliminar</span>
+                      <button type="button" onClick={() => void handleDelete(px)} aria-label={`Eliminar píxel ${px.pixel_id}`} title="Eliminar píxel" className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg border border-red-700/80 text-[11px] text-red-300 transition hover:bg-red-950/30 sm:h-auto sm:w-auto sm:px-2 sm:py-1 sm:text-[10px] ui-button-danger inline-flex items-center gap-1.5">
+                        <TrashIcon /><span className="hidden sm:inline">Eliminar</span>
                       </button>
                     </div>
                   </div>
@@ -1998,8 +1981,8 @@ export default function IntegracionesMetaCapi() {
               {needsTestCode ? <input value={quickTestCode} maxLength={100} autoComplete="off" onChange={event => setQuickTestCode(event.target.value)} placeholder="Código de Probar eventos de Meta" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" /> : null}
             </div>
             <p className="mt-2 text-xs text-zinc-400">{needsTestCode ? "Administrador de eventos de Meta → seleccioná este píxel → Probar eventos → copiá el código TEST… y volvé a probar." : "Comprobá el envío a Meta con el ID y el token. La prueba es automática."}</p>
-            {connectionResult ? <p role={connectionResult.ok ? "status" : "alert"} className={`mt-2 text-xs ${connectionResult.ok ? "text-emerald-300" : "text-red-400"}`}>{connectionResult.message}</p> : null}
-            {quickErr && <p className="mt-2 text-xs text-red-400">{quickErr}</p>}
+            <ActionNotice message={connectionResult?.message} tone={connectionResult?.ok ? "success" : "error"} noticeKey={connectionResultNoticeKey} />
+            <ActionNotice message={quickErr} tone="error" noticeKey={quickErrNoticeKey} />
             <div className="mt-4 flex justify-end gap-2">
               <button type="button" disabled={saving || testingConnection} onClick={() => void testConnection()} className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 disabled:opacity-60">{testingConnection ? "Probando…" : "Probar conexión"}</button>
               <button type="button" onClick={() => { connectionVersion.current++; setConnectionResult(null); setQuickOpen(false); }} className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300">Cancelar</button>

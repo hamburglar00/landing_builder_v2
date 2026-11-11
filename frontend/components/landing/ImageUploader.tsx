@@ -1,5 +1,7 @@
 "use client";
 
+import { TrashIcon } from "@/components/ui/TrashIcon";
+import { useActionMessage, ActionNotice, useActionFeedback } from "@/components/ui/ActionNotice";
 import { useRef, useCallback, useId, useState } from "react";
 import { LANDING_IMAGE_ACCEPT, validateLandingImageInput } from "@/lib/landing/imageUploadPolicy";
 
@@ -30,7 +32,8 @@ export function ImageUploader({
   const errorId = `${inputId}-error`;
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadError, setUploadError, uploadErrorNoticeKey] = useActionMessage<string | null>(null);
+  const notify = useActionFeedback();
 
   const revokeUrls = useCallback((urls: string[]) => {
     urls.forEach((url) => {
@@ -75,6 +78,7 @@ export function ImageUploader({
         } else {
           onChange(newUrls.length > 0 ? [newUrls[0]!] : []);
         }
+        notify(files.length > 1 ? "Imágenes listas para usar en la landing." : "Imagen lista para usar en la landing.");
       } catch (err) {
         setUploadError(err instanceof Error ? err.message : "Error al subir");
       } finally {
@@ -125,13 +129,10 @@ export function ImageUploader({
         aria-describedby={uploadError ? errorId : undefined}
       />
       {uploadError && (
-        <p
-          id={errorId}
-          className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-xs text-[var(--color-danger)]"
-          role="alert"
-        >
-          {uploadError}
-        </p>
+        <>
+        <span id={errorId} className="sr-only">{uploadError}</span>
+        <ActionNotice message={uploadError} tone={"error"} noticeKey={uploadErrorNoticeKey} />
+        </>
       )}
       {multiple && typeof maxFiles === "number" && maxFiles > 0 && (
         <p className="text-[11px] text-zinc-500">
@@ -156,8 +157,9 @@ export function ImageUploader({
             type="button"
             onClick={handleClear}
             disabled={uploading}
-            className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-400 transition hover:bg-zinc-800 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-400 transition hover:bg-zinc-800 disabled:opacity-70 disabled:cursor-not-allowed ui-button-danger inline-flex items-center gap-1.5"
           >
+              <TrashIcon />
             Quitar todas
           </button>
         )}
@@ -180,8 +182,9 @@ export function ImageUploader({
                 type="button"
                 onClick={() => handleRemove(index)}
                 disabled={uploading}
-                className="cursor-pointer absolute right-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-xs text-white hover:bg-black disabled:opacity-70 disabled:cursor-not-allowed"
+                className="cursor-pointer absolute right-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-xs text-white hover:bg-black disabled:opacity-70 disabled:cursor-not-allowed ui-button-danger inline-flex items-center gap-1.5"
               >
+              <TrashIcon />
                 Quitar
               </button>
             </div>

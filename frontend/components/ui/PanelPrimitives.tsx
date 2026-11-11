@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import ModalPortal from "@/components/ui/ModalPortal";
+import { TrashIcon } from "./TrashIcon";
 
 function cx(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(" ");
@@ -227,6 +228,7 @@ export function ConfirmDialog({
               danger ? "ui-button-danger" : "ui-button-primary",
             )}
           >
+            {danger && /elimin|borr|quitar/i.test(confirmLabel) ? <TrashIcon /> : null}
             {busy ? "Procesando…" : confirmLabel}
           </button>
         </>

@@ -1,5 +1,7 @@
 "use client";
 
+import { TrashIcon } from "@/components/ui/TrashIcon";
+import { useActionMessage, ActionNotice, useActionFeedback } from "@/components/ui/ActionNotice";
 import { useEffect, useMemo, useState } from "react";
 import type {
   ConversionRow,
@@ -123,7 +125,8 @@ export default function TrackingBoard({
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [deletingRowId, setDeletingRowId] = useState<string | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteError, setDeleteError, deleteErrorNoticeKey] = useActionMessage<string | null>(null);
+  const notify = useActionFeedback();
   const [exportOpen, setExportOpen] = useState(false);
   const [copiedExport, setCopiedExport] = useState(false);
 
@@ -320,6 +323,7 @@ export default function TrackingBoard({
       setDeleteError(null);
       setDeletingRowId(row.id);
       await onDeletePhone(row.phone, row.gerenciaId);
+      notify("Jugador eliminado de Seguimiento.");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "No se pudo eliminar el jugador.";
       setDeleteError(msg);
@@ -368,9 +372,7 @@ export default function TrackingBoard({
   return (
     <section className="ui-card p-3 sm:p-4">
       {deleteError ? (
-        <p className="ui-alert mb-4 border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-[var(--color-danger)]" role="alert">
-          {deleteError}
-        </p>
+        <ActionNotice message={deleteError} tone={"error"} noticeKey={deleteErrorNoticeKey} />
       ) : null}
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <h3 className="text-sm font-semibold text-zinc-200">Seguimiento ({filteredRows.length})</h3>
@@ -472,8 +474,9 @@ export default function TrackingBoard({
                         type="button"
                         onClick={() => void handleDelete(r)}
                         disabled={deletingRowId === r.id}
-                        className="rounded border border-red-900/70 bg-red-950/30 px-2 py-1 text-[11px] text-red-300 hover:bg-red-950/50 disabled:opacity-60"
+                        className="rounded border border-red-900/70 bg-red-950/30 px-2 py-1 text-[11px] text-red-300 hover:bg-red-950/50 disabled:opacity-60 ui-button-danger inline-flex items-center gap-1.5"
                       >
+              <TrashIcon />
                         {deletingRowId === r.id ? "Eliminando..." : "Eliminar"}
                       </button>
                     </td>
@@ -654,8 +657,9 @@ export default function TrackingBoard({
                         <button
                           type="button"
                           onClick={() => setDraftRules((prev) => prev.filter((x) => x.id !== r.id))}
-                          className="rounded border border-zinc-700 px-2 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800"
+                          className="rounded border border-zinc-700 px-2 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800 ui-button-danger inline-flex items-center gap-1.5"
                         >
+              <TrashIcon />
                           Quitar
                         </button>
                       </td>

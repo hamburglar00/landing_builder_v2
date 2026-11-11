@@ -1,4 +1,5 @@
 ﻿"use client";
+import { useActionMessage, ActionNotice } from "@/components/ui/ActionNotice";
 import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useEffect, useMemo, useState } from "react";
@@ -68,8 +69,8 @@ export default function AdminClientManagePage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [okMsg, setOkMsg] = useState<string | null>(null);
+  const [error, setError, errorNoticeKey] = useActionMessage<string | null>(null);
+  const [okMsg, setOkMsg, okMsgNoticeKey] = useActionMessage<string | null>(null);
 
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
@@ -142,7 +143,7 @@ export default function AdminClientManagePage() {
     return () => {
       mounted = false;
     };
-  }, [clientId]);
+  }, [clientId, setError]);
 
   const toggleColumn = (col: ColKey) => {
     setVisibleCols((prev) => {
@@ -240,7 +241,7 @@ export default function AdminClientManagePage() {
     setExpiresAt(renewedIso);
     setPlanStatus("active");
     setOkMsg(`Plan renovado hasta ${new Date(`${renewedIso}T00:00:00`).toLocaleDateString()}.`);
-    setTimeout(() => setOkMsg(null), 2500);
+
   };
 
   const onResetPassword = async () => {
@@ -275,7 +276,7 @@ export default function AdminClientManagePage() {
     }
     setResetPassword("");
     setOkMsg("Clave reseteada correctamente.");
-    setTimeout(() => setOkMsg(null), 2500);
+
   };
 
   if (loading) {
@@ -306,8 +307,8 @@ export default function AdminClientManagePage() {
         }
       />
 
-      {error && <p className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-xs text-[var(--color-danger)]">{error}</p>}
-      {okMsg && <p className="ui-alert border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-xs text-[var(--color-success)]">{okMsg}</p>}
+      {error && <ActionNotice message={error} tone={"error"} noticeKey={errorNoticeKey} />}
+      {okMsg && <ActionNotice message={okMsg} noticeKey={okMsgNoticeKey} />}
 
       <section className="ui-card p-4">
         <h2 className="text-sm font-semibold text-zinc-100">Landings del cliente</h2>

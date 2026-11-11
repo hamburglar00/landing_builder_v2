@@ -1,5 +1,6 @@
 "use client";
 
+import { useActionMessage, ActionNotice } from "@/components/ui/ActionNotice";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import type { TargetProvider } from "@/lib/landing/types";
@@ -13,7 +14,8 @@ export function AtrioManagerSelector({ landingId, atrioClientId, provider }: { l
   const [route, setRoute] = useState<Route | null>(null);
   const [choice, setChoice] = useState("");
   const [busy, setBusy] = useState(true);
-  const [message, setMessage] = useState("");
+  const [message, setMessage, messageNoticeKey] = useActionMessage("");
+  const [messageTone, setMessageTone] = useState<"success" | "error">("error");
 
   async function request(connectionId?: string, signal?: AbortSignal): Promise<Route> {
     const { data } = await supabase.auth.getSession();
@@ -34,6 +36,7 @@ export function AtrioManagerSelector({ landingId, atrioClientId, provider }: { l
       setBusy(true);
       setRoute(null);
       setMessage("");
+      setMessageTone("error");
       try {
         const result = await request(undefined, controller.signal);
         if (controller.signal.aborted) return;
@@ -52,10 +55,12 @@ export function AtrioManagerSelector({ landingId, atrioClientId, provider }: { l
   async function save() {
     setBusy(true);
     setMessage("");
+    setMessageTone("error");
     try {
       const result = await request(choice);
       setRoute(result);
       setChoice(result.connection_id || "");
+      setMessageTone("success");
       setMessage("Manager guardado para las cuentas nuevas de esta landing.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo guardar el manager."); }
     finally { setBusy(false); }
@@ -75,6 +80,6 @@ export function AtrioManagerSelector({ landingId, atrioClientId, provider }: { l
           className="block rounded bg-emerald-500/15 px-3 py-1.5 text-xs font-medium text-emerald-300 disabled:opacity-40">{busy ? "Guardando…" : "Guardar manager"}</button>
         {!activeSelection && <p className="text-xs text-amber-300">Elegí y guardá un manager antes de recibir usuarios nuevos.</p>}
       </> : route ? <p className="text-xs text-amber-300">Este asesor no tiene managers activos vinculados a {casinoNames[provider]}. Revisá su configuración en Atrio.</p> : null}
-    {message && <p role="status" className="text-xs text-zinc-400">{message}</p>}
+    {message && <ActionNotice message={message} tone={messageTone} noticeKey={messageNoticeKey} />}
   </div>;
 }

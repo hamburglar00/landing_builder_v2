@@ -1,5 +1,6 @@
 "use client";
 
+import { useActionMessage, ActionNotice } from "@/components/ui/ActionNotice";
 import { useEffect, useId, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import type { AtrioClient, LandingAtrioAssignment } from "@/lib/atrio/atrioDb";
 import { CASINO_NAMES, managerTypeLabel, requestManagerDestinations, type AdvisorDirectory, type DestinationConfiguration, type DestinationEditorConfiguration } from "@/lib/atrio/managerDestinations";
@@ -27,7 +28,7 @@ export function AtrioManagerDistribution({ landingId, provider, providers, clien
   const [mode, setMode] = useState<DestinationConfiguration["mode"]>("weighted_random");
   const [criterion, setCriterion] = useState<DestinationConfiguration["criterion"]>("usage_count");
   const [busy, setBusy] = useState(true);
-  const [message, setMessage] = useState("");
+  const [message, setMessage, messageNoticeKey] = useActionMessage("");
   const [loaded, setLoaded] = useState(false);
   const [loadedScope, setLoadedScope] = useState<string | null>(null);
   const [configured, setConfigured] = useState(false);
@@ -135,6 +136,6 @@ export function AtrioManagerDistribution({ landingId, provider, providers, clien
     {mixedTypes && <p className="text-xs text-amber-300">Seleccionaste MKT y Full Carga. Las cuentas nuevas se repartirán entre ambas modalidades.</p>}
     {destinations.length === 1 && <p className="text-xs text-[var(--color-text-muted)]">Un bot seleccionado: todos los usuarios nuevos irán a ese destino.</p>}
     <p className="text-xs text-[var(--color-text-muted)]">Los destinos se guardan con los cambios de la landing.</p>
-    {message && <p role="status" className="text-xs text-[var(--color-text-muted)]">{message}</p>}
+    {message && <ActionNotice message={message} tone={"error"} noticeKey={messageNoticeKey} />}
   </div>;
 }

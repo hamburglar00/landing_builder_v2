@@ -4,6 +4,8 @@ import Module, { register } from 'node:module';
 import { fileURLToPath } from 'node:url';
 // tsx also compiles CommonJS test modules; cover that resolver in this test process.
 const original = Module._resolveFilename;
+// Rendering is covered by browser checks, while unit tests only need class names.
+Module._extensions['.css'] = (module) => { module.exports = {}; };
 Module._resolveFilename = function(specifier, ...args) {
   if (specifier === 'server-only') return fileURLToPath(new URL('../node_modules/next/dist/compiled/server-only/empty.js', import.meta.url));
   return original.call(this, specifier, ...args);

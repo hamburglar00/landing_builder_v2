@@ -1,4 +1,6 @@
 "use client";
+import { TrashIcon } from "@/components/ui/TrashIcon";
+import { useActionMessage, ActionNotice } from "@/components/ui/ActionNotice";
 import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -352,7 +354,7 @@ export default function DashboardPromocionesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage, messageNoticeKey] = useActionMessage<string | null>(null);
   const [messageType, setMessageType] = useState<"success" | "error">("success");
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [selectedParticipantsPromotionId, setSelectedParticipantsPromotionId] = useState("");
@@ -414,7 +416,7 @@ export default function DashboardPromocionesPage() {
   const showMessage = (text: string, type: "success" | "error" = "success") => {
     setMessage(text);
     setMessageType(type);
-    window.setTimeout(() => setMessage(null), 3200);
+
   };
 
   const reload = useCallback(async (currentUserId: string | null) => {
@@ -742,16 +744,7 @@ export default function DashboardPromocionesPage() {
       />
 
       {message && (
-        <p
-          className={`ui-alert text-sm ${
-            messageType === "error"
-              ? "border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-[var(--color-danger)]"
-              : "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-[var(--color-success)]"
-          }`}
-          role="alert"
-        >
-          {message}
-        </p>
+        <ActionNotice message={message} tone={messageType} noticeKey={messageNoticeKey} />
       )}
 
       {editorOpen && (
@@ -1045,8 +1038,9 @@ export default function DashboardPromocionesPage() {
                             showMessage("No se pudo eliminar la promocion.", "error");
                           }
                         }}
-                        className="rounded-lg border border-red-800/70 px-3 py-1.5 text-xs text-red-300 hover:bg-red-950/40 disabled:opacity-50"
+                        className="rounded-lg border border-red-800/70 px-3 py-1.5 text-xs text-red-300 hover:bg-red-950/40 disabled:opacity-50 ui-button-danger inline-flex items-center gap-1.5"
                       >
+              <TrashIcon />
                         Eliminar
                       </button>
                     </div>
@@ -1178,11 +1172,11 @@ export default function DashboardPromocionesPage() {
                             type="button"
                             disabled={deletingParticipantId === participant.id}
                             onClick={() => void handleDeleteParticipant(participant)}
-                            className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-red-800/70 bg-red-950/20 text-[11px] font-bold text-red-300 transition hover:bg-red-950/50 disabled:cursor-wait disabled:opacity-50"
+                            className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-red-800/70 bg-red-950/20 text-[11px] font-bold text-red-300 transition hover:bg-red-950/50 disabled:cursor-wait disabled:opacity-50 ui-button-danger inline-flex items-center gap-1.5"
                             title="Eliminar participante"
                             aria-label={`Eliminar participante ${participant.username}`}
                           >
-                            {deletingParticipantId === participant.id ? "..." : "X"}
+                            {deletingParticipantId === participant.id ? "..." : <TrashIcon />}
                           </button>
                         </td>
                       </tr>

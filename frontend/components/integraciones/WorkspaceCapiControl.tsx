@@ -1,5 +1,6 @@
 "use client";
 
+import { useActionMessage, ActionNotice, useActionFeedback } from "@/components/ui/ActionNotice";
 import { useState } from "react";
 import type { ReportingCurrency } from "@/lib/currency";
 import { setWorkspaceCapiEnabled } from "@/lib/conversionsDb";
@@ -11,7 +12,8 @@ export function WorkspaceCapiControl({ userId, currency, enabled, onSaved }: {
   onSaved: (currency: ReportingCurrency, enabled: boolean) => void;
 }) {
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const notify = useActionFeedback();
+  const [error, setError, errorNoticeKey] = useActionMessage<string | null>(null);
 
   async function toggle() {
     if (saving) return;
@@ -21,6 +23,7 @@ export function WorkspaceCapiControl({ userId, currency, enabled, onSaved }: {
     try {
       await setWorkspaceCapiEnabled(userId, currency, next);
       onSaved(currency, next);
+      notify(`Configuración de CAPI guardada para ${currency}.`);
     } catch {
       setError("No pudimos guardar el cambio. Intentá nuevamente.");
     } finally {
@@ -39,6 +42,6 @@ export function WorkspaceCapiControl({ userId, currency, enabled, onSaved }: {
         <span className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${enabled ? "translate-x-5" : "translate-x-0.5"}`}/>
       </button>
     </div>
-    {saving ? <p role="status" className="mt-2 text-xs text-zinc-400">Guardando…</p> : error ? <p role="alert" className="mt-2 text-xs text-red-400">{error}</p> : <p role="status" className={`mt-2 text-xs ${enabled ? "text-emerald-300" : "text-amber-300"}`}>{enabled ? `CAPI activo en ${currency}` : `CAPI desactivado en ${currency}`}</p>}
+    {saving ? <p role="status" className="mt-2 text-xs text-zinc-400">Guardando…</p> : error ? <ActionNotice message={error} tone={"error"} noticeKey={errorNoticeKey} /> : <p role="status" className={`mt-2 text-xs ${enabled ? "text-emerald-300" : "text-amber-300"}`}>{enabled ? `CAPI activo en ${currency}` : `CAPI desactivado en ${currency}`}</p>}
   </div>;
 }

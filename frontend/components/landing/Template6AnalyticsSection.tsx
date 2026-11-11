@@ -1,5 +1,6 @@
 "use client";
 
+import { useActionMessage, ActionNotice, useActionFeedback } from "@/components/ui/ActionNotice";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
@@ -31,7 +32,8 @@ export function Template6AnalyticsSection({ landingId, config, savedTemplate6 }:
   const [counts, setCounts] = useState<number[]>([0, 0, 0, 0, 0, 0]);
   const [loading, setLoading] = useState(false);
   const [resetting, setResetting] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError, errorNoticeKey] = useActionMessage("");
+  const notify = useActionFeedback();
   const requestId = useRef(0);
   const cover = config.template === "template8" ? { ...normalizeTemplate8Cover(config.template8Cover), grid: "2x3" as const } : normalizeTemplate6Cover(config.template6Cover);
   const cardCount = config.template === "template8" ? normalizeTemplate8Cover(config.template8Cover).cardCount : TEMPLATE6_CARD_COUNT[cover.grid];
@@ -61,7 +63,7 @@ export function Template6AnalyticsSection({ landingId, config, savedTemplate6 }:
       setCounts(next);
     }
     setLoading(false);
-  }, [landingId, savedTemplate6, from, to]);
+  }, [landingId, savedTemplate6, from, to, setError]);
 
   useEffect(() => {
     let active = true;
@@ -84,7 +86,10 @@ export function Template6AnalyticsSection({ landingId, config, savedTemplate6 }:
       p_landing_id: landingId,
     });
     if (resetError) setError("No se pudieron reiniciar las analíticas.");
-    else await refresh();
+    else {
+      notify("Analíticas reiniciadas.");
+      await refresh();
+    }
     setResetting(false);
   };
 
@@ -114,7 +119,7 @@ export function Template6AnalyticsSection({ landingId, config, savedTemplate6 }:
 
       {!savedTemplate6 ? <p className="text-xs text-zinc-400">Guardá la landing para comenzar a medir.</p> : null}
       {invalidRange ? <p className="text-xs text-amber-300">Elegí un rango de fechas válido.</p> : null}
-      {error ? <p role="alert" className="text-xs text-red-300">{error}</p> : null}
+      {error ? <ActionNotice message={error} tone={"error"} noticeKey={errorNoticeKey} /> : null}
       {savedTemplate6 && !invalidRange ? (
         <div aria-busy={loading} className="space-y-2">
           <p className="text-xs text-zinc-300">Total: <strong className="text-zinc-100">{total.toLocaleString("es-AR")}</strong>{loading ? " · Actualizando..." : ""}</p>

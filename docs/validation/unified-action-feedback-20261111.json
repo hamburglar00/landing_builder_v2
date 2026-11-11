@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-11",
+  "scope": {
+    "builder": "Feedback de acciones de administración y edición, CTA de eliminar y vista previa de Template 4.",
+    "classic": "Solo el indicador de Template 4; copia generada desde Builder.",
+    "sharedMarketing": "24 archivos fijados de NexoBet sin diferencias; verificados 13 casos de Meta y marketing. Sin cambios para publicar en NexoBet.",
+    "excludedProducts": "Sin cambios de código en Atrio, gateways o Worker. Sin migraciones, cambios de permisos ni operaciones sobre datos productivos."
+  },
+  "behavior": {
+    "success": "Verde, visible 3000 ms y desvanecimiento de 300 ms.",
+    "error": "Rojo, visible 3000 ms y desvanecimiento de 300 ms; nunca inferir éxito por el texto arbitrario del servidor.",
+    "lifecycle": "Host común que sobrevive navegación. Repetir el mismo resultado reinicia su tiempo; rerenders y cuentas regresivas no lo prolongan. Sin bloqueo de scroll ni cambio de foco.",
+    "delete": "CTA rojos con papelera, incluida Administrar gerencia y confirmaciones de borrado.",
+    "template4": "Reducir a la mitad tipografía, punto, espacio y relleno del indicador, en CSS público, galería y vista previa. Conservar el texto y la adaptación sin scroll de ambos motores."
+  },
+  "verification": {
+    "builderBuildAndTypeScript": "passed",
+    "classicBuildAndTypeScript": "passed",
+    "builderUnitTests": { "passed": 502, "skipped": 4, "failed": 0 },
+    "classicUnitTests": { "passed": 47, "failed": 0 },
+    "changedTypeScriptLint": { "errors": 0, "existingWarnings": 9 },
+    "actionFeedbackBrowser": {
+      "script": "frontend/scripts/action-feedback-check.mjs",
+      "cases": 4,
+      "engines": ["Chromium", "WebKit"],
+      "widths": [320, 1280],
+      "checks": ["timing", "repeat", "countdown", "navigation", "focus and scroll", "failed and successful agency save", "cancel and confirm deletion", "email save, failure and cancellation", "profile update refusal", "notification autosave and server refresh"],
+      "status": "passed"
+    },
+    "botsFormsBrowser": { "cases": 6, "scenariosPerViewport": 16, "status": "passed" },
+    "editorBrowser": "Client and administrator, all nine templates and external landing, mobile and desktop; saving, deletion confirmation, permissions and drafts passed.",
+    "template4Browser": { "cases": 20, "engines": ["Chromium", "WebKit"], "surfaces": ["constructor", "classic", "preview"], "checks": ["half-size indicator", "single-line status", "no overflow", "bubble sequence", "right space", "matching background", "reduced motion"], "status": "passed" },
+    "sharedMarketingTests": { "passed": 13, "failed": 0 },
+    "classicSync": "passed",
+    "productionBusinessWrites": 0
+  },
+  "publicationTargets": {
+    "builder": { "project": "landing-builder-v2-k259", "branch": "main", "domains": ["constructor.panelbotadmin.com", "mkt.panelbotadmin.com"] },
+    "classic": { "project": "public-landing-bl", "branch": "main", "domains": ["landing.panelbotadmin.com"] },
+    "releaseEvidence": ".vercel/unified-feedback-20261111/release-observed.json",
+    "liveVisualEvidence": ".vercel/unified-feedback-20261111/live-results.json"
+  }
+}

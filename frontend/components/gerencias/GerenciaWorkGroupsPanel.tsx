@@ -1,5 +1,6 @@
 "use client";
 
+import { TrashIcon } from "@/components/ui/TrashIcon";
 import { useMemo, useState } from "react";
 import type { Gerencia, GerenciaWorkGroup } from "@/lib/gerencias/types";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
@@ -187,8 +188,9 @@ export function GerenciaWorkGroupsPanel({
                           });
                           if (confirmed) void onDelete(group.id);
                         }}
-                        className="rounded-md border border-red-800 px-2 py-1 text-xs text-red-300 hover:bg-red-950/50"
+                        className="rounded-md border border-red-800 px-2 py-1 text-xs text-red-300 hover:bg-red-950/50 ui-button-danger inline-flex items-center gap-1.5"
                       >
+              <TrashIcon />
                         Eliminar
                       </button>
                     </div>

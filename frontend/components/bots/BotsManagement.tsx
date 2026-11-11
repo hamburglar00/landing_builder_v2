@@ -1,4 +1,5 @@
 "use client";
+import { TrashIcon } from "@/components/ui/TrashIcon";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import {
@@ -20,7 +21,7 @@ import {
 } from "@/lib/bots/import-errors";
 import type { ImportDirectory } from "@/lib/bots/directory";
 import { ModalShell } from "@/components/ui/PanelPrimitives";
-import { ActionNotice } from "@/components/ui/ActionNotice";
+import { ActionNotice, useActionMessage, useActionFeedback } from "@/components/ui/ActionNotice";
 import CustomSelect from "@/components/ui/CustomSelect";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import { GerenciaWorkGroupsPanel } from "@/components/gerencias/GerenciaWorkGroupsPanel";
@@ -47,15 +48,16 @@ export function BotsManagement({
     refreshInventory?: boolean,
   ) => Promise<void>;
 }) {
+  const notify = useActionFeedback();
   const [open, setOpen] = useState(false),
     [mode, setMode] = useState("agency"),
     [id, setId] = useState(""),
     [name, setName] = useState(""),
     [slug, setSlug] = useState("");
   const [busy, setBusy] = useState(false),
-    [error, setError] = useState(""),
+    [error, setError, errorNoticeKey] = useActionMessage(""),
     [preview, setPreview] = useState<ImportDirectory | null>(null),
-    [notice, setNotice] = useState("");
+    [notice, setNotice, noticeNoticeKey] = useActionMessage("");
   const [legacyAgency, setLegacyAgency] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false),
     [groups, setGroups] = useState<GerenciaWorkGroup[]>([]);
@@ -68,7 +70,7 @@ export function BotsManagement({
     setPreview(null);
     setNotice("");
     setGroupOpen(false);
-  }, [workspace, userId]);
+  }, [workspace, userId, setNotice]);
   async function request(action: "preview" | "import") {
     const numericId = Number(id);
     if (!/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(numericId))
@@ -103,6 +105,7 @@ export function BotsManagement({
     setNotice("");
     try {
       let legacyAgencyId: number | undefined;
+      let successMessage = "";
       if (mode === "agency" && legacyAgency) {
         const agencyId = Number(id);
         if (!/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(agencyId))
@@ -135,13 +138,11 @@ export function BotsManagement({
           }
         }
         legacyAgencyId = existing?.id ?? agencyId;
-        setNotice(
+        successMessage =
           "Gerencia vinculada. Se sincronizan sus teléfonos de WhatsApp." +
             (canAtrio
               ? " Los asesores de Atrio se vinculan desde su opción específica."
-              : ""),
-        );
-        setOpen(false);
+              : "");
       } else if (mode === "manual") {
         if (!name.trim()) throw Error("Ingresá el nombre de la gerencia.");
         await createGerencia(userId, {
@@ -149,20 +150,17 @@ export function BotsManagement({
           source_type: "manual",
           workspace_currency: workspace,
         });
-        setOpen(false);
+        successMessage = "Gerencia creada.";
       } else if (mode === "atrio") {
         await createAtrioClient(userId, {
           workspaceCurrency: workspace,
           slug,
           atrioId: id,
         });
-        setOpen(false);
+        successMessage = "Cliente de Atrio vinculado.";
       } else {
         const result = await request("import");
-        setNotice(
-          `${result.gerencias} gerencia(s) y ${result.asesores} asesor(es) agregados. ${result.existentes} vínculo(s) ya existían.${result.warnings.length ? " " + result.warnings.join(" ") : ""}`,
-        );
-        setOpen(false);
+        successMessage = `${result.gerencias} gerencia(s) y ${result.asesores} asesor(es) agregados. ${result.existentes} vínculo(s) ya existían.${result.warnings.length ? " " + result.warnings.join(" ") : ""}`;
       }
       await onChanged();
       if (legacyAgencyId !== undefined) await onImported(legacyAgencyId, false);
@@ -172,6 +170,8 @@ export function BotsManagement({
         )
       )
         await onImported();
+      setNotice(successMessage);
+      setOpen(false);
       setPreview(null);
       setLegacyAgency(false);
       setId("");
@@ -183,12 +183,13 @@ export function BotsManagement({
       setBusy(false);
     }
   }
-  async function groupsChanged(action: () => Promise<unknown>) {
+  async function groupsChanged(action: () => Promise<unknown>, message: string) {
     setBusy(true);
     setError("");
     try {
       await action();
       setGroups(await fetchGerenciaWorkGroups(userId, workspace));
+      notify(message);
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo guardar el grupo.");
     } finally {
@@ -234,8 +235,8 @@ export function BotsManagement({
           Vincular Bots
         </button>
       </div>
-      <ActionNotice message={notice} />
-      {!open && !groupOpen && <ActionNotice message={error} tone="error" />}
+      <ActionNotice noticeKey={noticeNoticeKey} message={notice} />
+      {!open && !groupOpen && <ActionNotice noticeKey={errorNoticeKey} message={error} tone="error" />}
       <ModalShell
         open={open}
         title="Vincular Bots"
@@ -387,7 +388,7 @@ export function BotsManagement({
               />
             </label>
           )}
-          <ActionNotice message={error} tone="error" />
+          <ActionNotice noticeKey={errorNoticeKey} message={error} tone="error" />
           {preview && (
             <div className="space-y-3">
               <p className="text-xs text-zinc-300">
@@ -440,21 +441,21 @@ export function BotsManagement({
         onClose={closeGroupsModal}
         closeDisabled={busy}
       >
-        <ActionNotice message={error} tone="error" />
+        <ActionNotice noticeKey={errorNoticeKey} message={error} tone="error" />
         <GerenciaWorkGroupsPanel
           gerencias={managementGerencias}
           groups={groups}
           saving={busy}
           onCreate={(name, ids) =>
             groupsChanged(() =>
-              createGerenciaWorkGroup(userId, name, ids, workspace),
+              createGerenciaWorkGroup(userId, name, ids, workspace), "Grupo creado.",
             )
           }
           onUpdate={(groupId, name, ids) =>
-            groupsChanged(() => updateGerenciaWorkGroup(groupId, name, ids))
+            groupsChanged(() => updateGerenciaWorkGroup(groupId, name, ids), "Grupo actualizado.")
           }
           onDelete={(groupId) =>
-            groupsChanged(() => deleteGerenciaWorkGroup(groupId))
+            groupsChanged(() => deleteGerenciaWorkGroup(groupId), "Grupo eliminado.")
           }
         />
       </ModalShell>
@@ -471,12 +472,13 @@ export function GerenciaActions({
   onChanged: () => Promise<void>;
   menuItem?: boolean;
 }) {
+  const notify = useActionFeedback();
   const confirm = useAppConfirm(),
     [open, setOpen] = useState(false),
     [name, setName] = useState(""),
     [id, setId] = useState(""),
     [source, setSource] = useState<"pbadmin" | "manual">("pbadmin"),
-    [error, setError] = useState(""),
+    [error, setError, errorNoticeKey] = useActionMessage(""),
     [busy, setBusy] = useState(false);
   const closeModal = useCallback(() => setOpen(false), []);
   return (
@@ -503,7 +505,7 @@ export function GerenciaActions({
         footer={
           <div className="flex w-full justify-between gap-3">
             <button
-              className="ui-button ui-button-secondary text-red-300"
+              className="ui-button ui-button-danger inline-flex items-center gap-1.5"
               disabled={busy}
               onClick={async () => {
                 if (
@@ -518,8 +520,9 @@ export function GerenciaActions({
                 setBusy(true);
                 try {
                   await deleteGerencia(gerencia.id);
-                  setOpen(false);
                   await onChanged();
+                  setOpen(false);
+                  notify("Gerencia eliminada.");
                 } catch (e) {
                   setError(formatGerenciaError(e, "No se pudo eliminar."));
                 } finally {
@@ -527,6 +530,7 @@ export function GerenciaActions({
                 }
               }}
             >
+              <TrashIcon />
               Eliminar gerencia
             </button>
             <button
@@ -548,8 +552,9 @@ export function GerenciaActions({
                     gerencia_id:
                       source === "pbadmin" ? Number(id) : gerencia.gerencia_id,
                   });
-                  setOpen(false);
                   await onChanged();
+                  setOpen(false);
+                  notify("Gerencia actualizada.");
                 } catch (e) {
                   setError(formatGerenciaError(e, "No se pudo guardar."));
                 } finally {
@@ -595,7 +600,7 @@ export function GerenciaActions({
               />
             </label>
           )}
-          <ActionNotice message={error} tone="error" />
+          <ActionNotice noticeKey={errorNoticeKey} message={error} tone="error" />
         </div>
       </ModalShell>
     </>

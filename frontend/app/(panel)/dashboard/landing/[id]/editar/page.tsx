@@ -35,7 +35,7 @@ import {
 } from "@/components/landing/LandingEditorForm";
 import { PublishTargetSection } from "@/components/landing/PublishTargetSection";
 import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
-import { ActionNotice } from "@/components/ui/ActionNotice";
+import { ActionNotice, useActionMessage, useActionFeedback } from "@/components/ui/ActionNotice";
 import { LandingEditorActions } from "@/components/landing/LandingEditorActions";
 import { LandingUrlParametersCard } from "@/components/landing/LandingUrlParametersCard";
 import { LandingMarketCountryField } from "@/components/landing/LandingMarketCountryField";
@@ -174,7 +174,8 @@ export default function DashboardLandingEditarPage() {
   const [savedTemplate6, setSavedTemplate6] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveError, setSaveError, saveErrorNoticeKey] = useActionMessage<string | null>(null);
+  const notify = useActionFeedback();
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [gerencias, setGerencias] = useState<Gerencia[]>([]);
@@ -446,6 +447,7 @@ export default function DashboardLandingEditarPage() {
         publishTarget: landing.publishTarget,
         classicBaseUrl: urlBase,
       });
+      notify("Landing guardada y publicada.");
       router.push("/dashboard/landings");
     } catch (e: unknown) {
       const err = e as { code?: string; message?: string };
@@ -477,6 +479,7 @@ export default function DashboardLandingEditarPage() {
     setSaveError(null);
     try {
       await deleteLanding(landing.id);
+      notify("Landing eliminada.");
       router.push("/dashboard/landings");
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : "Error al eliminar");
@@ -523,7 +526,7 @@ export default function DashboardLandingEditarPage() {
     <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start xl:gap-6">
       {/* Columna izquierda: scroll normal */}
       <div className="min-w-0 flex-1 space-y-8 pb-8 xl:pr-4">
-        <ActionNotice message={saveError} tone="error" />
+        <ActionNotice noticeKey={saveErrorNoticeKey} message={saveError} tone="error" />
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Link
             href="/dashboard/landings"

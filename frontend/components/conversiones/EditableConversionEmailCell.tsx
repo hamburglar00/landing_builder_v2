@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useActionFeedback } from "@/components/ui/ActionNotice";
 import {
   updateConversionEmail,
   type ConversionRow,
@@ -18,21 +19,29 @@ export default function EditableConversionEmailCell({
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(row.email);
   const [saving, setSaving] = useState(false);
+  const notify = useActionFeedback();
+  const savingRef = useRef(false);
+  const cancelled = useRef(false);
 
   const save = async () => {
+    if (savingRef.current || cancelled.current) return;
     const trimmed = value.trim();
     if (trimmed === row.email) {
       setEditing(false);
       return;
     }
 
+    savingRef.current = true;
     setSaving(true);
     try {
       await updateConversionEmail(row.id, trimmed);
       onSaved(row.id, trimmed);
-    } catch {
+      notify("Email guardado.");
+    } catch (error) {
       setValue(row.email);
+      notify(error instanceof Error ? error.message : "No se pudo guardar el email.", "error");
     } finally {
+      savingRef.current = false;
       setSaving(false);
       setEditing(false);
     }
@@ -51,6 +60,7 @@ export default function EditableConversionEmailCell({
           onKeyDown={(event) => {
             if (event.key === "Enter") void save();
             if (event.key === "Escape") {
+              cancelled.current = true;
               setValue(row.email);
               setEditing(false);
             }
@@ -67,6 +77,7 @@ export default function EditableConversionEmailCell({
       <button
         type="button"
         onClick={() => {
+          cancelled.current = false;
           setValue(row.email);
           setEditing(true);
         }}

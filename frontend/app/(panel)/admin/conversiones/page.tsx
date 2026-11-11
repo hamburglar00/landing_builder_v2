@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { ActionNotice, useActionResult } from "@/components/ui/ActionNotice";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -288,8 +289,8 @@ export default function AdminConversionesPage() {
   const [clientName, setClientName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState<string | null>(null);
-  const [clearMsg, setClearMsg] = useState<string | null>(null);
+  const [saveMsg, setSaveMsg, saveMsgNoticeKey, saveMsgTone] = useActionResult();
+  const [clearMsg, setClearMsg, clearMsgNoticeKey, clearMsgTone] = useActionResult();
   const [tab, setTab] = useState<Tab>("funnel");
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
   const [tableSearch, setTableSearch] = useState("");
@@ -1036,7 +1037,7 @@ export default function AdminConversionesPage() {
         pixelConfigs,
       });
       setPixelConfigs(pixels);
-      setSaveMsg("Configuracion guardada.");
+      setSaveMsg("Configuracion guardada.", "success");
     } catch (e) {
       // Mostrar ms contexto del error para poder diagnosticar problemas de RLS o esquema en produccin
       // y loguearlo en consola del navegador.
@@ -1132,14 +1133,14 @@ export default function AdminConversionesPage() {
     try {
       await hideConversions(activeConversions.map((c) => c.id), userId);
       await refreshTable();
-      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.");
-      setTimeout(() => setClearMsg(null), 4000);
+      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.", "success");
+
     } catch (e) {
       console.error(e);
       const msg = e instanceof Error ? e.message : String(e);
       setClearMsg(`Error al limpiar: ${msg}`);
     } finally { setHidingTable(false); }
-  }, [userId, activeConversions, refreshTable, demoMode, confirmAction]);
+  }, [userId, activeConversions, refreshTable, demoMode, confirmAction, setClearMsg]);
 
   const clearFunnelDisplay = useCallback(async () => {
     if (!userId || activeFunnel.length === 0 || demoMode) return;
@@ -1158,14 +1159,14 @@ export default function AdminConversionesPage() {
         userId,
       );
       await refreshTable();
-      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.");
-      setTimeout(() => setClearMsg(null), 4000);
+      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.", "success");
+
     } catch (e) {
       console.error(e);
       const msg = e instanceof Error ? e.message : String(e);
       setClearMsg(`Error al limpiar: ${msg}`);
     } finally { setHidingFunnel(false); }
-  }, [userId, activeFunnel, refreshTable, demoMode, confirmAction]);
+  }, [userId, activeFunnel, refreshTable, demoMode, confirmAction, setClearMsg]);
 
   const clearStatsDisplay = useCallback(async () => {
     if (!userId || (activeFunnel.length === 0 && activeConversions.length === 0) || demoMode) return;
@@ -1185,14 +1186,14 @@ export default function AdminConversionesPage() {
       );
       await hideConversions(activeConversions.map((c) => c.id), userId);
       await refreshTable();
-      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.");
-      setTimeout(() => setClearMsg(null), 4000);
+      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.", "success");
+
     } catch (e) {
       console.error(e);
       const msg = e instanceof Error ? e.message : String(e);
       setClearMsg(`Error al limpiar: ${msg}`);
     } finally { setHidingStats(false); }
-  }, [userId, activeFunnel, activeConversions, refreshTable, demoMode, confirmAction]);
+  }, [userId, activeFunnel, activeConversions, refreshTable, demoMode, confirmAction, setClearMsg]);
 
   const clearLogsDisplay = useCallback(async () => {
     if (!userId || logs.length === 0 || demoMode) return;
@@ -1208,14 +1209,14 @@ export default function AdminConversionesPage() {
     try {
       await hideConversionLogs(logs.map((l) => Number(l.id)), userId);
       await refreshTable();
-      setClearMsg("Vista limpiada.");
-      setTimeout(() => setClearMsg(null), 4000);
+      setClearMsg("Vista limpiada.", "success");
+
     } catch (e) {
       console.error(e);
       const msg = e instanceof Error ? e.message : String(e);
       setClearMsg(`Error al limpiar: ${msg}`);
     } finally { setHidingLogs(false); }
-  }, [userId, logs, demoMode, refreshTable, confirmAction]);
+  }, [userId, logs, demoMode, refreshTable, confirmAction, setClearMsg]);
 
   if (loading) {
     return <DashboardSkeleton title="Cargando conversiones..." />;
@@ -1231,14 +1232,10 @@ export default function AdminConversionesPage() {
       />
 
       {saveMsg && (
-        <p className={`ui-alert text-sm ${saveMsg.includes("Error") ? "border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-[var(--color-danger)]" : "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-[var(--color-success)]"}`} role="alert">
-          {saveMsg}
-        </p>
+        <ActionNotice message={saveMsg} tone={saveMsgTone} noticeKey={saveMsgNoticeKey} />
       )}
       {clearMsg && (
-        <p className={`ui-alert text-sm ${clearMsg.includes("Error") ? "border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-[var(--color-danger)]" : "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-[var(--color-success)]"}`} role="alert">
-          {clearMsg}
-        </p>
+        <ActionNotice message={clearMsg} tone={clearMsgTone} noticeKey={clearMsgNoticeKey} />
       )}
 
       {/* Tabs + Demo toggle */}

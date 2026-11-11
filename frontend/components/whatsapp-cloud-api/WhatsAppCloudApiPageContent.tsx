@@ -1,4 +1,5 @@
 "use client";
+import { useActionMessage, ActionNotice } from "@/components/ui/ActionNotice";
 import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -451,8 +452,8 @@ export default function WhatsAppCloudApiPageContent({
   const [saving, setSaving] = useState(false);
   const [datasetLoading, setDatasetLoading] = useState(false);
   const [healthSyncing, setHealthSyncing] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage, messageNoticeKey] = useActionMessage<string | null>(null);
+  const [error, setError, errorNoticeKey] = useActionMessage<string | null>(null);
   const [instructionsOpen, setInstructionsOpen] = useState(false);
   const [instructionInfoKey, setInstructionInfoKey] = useState<InstructionHelpKey | null>(null);
   const [config, setConfig] = useState<WhatsappCloudApiConfig | null>(null);
@@ -572,7 +573,7 @@ export default function WhatsAppCloudApiPageContent({
     } else {
       setAssignments([]);
     }
-  }, [mode, selectedClientName, selectedClientTrackingName, workspaceCurrency]);
+  }, [mode, selectedClientName, selectedClientTrackingName, workspaceCurrency, setError]);
 
   useEffect(() => {
     const init = async () => {
@@ -602,13 +603,9 @@ export default function WhatsAppCloudApiPageContent({
       setError(err instanceof Error ? err.message : "Error al cargar WhatsApp Cloud API");
       setReady(true);
     });
-  }, [loadTarget, mode, router]);
+  }, [loadTarget, mode, router, setError]);
 
-  useEffect(() => {
-    if (!message) return;
-    const timeout = window.setTimeout(() => setMessage(null), 3500);
-    return () => window.clearTimeout(timeout);
-  }, [message]);
+
 
   const reloadSelected = async (uid = targetUserId) => {
     if (!uid || !currentUserId) return;
@@ -852,14 +849,10 @@ export default function WhatsAppCloudApiPageContent({
       ) : null}
 
       {error ? (
-        <p className="ui-alert ui-alert-error text-sm">
-          {error}
-        </p>
+        <ActionNotice message={error} tone={"error"} noticeKey={errorNoticeKey} />
       ) : null}
       {message ? (
-        <p className="ui-alert ui-alert-success text-sm" role="status" aria-live="polite">
-          {message}
-        </p>
+        <ActionNotice message={message} noticeKey={messageNoticeKey} />
       ) : null}
 
       {instructionsOpen ? (

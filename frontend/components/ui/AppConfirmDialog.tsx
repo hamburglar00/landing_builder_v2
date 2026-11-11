@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { ConfirmDialog, ModalShell } from "@/components/ui/PanelPrimitives";
+import { ActionFeedbackProvider } from "./ActionNotice";
 
 type ConfirmOptions = {
   title: string;
@@ -89,6 +90,7 @@ export function AppConfirmProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
+    <ActionFeedbackProvider>
     <AppConfirmContext.Provider value={confirm}>
       <AppPromptContext.Provider value={prompt}>
         {children}
@@ -140,6 +142,7 @@ export function AppConfirmProvider({ children }: { children: ReactNode }) {
         </ModalShell>
       </AppPromptContext.Provider>
     </AppConfirmContext.Provider>
+    </ActionFeedbackProvider>
   );
 }
 

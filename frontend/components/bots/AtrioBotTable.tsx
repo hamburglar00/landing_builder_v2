@@ -1,4 +1,5 @@
 "use client";
+import { TrashIcon } from "@/components/ui/TrashIcon";
 import { useCallback, useState, type ReactNode } from "react";
 import {
   updateAtrioClient,
@@ -14,7 +15,7 @@ import type { AtrioBotEntry } from "@/lib/bots/workspace";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import { ModalShell } from "@/components/ui/PanelPrimitives";
 import { BotResetIcon } from "./BotActionIcons";
-import { ActionNotice } from "@/components/ui/ActionNotice";
+import { ActionNotice, useActionMessage } from "@/components/ui/ActionNotice";
 import styles from "./AtrioBotTable.module.css";
 export const PLATFORM_NAMES: Record<number, string> = {
   1: "Ases del Norte",
@@ -35,12 +36,12 @@ export function AtrioBotTable({
   render?: (actions: (entry: AtrioBotEntry) => ReactNode) => ReactNode;
 }) {
   const confirm = useAppConfirm(),
-    [error, setError] = useState(""),
+    [error, setError, errorNoticeKey] = useActionMessage(""),
     [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<AtrioBotEntry | null>(null),
     [slug, setSlug] = useState(""),
     [atrioId, setAtrioId] = useState("");
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice, noticeNoticeKey] = useActionMessage("");
   const closeEditing = useCallback(() => setEditing(null), []);
   async function reset(entry: AtrioBotEntry, metric: BotResetMetric) {
     if (
@@ -127,16 +128,17 @@ export function AtrioBotTable({
                         onClick={() => void remove(entry)}
                         className="text-red-300" data-danger="true"
                       >
+              <TrashIcon />
                         Quitar asesor
                       </button>
   </>;
   return (
     <>
-      <ActionNotice message={notice} />
-      {render ? <>{!editing && <ActionNotice message={error} tone="error" />}{render(renderActions)}</> : (
+      <ActionNotice noticeKey={noticeNoticeKey} message={notice} />
+      {render ? <>{!editing && <ActionNotice noticeKey={errorNoticeKey} message={error} tone="error" />}{render(renderActions)}</> : (
     <section className="mt-4 space-y-2" aria-label="Bots de Atrio">
       <h3 className="text-xs font-semibold text-zinc-300">Atrio</h3>
-      {!editing && <ActionNotice message={error} tone="error" />}
+      {!editing && <ActionNotice noticeKey={errorNoticeKey} message={error} tone="error" />}
       <div className="overflow-x-auto rounded-lg border border-zinc-700">
         <table className="w-full min-w-[760px] text-left text-xs">
           <thead className="bg-zinc-800/80 text-zinc-300">
@@ -282,7 +284,7 @@ export function AtrioBotTable({
               onChange={(event) => setAtrioId(event.target.value)}
             />
           </label>
-          <ActionNotice message={error} tone="error" />
+          <ActionNotice noticeKey={errorNoticeKey} message={error} tone="error" />
         </div>
       </ModalShell>
     </>

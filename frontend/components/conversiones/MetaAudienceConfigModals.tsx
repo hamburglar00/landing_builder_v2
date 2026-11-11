@@ -1,4 +1,6 @@
 "use client";
+import { TrashIcon } from "@/components/ui/TrashIcon";
+import { ActionNotice } from "@/components/ui/ActionNotice";
 import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
 
 import { useEffect, useState } from "react";
@@ -71,7 +73,7 @@ export function SavedAudiencesModal({
   if (!open) return null;
   return (
     <ModalFrame title="Mis audiencias" onClose={onClose} width="max-w-3xl">
-      {error ? <p className="mb-3 rounded-lg border border-red-900/60 bg-red-950/25 px-3 py-2 text-xs text-red-300" role="alert">{error}</p> : null}
+      {error ? <ActionNotice message={error} tone={"error"} /> : null}
       {loading ? <LandingBuilderLoading variant="dots" size="panel" label="Cargando audiencias" /> : null}
       {!loading && items.length === 0 ? <p className="rounded-xl border border-dashed border-zinc-800 px-4 py-8 text-center text-xs text-zinc-500">Todavía no guardaste audiencias para esta moneda.</p> : null}
       {!loading && items.length > 0 ? (
@@ -86,7 +88,8 @@ export function SavedAudiencesModal({
                 <button type="button" onClick={() => onOpen(item)} className="h-8 rounded-lg bg-emerald-600 px-3 text-[11px] font-semibold text-white hover:bg-emerald-500">Abrir</button>
                 <button type="button" onClick={() => onRename(item)} className="h-8 rounded-lg border border-zinc-700 px-2.5 text-[11px] text-zinc-300 hover:bg-zinc-800">Renombrar</button>
                 <button type="button" onClick={() => onDuplicate(item)} className="h-8 rounded-lg border border-zinc-700 px-2.5 text-[11px] text-zinc-300 hover:bg-zinc-800">Duplicar</button>
-                <button type="button" onClick={() => onDelete(item)} className="h-8 rounded-lg border border-red-900/60 px-2.5 text-[11px] text-red-300 hover:bg-red-950/30">Eliminar</button>
+                <button type="button" onClick={() => onDelete(item)} className="h-8 rounded-lg border border-red-900/60 px-2.5 text-[11px] text-red-300 hover:bg-red-950/30 ui-button-danger inline-flex items-center gap-1.5">
+              <TrashIcon />Eliminar</button>
               </div>
             </article>
           ))}
@@ -105,7 +108,7 @@ export function AudienceNameModal({ open, action, initialName, saving, error, on
   return (
     <ModalFrame title={title} onClose={onClose} width="max-w-md">
       <form onSubmit={(event) => { event.preventDefault(); if (name.trim()) onSubmit(name); }}>
-        {error ? <p className="mb-3 rounded-lg border border-red-900/60 bg-red-950/25 px-3 py-2 text-xs text-red-300" role="alert">{error}</p> : null}
+        {error ? <ActionNotice message={error} tone={"error"} /> : null}
         <label className="block"><span className="mb-1 block text-xs text-zinc-400">Nombre</span><input autoFocus maxLength={120} value={name} onChange={(event) => setName(event.target.value)} className={inputClass} /></label>
         <div className="mt-4 flex justify-end gap-2">
           <button type="button" onClick={onClose} className="h-9 rounded-lg border border-zinc-700 px-3 text-xs text-zinc-300 hover:bg-zinc-800">Cancelar</button>
