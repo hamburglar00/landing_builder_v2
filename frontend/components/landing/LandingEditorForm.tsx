@@ -781,6 +781,25 @@ export function LandingEditorForm({
       {isTemplate4 && (
         <CollapsibleSection title="Chat">
           <div className="space-y-5">
+            <div className="space-y-2">
+              <label
+                htmlFor={fieldId("template4-chat-name")}
+                className="block text-xs font-medium text-zinc-400"
+              >
+                Nombre del chat
+              </label>
+              <input
+                id={fieldId("template4-chat-name")}
+                type="text"
+                value={config.titleLine1}
+                onChange={(e) => updateConfig(setConfig, { titleLine1: e.target.value })}
+                placeholder="Ej.: Sofía"
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+              />
+              <p className="text-[11px] text-zinc-500">
+                Se muestra en el encabezado y reemplaza {"{{name}}"} en los mensajes. No cambia la URL de la landing.
+              </p>
+            </div>
             <ImageUploader
               label="Foto de perfil"
               multiple={false}
@@ -860,7 +879,7 @@ export function LandingEditorForm({
                 className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
               />
               <p className="text-[11px] text-zinc-500">
-                Podés usar {"{{name}}"} para insertar el nombre configurado.
+                Podés usar {"{{name}}"} para insertar el Nombre del chat.
               </p>
             </div>
 

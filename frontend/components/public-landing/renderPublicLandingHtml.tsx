@@ -630,7 +630,7 @@ function renderTemplate3({ config }: RenderParams) {
 }
 
 function renderTemplate4({ config }: RenderParams) {
-  const rawName = config.name || "tu asesor";
+  const rawName = config.content?.title?.[0]?.trim() || "Asesor";
   const name = escapeHtml(rawName);
   const chat = config.content?.template4;
   const profileImageUrl = chat?.profileImageUrl || "";
