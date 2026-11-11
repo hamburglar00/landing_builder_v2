@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { Dispatch, SetStateAction } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import type { Gerencia, GerenciaWorkGroup } from "@/lib/gerencias/types";
 import type { LandingGerenciaAssignment } from "@/lib/gerencias/gerenciasDb";
 import type { Landing, PhoneKind } from "@/lib/landing/types";
@@ -35,6 +35,10 @@ type DisplayGroup = {
   name: string;
   gerencias: Gerencia[];
 };
+
+function normalizeSearch(value: string): string {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
 
 function buildDisplayGroups(gerencias: Gerencia[], workGroups: GerenciaWorkGroup[]): DisplayGroup[] {
   if (workGroups.length === 0) {
@@ -74,7 +78,18 @@ export function GerenciaRedirectSection({
   setAssignments,
   createGerenciasHref,
 }: Props) {
+  const [search, setSearch] = useState("");
+  const searchTerm = normalizeSearch(search);
   const displayGroups = buildDisplayGroups(gerencias, workGroups);
+  const filteredGroups = displayGroups
+    .map((group) => ({
+      ...group,
+      matchingGerencias: group.gerencias.filter((gerencia) =>
+        normalizeSearch(gerencia.nombre).includes(searchTerm) ||
+        String(gerencia.gerencia_id ?? gerencia.id).includes(searchTerm),
+      ),
+    }))
+    .filter((group) => group.matchingGerencias.length > 0);
   const usesWeight = landing.gerenciaSelectionMode === "weighted_random" ||
     landing.gerenciaSelectionMode === "weighted_quota";
 
@@ -279,7 +294,7 @@ export function GerenciaRedirectSection({
 
   return (
     <CollapsibleSection title="Redirección">
-      <div className="mb-3 rounded-lg border border-zinc-700 bg-zinc-900/70 p-3">
+      <div className="mb-3 rounded-lg border border-zinc-700 bg-zinc-900/70 p-3 [&_button]:font-bold">
         <p className="mb-2 text-xs font-medium text-zinc-300">Selección de gerencias</p>
         <div className="flex flex-wrap items-center gap-3">
           <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
@@ -341,9 +356,16 @@ export function GerenciaRedirectSection({
         </div>
       </div>
       <p className="mb-3 text-xs text-zinc-400">Configura a dónde redirigirá el CTA de tu landing page.</p>
-      <p className="mb-3 text-xs text-zinc-500">
-        Desplegá un grupo de trabajo y marcá <strong>Asignar</strong> para incluir sus gerencias. La asignación real sigue siendo por gerencia individual.
-      </p>
+      {gerencias.length > 0 && (
+        <input
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          aria-label="Buscar gerencia por nombre o ID"
+          placeholder="Buscar gerencia por nombre o ID"
+          className="mb-3 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400"
+        />
+      )}
       {gerencias.length === 0 ? (
         <p className="text-sm text-zinc-500">
           No tienes gerencias.{" "}
@@ -351,12 +373,14 @@ export function GerenciaRedirectSection({
             Crear gerencias
           </Link>
         </p>
+      ) : filteredGroups.length === 0 ? (
+        <p role="status" className="text-sm text-zinc-500">No se encontraron gerencias con ese nombre o ID.</p>
       ) : (
         <div className="space-y-3">
-          {displayGroups.map((group) => {
+          {filteredGroups.map((group) => {
             const assignedCount = group.gerencias.filter((g) => assignments.some((a) => a.gerencia_id === g.id)).length;
             return (
-              <details key={group.id} className="overflow-hidden rounded-lg border border-zinc-700 bg-zinc-950/30">
+              <details key={group.id} open={searchTerm ? true : undefined} className="overflow-hidden rounded-lg border border-zinc-700 bg-zinc-950/30">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-zinc-900/80 px-3 py-2 text-sm font-medium text-zinc-200 marker:hidden">
                   <span>{group.name}</span>
                   <span className="text-[11px] font-normal text-zinc-500">
@@ -385,7 +409,7 @@ export function GerenciaRedirectSection({
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-800">{renderRows(group.gerencias)}</tbody>
+                    <tbody className="divide-y divide-zinc-800">{renderRows(group.matchingGerencias)}</tbody>
                   </table>
                 </div>
               </details>
