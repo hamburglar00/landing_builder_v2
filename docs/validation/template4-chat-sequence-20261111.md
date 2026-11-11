@@ -15,3 +15,11 @@ Los motores se publican por separado. Builder sirve Constructor en `constructor.
 Antes de entregar Template 4, ejecutar `node scripts/build-classic-template7.mjs --write` y luego el mismo comando sin `--write`: pese a su nombre, ese generador también sincroniza el renderer y los assets de las plantillas 1–6. Revisar la diferencia, conservar las bases productivas y publicar ambos repositorios desde `main`. Verificar READY, los dominios, los hashes de CSS/runtime y la URL real de la landing en ambos motores. La comprobación del editor y de un renderer clásico aislado no acredita el despliegue del clásico.
 
 La sincronización clásica de este lote modifica únicamente el bundle generado y agrega los mismos CSS/runtime que ya usa Builder; los otros módulos compartidos coinciden. Sus 47 pruebas existentes pasan. Evidencia adicional y comprobación de `b30golden` en `.vercel/template4-classic-release-20261111/`.
+
+## Fondo del documento, descripción e indicador
+
+La revisión del 11/11 corrige también el fondo de `html` y `body`, que seguía negro, y `theme-color` para Template 4: los tres se emiten con `#102326` desde el HTML inicial. Los demás templates conservan sus colores. Se mantienen `viewport-fit=cover` y los insets existentes. Referencias de WebKit: [fondo de las zonas seguras](https://webkit.org/blog/7929/designing-websites-for-iphone-x/) y [color de tema](https://webkit.org/blog/11989/new-webkit-features-in-safari-15/).
+
+La descripción del encabezado se muestra completa en una sola línea; parte de 12 px y se reduce cuando su caja lo requiere. El indicador aumenta texto, punto y espaciado, con tipografía independiente del ajuste de las burbujas, y dice «X personas están escribiendo en este momento». El ajuste de las tres burbujas reserva el espacio real del indicador ampliado y se actualiza también cuando cambia el contador.
+
+Fuente única en Builder, sincronizada al clásico con el generador. Se verifica en ambos motores y en la vista previa: raíz/cuerpo/metadatos del color correcto, descripción sin cortes ni salto de línea, texto nuevo del indicador y tamaño mínimo de 18 px, tres mensajes completos sin scroll y secuencia de un segundo. Los checks de WebKit son automatizados; no equivalen a una captura de las barras nativas en un iPhone físico. Evidencia de esta revisión en `.vercel/template4-mobile-chrome-20261111/`.

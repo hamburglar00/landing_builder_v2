@@ -666,7 +666,7 @@ function renderTemplate4({ config }: RenderParams) {
   const timeTwo = formatTemplate4Time(-1);
   const timeThree = formatTemplate4Time();
 
-  return `<main class="public-landing template4"><section class="template4__phone" aria-label="Chat en vivo"${backgroundStyle}>${cssBackgroundFallback(backgroundImageUrl, '--template4-chat-background-image')}<div class="template4__intro"><div class="template4__spinner">${renderTemplate4Avatar(profileImageUrl, true)}</div><div class="template4__intro-copy"><span>Abriendo sala</span><strong>Abriendo tu chat con ${name}</strong><p>Atencion abierta ahora</p></div></div><header class="template4__header"><div class="template4__avatar-wrap">${renderTemplate4Avatar(profileImageUrl)}<i class="template4__online-dot"></i></div><div class="template4__who"><b>${name} · Asesora</b><span>En linea · responde en ~40 seg</span></div><time class="template4__time" data-template4-current-time>${timeThree}<br><i>24/7</i></time></header><div class="template4__thread" data-public-landing-trigger><div class="template4__stack" data-template4-stack><div class="template4__live-pill"><i></i><span><b data-template4-live-count>14</b> personas en chat ahora mismo</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-1"><p>${bubble1}</p><span data-template4-message-time>${timeOne}</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-2"><p>${bubble2Intro}</p><ul>${bubble2Items.map((item) => `<li>${template4Text(item, "", rawName)}</li>`).join("")}</ul><span data-template4-message-time>${timeTwo}</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-3"><p>${bubble3}</p><span data-template4-message-time>${timeThree}</span></div></div></div><footer class="template4__footer"><button type="button" class="template4__cta" style="color:${escapeHtml(ctaColor)};background:${escapeHtml(ctaBackground)}" data-public-landing-cta data-public-landing-rest-label="${escapeHtml(ctaText)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin numero disponible" aria-label="${escapeHtml(ctaText)}">${renderWhatsAppIcon("template4__cta-icon")}<span data-public-landing-cta-label>${escapeHtml(ctaText)}</span></button></footer></section></main>`;
+  return `<main class="public-landing template4"><section class="template4__phone" aria-label="Chat en vivo"${backgroundStyle}>${cssBackgroundFallback(backgroundImageUrl, '--template4-chat-background-image')}<div class="template4__intro"><div class="template4__spinner">${renderTemplate4Avatar(profileImageUrl, true)}</div><div class="template4__intro-copy"><span>Abriendo sala</span><strong>Abriendo tu chat con ${name}</strong><p>Atencion abierta ahora</p></div></div><header class="template4__header"><div class="template4__avatar-wrap">${renderTemplate4Avatar(profileImageUrl)}<i class="template4__online-dot"></i></div><div class="template4__who"><b>${name} · Asesora</b><span data-template4-status>En linea · responde en ~40 seg</span></div><time class="template4__time" data-template4-current-time>${timeThree}<br><i>24/7</i></time></header><div class="template4__thread" data-public-landing-trigger><div class="template4__stack" data-template4-stack><div class="template4__live-pill"><i></i><span><b data-template4-live-count>14</b> personas están escribiendo en este momento</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-1"><p>${bubble1}</p><span data-template4-message-time>${timeOne}</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-2"><p>${bubble2Intro}</p><ul>${bubble2Items.map((item) => `<li>${template4Text(item, "", rawName)}</li>`).join("")}</ul><span data-template4-message-time>${timeTwo}</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-3"><p>${bubble3}</p><span data-template4-message-time>${timeThree}</span></div></div></div><footer class="template4__footer"><button type="button" class="template4__cta" style="color:${escapeHtml(ctaColor)};background:${escapeHtml(ctaBackground)}" data-public-landing-cta data-public-landing-rest-label="${escapeHtml(ctaText)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin numero disponible" aria-label="${escapeHtml(ctaText)}">${renderWhatsAppIcon("template4__cta-icon")}<span data-public-landing-cta-label>${escapeHtml(ctaText)}</span></button></footer></section></main>`;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -781,6 +781,8 @@ export function renderPublicLandingHtml(params: RenderParams) {
   const isTemplate7 = config.layout?.template === 7 || isTemplate8 || config.layout?.template === 9;
   const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
   const metadata = publicMetadata(config, slug);
+  const template4Background = config.layout?.template === 4 ? ' style="background-color:#102326"' : "";
+  const themeColor = config.layout?.template === 4 ? "#102326" : config.layout?.template === 9 ? getTemplate9Brand(config.tracking?.target_provider || "rey_de_ases", config.tracking?.skin_code).deep : "#000000";
   const supabaseOrigin = (() => {
     const raw = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
     try {
@@ -801,13 +803,13 @@ export function renderPublicLandingHtml(params: RenderParams) {
     ? `<script>(()=>{const input=document.querySelector('[data-template7-name]');if(!input)return;const names=${JSON.stringify(TEMPLATE7_EXAMPLE_NAMES)};input.placeholder='Ej.: '+names[Math.floor(Math.random()*names.length)];})();</script>`
     : "";
 
-  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><script>${buildLandingEntryFunnelScript({ landingId: config.id || '', template: (config.layout?.template || 1) as EntryFunnelTemplate, engine })}</script><title>${escapeHtml(
+  const html = `<!doctype html><html lang="es"${template4Background}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><script>${buildLandingEntryFunnelScript({ landingId: config.id || '', template: (config.layout?.template || 1) as EntryFunnelTemplate, engine })}</script><title>${escapeHtml(
     metadata.title,
   )}</title>${buildPublicMetadataTags(
     config,
     slug,
     canonicalUrl,
-  )}${PUBLIC_LANDING_FAVICON_LINK}<meta name="theme-color" content="${config.layout?.template === 9 ? getTemplate9Brand(config.tracking?.target_provider || "rey_de_ases", config.tracking?.skin_code).deep : "#000000"}">${
+  )}${PUBLIC_LANDING_FAVICON_LINK}<meta name="theme-color" content="${themeColor}">${
     supabaseOrigin
       ? `<link rel="preconnect" href="${escapeHtml(supabaseOrigin)}" crossorigin><link rel="dns-prefetch" href="${escapeHtml(supabaseOrigin)}">`
       : ""
@@ -825,7 +827,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     config.tracking?.phoneCountryCode || "54",
     config.layout?.template || 0,
     engine === 'classic' && !isTemplate7,
-  )}</head><body>${buildPixelNoscript(pixelId)}${renderTemplate(params)}${template7PlaceholderScript}${renderPrivacyFooter(
+  )}</head><body${template4Background}>${buildPixelNoscript(pixelId)}${renderTemplate(params)}${template7PlaceholderScript}${renderPrivacyFooter(
     config,
   )}${runtimeScript}${isTemplate7 ? resourceWarmup(config) : ""}</body></html>`;
   if (!isTemplate7 || isTemplate8) return html;

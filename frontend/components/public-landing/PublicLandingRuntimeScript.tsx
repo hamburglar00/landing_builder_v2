@@ -1838,6 +1838,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
             var delta = Math.random() > 0.5 ? 1 : -1;
             current = Math.max(9, Math.min(24, current + delta));
             count.textContent = String(current);
+            if (thread) fit();
           }, 2600 + Math.floor(Math.random() * 1800));
         }
 

@@ -1930,9 +1930,10 @@ ${TEMPLATE4_BUBBLE_MOTION_CSS}
   display: block;
   margin-top: 4.5px;
   color: #25d366;
-  font-size: clamp(13px, 4.36vw, 18.75px);
+  font-size: var(--template4-status-size, 12px);
   line-height: 1.2;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .public-landing.template4 .template4__time {
@@ -1973,16 +1974,21 @@ ${TEMPLATE4_BUBBLE_MOTION_CSS}
   align-self: center;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   max-width: 100%;
-  padding: calc(8px * var(--template4-fit, 0.6)) calc(13px * var(--template4-fit, 0.6));
+  padding: 8px 13px;
   border: 1px solid rgba(37, 211, 102, 0.3);
   border-radius: 999px;
   color: #eef7f1;
   background: rgba(37, 211, 102, 0.11);
-  font-size: max(9px, calc(12.5px * var(--template4-fit, 0.6)));
-  line-height: 1.1;
+  font-size: clamp(18px, 5.12vw, 25px);
+  line-height: 1.2;
   font-weight: 700;
+  text-align: center;
+}
+
+.public-landing.template4 .template4__live-pill > span {
+  min-width: 0;
 }
 
 .public-landing.template4 .template4__live-pill i,
@@ -1993,6 +1999,11 @@ ${TEMPLATE4_BUBBLE_MOTION_CSS}
   border-radius: 999px;
   background: #25d366;
   animation: publicLandingTemplate4Blink 1.45s ease-in-out infinite;
+}
+
+.public-landing.template4 .template4__live-pill i {
+  width: 12px;
+  height: 12px;
 }
 
 .public-landing.template4 .template4__live-pill b {

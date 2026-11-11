@@ -45,6 +45,15 @@ export const TEMPLATE4_BUBBLE_MOTION_CSS = String.raw`
 export function fitTemplate4Messages(thread: HTMLElement) {
   const stack = thread.querySelector<HTMLElement>("[data-template4-stack]");
   if (!stack || !thread.clientHeight) return;
+  const status = thread.parentElement?.querySelector<HTMLElement>("[data-template4-status]");
+  if (status && status.clientWidth) {
+    status.style.removeProperty("--template4-status-size");
+    const size = parseFloat(getComputedStyle(status).fontSize);
+    if (status.scrollWidth > status.clientWidth) {
+      const fittedSize = Math.floor(size * (status.clientWidth - 1) / status.scrollWidth * 100) / 100;
+      status.style.setProperty("--template4-status-size", `${fittedSize}px`);
+    }
+  }
   const style = getComputedStyle(thread);
   const availableHeight = thread.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
   const availableWidth = thread.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
