@@ -8,6 +8,7 @@ import { buildEntryFunnelRuntimeScript } from "@/lib/landing/entryFunnel.client"
 import { buildLandingFbcFactoryScript } from "@/lib/tracking/landingFbc";
 import { META_EBP_COLLECTOR_URL } from "@/lib/meta/ebpAssetManifest";
 import { buildLandingPhoneRequestFactoryScript } from "@/lib/landing/landingPhoneRequest.client";
+import { fitTemplate4Messages } from "./template4Motion";
 
 type Props = {
   slug: string;
@@ -1822,6 +1823,14 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
       }
 
       function initTemplate4LiveDetails() {
+        var thread = document.querySelector(".template4__thread");
+        if (thread) {
+          var fitMessages = ${fitTemplate4Messages.toString()};
+          var fit = function () { fitMessages(thread); };
+          fit();
+          new ResizeObserver(fit).observe(thread);
+          if (document.fonts) document.fonts.ready.then(fit);
+        }
         var count = document.querySelector("[data-template4-live-count]");
         if (count) {
           var current = Number(count.textContent) || 14;

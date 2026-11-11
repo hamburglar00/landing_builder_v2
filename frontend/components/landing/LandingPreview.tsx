@@ -4,8 +4,9 @@ import { renderTemplate9View } from "@/components/public-landing/template9View";
 import { Template9Preview } from "./Template9Preview";
 import { TEMPLATE9_CSS } from "@/components/public-landing/template9Css";
 import { PUBLIC_LANDING_CSS } from "@/components/public-landing/publicLandingCss";
+import { fitTemplate4Messages, TEMPLATE4_BUBBLE_MOTION_CSS } from "@/components/public-landing/template4Motion";
 import { buildLandingConfig } from "@/lib/landing/buildLandingConfig";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { LandingThemeConfig } from "@/lib/landing/types";
 import { getColorHex, SYSTEM_FONT_FAMILY } from "@/lib/landing/helpers";
 import { buildResponsiveImageSet } from "@/lib/landing/imageUrl";
@@ -129,6 +130,7 @@ export function LandingPreview({
     TEMPLATE5_FEED_ITEMS.slice(0, 3),
   );
   const [template4Now, setTemplate4Now] = useState(() => formatPreviewTime());
+  const template4Thread = useRef<HTMLDivElement>(null);
   const template =
     config.template === "template2"
       ? 2
@@ -144,6 +146,18 @@ export function LandingPreview({
               ? 7
             : 1;
   const ctaPosition = config.ctaPosition ?? "between_title_and_info";
+
+  useLayoutEffect(() => {
+    const thread = template4Thread.current;
+    if (template !== 4 || !thread) return;
+    let active = true;
+    const fit = () => { if (active) fitTemplate4Messages(thread); };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(thread);
+    document.fonts?.ready.then(fit);
+    return () => { active = false; observer.disconnect(); };
+  }, [config, template, gallery]);
 
   useEffect(() => {
     const timeTimer = window.setInterval(() => setTemplate4Now(formatPreviewTime()), 30000);
@@ -511,8 +525,8 @@ export function LandingPreview({
   );
   const renderTemplate4 = () => {
     const outerClass = compact
-      ? "relative h-full w-full overflow-hidden rounded-3xl bg-[#182629] shadow-[0_14px_32px_rgba(0,0,0,0.9)]"
-      : "relative mx-auto aspect-[9/16] w-full max-w-[360px] overflow-hidden rounded-3xl bg-[#182629] shadow-[0_18px_40px_rgba(0,0,0,1)]";
+      ? "relative h-full w-full overflow-hidden rounded-3xl bg-[#102326] [container-type:inline-size] shadow-[0_14px_32px_rgba(0,0,0,0.9)]"
+      : "relative mx-auto aspect-[9/16] w-full max-w-[360px] overflow-hidden rounded-3xl bg-[#102326] [container-type:inline-size] shadow-[0_18px_40px_rgba(0,0,0,1)]";
     const name = config.titleLine1?.trim() || "Asesor";
     const messageTime = template4Now === "--:--" ? "19:36" : template4Now;
     const chat = {
@@ -557,8 +571,8 @@ export function LandingPreview({
             style={backgroundLayerStyle}
           />
           <div className="relative z-[1] flex h-full flex-col">
-            <div className="flex min-h-[54px] items-center gap-2 border-b border-slate-400/15 bg-[#102326] px-3">
-              <div className="grid h-8 w-8 place-items-center overflow-hidden rounded-full border border-white/10 bg-black text-[7px] font-bold text-slate-300/70">
+            <div className="flex min-h-[81px] items-center gap-3 border-b border-slate-400/15 bg-[#102326] px-3">
+              <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-black text-[10.5px] font-bold text-slate-300/70">
                 {profileImageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={profileImageUrl} alt="" className="h-full w-full object-cover" />
@@ -567,8 +581,8 @@ export function LandingPreview({
                 )}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-[12px] font-extrabold text-white">{name} · Asesora</p>
-                <p className="truncate text-[10px] font-bold text-[#25d366]">En linea · responde en ~40 seg</p>
+                <p className="truncate text-[18px] font-extrabold text-white">{name} · Asesora</p>
+                <p className="truncate text-[15px] font-bold text-[#25d366]">En linea · responde en ~40 seg</p>
               </div>
             </div>
             <div className="flex flex-col gap-2 px-3 pt-5">
@@ -590,6 +604,7 @@ export function LandingPreview({
 
     return (
       <div className={outerClass} style={{ fontFamily }}>
+        <style>{TEMPLATE4_BUBBLE_MOTION_CSS}</style>
         <div
           className={`pointer-events-none absolute inset-0 ${backgroundImageUrl ? "opacity-100" : "opacity-[0.2]"}`}
           style={backgroundLayerStyle}
@@ -616,64 +631,66 @@ export function LandingPreview({
             </p>
           </div>
         </div>
-        <div className="flex h-full flex-col">
-          <div className="flex min-h-[66px] items-center gap-3 border-b border-slate-400/15 bg-[#102326] px-4 pt-2.5">
-            <div className="relative grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-white/10 bg-black text-[8px] font-bold text-slate-300/70">
+        <div className="relative z-[1] flex h-full min-h-0 flex-col">
+          <div className="flex min-h-[99px] shrink-0 items-center gap-[clamp(10px,4.18cqw,18px)] border-b border-slate-400/15 bg-[#102326] px-[clamp(12px,5.58cqw,24px)] py-[15px]">
+            <div className="relative grid h-[clamp(48px,14.65cqw,63px)] w-[clamp(48px,14.65cqw,63px)] shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-black text-[12px] font-bold text-slate-300/70">
               {profileImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={profileImageUrl} alt="" className="h-full w-full rounded-full object-cover" />
               ) : (
                 "foto"
               )}
-              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#263639] bg-[#25d366]" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-[18px] w-[18px] rounded-full border-[3px] border-[#102326] bg-[#25d366]" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[15px] font-extrabold leading-tight text-white">
+              <p className="truncate text-[clamp(18px,5.6cqw,24px)] font-extrabold leading-tight text-white">
                 {name} · Asesora
               </p>
-              <p className="mt-1 text-[11px] font-bold text-[#25d366]">
+              <p className="mt-[4.5px] text-[clamp(13px,4.36cqw,18.75px)] font-bold leading-[1.2] text-[#25d366]">
                 En linea · responde en ~40 seg
               </p>
             </div>
-            <span className="text-right text-[10px] font-bold leading-snug text-slate-300/70">
+            <span className="shrink-0 text-right text-[clamp(12px,3.84cqw,16.5px)] font-bold leading-snug text-slate-300/70">
               {messageTime}
               <br />
               <i className="not-italic text-[#e5bd42]">24/7</i>
             </span>
           </div>
-          <div className="relative z-[1] flex flex-1 flex-col justify-start gap-[7px] overflow-hidden px-4 pb-3 pt-[clamp(26px,8vh,78px)]">
-            <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-[#25d366]/30 bg-[#25d366]/10 px-3 py-2 text-[10px] font-bold text-slate-100">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#25d366]" />
-              <span>
-                <b>{template4LiveCount}</b> personas en chat ahora mismo
-              </span>
-            </div>
-            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#223237] px-3 py-2 pb-5 text-[13px] font-semibold leading-snug text-white shadow-[0_3px_12px_rgba(0,0,0,0.34)]">
-              {template4Text(chat.bubble1Text, name)}
-              <span className="float-right -mb-3 mt-1 text-[9px] text-slate-200/80">
-                {messageTime}
-              </span>
-            </div>
-            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#223237] px-3 py-2 pb-5 text-[13px] font-semibold leading-snug text-white shadow-[0_3px_12px_rgba(0,0,0,0.34)]">
-              {template4Text(chat.bubble2Intro, name)}
-              <ul className="mt-2 space-y-0.5 text-[12px] font-semibold text-slate-50">
-                {bubble2Items.map((item) => (
-                  <li key={item}>{template4Text(item, name)}</li>
-                ))}
-              </ul>
-              <span className="float-right -mb-3 mt-1 text-[9px] text-slate-200/80">
-                {messageTime}
-              </span>
-            </div>
-            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#223237] px-3 py-2 pb-5 text-[13px] font-semibold leading-snug text-white shadow-[0_3px_12px_rgba(0,0,0,0.34)]">
-              {template4Text(chat.bubble3Text, name)}
-              <span className="float-right -mb-3 mt-1 text-[9px] text-slate-200/80">
-                {messageTime}
-              </span>
+          <div ref={template4Thread} className="relative z-[1] min-h-0 flex-1 overflow-hidden px-4 py-3">
+            <div data-template4-stack className="relative flex flex-col gap-[calc(9px*var(--template4-fit,0.6))]">
+              <div className="mx-auto inline-flex max-w-full items-center gap-2 rounded-full border border-[#25d366]/30 bg-[#25d366]/10 px-3 py-1 text-[max(9px,calc(12.5px*var(--template4-fit,0.6)))] font-bold text-slate-100">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#25d366]" />
+                <span>
+                  <b>{template4LiveCount}</b> personas en chat ahora mismo
+                </span>
+              </div>
+              <div className="template4__bubble template4__bubble--delay-1 rounded-[14px] rounded-bl bg-[#223237] font-semibold leading-snug text-white shadow-[0_3px_12px_rgba(0,0,0,0.34)]">
+                <p>{template4Text(chat.bubble1Text, name)}</p>
+                <span data-template4-message-time className="text-slate-200/80">
+                  {messageTime}
+                </span>
+              </div>
+              <div className="template4__bubble template4__bubble--delay-2 rounded-[14px] rounded-bl bg-[#223237] font-semibold leading-snug text-white shadow-[0_3px_12px_rgba(0,0,0,0.34)]">
+                <p>{template4Text(chat.bubble2Intro, name)}</p>
+                <ul className="font-semibold text-slate-50">
+                  {bubble2Items.map((item) => (
+                    <li key={item}>{template4Text(item, name)}</li>
+                  ))}
+                </ul>
+                <span data-template4-message-time className="text-slate-200/80">
+                  {messageTime}
+                </span>
+              </div>
+              <div className="template4__bubble template4__bubble--delay-3 rounded-[14px] rounded-bl bg-[#223237] font-semibold leading-snug text-white shadow-[0_3px_12px_rgba(0,0,0,0.34)]">
+                <p>{template4Text(chat.bubble3Text, name)}</p>
+                <span data-template4-message-time className="text-slate-200/80">
+                  {messageTime}
+                </span>
+              </div>
             </div>
           </div>
           {!gallery && (
-            <div className="relative z-[1] border-t border-slate-400/15 bg-[#102326] px-4 pb-6 pt-2.5">
+            <div className="relative z-[1] shrink-0 border-t border-slate-400/15 bg-[#102326] px-4 pb-6 pt-2.5">
               <button
                 className="flex h-[54px] w-full items-center justify-center gap-2.5 rounded-full px-5 text-center text-[15px] font-black shadow-[0_0_0_0_rgba(37,211,102,.5)]"
                 style={{
