@@ -71,6 +71,24 @@ export async function reserveAccount(db: SupabaseClient, identity: Identity) {
     ready: boolean;
   };
 }
+/** Opening proves both existing identities; only an explicit link/create can provision. */
+export async function assertLinkedProfile(
+  db: SupabaseClient,
+  id: string,
+  role: string,
+  parentAdminId?: string,
+) {
+  const [auth, profile] = await Promise.all([
+    db.auth.admin.getUserById(id),
+    db.from("profiles").select(parentAdminId ? "role,admin_id" : "role").eq("id", id).maybeSingle(),
+  ]);
+  if ((auth.error && auth.error.status !== 404) || profile.error)
+    throw new AccessError("No se pudo comprobar la cuenta vinculada. Volvé a intentar.", 503);
+  const row = profile.data as { role?: string; admin_id?: string } | null;
+  if (!auth.data.user || !row || row.role !== role || (parentAdminId && row.admin_id !== parentAdminId))
+    throw new AccessError("La cuenta vinculada ya no está disponible. Volvé a vincularla desde Extensiones.");
+}
+
 export async function ensureManagedAuth(
   db: SupabaseClient,
   id: string,

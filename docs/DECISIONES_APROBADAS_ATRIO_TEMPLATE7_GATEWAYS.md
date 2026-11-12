@@ -2,6 +2,8 @@
 
 ### Publicación de Extensiones PBAdmin autorizada (12/11/2026)
 
+- Refuerzo del contrato ya aprobado: Abrir una vinculación exige que su Auth y perfil sigan existiendo, con el rol y administración correctos. No recrear identidades/perfiles borrados sólo porque la reserva siga marcada lista. Con una lectura incierta, conservar el estado y permitir reintentar; con identidad ausente, pedir nueva vinculación. Se comprobaron primero cuatro fallos reales de la orquestación y se agregan guardias y regresiones para ambos peers, sin otra migración ni cambios de cuentas productivas.
+
 - Leo autoriza comitear/pushear Atrio y Builder, aplicar sus migraciones de desvinculación y desplegar ambos. Reemplaza la espera local de estos adaptadores, conservando cuentas, historial, guardias financieras y las configuraciones particulares de cada sistema. API2/Panel3 ya se entregaron por separado; su despliegue y migraciones siguen a cargo del programador.
 - Atrio publica también la convención aprobada para las altas nuevas y los adaptadores canónicos pendientes de Tracking/recuperación por gerencia, conservando las pantallas móviles ya publicadas. NexoBet mantiene su identidad y cuentas propias; sus pruebas se retoman después, sin copiar este broker. Los cuatro gateways conservan SDK/Worker e ingreso por proveedor y consumen el backend único de Atrio; no requieren cambios de fuente en este lote.
 - La migración de Atrio es `20261112153117_pbadmin_disconnect.sql`; la de Builder `20261112153118_pbadmin_disconnect.sql`. Una por base, antes de publicar los adaptadores. No retirar vínculos ni operar dinero como prueba de publicación. [Alcance y verificación](../../internal-chat/docs/validation/pbadmin-disconnect-release-20261112.md).

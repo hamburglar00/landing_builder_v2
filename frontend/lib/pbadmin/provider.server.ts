@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { initializeClientDefaults } from "../../../supabase/functions/_shared/initialize-client";
 import { AccessError, broker, type Identity } from "./protocol.server";
 import {
+  assertLinkedProfile,
   ensureManagedAuth,
   issueSession,
   reserveAccount,
@@ -39,6 +40,7 @@ export async function provision(
   const db = adminDb(),
     account = await reserveAccount(db, identity);
   const uid = account.account_id;
+  if (identity.intent === "open") await assertLinkedProfile(db, uid, "client");
   if (account.legacy) {
     const user = (await db.auth.admin.getUserById(uid)).data.user;
     const profile = await db
