@@ -23,6 +23,7 @@ for(const [engine,launcher] of [['chromium',playwright.chromium],['webkit',playw
    const url=new URL(route.request().url());assert.equal(url.origin,'https://gateway.test');
    if(url.pathname==='/login'||url.pathname==='/17')return route.fulfill({contentType:'text/html',body:await (url.pathname==='/login'?gatewayLoginPage(provider):gatewayAgencyPage(provider,17)).text()});
    if(url.pathname==='/api/session/recover')return route.fulfill({json:{active:false}});
+   if(url.pathname==='/api/agency-entry'&&route.request().postDataJSON().action==='resume')return route.fulfill({json:{active:false}});
    if(['/api/session/login','/api/agency-entry'].includes(url.pathname))return route.fulfill({status:401,json:{error:'No pudimos ingresar. Revisá tu usuario y contraseña e intentá nuevamente.'}});
    assert.match(url.pathname,/\.webp$/);
    return route.fulfill({contentType:'image/webp',body:await readFile(path.join(root,repo,'public',url.pathname))});
@@ -33,13 +34,15 @@ for(const [engine,launcher] of [['chromium',playwright.chromium],['webkit',playw
    assert.ok(dimensions.scrollWidth<=width,label);assert.ok(dimensions.scrollHeight<=height+1,label);
    assert.ok(dimensions.top>=7&&dimensions.bottom<=height-7,label);assert.ok(dimensions.left>=11&&dimensions.right<=width-11,label);
    assert.equal(dimensions.scrollY,0,label);
-   for(const button of await page.locator('#login-submit,#submit,#toggle').all())assert.equal(await button.evaluate(el=>getComputedStyle(el).textTransform),'uppercase');
+   for(const button of await page.locator('#login-submit,#submit,#toggle,#retry-recovery').all())assert.equal(await button.evaluate(el=>getComputedStyle(el).textTransform),'uppercase');
    assert.ok(await page.locator('img').evaluate(img=>img.complete&&img.naturalWidth>0));
    report.push({engine,provider,width,height,state,passed:true});
   }
   try{
    for(const mode of ['login','17']){
-    await page.goto('https://gateway.test/'+mode);await page.locator('#username').waitFor({state:'visible'});
+    await page.goto('https://gateway.test/'+mode);
+    if(mode==='17'){await page.locator('#name').waitFor({state:'visible'});await fit('register default');await page.locator('#toggle').click();}
+    await page.locator('#username').waitFor({state:'visible'});
     assert.equal(await page.locator('.intro').textContent(),'Tu plataforma y tu asesor, en el mismo lugar.');
     await fit(mode);
     if(mode==='login'&&engine==='chromium'&&((width===390&&height===664)||(width===1365&&height===635)||(provider==='ganamos_net'&&width===568)))await page.screenshot({path:path.join(output,`${provider}-${width}x${height}.png`)});
