@@ -2,6 +2,34 @@
 
 Pedido de Leo del 12/11: implementar el reconocimiento previo de sesión y después comitear/pushear. No incluye operaciones reales, cambios de API2/Panel3 ni despliegues manuales.
 
+## Por qué elegimos este flujo
+
+La diferencia está en si el enlace identifica una gerencia. El objetivo es facilitar el regreso de un jugador y el alta de uno nuevo, conservando la posibilidad de reutilizar una cuenta del casino original.
+
+| Enlace | Qué sabemos | Comportamiento |
+| --- | --- | --- |
+| Genérico, por ejemplo `reydeases.fun` | El casino, pero el enlace no identifica una gerencia ni un asesor para crear una cuenta nueva. | Puede recuperar una sesión válida o permitir el ingreso de una cuenta ya vinculada. Para un alta o una primera vinculación, orientar al enlace de la gerencia/asesor; no elegir un destino por defecto. |
+| Por gerencia, por ejemplo `reydeases.fun/306` | El ID permite validar la gerencia, su casino y su conexión con el bot/asesor correspondiente. | Intentar recuperar la sesión compatible; si no se recupera, ofrecer nombre y «Crear usuario», junto con «Ya tengo usuario. Ingresar». |
+
+La recuperación evita volver a pedir credenciales a quien ya tiene una sesión válida para ese destino. El alta por nombre resulta posible porque la gerencia ya está definida. Abrir el enlace sólo ofrece o recupera el acceso: la cuenta nueva se crea únicamente después de que la persona envía el nombre y presiona «Crear usuario».
+
+**No reconocer una sesión no significa que la persona no tenga cuenta.** Puede estar usando otro navegador, Incógnito o haber perdido sus cookies. Por eso se mantiene visible «Ya tengo usuario» y se explica que debe usarlo quien ya tenga cuenta, evitando un alta innecesaria.
+
+### Para qué se conserva «Ya tengo usuario»
+
+También cubre al jugador que tiene usuario en la página original del casino, dentro de esa gerencia, y todavía no lo había vinculado al gateway. No exige una vinculación previa con el gateway cuando entra desde el enlace por gerencia.
+
+1. La persona ingresa el usuario y la contraseña de su cuenta de casino.
+2. Se validan las credenciales y la pertenencia a la gerencia del enlace. Que el usuario exista en el casino, por sí solo, no alcanza.
+3. Con el circuito habilitado y sin conflictos, se reutiliza esa cuenta y se completa la vinculación interna necesaria con el gateway y su chat. También se reutilizan los vínculos internos que ya existan.
+4. Se establece la sesión para ingresar con esa cuenta y facilitar sus próximas visitas.
+
+Este recorrido no crea otro usuario en el casino ni reinicia su saldo u operaciones. Puede completar registros internos faltantes para representar la cuenta y su vínculo. Una cuenta de otra gerencia o ya vinculada de forma incompatible se rechaza; no se mueve automáticamente a otro asesor/bot.
+
+El ingreso con credenciales, por lo tanto, cumple dos funciones: **incorporar una cuenta de casino todavía no vinculada** y **recuperar el acceso de una cuenta ya vinculada cuya sesión no se pudo reconocer**. La decisión cambia cuál pantalla se ofrece primero en el enlace por gerencia; conserva ambas posibilidades.
+
+Fuentes verificadas: login genérico de los gateways (`gateway-login.ts`), ingreso por gerencia de Atrio (`gateway-agency.server.ts`) y validación/importación existente de API2 (`gateway_agency.service.ts`). La explicación documenta el comportamiento y su motivo; no cambia esas implementaciones.
+
 ## Resultado
 
 `/<agency_id>` valida primero el circuito existente e intenta recuperar la cuenta autenticada del navegador. Si coincide con gerencia, proveedor, asesor, backend y skin, confirma la cookie exacta y abre su casino/chat. La sesión PBAdmin no identifica a un jugador.
