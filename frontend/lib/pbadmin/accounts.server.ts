@@ -45,6 +45,14 @@ export async function verifyNativeAccount(
 }
 
 export async function reserveAccount(db: SupabaseClient, identity: Identity) {
+  if (identity.intent === "open") {
+    const current = await db.from("pbadmin_accounts").select("owner_id,account_id,legacy,ready,disconnected_at")
+      .eq("owner_id", identity.ownerId).maybeSingle();
+    if (current.error) throw new AccessError("No se pudo comprobar la cuenta vinculada.", 503);
+    if (!current.data?.ready || current.data.disconnected_at || current.data.account_id !== identity.accountId)
+      throw new AccessError("La cuenta vinculada ya no está disponible. Volvé a vincular Builder desde Extensiones.");
+    return current.data as { owner_id: number; account_id: string; legacy: boolean; ready: boolean };
+  }
   const result = await db.rpc("reserve_pbadmin_account", {
     p_owner: identity.ownerId,
     p_existing: identity.accountId,

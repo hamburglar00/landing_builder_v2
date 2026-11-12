@@ -177,6 +177,8 @@ try {
       "utf8",
     ),
   );
+  // Both peers share this disposable fixture; Atrio adds the personal reservation RPC.
+  sql(await readFile(path.join(atrio,"supabase/migrations/20261112153117_pbadmin_disconnect.sql"),"utf8"));
   const rest = run("public.ecr.aws/supabase/postgrest:v14.3", [
     "--publish",
     "127.0.0.1::3000",
@@ -985,13 +987,22 @@ try {
     );
   });
   let atrioAdmin, atrioMarketer;
-  await test("marketing can activate first; admin later reuses the administration and gets own advisor", async () => {
-    const marketer = await atrioProvider.provision(
+  await test("administrator links first; marketing then joins the same administration with its own advisor", async () => {
+    await assert.rejects(atrioProvider.provision(
       { ...identity(201, 202), provider: "atrio", role: 3 },
       "synthetic-grant",
-    );
+    ), /administrador debe crear o vincular primero/);
+    assert.equal((await db.from("pbadmin_accounts").select("owner_id").eq("owner_id", 201)).data.length, 0);
     const admin = await atrioProvider.provision(
       { ...identity(201, 203), provider: "atrio" },
+      "synthetic-grant",
+    );
+    const adminUser = (
+      await authClient.auth.getUser(admin.session.access_token)
+    ).data.user;
+    const token = registrations.at(-1).advisorToken;
+    const marketer = await atrioProvider.provision(
+      { ...identity(201, 202), provider: "atrio", role: 3, accountId: adminUser.id },
       "synthetic-grant",
     );
     atrioAdmin = admin;
@@ -1003,9 +1014,6 @@ try {
         .eq("id", marketer.advisorId)
         .single()
     ).data;
-    const adminUser = (
-      await authClient.auth.getUser(admin.session.access_token)
-    ).data.user;
     assert.equal(marketerProfile.admin_id, adminUser.id);
     assert.notEqual(admin.advisorId, marketer.advisorId);
     assert.equal(
@@ -1013,7 +1021,6 @@ try {
         .data.role,
       "admin",
     );
-    const token = registrations.at(-1).advisorToken;
     assert.equal(typeof token, "string");
     assert.ok(token.length >= 32);
     const retry = await atrioProvider.provision(
@@ -1100,6 +1107,53 @@ try {
       .update({ admin_id: defaultsId })
       .eq("id", atrioAdmin.advisorId);
     assert.equal((await switchTo("advisor")).status, 403);
+  });
+  const unlinkBuilder=await bundle(path.join(root,'frontend/app/api/pbadmin/disconnect/route.ts'),'unlink-builder',path.join(root,'frontend'));
+  const unlinkAtrio=await bundle(path.join(atrio,'src/app/api/pbadmin/disconnect/route.ts'),'unlink-atrio',path.join(atrio,'src'));
+  const unlink=(route,body,authorized=true)=>route.POST(new Request(base+'/api/pbadmin/disconnect',{
+    method:'POST',headers:{'Content-Type':'application/json',...(authorized?{'x-extension-secret':process.env.PBADMIN_EXTENSIONS_SECRET}:{})},body:JSON.stringify(body),
+  }));
+  await test('Builder unlink revokes delegated access, preserves native credentials and permits a different verified account',async()=>{
+    const previous=(await db.from('pbadmin_accounts').select('account_id').eq('owner_id',103).single()).data.account_id;
+    const opened=await builder.provision({...identity(103),intent:'open',accountId:previous},'synthetic-grant');
+    const body={ownerId:103,userId:103,accountId:previous,scope:'workspace'};
+    assert.equal((await unlink(unlinkBuilder,body,false)).status,401);
+    assert.equal((await unlink(unlinkBuilder,body)).status,200);
+    assert.equal((await unlink(unlinkBuilder,body)).status,200,'Retry is idempotent');
+    await assert.rejects(builder.provision({...identity(103),intent:'open',accountId:previous},'synthetic-grant'));
+    const scoped=createClient(base,jwt('anon'),{global:{headers:{Authorization:`Bearer ${opened.session.access_token}`}},auth:{persistSession:false}});
+    assert.equal((await scoped.from('profiles').select('*')).error?.code,'42501');
+    assert.equal((await builder.sessionClient().auth.signInWithPassword({email:'legacy@example.test',password:'Only-local-fixture-password-47'})).error,null);
+    assert.equal((await db.from('client_subscriptions').select('max_landings').eq('user_id',previous).single()).data.max_landings,99);
+    const replacement=await create('replacement-builder@example.test');
+    await db.from('profiles').insert({id:replacement,role:'client',nombre:'replacementfixture'});
+    assert.equal((await builder.connect({...identity(103),intent:'link'},'synthetic-grant',{email:'replacement-builder@example.test',password:'Only-local-fixture-password-47'})).status,'connected');
+    assert.equal((await db.from('pbadmin_accounts').select('account_id').eq('owner_id',103).single()).data.account_id,replacement);
+    assert.equal((await unlink(unlinkBuilder,body)).status,503,'Old unlink cannot affect the replacement');
+    assert.equal((await scoped.from('profiles').select('*')).error?.code,'42501','Old session remains revoked after relinking');
+  });
+  await test('Atrio personal unlink permits another advisor, and workspace unlink permits another administration without deleting profiles',async()=>{
+    const admin=await create('unlink-admin@example.test'),first=await create('unlink-first@example.test'),second=await create('unlink-second@example.test');
+    await db.from('profiles').insert([{id:admin,role:'admin'},...[[first,'unlink-first'],[second,'unlink-second']].map(([id,slug])=>({id,role:'advisor',admin_id:admin,slug}))]);
+    const subject={...identity(506),provider:'atrio',intent:'link'};
+    const credentials={email:'unlink-admin@example.test',password:'Only-local-fixture-password-47'};
+    await atrioProvider.connect(subject,'synthetic-grant',{...credentials,advisorId:first});
+    const opened=await atrioProvider.provision({...subject,intent:'open',accountId:admin},'synthetic-grant');
+    const personal={ownerId:506,userId:506,accountId:admin,advisorId:first,scope:'personal'};
+    assert.equal((await unlink(unlinkAtrio,personal)).status,200);
+    await assert.rejects(atrioProvider.provision({...subject,intent:'open',accountId:admin},'synthetic-grant'));
+    assert.equal((await db.from('profiles').select('id').in('id',[admin,first,second])).data.length,3);
+    await atrioProvider.connect({...subject,accountId:admin},'synthetic-grant',{...credentials,advisorId:second});
+    assert.equal((await db.from('pbadmin_people').select('advisor_id').eq('user_id',506).single()).data.advisor_id,second);
+    assert.equal((await unlink(unlinkAtrio,personal)).status,503);
+    const scoped=createClient(base,jwt('anon'),{global:{headers:{Authorization:`Bearer ${opened.session.access_token}`}},auth:{persistSession:false}});
+    assert.equal((await scoped.from('profiles').select('*')).error?.code,'42501');
+    assert.equal((await unlink(unlinkAtrio,{...personal,scope:'workspace'})).status,200);
+    const replacementAdmin=await create('unlink-replacement-admin@example.test'),replacementAdvisor=await create('unlink-replacement-advisor@example.test');
+    await db.from('profiles').insert([{id:replacementAdmin,role:'admin'},{id:replacementAdvisor,role:'advisor',admin_id:replacementAdmin,slug:'unlink-replacement-advisor'}]);
+    await atrioProvider.connect(subject,'synthetic-grant',{email:'unlink-replacement-admin@example.test',password:'Only-local-fixture-password-47',advisorId:replacementAdvisor});
+    assert.equal((await db.from('pbadmin_accounts').select('account_id').eq('owner_id',506).single()).data.account_id,replacementAdmin);
+    assert.equal((await db.from('profiles').select('id').in('id',[admin,first,second])).data.length,3);
   });
   console.log(`PASS ${passed} actual Auth/PostgreSQL/PostgREST scenarios`);
 } finally {

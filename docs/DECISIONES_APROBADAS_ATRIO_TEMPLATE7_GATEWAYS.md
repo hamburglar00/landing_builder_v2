@@ -1,5 +1,101 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+### Publicación de Extensiones PBAdmin autorizada (12/11/2026)
+
+- Leo autoriza comitear/pushear Atrio y Builder, aplicar sus migraciones de desvinculación y desplegar ambos. Reemplaza la espera local de estos adaptadores, conservando cuentas, historial, guardias financieras y las configuraciones particulares de cada sistema. API2/Panel3 ya se entregaron por separado; su despliegue y migraciones siguen a cargo del programador.
+- Atrio publica también la convención aprobada para las altas nuevas y los adaptadores canónicos pendientes de Tracking/recuperación por gerencia, conservando las pantallas móviles ya publicadas. NexoBet mantiene su identidad y cuentas propias; sus pruebas se retoman después, sin copiar este broker. Los cuatro gateways conservan SDK/Worker e ingreso por proveedor y consumen el backend único de Atrio; no requieren cambios de fuente en este lote.
+- La migración de Atrio es `20261112153117_pbadmin_disconnect.sql`; la de Builder `20261112153118_pbadmin_disconnect.sql`. Una por base, antes de publicar los adaptadores. No retirar vínculos ni operar dinero como prueba de publicación. [Alcance y verificación](../../internal-chat/docs/validation/pbadmin-disconnect-release-20261112.md).
+
+### Acceso móvil a las cards de Configuración del asesor (12/11/2026)
+
+- Pedido explícito: organizar el ingreso a las cards de Configuración del asesor como una lista agrupada de accesos, con iconos y flechas, inspirada en WhatsApp pero con el estilo oscuro/dorado de Atrio. Aclaración: sólo celular; conservar el escritorio como está.
+- Cada acceso abre su contenido existente y un botón para volver a Configuración. Conservar los borradores durante esa navegación y las acciones/validaciones originales. Conexiones reúne el token/UUID y los bots vinculados, sin un segundo acordeón. En escritorio se mantienen todas las cards y sus dos columnas.
+- Pedido anterior conservado en el mismo lote: separar más el nombre/email de la descripción de Disponible/Ausente en el modal del estado del asesor, con espacio y divisor sutil.
+- Alcance exclusivo de las superficies internas de Atrio. NexoBet conserva su adaptador propio de Configuración y navegación; el widget y los cuatro gateways no utilizan estos accesos. Sin cambios de SDK/Worker, permisos, datos, API2/Panel3, finanzas ni migraciones. [Validación y entrega](../../internal-chat/docs/validation/advisor-mobile-settings-20261112.md).
+- Publicado: fuente canónica `506a548`, fuente aislada `d56fea7`, deployment `dpl_2vg4QHQH4XW6AKNZTTk7HAwHUYia`, READY y promovido a www.atrio.website. Seis recorridos de navegación/configuración, dieciséis casos de los cuatro proveedores y cuatro recorridos de perfil/filtros aprobados, además de TypeScript/ESLint y build productivo. Reversión: `dpl_4xtp1t7F8ZnemFSTDAQ8xv2bPWL4`.
+
+### Perfil interno, logo y filtros de usuarios de Atrio (12/11/2026)
+
+- Pedido explícito: el CTA inferior del perfil muestra el email debajo del nombre al abrir su contenido. En el asesor se conserva el selector de estado y se añade el correo de su sesión; en administración el CTA inferior abre Mi perfil y presenta allí el correo. La foto del administrador queda en el CTA inferior; la cabecera conserva el logo canónico de Atrio.
+- Superadmin, Admins: búsqueda de nombre/email y estados Activo/Inactivo, sin filtro de asignación a otro administrador. Asesores: búsqueda y estado Activo/Ausente, más lista de administradores con buscador propio por nombre/email; estado y administrador pueden combinarse. Estados con círculos verde/rojo tanto en opciones como en la selección.
+- Aclaración confirmada por Leo: Activo/Inactivo de administradores significa acceso habilitado/bloqueado. Leer el bloqueo vigente de Auth en servidor; no deducirlo de la última conexión, no modificarlo desde el filtro. Datos de acceso no disponibles se presentan como Sin confirmar y quedan fuera de los filtros de estado confirmado.
+- Alcance: navegación y administración propias de Atrio. NexoBet conserva sus shells/adaptadores de cuenta y superadmin sin esta jerarquía; el widget de los cuatro gateways no usa estos controles. Sin cambios de SDK/Worker, altas, permisos, RLS, reglas financieras, API2 o Panel3. [Validación y publicación](../../internal-chat/docs/validation/internal-profile-filters-20261112.md).
+- Publicado: fuente canónica `52ceb27`, fuente aislada `81dd381`, deployment `dpl_4xtp1t7F8ZnemFSTDAQ8xv2bPWL4`, READY y promovido a www.atrio.website. Pruebas Chromium/WebKit de filtros, perfil y alta; TypeScript/ESLint, lectura Auth y build productivo aprobados. Reversión: `dpl_8nFCStmbLnUdq5wAsT32AZjDCAaY`.
+
+### Nombres y correos creados desde PBAdmin en Atrio (12/11/2026, sólo local)
+
+- El usuario ratifica el ingreso mediante «Ingresar con PBAdmin»: conservar sesiones delegadas y no copiar contraseñas. Corregir los datos generados en las altas nuevas, sin migrar automáticamente las cuentas existentes.
+- Administrador: correo de su usuario PBAdmin y nombre de la administración. Asesor personal del administrador: nombre de la administración + « · Asesor» y correo normalizado `nombreAdministracion.asesor@gmail.com`, formato solicitado expresamente. Este identificador no crea un buzón de Gmail ni acredita su propiedad.
+- Colaborador: asesor con su correo/nombre PBAdmin, dentro de la administración ya vinculada. Confirmación expresa: el administrador debe vincular primero; no crear un administrador técnico automáticamente desde un colaborador.
+- Conservar los UUID, vínculos, credenciales nativas, perfiles existentes y reintentos. Un correo ocupado requiere revisión/vinculación y no permite apropiarse de otra cuenta ni generar otra dirección aleatoria.
+- Fuente: adaptador PBAdmin de Atrio. API2/Panel3 ya aportan la identidad; no cambian. Builder y el alta comercial propia de NexoBet permanecen fuera del alcance. Los cuatro gateways conservan ingreso, SDK y Worker. Sin publicación, cuentas productivas modificadas ni nuevas migraciones. [Implementación y validación](../../internal-chat/docs/validation/pbadmin-managed-identity-20261112.md).
+
+### Matriz de permisos de PBAdmin y etiqueta de rol por usuario (12/11/2026, sólo local)
+
+- El nombre opcional del rol personalizado es una etiqueta del usuario; no crea un perfil reutilizable ni concede permisos. Mantener la validación de dependencias, tipos de bot, delegación y recursos propios en API2 y Panel3.
+- Ver Finanzas conserva la carga/procesamiento de comprobantes manuales. Editar Tracking queda exclusivo del administrador; el switch de usuarios personalizados se muestra deshabilitado.
+- MKT y Full Carga pueden coexistir. La visualización de una gerencia con $0 antes del primer ingreso queda pendiente de discutir con el programador; no implementar cambios de wallets/saldos para ese punto.
+- Cambios locales en API2/Panel3 y migración aditiva preparada para la etiqueta. No cambia el login, chat, SDK ni Worker de los cuatro gateways, Atrio, Builder o NexoBet. [Matriz y verificación](../../../../../Documents/GitHub/api2/docs/validation/permission-matrix-20261112.md).
+
+### Activación completa de Full Carga en PBAdmin (12/11/2026, sólo local)
+
+- Al activar Full Carga al crear/editar un usuario, completar el paquete operativo y conservar MKT. Leo confirma retiro/transferencia de saldo y pago/cancelación de descargas sobre recursos propios. Los ajustes posteriores por acción y la delegación siguen vigentes; no conceder gestión de usuarios ni eliminación de recursos.
+- El alta guiada de API2 debe separar el identificador interno único del nombre visible para que MKT y Full Carga puedan compartir nombre sin colisionar. No cambiar los bots existentes ni sus métodos de pago, y conservar la recuperación por reintentos. Es una corrección común del orquestador para los cuatro proveedores, sin cambios de SDK, Worker, login, chat ni NexoBet.
+- Mostrar gerencias Full Carga/PBAdmin Wallet aunque aún no tengan fila de saldo queda pendiente de discutir con el programador por decisión posterior de Leo. No implementar esta consulta ni crear filas artificiales o movimientos para hacerlas aparecer.
+- Preparado en local en API2/Panel3, sin cuentas reales modificadas ni publicación. [Hallazgos, validación y pendiente financiero](../../../../../Documents/GitHub/api2/docs/validation/full-carga-custom-access-20261112.md).
+
+### Desvincular Builder/Atrio desde PBAdmin (12/11/2026, sólo local)
+
+- Pedido explícito: permitir quitar una vinculación incorrecta o cuyo usuario remoto fue eliminado. Conservar las cuentas y sus datos; revocar únicamente el acceso delegado y liberar las reservas para vincular nuevamente.
+- Atrio desactiva en API2 los bots asociados al alcance confirmado. El administrador elige su acceso personal o toda la administración; un colaborador sólo puede quitar el propio. Volver a vincular no reactiva ni reasigna los bots anteriores.
+- Builder se desvincula por administración y quita de Tracking de PBAdmin su URL completada automáticamente; conservar toda URL personalizada y el estado de los bots. Las selecciones de Tracking en Atrio permanecen independientes.
+- Fuente del vínculo y autorización: API2, con confirmación previa en Panel3. Los dos peers incorporan liberación privada y revocación de sesiones conservando los registros de sesión necesarios para bloquear JWT antiguos. Reintentos y solicitudes antiguas no deben afectar una cuenta nueva ni otra administración.
+- Lote exclusivamente local en API2, Panel3 y los adaptadores PBAdmin de Builder/Atrio, con una migración propia preparada en cada peer. Sin publicación, cambios de cuentas reales ni reglas financieras. NexoBet conserva su alta propia y su copia fijada del adaptador; no cambia el chat ni el ingreso de los cuatro gateways, sus SDK o Worker. [Validación y orden futuro](../../../../../Documents/GitHub/api2/docs/validation/extensions-disconnect-20261112.md).
+
+### Cerrar el formulario tras crear un asesor en Atrio (12/11/2026)
+
+- Pedido explícito: al confirmar el alta exitosa de un asesor, cerrar el formulario y mostrar un mensaje de éxito. Aplicar al formulario interno compartido con Nuevo admin; conservar su autorización existente.
+- Confirmar únicamente ante éxito del servidor, refrescar el listado y mostrar un aviso accesible en móvil/escritorio. Con errores, conservar el formulario y los campos principales; una respuesta de red desconocida no acredita éxito. Deshabilitar cierre y envío mientras la solicitud está pendiente, y limpiar avisos al abrir otra alta.
+- Alcance: panel administrativo de Atrio. NexoBet conserva su superadmin adaptado y su copia fijada de `admin-users-shell`; los cuatro gateways no usan este formulario y no requieren publicación. Sin cambios de SDK/Worker, datos, esquema, Auth/RLS, API2, Panel3 ni reglas financieras. [Validación y entrega](../../internal-chat/docs/validation/internal-user-creation-20261112.md).
+- Publicado: fuente canónica `4788412`, fuente aislada `aa28689` sobre el frontend productivo anterior. Deployment `dpl_8nFCStmbLnUdq5wAsT32AZjDCAaY`, READY y promovido a www.atrio.website. Ocho escenarios de creación con servicios ficticios y build Next/TypeScript aprobados; sin altas reales de prueba. Reversión: `dpl_5iwLp5PC31kE5pQy3urNsDx4rR9d`.
+
+### Confirmar la suscripción de Telegram desde el bot (12/11/2026)
+
+- Pedido explícito para Atrio y NexoBet: al completarse la vinculación con el bot, enviar una confirmación de éxito con emoji en el mismo chat. Texto común con marca propia: «✅ ¡Vinculación realizada con éxito! 🔔 Ya podés recibir las notificaciones de Atrio/NexoBet por este chat».
+- Confirmar sólo después de guardar el destino y habilitar el canal con el token vigente; comprobar la aceptación de Telegram y permitir reintentos ante fallos. Conservar secretos, identidades y la guardia de cuenta activa de NexoBet. No enviar mensajes de prueba a destinos reales.
+- Fuente compartida: helper de Atrio y adaptadores de `telegram-webhook` de cada producto. Publicación independiente de esas dos Edge Functions, sin redeploy del frontend, cambios de SDK/Worker, API2, Panel3, datos o reglas financieras. Los cuatro gateways conservan sus canales actuales. [Evidencia y estado por producto](../../internal-chat/docs/validation/telegram-link-confirmation-20261112.md).
+- Publicadas las dos Edge Functions en versión 3, `ACTIVE`, conservando el secreto de Telegram y `verify_jwt=false`; fuentes desplegadas verificadas y rechazo 403 sin secreto. Fuente canónica del helper comiteada y pusheada en Atrio: `a7876dc`, rama `release/telegram-link-confirmation-20261112`. La copia revisada de NexoBet agrega sólo ese helper como pin catorce, conservando los anteriores.
+
+- NexoBet comiteado y pusheado en la misma rama de entrega, `348b40d`, con `npm run test:regression` aprobado: 38/38 etapas, cero fallos, incluido el build. Sus secretos y guardias propios se mantienen. El registro local compartido conserva las entradas de otros lotes sin incluirlas en estos commits.
+
+### Respuestas de carga según el titular (12/11/2026)
+
+- Aclaración del usuario: `/titular` debía tomar el nombre del titular de cada billetera, permitiendo elegir una específica entre varias. Generar un atajo por billetera activa, con alias/terminación para distinguirla y sufijos ante titulares repetidos. Configuración los coloca debajo de Bienvenida y Ausencia.
+- El envío manual identifica la billetera por ID y revalida pertenencia/vigencia mediante la sesión RLS de la conversación. No reemplazar una opción pausada/eliminada por otra. Conservar el chip automático y la autoridad bancaria de Full Carga/PBAdmin, sin tocar reglas financieras ni API2/Panel3.
+- Fuente canónica Atrio, mismo alcance del pedido actual. Los cuatro casinos consumen ese chat; SDK y Worker no cambian. Publicado desde `f6ab484`, deployment `dpl_5iwLp5PC31kE5pQy3urNsDx4rR9d`, READY y promovido a www.atrio.website. Se excluyen Tracking y gateway-agency; NexoBet conserva su copia y adaptadores. [Validación y publicación](../../internal-chat/docs/validation/wallet-holder-quick-replies-20261112.md).
+
+### Modal compacto de Atrio y publicación de `/titular` (11/11/2026)
+
+- El usuario pide la invitación a notificaciones completa sin scroll, con aire superior e inferior en móvil/PC. Más tarde y Finalizar comparten fila; cabecera, contador y progreso sólo se muestran cuando hay varios pasos.
+- Ajustar únicamente la guía inicial de Atrio, conservando consentimiento explícito, confirmaciones reales, navegación/foco y recuperación ante errores. NexoBet conserva su onboarding propio; no cambia la tarjeta compartida de notificaciones.
+- Gera tiene una billetera activa; el dominio publicado sigue en `dcd5497`, previo al commit `/titular` `02f0e28`. Publicar la respuesta y el modal desde esa base productiva, sin incorporar el adaptador Tracking `b350b93` de otro lote. Los cuatro casinos reciben el mismo chat de Atrio, sin cambios de SDK/Worker, reglas financieras, API2 ni Panel3.
+- Publicado el 12/11: fuente `d721097` en `release/atrio-setup-titular-20261112`, deployment `dpl_cvprb4TsNfYkLKdVxv8VJowwjqTN`, READY y promovido a www.atrio.website. 124 escenarios de la guía y 90 adicionales con CSS/fuentes productivas aprobados. Evidencia, comprobaciones y reversión: [validación](../../internal-chat/docs/validation/setup-fit-titular-release-20261111.md).
+
+### Respuesta rápida `/titular` en Atrio (11/11/2026, implementación local)
+
+- Pedido: «En este proyecto» generar automáticamente `/titular` cuando el asesor tenga una billetera configurada, para enviar la tarjeta del chip Cargar sin esperar que el cliente lo toque. Elegir el atajo prepara el envío; el asesor lo confirma con Enviar.
+- La respuesta usa los datos vigentes y la selección existente de `resolveClientLoadWallet`; Full Carga conserva su consulta a PBAdmin, sin usar billeteras manuales como alternativa ante errores. No modifica lógica financiera, API2 ni Panel3.
+- Fuente canónica: inbox/API de Atrio y atajo virtual, sin migración. Los cuatro casinos consumen la misma tarjeta del widget, con sus identidades actuales; no cambia SDK ni Worker. NexoBet se revisó como consumidor con adaptadores propios, sin cambios de su copia en este pedido al proyecto actual; su importación y publicación no se dan por realizadas.
+- Evidencia y estado por producto: [validación local](../../internal-chat/docs/validation/wallet-quick-reply-20261111.md). Sin commit/push ni despliegue en este turno.
+
+### Completar Tracking al vincular Builder y Atrio desde PBAdmin (11/11/2026, sólo local)
+
+- Leo descarta múltiples URL y switches. Conservar la única URL POST de cada sistema, sus configuraciones personalizadas y su independencia. API2 conserva su guardado administrativo existente; entregar a Atrio la URL canónica del Builder vinculado a la misma administración, únicamente para completar un destino faltante.
+- Atrio guarda `meta_tracking.config.eventUrl` a nivel administrativo, de donde sus asesores ya heredan el destino. Guardar la URL no habilita la integración ni concede permisos: mantener los flags actuales y crear una configuración ausente con `enabled=false`. La habilitación posterior conserva y recupera la URL guardada.
+- Cubrir ambos órdenes de vinculación, nuevas cuentas/asesores, reintentos y cuentas ya vinculadas mediante el reconciliador existente. No sobrescribir una URL guardada ni una edición concurrente. No cambiar el despacho, las atribuciones, los identificadores, fechas o importes de los eventos.
+- Alcance: API2 y adaptador PBAdmin de Atrio. Builder conserva su proveedor actual; Panel3, NexoBet, los SDK y los cuatro gateways/Worker no requieren cambios. NexoBet conserva su alta y marketing propios. Todos los casinos usan la configuración única de Atrio, sin reglas por proveedor.
+- Preparado exclusivamente en local; sin commit/push, despliegue ni cambios de cuentas reales. No agrega esquema, migraciones ni variables de entorno. Validación y orden futuro de publicación en [la evidencia del lote](../../internal-chat/docs/validation/pbadmin-builder-tracking-20261111.md).
+
 ### Seguimiento de lotes y cobertura de medición (10/11/2026)
 
 - El usuario acepta los cuatro puntos de la siguiente mejora: adelantar la precarga, medir y acelerar servidor/transporte, revisar la caché de ambos motores y medir el número listo al clic. Solicita trabajar en lotes mayores sin que se pierdan pendientes; esta revisión registra el alcance, sin iniciar su implementación.

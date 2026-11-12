@@ -146,7 +146,8 @@ export async function provision(
     .from("pbadmin_accounts")
     .update({ ready: true })
     .eq("owner_id", identity.ownerId)
-    .eq("account_id", uid);
+    .eq("account_id", uid)
+    .is("disconnected_at", null).select("account_id").single();
   if (ready.error)
     throw new AccessError("El vínculo quedó pendiente. Volvé a intentar.", 503);
   return {
