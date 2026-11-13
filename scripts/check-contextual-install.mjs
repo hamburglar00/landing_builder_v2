@@ -26,7 +26,7 @@ const TWO_HOURS = 2 * 60 * 60 * 1000;
 for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", chromium]] : (process.argv.includes("--webkit") ? [["WebKit", webkit]] : [["Chromium", chromium], ["WebKit", webkit]]))) {
   const browser = await type.launch({ headless: true });
   try {
-    for (const [repo, fallbackSource] of (process.argv.includes("--quick") ? configs.slice(0, 1) : configs)) {
+    for (const [repo, fallbackSource] of (process.argv.includes("--quick") ? configs.slice(0, 1) : configs.filter(([repo])=>!process.env.GATEWAY_TEST_PROVIDER || repo===process.env.GATEWAY_TEST_PROVIDER))) {
       const root = path.join(workspace, repo);
       const js = await readFile(path.join(root, "public/gateway-client.js"), "utf8");
       const source = js.match(/messageSource:.*?\|\| "([^"]+)"/)?.[1] || fallbackSource;
@@ -47,7 +47,7 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
       page.on("pageerror", error => errors.push(error.message));
       let serial = 0;
       let now = Date.now();
-      let profile = {};
+      let profile = { displayName:"Prueba",whatsapp:"",email:"" };
       await page.clock.setFixedTime(now);
       const msg = (sender, content, metadata = {}) => ({ id: `fixture-message-${++serial}`, sender, type: "texto", content, metadata, created_at: new Date(now + serial).toISOString(), read_at: null });
       const wallet = msg("asesor", "Cuenta de prueba", { wallet: { accountNumber: "0000000000000000000000", alias: "fixture", holderName: "Fixture" } });
@@ -58,7 +58,7 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
         if (url.hostname === "gateway.test") {
           if (url.pathname === "/gateway-client.js") return route.fulfill({ contentType: "text/javascript; charset=utf-8", body: js });
           if (url.pathname === "/gateway-app-sdk.js") return route.fulfill({ contentType: "text/javascript; charset=utf-8", body: sdk });
-          if (url.pathname === "/") return route.fulfill({ contentType: "text/html; charset=utf-8", body: `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{background:#11001f}${css}</style></head><body><script src="/gateway-client.js" data-chat-url="https://chat.test/embed" data-initial-chat-open="true"></script></body></html>` });
+          if (url.pathname === "/") return route.fulfill({ contentType: "text/html; charset=utf-8", body: `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>:root{--gateway-primary:#a726d9;--gateway-surface:#1c082e;--gateway-page-background:#11001f}body{background:#11001f}${css}</style></head><body><script src="/gateway-client.js" data-chat-url="https://chat.test/embed" data-initial-chat-open="true"></script></body></html>` });
           return route.fulfill({ json: { ok: true, active: false } });
         }
         if (url.hostname === "chat.test") {
@@ -67,6 +67,12 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
           if (url.pathname === "/api/gateway/chat" && route.request().method() === "POST") {
             const body = route.request().postDataJSON();
             if (body.action === "visible_entry") return route.fulfill({ json: { messages, walletReady: true, walletRequestCompleted: true, entryDiagnostics: [] } });
+            if (body.action === "app_invitation" || body.action === "installation_help") {
+              const source = body.action === "app_invitation" ? "automatic_install_invite" : "client_install_help";
+              let message = messages.find(row=>row.metadata?.source===source);
+              if (!message) { message = {...msg("asesor","Guardamos tu acceso para volver cuando quieras",{source}),type:body.action === "app_invitation" ? "instrucciones_instalacion" : "texto"}; messages.push(message); }
+              return route.fulfill({json:{message}});
+            }
             if (body.action === "message") { const message = msg("cliente", body.content); messages.push(message); return route.fulfill({ json: { message } }); }
           }
           return route.fulfill({ json: { ok: true, messages, profile } });
@@ -75,112 +81,80 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
       });
       await page.goto("https://gateway.test/");
       const chat = page.frameLocator("#gateway-chat-shell iframe");
-      const offer = chat.getByRole("complementary", { name: "Guardar acceso en este teléfono" });
+      const closeChat = async () => {
+        await page.locator('#gateway-chat-shell[data-motion="open"]').waitFor();
+        await chat.getByRole("button",{name:"Cerrar chat",exact:true}).click();
+        await page.locator('#gateway-chat-shell[data-open="false"]').waitFor();
+      };
+      const offer = chat.locator('[data-chat-invitation-action="install_app"]');
       await chat.getByPlaceholder("Escribi un mensaje...").waitFor();
       await page.waitForFunction(() => !!window.GatewayApp);
-      for(const name of ["Mi perfil","Cerrar chat"]){
+      for (const name of ["Mi perfil","Cerrar chat"]) {
         const button=chat.getByRole("button",{name,exact:true});
-        assert.equal(await button.evaluate(el=>getComputedStyle(el).borderTopColor),"rgb(255, 255, 255)");
-        assert.equal(await button.locator("svg").first().evaluate(el=>getComputedStyle(el).color),"rgb(255, 255, 255)");
+        assert.equal(await button.evaluate(el=>getComputedStyle(el).borderTopWidth),"0px");
+        assert.ok(Math.abs((await button.boundingBox()).width-40)<1);
       }
-      await page.waitForTimeout(1800);
-      assert.equal(await offer.count(), 0);
-      assert.equal(await page.getByRole("dialog").count(), 0, "No automatic install modal at entry");
-      await chat.getByRole("button", { name: "Cerrar chat", exact: true }).click();
-      await page.waitForTimeout(700);
-      assert.equal(await page.getByRole("dialog").count(), 0, "Closing chat must not open install modal");
-      await page.getByRole("button", { name: "Abrir chat de Atrio" }).click();
+      assert.equal(await chat.getByRole("button",{name:/Maximizar/}).count(),0);
+      assert.equal(await page.getByRole("dialog").count(),0);
       await chat.getByPlaceholder("Escribi un mensaje...").fill("Hola, quiero consultar");
       await chat.getByPlaceholder("Escribi un mensaje...").press("Enter");
-      await page.waitForTimeout(300);
-      assert.equal(await offer.count(), 0);
-      messages.push(msg("asesor", "Bienvenida tardía", { source: "auto_welcome" }), { ...wallet, id: "another-wallet" });
-      await page.waitForTimeout(1200); assert.equal(await offer.count(), 0);
-      messages.push(msg("asesor", "Hola, te ayudo"));
+      await page.waitForTimeout(300);assert.equal(await offer.count(),0);
+      messages.push(msg("asesor","Hola, te ayudo"));
       await offer.waitFor();
-      const status = state => msg("asesor", `Estado: ${state}`, { api2_reply: { version: 1, category: "load_status", event: "fixture", status: state } });
-      messages.push(status("processing"));
-      await offer.waitFor({ state: "detached" });
-      messages.push(status("success"));
-      await offer.waitFor();
-      await page.screenshot({ path: path.join(output, `${engine}-${repo}-offer.png`) });
-      await chat.getByRole("button", { name: "Instalar app", exact: true }).click();
+      assert.equal(await page.getByRole("dialog").count(),0,"Receiving an invitation never opens a modal");
+      await offer.getByRole("button",{name:"Instalar app",exact:true}).click();
       await page.getByRole("dialog").waitFor();
-      assert.equal(await page.locator(".gateway-app-notice-copy").first().innerText(), await page.evaluate(() => window.GatewayApp.installationInstructions("ios")));
-      assert.deepEqual(await page.locator(".gateway-app-notice-actions button").allTextContents(), ["Entendido", "Recordármelo después"]);
-      await page.getByRole("button", { name: "Recordármelo después", exact: true }).click();
-      await page.reload();
-      await chat.getByPlaceholder("Escribi un mensaje...").waitFor();
-      await page.waitForFunction(() => !!window.GatewayApp);
-      await page.waitForTimeout(300); assert.equal(await offer.count(), 0, "Dismissal survives reload");
-      // A fresh advisor invitation must arrive even when an older one was postponed.
-      messages.push({ ...msg("asesor", "Instructivo enviado por el asesor", { source: "install_instructions_rpc" }), type: "instrucciones_instalacion" });
+      const rect=await page.locator('.gateway-app-notice').boundingBox();
+      assert.ok(rect.x>=14 && rect.y>=16 && rect.x+rect.width<=376 && rect.y+rect.height<=828);
+      assert.equal(await page.locator('.gateway-app-notice-copy').first().evaluate(e=>getComputedStyle(e).fontWeight),"700");
+      assert.equal(await page.locator('.gateway-app-notice').evaluate(e=>getComputedStyle(e).getPropertyValue('--gateway-page-primary').trim()),"#a726d9");
+      await page.getByRole("button",{name:"Entendido",exact:true}).click();
+      assert.equal(await offer.count(),1,"Acknowledgement retains the history and CTA");
+      await chat.locator('.chat-install-help').waitFor();
+      await offer.getByRole("button",{name:"Instalar app",exact:true}).click();
+      await page.getByRole("button",{name:"Ahora no",exact:true}).click();
+      await page.waitForTimeout(400);assert.equal(await chat.locator('.chat-install-help').count(),1,"Repeated taps reuse help");
+      messages.push({...msg("asesor","Instala desde este mensaje",{source:"install_instructions_rpc"}),type:"instrucciones_instalacion"});
+      messages.push({...msg("asesor","Recibi mis avisos",{source:"push_activation_invite"}),type:"instrucciones_instalacion"});
+      messages.push(msg("asesor","Completa tus datos",{source:"profile_completion_invite"}));
+      await chat.locator('[data-chat-invitation-action="complete_profile"]').waitFor();
+      assert.equal(await page.getByRole("dialog").count(),0);
+      await chat.getByRole("button",{name:"Mi perfil",exact:true}).click();
+      await page.locator('#gateway-chat-shell[data-profile-overlay="true"]').waitFor();
+      const profileRect=await chat.getByRole("dialog",{name:"Mi perfil",exact:true}).boundingBox();
+      assert.ok(profileRect.x>=16 && profileRect.y>=16 && profileRect.x+profileRect.width<=374 && profileRect.y+profileRect.height<=828);
+      assert.equal(await chat.getByRole("dialog",{name:"Mi perfil",exact:true}).evaluate(e=>e.scrollHeight>e.clientHeight+1),false);
+      await page.screenshot({path:path.join(output,`${engine}-${repo}-profile.png`)});
+      await chat.getByRole("button",{name:"Cerrar",exact:true}).click();
+      await page.locator('#gateway-chat-shell[data-profile-overlay="false"]').waitFor();
+      await closeChat();
+      await page.waitForTimeout(1000);await page.getByRole("button",{name:"Abrir chat de Atrio"}).click();
+      await page.waitForTimeout(4300);assert.equal(await page.getByRole("dialog").count(),0,"Reopening cancels the pending automatic prompt");
+      await closeChat();
       await page.getByRole("dialog").waitFor();
-      assert.equal(await page.locator(".gateway-app-notice-copy").first().innerText(), "Instructivo enviado por el asesor");
-      await page.getByRole("button", { name: "Recordármelo después", exact: true }).click();
-      await page.waitForTimeout(300);
-      assert.equal(await page.getByRole("dialog").count(), 0);
-      now += TWO_HOURS + 1000;
-      await page.clock.setFixedTime(now);
-      await page.waitForTimeout(1500);
-      assert.equal(await page.getByRole("dialog").count(), 0, "Time alone must not display a reminder");
-      await chat.getByPlaceholder("Escribi un mensaje...").fill("Otra consulta");
-      await chat.getByPlaceholder("Escribi un mensaje...").press("Enter");
-      await page.waitForTimeout(1500);
-      assert.equal(await page.getByRole("dialog").count(), 0, "Wait for the new turn's reply");
-      messages.push(msg("asesor", "Hola, te respondo"));
-      await page.getByRole("dialog").waitFor();
-      assert.equal(await page.locator(".gateway-app-notice-copy").first().innerText(), "Instructivo enviado por el asesor");
-      await page.getByRole("button", { name: "Recordármelo después", exact: true }).click();
-      await page.reload();
-      await chat.getByPlaceholder("Escribi un mensaje...").waitFor();
-      await page.waitForFunction(() => !!window.GatewayApp);
-      await page.waitForTimeout(600);
-      assert.equal(await page.getByRole("dialog").count(), 0, "An invitation in initial history must respect the saved snooze");
-      await page.waitForTimeout(300);
-      now += TWO_HOURS - 1000;
-      await page.clock.setFixedTime(now);
-      messages.push(msg("cliente", "Antes del plazo"), msg("asesor", "Todav?a no"));
-      await page.waitForTimeout(1500);
-      assert.equal(await page.getByRole("dialog").count(), 0, "Second deferral gets two full hours");
-      now += 2000;
-      await page.clock.setFixedTime(now);
-      messages.push(msg("cliente", "Estoy cargando"), status("processing"));
-      await page.waitForTimeout(1500);
-      assert.equal(await page.getByRole("dialog").count(), 0, "No interruption during a pending load");
-      messages.push(status("success"));
-      await page.getByRole("dialog").waitFor();
-      await page.evaluate(() => window.dispatchEvent(new Event("appinstalled")));
-      await page.getByRole("dialog").waitFor({ state: "detached" });
-      now += TWO_HOURS + 1000;
-      await page.clock.setFixedTime(now);
-      messages.push(msg("cliente", "App instalada"), msg("asesor", "Listo"));
-      await page.waitForTimeout(1500);
-      assert.equal(await page.getByRole("dialog").count(), 0, "Confirmed installation cancels reminders");
-      // Profile reminders re-check the real endpoint before resurfacing.
-      messages.push(msg("asesor", "Complet? tu perfil", { source: "profile_completion_invite" }));
-      await page.getByRole("dialog").waitFor();
-      await page.getByRole("button", { name: "Recordármelo después", exact: true }).click();
-      profile = { whatsapp: "fixture-phone", email: "fixture@example.invalid" };
-      now += TWO_HOURS + 1000;
-      await page.clock.setFixedTime(now);
-      messages.push(msg("cliente", "Ya complet? mis datos"), msg("asesor", "Gracias"));
-      await page.waitForTimeout(1500);
-      assert.equal(await page.getByRole("dialog").count(), 0, "Do not ask for a completed profile");
-      await page.evaluate(() => localStorage.clear());
-      messages = [msg("cliente", "Hola"), msg("asesor", "Te ayudo")];
-      await page.addInitScript(() => {
-        const original = window.matchMedia.bind(window);
-        window.matchMedia = query => query.includes("display-mode") ? { matches: true, addEventListener() {}, removeEventListener() {} } : original(query);
+      const firstShown=await page.evaluate(()=>Number(localStorage.getItem('gateway:automatic-install:last-shown:v1')));
+      assert.ok(firstShown>0);
+      await page.getByRole("button",{name:"Ahora no",exact:true}).click();
+      await page.getByRole("button",{name:"Abrir chat de Atrio"}).click();
+      await closeChat();
+      await page.waitForTimeout(5200);assert.equal(await page.getByRole("dialog").count(),0,"Automatic cooldown is separate from manual invitations");
+      now+=30*60*1000+1000;await page.clock.setFixedTime(now);
+      assert.equal(await page.locator("#gateway-chat-shell").getAttribute("data-open"),"false");
+      await page.getByRole("button",{name:"Abrir chat de Atrio"}).click();
+      await closeChat();
+      await page.getByRole("dialog").waitFor().catch(async error => {
+        console.log(JSON.stringify({engine,repo,diagnostic:await page.evaluate(()=>({now:Date.now(),last:localStorage.getItem('gateway:automatic-install:last-shown:v1'),visibility:document.visibilityState,open:document.querySelector('#gateway-chat-shell')?.dataset.open,dialogs:[...document.querySelectorAll('[aria-modal="true"]')].map(e=>({text:e.textContent?.slice(0,60),visible:!!e.getClientRects().length})),installed:localStorage.getItem('gateway:installed')})),errors}));
+        throw error;
       });
-      await page.reload();
-      await chat.getByPlaceholder("Escribi un mensaje...").waitFor();
-      await page.waitForFunction(() => !!window.GatewayApp);
-      await page.waitForTimeout(300);
-      assert.equal(await offer.count(), 0, "No install offer inside the installed app");
-      assert.deepEqual(errors, []);
-      checks.push({ engine, repo, firstExchange: true, pendingLoadDeferred: true, noEntryOrCloseModal: true, dismissalPersisted: true, twoHourReminders: true, repeatedSnooze: true, newAnsweredTurnRequired: true, installCompletion: true, profileCompletion: true, noStandaloneOffer: true });
-      console.log(JSON.stringify({ engine, repo, passed: true }));
+      assert.ok(await page.evaluate(()=>Number(localStorage.getItem('gateway:automatic-install:last-shown:v1')))>firstShown);
+      await page.evaluate(()=>window.dispatchEvent(new Event('appinstalled')));
+      await page.getByRole("dialog").waitFor({state:"detached"});
+      await page.getByRole("button",{name:"Abrir chat de Atrio"}).click();
+      await chat.getByRole("button",{name:"App instalada",exact:true}).first().waitFor();
+      assert.equal(await chat.getByRole("button",{name:"Instalar app",exact:true}).count(),0);
+      assert.deepEqual(errors,[]);
+      checks.push({engine,repo,persistentInvitations:true,manualOnly:true,profileOverlay:true,modalMargins:true,thirtyMinuteCooldown:true,reopenCancels:true,confirmedInstallation:true});
+      console.log(JSON.stringify({engine,repo,passed:true}));
       await context.close();
     }
   } finally { await browser.close(); }

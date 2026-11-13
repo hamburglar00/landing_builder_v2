@@ -28,6 +28,12 @@ for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "mu
   });
   after = after.replace(/      if \(event.data.type === "atrio.widget.request-install"\) \{[\s\S]*?\n      \}/,
     '      if (event.data.type === "atrio.widget.request-install") {\n        requestInstallOffer(event.data);\n      }');
+  const newHandlers = source.match(/      if \(event.data.type === "atrio.widget.request-notifications"\) \{[\s\S]*?(?=      if \(event.data.type === "atrio.widget.cancel-reminder")/)?.[0];
+  const handlersPattern = /      if \(event.data.type === "atrio.widget.request-notifications"\) \{[\s\S]*?(?=      if \(event.data.type === "atrio.widget.cancel-reminder")/;
+  if (handlersPattern.test(after)) after=after.replace(handlersPattern,()=>newHandlers);
+  else after = after.replace('      if (event.data.type === "atrio.widget.cancel-reminder"', newHandlers + '      if (event.data.type === "atrio.widget.cancel-reminder"');
+  after = after.replace(/        if \(invitation\?\.action === "install_app"\) \{[\s\S]*?(?=        if \(invitation\?\.action === "promotion")/, "");
+  after = after.replace("install-copy-1", "persistent-invitations-1");
   const cancel = source.match(/      if \(event.data.type === "atrio.widget.cancel-reminder"[\s\S]*?\n      \}/)?.[0];
   if (!after.includes('event.data.type === "atrio.widget.cancel-reminder"')) {
     if (!cancel) throw Error("Missing reminder cancellation");

@@ -13,7 +13,7 @@ for(const repo of ['landing-autologuin','ases-gateway','ganamos-gateway','multi-
  const source=await readFile(new URL(`../../${repo}/public/gateway-client.js`,import.meta.url),'utf8'),ast=ts.createSourceFile('client.js',source,ts.ScriptTarget.Latest,true);let fn;
  function visit(node){if(ts.isFunctionDeclaration(node)&&node.name?.text==='showInstallNotice')fn=node;ts.forEachChild(node,visit)}visit(ast);assert.ok(fn);
  for(const platform of ['ios','android','desktop']){
-  const body=window.GatewayApp.installationInstructions(platform);assert.equal(body,sqlCopy(platform));
+  const body=window.GatewayApp.installationInstructions(platform);if(platform === "desktop") { assert.match(body,/computadora/); assert.doesNotMatch(body,/Android:|iPhone:/); } else assert.equal(body,sqlCopy(platform));
   // Copy contract only; native-client-install covers the actual DOM and actions.
   const notices=[];const bindings={appFeaturesInitialized:true,standalone:false,app:{...window.GatewayApp,canInstall:()=>false},invitationStorageKey:invitation=>invitation.id,storageGet:()=>null,localStorage:{},platform:()=>platform,createNotice:value=>{notices.push(value);return false},notice:{dataset:{}}};
   const code=ts.transpileModule(fn.getText(ast)+';return showInstallNotice',{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;

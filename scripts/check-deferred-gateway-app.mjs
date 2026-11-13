@@ -50,7 +50,7 @@ for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "mu
             Object.defineProperty(window, "Notification", { value: { permission: "default", requestPermission() {
               window.calls.push("native-permission");
               window.gestureAtPrompt = navigator.userActivation?.isActive;
-              return Promise.resolve("granted");
+              window.Notification.permission = "granted"; return Promise.resolve("granted");
             } } });
             Object.defineProperty(window, "PushManager", { value: class {
             } });
@@ -124,6 +124,8 @@ for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "mu
             const frame = document.querySelector("#gateway-chat-shell iframe");
             window.dispatchEvent(new MessageEvent("message", { origin: "https://chat.test", source: frame.contentWindow, data: { source: "atrio-widget", type: "atrio.widget.invitation", invitation: { id: "push-invitation-1234", action: "enable_notifications", title: "Activar notificaciones", body: "Recibí los mensajes de tu asesor." } } }));
           });
+          assert.equal(await page.getByRole("dialog").count(),0,"Receiving an invitation must not open a modal");
+          await signal({type:"atrio.widget.request-notifications"});
           await page.getByRole("button", { name: /Activar notificaciones/ }).click();
           await page.waitForFunction(() => window.calls.includes("saved"));
           const calls = await page.evaluate(() => window.calls);

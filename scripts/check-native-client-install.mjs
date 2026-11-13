@@ -159,7 +159,7 @@ for (const [engine, launcher] of process.argv.includes("--quick")
           );
           await page.addScriptTag({ content: sdk });
           await page.addScriptTag({
-            content: `let notice = null, noticePriority = -1;
+            content: `let notice = null, noticePriority = -1, automaticPushShown = false; const installationConfirmed=()=>false,postReminderMessage=()=>{};
             const app = window.GatewayApp, standalone = false, appFeaturesInitialized = true, appNoticeDeferredForChat = true;
             const config = {displayName:'Fixture casino',appIcon:'/icon.svg'};
             const storageGet=(storage,key)=>storage.getItem(key),storageSet=(storage,key,value)=>storage.setItem(key,value);
