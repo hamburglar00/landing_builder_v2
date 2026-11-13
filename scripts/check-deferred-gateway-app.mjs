@@ -27,6 +27,7 @@ const fixtureCode = {
 for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "multi-skin-gateway"]) {
   const gateway = path.join(workspace, repo);
   const script = await readFile(gateway + "/public/gateway-client.js", "utf8"), sdk = await readFile(gateway + "/public/gateway-app-sdk.js", "utf8");
+  const guide = await readFile(gateway + "/public/gateway-pwa-guide.js", "utf8");
   const f = fixtureCode[repo];
   const compiled = await build({ absWorkingDir: gateway, tsconfig: gateway + "/tsconfig.json", stdin: { contents: "import{" + f.name + '}from"./src/lib/html-rewriter";' + (f.extra || "") + ";export const html=" + f.name + "(" + JSON.stringify('<html><head><script src="/provider-delayed.js" defer><\/script></head><body><main>Casino</main></body></html>') + "," + f.options + ")" + (f.suffix || "") + ";", resolveDir: gateway, loader: "ts" }, bundle: true, write: false, platform: "node", format: "cjs", packages: "external" });
   const loaded = { exports: {} };
@@ -41,7 +42,7 @@ for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "mu
           const page = await browser.newPage({ viewport: { width: 390, height: 844 }, userAgent: ios ? "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile" : "Mozilla/5.0 (Linux; Android 14) Chrome/130.0.0.0 Mobile" });
           await page.addInitScript(({ ios: ios2 }) => {
             window.calls = [];
-            window.sdkRequests = 0;
+            window.sdkRequests = 0; window.guideRequests = 0;
             window.installPrompts = 0;
             const worker = { pushManager: { getSubscription: async () => null, subscribe: async () => {
               window.calls.push("subscribe");
@@ -65,6 +66,7 @@ for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "mu
           }, { ios });
           await page.route("https://fixture.test/**", async (route) => {
             const path2 = new URL(route.request().url()).pathname;
+            if (path2 === "/gateway-pwa-guide.js") { await page.evaluate(()=>window.guideRequests++); return route.fulfill({contentType:"application/javascript",body:guide}); }
             if (path2 === "/gateway-app-sdk.js" || path2 === "/gateway-client.js") {
               if (path2.includes("sdk")) await page.evaluate(() => window.sdkRequests++);
               if (path2.includes("sdk") && sdkLate) await new Promise((resolve) => setTimeout(resolve, 1800));
@@ -82,7 +84,7 @@ for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "mu
             if (path2 === "/") return route.fulfill({ contentType: "text/html", body: html });
             return route.fulfill({ status: 204 });
           });
-          await page.route("https://chat.test/**", (route) => route.fulfill({ contentType: "text/html", body: "<!doctype html><p>Chat fixture</p>" }));
+          await page.route("https://chat.test/**", (route) => new URL(route.request().url()).pathname === "/api/public/pwa-guide" ? route.fulfill({json:{showHow:true},headers:{"Access-Control-Allow-Origin":"*"}}) : route.fulfill({ contentType: "text/html", body: "<!doctype html><p>Chat fixture</p>" }));
           await page.goto("https://fixture.test/", { waitUntil: "commit" });
           await page.locator("#gateway-chat-shell").waitFor({ state: "attached" });
           if (!ios) await page.evaluate(() => {
@@ -113,12 +115,15 @@ for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "mu
           await page.waitForFunction(() => !!window.GatewayApp);
           await page.waitForFunction(() => window.calls.includes("register"));
           assert.equal(await page.evaluate(() => window.sdkRequests), 1);
+          assert.equal(await page.evaluate(() => window.guideRequests),0,"Visual guide stays off the entry critical path");
           if (!ios) {
             const source = await page.evaluate(() => window.GatewayApp.canInstall());
             assert.equal(source, true);
             await signal({ type: "atrio.widget.request-install" });
-            await page.getByRole("button", { name: "Instalar app", exact: true }).click();
+            await page.getByRole("button", { name: "Instalar", exact: true }).click();
             assert.equal((await page.evaluate(() => window.calls)).filter((x) => x === "native-install").length, 1);
+            assert.equal(await page.getByRole("dialog").count(),1,"Acceptance is pending confirmation");
+            await page.getByRole("button",{name:"Ahora no",exact:true}).click();
           }
           await page.evaluate(() => {
             const frame = document.querySelector("#gateway-chat-shell iframe");
@@ -126,7 +131,7 @@ for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "mu
           });
           assert.equal(await page.getByRole("dialog").count(),0,"Receiving an invitation must not open a modal");
           await signal({type:"atrio.widget.request-notifications"});
-          await page.getByRole("button", { name: /Activar notificaciones/ }).click();
+          await page.getByRole("button", { name: "Activar", exact: true }).click();
           await page.waitForFunction(() => window.calls.includes("saved"));
           const calls = await page.evaluate(() => window.calls);
           assert.equal(calls.filter((c) => c === "native-permission").length, 1);

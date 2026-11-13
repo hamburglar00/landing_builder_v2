@@ -31,8 +31,9 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
       const js = await readFile(path.join(root, "public/gateway-client.js"), "utf8");
       const source = js.match(/messageSource:.*?\|\| "([^"]+)"/)?.[1] || fallbackSource;
       const css = await readFile(path.join(root, "public/gateway-client.css"), "utf8");
+      const guide = await readFile(path.join(root, "public/gateway-pwa-guide.js"), "utf8");
       const sdk = await readFile(path.join(root, "public/gateway-app-sdk.js"), "utf8");
-      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile" });
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile Safari/604.1" });
       // Keep installation/reminder HTTP fixtures independent of OS service workers.
       // The separate deferred-app checker verifies worker registration and push.
       await context.addInitScript(() => {
@@ -57,11 +58,13 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
         const url = new URL(route.request().url());
         if (url.hostname === "gateway.test") {
           if (url.pathname === "/gateway-client.js") return route.fulfill({ contentType: "text/javascript; charset=utf-8", body: js });
+          if (url.pathname === "/gateway-pwa-guide.js") return route.fulfill({ contentType: "text/javascript; charset=utf-8", body: guide });
           if (url.pathname === "/gateway-app-sdk.js") return route.fulfill({ contentType: "text/javascript; charset=utf-8", body: sdk });
           if (url.pathname === "/") return route.fulfill({ contentType: "text/html; charset=utf-8", body: `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>:root{--gateway-primary:#a726d9;--gateway-surface:#1c082e;--gateway-page-background:#11001f}body{background:#11001f}${css}</style></head><body><script src="/gateway-client.js" data-chat-url="https://chat.test/embed" data-initial-chat-open="true"></script></body></html>` });
           return route.fulfill({ json: { ok: true, active: false } });
         }
         if (url.hostname === "chat.test") {
+          if (url.pathname === "/api/public/pwa-guide") return route.fulfill({json:{showHow:true},headers:{"Access-Control-Allow-Origin":"*"}});
           if (url.pathname === "/embed") return route.fulfill({ contentType: "text/html; charset=utf-8", body: `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${chatCss}</style></head><body><div id="root"></div><script>window.fixtureProps=${JSON.stringify({ ...props, initialMessages: messages })}</script><script src="/chat.js"></script></body></html>` });
           if (url.pathname === "/chat.js") return route.fulfill({ contentType: "text/javascript; charset=utf-8", body: bundle.outputFiles[0].text });
           if (url.pathname === "/api/gateway/chat" && route.request().method() === "POST") {
@@ -111,11 +114,11 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
       assert.equal(await page.getByRole("dialog").count(),0,"Receiving an invitation never opens a modal");
       await offer.getByRole("button",{name:"Instalar app",exact:true}).click();
       await page.getByRole("dialog").waitFor();
-      const rect=await page.locator('.gateway-app-notice').boundingBox();
+      const rect=await page.locator('.ig-sheet').boundingBox();
       assert.ok(rect.x>=14 && rect.y>=16 && rect.x+rect.width<=376 && rect.y+rect.height<=828);
-      assert.equal(await page.locator('.gateway-app-notice-copy').first().evaluate(e=>getComputedStyle(e).fontWeight),"700");
-      assert.equal(await page.locator('.gateway-app-notice').evaluate(e=>getComputedStyle(e).getPropertyValue('--gateway-page-primary').trim()),"#a726d9");
-      await page.getByRole("button",{name:"Entendido",exact:true}).click();
+      assert.equal(await page.locator('.ig-title').evaluate(e=>getComputedStyle(e).fontWeight),"800");
+      assert.equal(await page.locator('.ig-sheet').evaluate(e=>getComputedStyle(e).getPropertyValue('--ig-accent').trim()),"#a726d9");
+      await page.getByRole("button",{name:"Ahora no",exact:true}).click();
       assert.equal(await offer.count(),1,"Acknowledgement retains the history and CTA");
       await chat.locator('.chat-install-help').waitFor();
       await offer.getByRole("button",{name:"Instalar app",exact:true}).click();
