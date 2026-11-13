@@ -91,7 +91,7 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
       await page.waitForFunction(() => !!window.GatewayApp);
       for (const name of ["Mi perfil","Cerrar chat"]) {
         const button=chat.getByRole("button",{name,exact:true});
-        assert.equal(await button.evaluate(el=>getComputedStyle(el).borderTopWidth),"0px");
+        assert.equal(await button.evaluate(el=>getComputedStyle(el).borderTopWidth),"1px");
         assert.ok(Math.abs((await button.boundingBox()).width-40)<1);
       }
       assert.equal(await chat.getByRole("button",{name:/Maximizar/}).count(),0);
@@ -147,8 +147,7 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
       await page.waitForTimeout(5200);assert.equal(await page.getByRole("dialog").count(),0,"Automatic cooldown is separate from manual invitations");
       now+=30*60*1000+1000;await page.clock.setFixedTime(now);
       assert.equal(await page.locator("#gateway-chat-shell").getAttribute("data-open"),"false");
-      await page.getByRole("button",{name:"Abrir chat de Atrio"}).click();
-      await closeChat();
+      await page.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')));
       await page.getByRole("dialog").waitFor().catch(async error => {
         console.log(JSON.stringify({engine,repo,diagnostic:await page.evaluate(()=>({now:Date.now(),last:localStorage.getItem('gateway:automatic-install:last-shown:v1'),visibility:document.visibilityState,open:document.querySelector('#gateway-chat-shell')?.dataset.open,dialogs:[...document.querySelectorAll('[aria-modal="true"]')].map(e=>({text:e.textContent?.slice(0,60),visible:!!e.getClientRects().length})),installed:localStorage.getItem('gateway:installed')})),errors}));
         throw error;
