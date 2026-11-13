@@ -1647,3 +1647,5 @@ Leo ratifica: ambos modales PWA quedan encima del chat; ocultar/restaurar burbuj
 ### Prioridad de mayoría de edad y ajuste de las guías (13/11/2026)
 
 Leo pide retirar «¿Tu Safari se ve distinto?» de iOS y agrandar círculo/logo de las dos guías. Insignia 68 px, imagen 48 px; asesor Atrio usa su símbolo sin margen interno. En NET/+ no coincidir con la confirmación nativa de edad: esperar a que desaparezca y otros cinco segundos, reiniciar si reaparece y suspender temporalmente la ayuda propia sin completarla ni modificar el consentimiento. Gracia inicial de cinco segundos para las ayudas; no retrasar la preparación del gateway. Otros proveedores y marcas se conservan. UX-022 registra disparadores, excepciones y pruebas.
+
+Publicación comprobada de UX-021/022: Atrio, NexoBet y los cuatro gateways, incluido Worker. 70 comprobaciones públicas correctas; insignia 68 px / imagen 48 px, prioridad de edad + cinco segundos y capas/áreas seguras. Fuentes, deployments y limitación de hardware en [entrega](../../internal-chat/docs/validation/pwa-safe-layout-20261113.md). Sin cambios financieros ni publicación del frontend de Builder.
