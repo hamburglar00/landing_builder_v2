@@ -99,8 +99,15 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
       await chat.getByPlaceholder("Escribi un mensaje...").fill("Hola, quiero consultar");
       await chat.getByPlaceholder("Escribi un mensaje...").press("Enter");
       await page.waitForTimeout(300);assert.equal(await offer.count(),0);
-      messages.push(msg("asesor","Hola, te ayudo"));
+      messages.push(msg("asesor","Hola, *te ayudo*"));
       await offer.waitFor();
+      for(const text of ['Hola, quiero consultar','Hola, te ayudo']) {
+        const bubble=chat.locator('[data-chat-message-row]').filter({hasText:text}).last().locator('.chat-message-copyable').first();
+        assert.deepEqual(await bubble.evaluate(e=>({size:getComputedStyle(e).fontSize,weight:getComputedStyle(e).fontWeight})),{size:'15px',weight:'600'});
+      }
+      assert.equal(await chat.locator('strong').filter({hasText:'te ayudo'}).evaluate(e=>getComputedStyle(e).fontWeight),'700');
+      assert.equal(await chat.getByText('0000000000000000000000',{exact:true}).evaluate(e=>getComputedStyle(e).fontWeight),'700');
+      assert.equal(await chat.getByText('CBU',{exact:true}).evaluate(e=>getComputedStyle(e).fontWeight),'700');
       assert.equal(await page.getByRole("dialog").count(),0,"Receiving an invitation never opens a modal");
       await offer.getByRole("button",{name:"Instalar app",exact:true}).click();
       await page.getByRole("dialog").waitFor();
