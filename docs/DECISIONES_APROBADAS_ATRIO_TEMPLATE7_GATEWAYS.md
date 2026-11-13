@@ -1643,3 +1643,7 @@ Entrega UX-020 publicada y verificada en los cuatro gateways, Ganamos+ Worker y 
 ### Capas, áreas seguras y pica de Inicio (13/11/2026)
 
 Leo ratifica: ambos modales PWA quedan encima del chat; ocultar/restaurar burbuja y CARGAR durante la guía. El casino instalado respeta arriba/abajo el área segura, con cabecera y menú completos, en los cuatro gateways; no superponer la franja de color del navegador en standalone. Ganamos NET y Ganamos+ usan la pica oficial en favicon, Apple e iconos del manifest, no el wordmark. Mantener otras skins, sesión, rutas e identidad de instalación. Cambiar URLs/versiones de recursos y verificar Apple/manifest, no sólo la insignia del modal. Asentar UX-021 y publicar también Ganamos+ Worker. Pruebas concretas con widget real y standalone simulado; no declarar iPhone físico probado.
+
+### Prioridad de mayoría de edad y ajuste de las guías (13/11/2026)
+
+Leo pide retirar «¿Tu Safari se ve distinto?» de iOS y agrandar círculo/logo de las dos guías. Insignia 68 px, imagen 48 px; asesor Atrio usa su símbolo sin margen interno. En NET/+ no coincidir con la confirmación nativa de edad: esperar a que desaparezca y otros cinco segundos, reiniciar si reaparece y suspender temporalmente la ayuda propia sin completarla ni modificar el consentimiento. Gracia inicial de cinco segundos para las ayudas; no retrasar la preparación del gateway. Otros proveedores y marcas se conservan. UX-022 registra disparadores, excepciones y pruebas.
