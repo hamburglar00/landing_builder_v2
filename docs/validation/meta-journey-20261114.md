@@ -33,11 +33,23 @@ La elegibilidad temporal de CAPI se evalúa por evento: una adquisición posteri
 | Cola HTTP | 8 pruebas SQL de leases/recuperación y 6 de transporte/recibos |
 | Frontend Builder | 50 pruebas de estadísticas, rangos, funnel, tabla, altas, históricos y exportación; TypeScript correcto |
 | Atrio | SQL/transporte, regresiones de origen/ingreso de cuatro proveedores, TypeScript y ESLint correctos; presupuesto de reintentos y finalización protegida por lease PostgreSQL |
-| NexoBet | 49 pruebas de adaptadores aprobadas y 1 omisión preexistente; 2 compartidas; 13 SQL; TypeScript y pins compartidos correctos |
+| NexoBet | 49 pruebas de adaptadores aprobadas y 1 omisión preexistente; 2 compartidas; 15 SQL (incluyen compra anterior al CTA y retry inmutable); TypeScript y pins compartidos correctos |
 | Gateways | 16 comprobaciones de contratos; cuatro SDK idénticos, SHA256 `a878b2c423f42bdee414265dd567e1e71cab6bdddf95db6b01a93ad3fad5e687` |
 | Motores de landing | Los cuatro runtimes T7/T8 coinciden byte a byte entre Builder y Clásico; SDK oficial 1.3.1 idéntico, SHA256 `9f11e6cfc737d685de93b0a54722e9524c8de86be716b015d763af7794ce7085` |
 
 Los labels de proveedores en fixtures ejercitan handlers compartidos, no sus APIs reales. PGlite ejecuta SQL PostgreSQL en un motor aislado, no certifica contención entre procesos independientes.
+
+## Revisiones locales y publicación
+
+| Producto | Commit de implementación | Push | Migración/despliegue |
+| --- | --- | --- | --- |
+| Builder | `bf4d1ad9d306a47420846dde9aaffe8ae23f623b` | Pendiente | Pendiente |
+| Atrio | `ddd68e88685c7ba8c88b65a15b09f142d8ecf93b` y `99bc678dae6d4c210736da40c9a8ae25746124d7` | Pendiente | Pendiente |
+| NexoBet | `4c777e1388551265f3a64ea8fc0b48d18b89756f` | Pendiente | Pendiente |
+| Clásico | Sin cambios de fuente; receptor compartido de Builder | No requiere nuevo push | Recibirá el backend al publicar Builder |
+| Cuatro gateways/Worker | Sin cambios de fuente; contratos/SDK verificados | No requiere nuevo push | Recibirán la medición del backend al publicar Atrio/Nexo |
+
+Worktrees: `../landing-builder-meta-journey`, `../internal-chat-meta-journey` y `../NexoBet-meta-journey`. Los nueve pins de estadísticas Nexo y el clasificador apuntan al commit de código Builder; las 51 fuentes ajenas a este lote conservan sus revisiones previas. No hay fuentes compartidas marcadas como working tree pendiente. El lote productivo permanece abierto hasta migraciones, claves dedicadas, builds y verificación de cada publicación.
 
 ## Orden de publicación y reversión
 
