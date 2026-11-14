@@ -1679,3 +1679,7 @@ Leo confirma texto general de ambos remitentes en 15 px / peso 500, manteniendo 
 ### Lectura más liviana del inbox — 14/11/2026
 
 Leo solicita bajar nuevamente el peso general: pasa de 500 a normal 400, en ambos remitentes del inbox del asesor, manteniendo 15 px y 700 para los datos destacados. Invitaciones y ayuda acompañan el peso base; títulos, CTA y recibos conservan sus pesos. Sustituye únicamente la decisión anterior de 500. Fuente Atrio, sincronizar Nexo con sus adaptadores/temas. Widget cliente, cuatro gateways, SDK, Worker, finanzas e ingreso no cambian ni requieren publicación. Validación puntual de estilos calculados y builds de ambos productos.
+
+### Márgenes del chat del asesor en escritorio — 14/11/2026
+
+Leo solicita acercar ambas burbujas al borde en desktop: reducir a la mitad el padding horizontal del historial, de 32 px a 16 px por lado. Móvil conserva 16 px, separación vertical y tamaño/peso del texto actuales. Fuente Atrio; aplicar el cambio puntual al adaptador de inbox de Nexo sin sustituir sus temas ni permisos. No cambia CSS canónico ni versión del módulo (1.14.3), widget cliente, los cuatro gateways, SDK, Worker, ingreso o finanzas; esos productos no requieren publicación. Validación acotada en escritorio y móvil, Chromium/WebKit y temas Nexo.
