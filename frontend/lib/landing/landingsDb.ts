@@ -222,7 +222,7 @@ export async function createLanding(
       post_url: postUrl,
       landing_tag: payload.landingTag ?? "",
       comment: payload.comment,
-      config: payload.config as unknown as Record<string, unknown>,
+      config: { ...payload.config, gatewayEntry: payload.config.gatewayEntry ?? { mode: "direct", seconds: 4 } } as unknown as Record<string, unknown>,
     })
     .select("id")
     .single();

@@ -16,6 +16,7 @@ export function buildTemplate7HandoffRuntimeScript(): string {
       if (url.protocol !== "https:" || url.username || url.password || url.hash ||
           (url.pathname !== "/prepare" && url.pathname !== "/start") ||
           url.searchParams.getAll("t").length !== 1 || !url.searchParams.get("t") || url.searchParams.get("t").length > 12000 ||
+          url.searchParams.getAll("ew").length > 1 || (url.searchParams.has("ew") && (!url.searchParams.get("ew") || url.searchParams.get("ew").length > 1550)) ||
           url.searchParams.getAll("ef").length > 1 || (url.searchParams.has("ef") &&
           (!url.searchParams.get("ef") || url.searchParams.get("ef").length > 2003))) {
         throw new Error("invalid handoff");
@@ -25,9 +26,10 @@ export function buildTemplate7HandoffRuntimeScript(): string {
           (typeof cfg!=="undefined"&&cfg.targetProvider&&cfg.targetProvider!=="multi_skin")))throw new Error("invalid handoff skin");
       // Attribution is captured on the landing before this navigation. Future
       // advertising parameters must neither reject nor authorize an entry.
-      var token=url.searchParams.get("t"),funnel=url.searchParams.get("ef"),skin=url.pathname==="/prepare"?url.searchParams.get("skin"):null;
+      var token=url.searchParams.get("t"),funnel=url.searchParams.get("ef"),entryWait=url.searchParams.get("ew"),skin=url.pathname==="/prepare"?url.searchParams.get("skin"):null;
       url.search="";url.searchParams.set("t",token);
       if(funnel)url.searchParams.set("ef",funnel);
+      if(entryWait&&url.pathname==="/start")url.searchParams.set("ew",entryWait);
       if(skin)url.searchParams.set("skin",skin);
       return url;
     }

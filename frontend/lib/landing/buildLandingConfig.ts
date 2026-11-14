@@ -1,3 +1,4 @@
+import { normalizeGatewayEntry, type GatewayEntry } from "./gatewayEntry";
 import { normalizeTemplate8Cover } from "./template8";
 import type { LandingTemplate8CoverConfig } from "./types";
 import type { LandingThemeConfig, LandingWorkspaceCurrency, MultiSkinCode, TargetProvider } from "./types";
@@ -131,6 +132,7 @@ export interface LandingConfigPayload {
       email: boolean;
     };
   };
+  gatewayEntry?: GatewayEntry;
   template7Capture?: {
     whatsapp: boolean;
   };
@@ -399,6 +401,7 @@ export function buildLandingConfig({
       },
     },
     ...((themeWithHex.template === "template7" || themeWithHex.template === "template8" || themeWithHex.template === "template9") ? {
+      ...(normalizeGatewayEntry(themeWithHex.gatewayEntry) ? { gatewayEntry: normalizeGatewayEntry(themeWithHex.gatewayEntry) } : {}),
       template7Capture: {
         whatsapp: themeWithHex.template7WhatsappEnabled === true,
       },

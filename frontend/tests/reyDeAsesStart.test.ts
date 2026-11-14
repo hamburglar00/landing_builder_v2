@@ -54,6 +54,28 @@ const validPayload = {
   attribution: { utm_campaign: "campana", fbp: "fb.1.123.abc" },
 };
 
+test("entry presentation comes only from the saved landing; old landings retain global fallback", async () => {
+  for (const policy of [undefined, { mode: "direct", seconds: 4 }, { mode: "credentials", seconds: 9 }, { mode: "credentials", seconds: 100 }]) {
+    const { deps } = dependencies(), read = deps.db.landing, create = deps.createHandoff;
+    deps.db.landing = async id => {
+      const row = (await read(id))!;
+      return { ...row, config: { ...(row.config as object), ...(policy ? { gatewayEntry: policy } : {}) } };
+    };
+    const seen: unknown[] = [];
+    deps.createHandoff = async (...args) => { seen.push(args[8]); return create(...args); };
+    const response = await handleReyStart(request(validPayload), deps);
+    assert.equal(response.status, 200);
+    assert.deepEqual(seen, [policy && policy.seconds <= 60 ? {
+      enabled: policy.mode === "credentials", seconds: policy.seconds, continueButtonEnabled: policy.mode === "credentials",
+    } : undefined]);
+  }
+  const { deps } = dependencies();
+  const create = deps.createHandoff, seen: unknown[] = [];
+  deps.createHandoff = async (...args) => { seen.push(args[8]); return create(...args); };
+  const response = await handleReyStart(request({ ...validPayload, gatewayEntry: { mode: "credentials", seconds: 60 } }), deps);
+  assert.equal(response.status, 200); assert.deepEqual(seen, [undefined]);
+});
+
 test("Template 8 resolves the saved card skin for account preparation and signed handoff", async () => {
   const { deps } = dependencies(null, "multi_skin");
   const read = deps.db.landing;

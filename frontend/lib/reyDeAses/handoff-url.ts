@@ -4,14 +4,17 @@ export function canonicalStartHandoffUrl(raw: string, expectedOrigin: string): s
   const url = new URL(raw);
   const token = url.searchParams.get("t");
   const funnel = url.searchParams.get("ef");
+  const entryWait = url.searchParams.get("ew");
   if (url.protocol !== "https:" || url.origin !== expectedOrigin || url.pathname !== "/start" ||
       url.username || url.password || url.hash || url.searchParams.getAll("t").length !== 1 ||
       !token || token.length > 12000 || url.searchParams.getAll("ef").length > 1 ||
+      url.searchParams.getAll("ew").length > 1 || (url.searchParams.has("ew") && !/^w1\.[A-Za-z0-9_-]{1,1500}\.[A-Za-z0-9_-]{43}$/.test(entryWait!)) ||
       (url.searchParams.has("ef") && !/^e1\.[A-Za-z0-9_-]{1,2000}$/.test(funnel!))) {
     throw new Error("unexpected handoff");
   }
   url.search = "";
   url.searchParams.set("t", token);
   if (funnel) url.searchParams.set("ef", funnel);
+  if (entryWait) url.searchParams.set("ew", entryWait);
   return url.href;
 }

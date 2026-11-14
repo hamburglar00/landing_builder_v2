@@ -1351,6 +1351,39 @@ export function LandingEditorForm({
         </section>
       )}
 
+      {isTemplate7 && <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <h3 className="text-sm font-semibold text-zinc-100">Ingreso a la plataforma</h3>
+        <p className="mt-1 text-xs text-zinc-500">Elegí qué sucede después de crear la cuenta en esta landing.</p>
+        <div className="mt-3">
+          <label className="mb-2 block text-xs text-zinc-300" htmlFor={fieldId("gateway-entry-mode")}>Modo de ingreso</label>
+          <CustomSelect portal id={fieldId("gateway-entry-mode")}
+            value={config.gatewayEntry?.mode ?? "legacy"}
+            onChange={(mode) => {
+              if (mode === "direct" || mode === "credentials") updateConfig(setConfig, {
+                gatewayEntry: { mode, seconds: config.gatewayEntry?.seconds ?? 4 },
+              });
+            }}
+            options={[
+              ...(!config.gatewayEntry ? [{ value: "legacy", label: "Conservar configuración actual" }] : []),
+              { value: "direct", label: "Ingresar directamente" },
+              { value: "credentials", label: "Mostrar usuario y clave antes de ingresar" },
+            ]} />
+        </div>
+        {config.gatewayEntry?.mode === "credentials" && <div className="mt-3">
+          <label className="block text-xs text-zinc-300" htmlFor={fieldId("gateway-entry-seconds")}>Ingresar automáticamente después de</label>
+          <div className="mt-2 flex items-center gap-2">
+            <input id={fieldId("gateway-entry-seconds")} type="number" min={1} max={60} step={1}
+              value={config.gatewayEntry.seconds}
+              onChange={(event) => updateConfig(setConfig, { gatewayEntry: {
+                mode: "credentials", seconds: Math.min(60, Math.max(1, Math.trunc(Number(event.target.value) || 1))),
+              } })}
+              className="w-20 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100" />
+            <span className="text-xs text-zinc-400">segundos</span>
+          </div>
+          <p className="mt-2 text-xs text-zinc-500">Se muestran el usuario, la clave y el botón Continuar. El cliente puede ingresar antes de que termine la espera.</p>
+        </div>}
+      </section>}
+
       {isTemplate7 && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="flex items-center justify-between gap-4">

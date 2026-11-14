@@ -1,3 +1,4 @@
+import type { GatewayEntryWait } from "../landing/gatewayEntry";
 import { safeProvisionTiming } from "./performance.server";
 import type { AssignedAdvisor, Api2ResolveAccountRequest, HandoffResult, LinkedProviderAccount, TargetAccount, ResolvedPlayer, PlayerResolveRequest } from "./contracts";
 import type { MultiSkinCode, TargetProvider } from "../landing/types";
@@ -228,6 +229,7 @@ export async function createProviderHandoff(
   skinCode: MultiSkinCode | null = null,
   promoCode?: string,
   entryFunnel?: import("../landing/entryFunnel").EntryFunnelContext,
+  entryWait?: GatewayEntryWait,
 ): Promise<HandoffResult> {
   const origin = configuredOrigin(gatewayOriginFor(provider, skinCode));
   if (player.target_provider !== provider || !isDeviceId(player.player_provider_account_id) ||
@@ -248,6 +250,7 @@ export async function createProviderHandoff(
     target_provider: player.target_provider,
     ...(promoCode ? { promo_code: promoCode } : {}),
     ...(entryFunnel ? { entry_funnel: entryFunnel } : {}),
+    ...(entryWait ? { entry_wait: entryWait } : {}),
     ...(provider === "rey_de_ases" ? {
       platform: "rey_de_ases",
       username: account.username,
