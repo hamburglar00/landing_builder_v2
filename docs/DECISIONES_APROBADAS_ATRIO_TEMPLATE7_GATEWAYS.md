@@ -1667,3 +1667,8 @@ Publicación comprobada de UX-021/022: Atrio, NexoBet y los cuatro gateways, inc
 - Revisar y sincronizar tambi?n NexoBet (m?dulo Builder 1.2.1). La galer?a y la vista previa siguen el mismo tama?o. Ajustar espacios de Rey en ventanas compactas para mantener formulario, pie y cookies accesibles. Las dem?s marcas conservan sus medidas.
 - Excepciones: los cuatro gateways, Atrio y sus gu?as no presentan esta landing; no requieren cambios ni publicaci?n. Sin cambios en recursos, configuraci?n guardada, ingreso, Meta, API2/Panel3 o bases de datos. Las p?ginas legales mantienen su cabecera.
 - Validaci?n y publicaci?n por producto: `docs/validation/template9-rey-logo-20261113.md`.
+
+
+## NexoBet: paleta y Marketing independientes — 14/11/2026
+
+El usuario pide la paleta de Builder y sus vistas de galería/editor (Template 8 y 9), Funnel/Tabla reducida/Estadísticas y formulario/modal Meta, adaptados a NexoBet, solo Atrio y ARS por ahora. Ratifica explícitamente que JAMÁS se cruzan datos entre NexoBet, Builder y Atrio. Se comparte código versionado, no bases, cuentas, sesiones, tokens ni conversiones. Nexo publica imágenes únicamente en su propio almacenamiento. Se extrae el renderer HTML puro de Template 8 como módulo canónico reutilizable; Builder conserva su salida y runtime existentes (seis pruebas Template 8 aprobadas). No cambia el ingreso, SDK ni configuración pública de los cuatro gateways; no requiere publicarlos por este refactor. Fuente canónica versionada para NexoBet; este refactor conserva la salida de Builder y no requiere un despliegue nuevo de su panel. Guía de Nexo en ../NexoBet/docs/UI_UX.md.

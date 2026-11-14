@@ -1,3 +1,4 @@
+import { renderTemplate8View as renderTemplate8, renderTemplate7View as renderTemplate7, renderTemplate6View as renderTemplate6 } from "./template8View";
 import { renderTemplate9View, TEMPLATE9_UI_SCRIPT } from "./template9View";
 import { TEMPLATE9_CSS } from "./template9Css";
 import { getTemplate9Brand, TEMPLATE9_DEFAULTS } from "../../lib/landing/template9";
@@ -593,35 +594,6 @@ function renderTemplate2({ config }: RenderParams) {
     .join("")}</div></div></section></main>`;
 }
 
-function renderTemplate7({ config }: RenderParams) {
-  const code = config.tracking?.skin_code;
-  const skinBrand = config.tracking?.target_provider === 'multi_skin' && isMultiSkinCode(code)
-    ? getMultiSkinBrand(code) : undefined;
-  const hasLogo = Boolean(config.content?.logoUrl);
-  const titleLines = (config.content?.title || []).map((line) => line.trim()).filter(Boolean);
-  const subtitleLines = (config.content?.subtitle || []).map((line) => line.trim()).filter(Boolean);
-  const ctaText = config.content?.ctaText || "Continuar";
-  const captureWhatsapp = config.template7Capture?.whatsapp === true;
-
-  return `<main class="public-landing template7">${renderFrameBackgroundTemplate7(config)}<div class="template7__veil"></div><section class="template7__card">${
-    hasLogo
-      ? `<img src="${escapeHtml(config.content?.logoUrl)}"${attr("srcset", config.content?.logoSrcSet)}${attr("data-image-fallback", config.content?.logoOriginalUrl)} onerror="this.onerror=null;this.removeAttribute('srcset');if(this.dataset.imageFallback)this.src=this.dataset.imageFallback" alt="${escapeHtml(config.name)}" class="template7__logo" width="170" height="138" decoding="async" fetchpriority="high">`
-      : ""
-  }<h1 class="template7__title"${styleAttr({
-    color: config.colors?.title ?? "#FFFFFF",
-    "--template7-title-size": `${config.typography?.title?.sizePx ?? 26}px`,
-    "font-weight": config.typography?.title?.weight ?? 700,
-  })}>${renderTextLines(titleLines)}</h1>${subtitleLines.length ? `<p class="template7__subtitle"${styleAttr({
-    color: config.colors?.subtitle ?? "#FFFFFF",
-    "--template7-subtitle-size": `${config.typography?.subtitle?.sizePx ?? 16}px`,
-    "font-weight": config.typography?.subtitle?.weight ?? 400,
-  })}>${renderTextLines(subtitleLines)}</p>` : ""}<form class="template7__form" data-template7-form><label class="template7__label" for="template7-name">Tu nombre</label><input id="template7-name" class="template7__input" data-template7-name type="text" name="firstName" autocomplete="given-name" maxlength="80" required placeholder="Ej.: Martín">${captureWhatsapp ? '<label class="template7__label" for="template7-whatsapp">WhatsApp <span>(opcional)</span></label><input id="template7-whatsapp" class="template7__input" data-template7-whatsapp type="tel" name="phone" autocomplete="tel" inputmode="tel" maxlength="32" placeholder="Ej.: 11 0000-0000"><p class="template7__phone-warning" data-template7-phone-warning role="status" hidden></p>' : ""}<button type="button" class="template7__cta" data-public-landing-cta data-public-landing-rest-label="${escapeHtml(ctaText)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="No disponible"${styleAttr({
-    color: config.colors?.ctaText ?? "#111111",
-    background: config.colors?.ctaBackground ?? "#FFD700",
-    "--template7-cta-size": `${config.typography?.cta?.sizePx ?? 18}px`,
-    "font-weight": config.typography?.cta?.weight ?? 700,
-  })} disabled><span data-public-landing-cta-label>${escapeHtml(ctaText)}</span></button><p class="template7__error" data-template7-error role="alert" hidden></p></form></section></main>${renderGatewayEntryTransition(config.tracking?.target_provider || "rey_de_ases", { stage: "creating", gatewayOrigin: template7GatewayOrigin(config), brand: skinBrand })}`;
-}
 
 function renderTemplate3({ config }: RenderParams) {
   return `<main class="public-landing template3"><section class="template3__card" aria-live="polite"><svg class="template3__whatsapp" viewBox="0 0 32 32" role="img" aria-label="WhatsApp"><path fill="currentColor" d="M16.04 3A12.82 12.82 0 0 0 5.08 22.47L3 30l7.72-2.02A12.88 12.88 0 1 0 16.04 3Zm0 23.58a10.66 10.66 0 0 1-5.43-1.49l-.39-.23-4.58 1.2 1.22-4.46-.25-.4a10.68 10.68 0 1 1 9.43 5.38Zm5.85-7.99c-.32-.16-1.9-.94-2.2-1.05-.29-.11-.5-.16-.72.16-.21.32-.82 1.05-1.01 1.26-.19.21-.37.24-.69.08-.32-.16-1.35-.5-2.57-1.59a9.63 9.63 0 0 1-1.78-2.22c-.19-.32-.02-.49.14-.65.15-.14.32-.37.48-.56.16-.18.21-.32.32-.53.11-.21.06-.4-.03-.56-.08-.16-.72-1.73-.98-2.37-.26-.62-.52-.54-.72-.55h-.61c-.21 0-.56.08-.85.4-.29.32-1.12 1.1-1.12 2.67s1.15 3.1 1.31 3.31c.16.21 2.26 3.45 5.47 4.84.77.33 1.36.53 1.83.68.77.24 1.46.21 2.01.13.61-.09 1.9-.78 2.17-1.52.27-.75.27-1.39.19-1.52-.08-.14-.29-.22-.61-.38Z"></path></svg><h1 class="template3__title">Conectando...</h1><p class="template3__copy">Te estamos redirigiendo a nuestro chat de<br>WhatsApp para atenderte enseguida.</p><span class="template3__spinner" aria-hidden="true"></span><div class="template3__fallback"><span>Si no eres redirigido en unos segundos,</span>${renderWhatsAppButton(config, "template3", {
@@ -702,46 +674,6 @@ function renderTemplate5Configured({ config }: RenderParams) {
   return `<main class="public-landing template5"><section class="template5__phone" aria-label="Atencion en vivo"${backgroundStyle}>${cssBackgroundFallback(backgroundImageUrl, '--template5-background-image')}<div class="template5__ambient" aria-hidden="true"></div><div class="template5__curtain"><span>EN VIVO</span><strong>Entrando...</strong></div><div class="template5__scroll"><div class="template5__topline"><div class="template5__live-badge"><span class="template5__live-dot"></span><strong>EN VIVO</strong><time data-template5-current-time>${currentTime}</time></div><span class="template5__viewers"><b data-template5-viewer-count>1.278</b> viendo</span></div><section class="template5__hero" data-public-landing-trigger><h1>${renderTemplate5Title(titleLines)}</h1><p>${subtitle}</p></section><section class="template5__advisor"><div class="template5__avatar-wrap">${renderTemplate5Avatar(profileImageUrl)}<i class="template5__advisor-dot"></i></div><div><strong>${name} · tu asesora designada</strong><span>En linea · responde en ~40 seg</span></div></section><div class="template5__progress" aria-hidden="true"><span></span></div><section class="template5__feed" aria-label="Actividad en vivo"><div><strong><span class="template5__feed-dot"></span> EN VIVO</strong></div><p data-template5-feed-row><span><b>Camilo A.</b><small data-template5-feed-time>hace 5 s</small></span><strong>$ 1.150.000</strong></p><p data-template5-feed-row><span><b>Sebastian G.</b><small data-template5-feed-time>hace 17 s</small></span><strong>$ 260.000</strong></p><p data-template5-feed-row><span><b>Laura P.</b><small data-template5-feed-time>hace 29 s</small></span><strong>$ 780.000</strong></p></section><section class="template5__activity" aria-label="Actividad de asesores"><article><span>Cuentas creadas</span><strong><b data-template5-created-count>1323</b></strong></article><article><span>Asesores disponibles</span><strong><b data-template5-advisor-count>6</b> en vivo</strong></article></section></div><footer class="template5__footer"><button type="button" class="template5__cta" data-public-landing-cta data-public-landing-rest-label="ENTRAR POR WHATSAPP" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin numero disponible" aria-label="ENTRAR POR WHATSAPP">${renderWhatsAppIcon("template5__cta-icon")}<span data-public-landing-cta-label>ENTRAR POR WHATSAPP</span></button></footer></section></main>`;
 }
 
-function renderTemplate6({ config }: RenderParams) {
-  const isTemplate8 = config.layout?.template === 8;
-  const cover = { ...config.content?.template6, ...(isTemplate8 ? { ...config.content?.template8, showWhatsAppLogo: false } : {}) };
-  const backgroundImageUrl = cover?.backgroundImageUrl?.trim() || "";
-  const grid = cover?.grid === "2x1" || cover?.grid === "2x3" ? cover.grid : "2x2";
-  const cardCount = isTemplate8 ? Math.min(6, Math.max(1, config.content?.template8?.cardCount || 4)) : grid === "2x1" ? 2 : grid === "2x3" ? 6 : 4;
-  const title = template5Lines(cover?.headerText, "Elegí tu opción", 2);
-  const footer = template5Lines(cover?.footerText, "Estamos para ayudarte", 2);
-  const cards = Array.from({ length: cardCount }, (_, index) => {
-    const card = cover?.cards?.[index];
-    const label = String(card?.ctaText || config.content?.ctaText || "Abrir WhatsApp").trim();
-    const image = String(card?.imageUrl || "").trim();
-    const responsive = template8Image(image);
-    const caption = String(card?.text || `Opción ${index + 1}`).trim();
-    return `<article class="template6__card"><div class="template6__image">${
-      image
-        ? `<img src="${escapeHtml(image)}"${imageFallbackAttributes(image)}${responsive ? attr("srcset", responsive.srcSet) + attr("sizes", responsive.srcSet ? responsive.sizes : "") : ""} alt="${escapeHtml(caption)}" width="480" height="480" loading="${index < 2 ? "eager" : "lazy"}" decoding="async"${index === 0 && !backgroundImageUrl ? ' fetchpriority="high"' : ""}>`
-        : `<span>Imagen ${index + 1}</span>`
-    }</div><p class="template6__caption">${escapeHtml(caption)}</p><button type="button" class="template6__cta" ${isTemplate8 ? `data-template8-card-index="${index + 1}" ` : "data-public-landing-cta"} data-template6-card-index="${index + 1}" data-public-landing-rest-label="${escapeHtml(label)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin número disponible" aria-label="${escapeHtml(label)}"><span data-public-landing-cta-label>${escapeHtml(label)}</span>${cover?.showWhatsAppLogo === false ? "" : renderWhatsAppIcon("template6__cta-icon")}</button></article>`;
-  }).join("");
-  const styles = styleAttr({
-    ...(isTemplate8 ? {
-      "--template8-rows": Math.ceil(cardCount / 2),
-      "--template8-extra-copy": `${Math.max(0, title.length - 1) * 28 + Math.max(0, footer.length - 1) * 18}px`,
-    } : {}),
-    "--template6-title": config.colors?.title || "#FFFFFF",
-    "--template6-caption": config.colors?.subtitle || "#FFFFFF",
-    "--template6-footer": config.colors?.badge || "#FFD700",
-    "--template6-cta-text": config.colors?.ctaText || "#000000",
-    "--template6-cta-background": config.colors?.ctaBackground || "#FFD700",
-    "--template6-cta-glow": config.colors?.ctaGlow || "#FFD700",
-    "--template6-cta-size": `${Math.min(22, Math.max(11, config.typography?.cta?.sizePx || 14))}px`,
-    "--template6-cta-weight": config.typography?.cta?.weight || 700,
-  });
-  const backgroundResponsive = template8Image(backgroundImageUrl, true);
-  const background = backgroundImageUrl
-    ? `<div class="template6__background" aria-hidden="true"><img src="${escapeHtml(backgroundImageUrl)}"${imageFallbackAttributes(backgroundImageUrl)}${backgroundResponsive ? attr("srcset", backgroundResponsive.srcSet) + attr("sizes", backgroundResponsive.srcSet ? backgroundResponsive.sizes : "") : ""} alt="" loading="eager" decoding="async" fetchpriority="high"></div>`
-    : "";
-  return `<main class="public-landing template6${isTemplate8 ? " template8" : ""}${backgroundImageUrl ? " has-background" : ""}"${styles}>${background}<div class="template6__shell"><header class="template6__header"><h1>${title.map((line) => `<span>${escapeHtml(line)}</span>`).join("")}</h1></header><section class="template6__grid" aria-label="Opciones disponibles">${cards}</section><footer class="template6__footer">${footer.map((line) => `<span>${escapeHtml(line)}</span>`).join("")}</footer></div></main>`;
-}
 
 function resourceWarmup(config: PublicLandingConfig) {
   if (config.layout?.template !== 8) return buildTemplate7ResourceWarmup(template7GatewayOrigin(config));
@@ -749,16 +681,7 @@ function resourceWarmup(config: PublicLandingConfig) {
   // chat or every-provider preparation before the visitor chooses a card.
   return buildTemplate7ResourceWarmup("", undefined, true);
 }
-function renderTemplate8(params: RenderParams) {
-  const entryConfig = { ...params.config,
-    content: params.config.content ? { ...params.config.content, logoUrl: "" } : undefined,
-    background: undefined,
-  };
-  const entry = renderTemplate7({ ...params, config: entryConfig })
-    .replace('</form>', '</form><p style="text-align:center;margin-top:16px"><a data-template8-login href="#" style="color:inherit;text-underline-offset:3px">Ya tengo cuenta · Ingresar</a></p>')
-    .replace('<h1 class="template7__title"', '<h1 data-template8-selected-page class="template7__title"');
-  return `<section data-template8-grid>${renderTemplate6(params)}<p data-template8-status role="status" class="template8__status"></p></section><section data-template8-entry hidden><button type="button" data-template8-back class="template8__back">← Cambiar página</button>${entry}</section>`;
-}
+
 function renderTemplate(params: RenderParams) {
   if (params.config.layout?.template === 9) {
     const brand = getTemplate9Brand(params.config.tracking?.target_provider || "rey_de_ases", params.config.tracking?.skin_code);
