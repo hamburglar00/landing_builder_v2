@@ -1675,3 +1675,7 @@ Decisión explícita de Leo: oscurecer sin blur al abrir chat y modales; halo de
 ### Lectura del inbox del asesor — 14/11/2026
 
 Leo confirma texto general de ambos remitentes en 15 px / peso 500, manteniendo 700 para credenciales y CBU/Titular con valores. Incluye las invitaciones y ayuda del inbox, conservando los pesos de títulos, CTA y recibos. Fuente Atrio; Nexo conserva adaptadores y temas. El widget del cliente sigue en 600. No modifica gateways/SDK/Worker ni datos financieros; esos productos no requieren publicación. Prueba acotada de estilos calculados en Chromium y WebKit para ambos inbox y build de ambos productos. Registro canónico: internal-chat/docs/CATALOGO_UX.md, ajuste de UX-023.
+
+### Lectura más liviana del inbox — 14/11/2026
+
+Leo solicita bajar nuevamente el peso general: pasa de 500 a normal 400, en ambos remitentes del inbox del asesor, manteniendo 15 px y 700 para los datos destacados. Invitaciones y ayuda acompañan el peso base; títulos, CTA y recibos conservan sus pesos. Sustituye únicamente la decisión anterior de 500. Fuente Atrio, sincronizar Nexo con sus adaptadores/temas. Widget cliente, cuatro gateways, SDK, Worker, finanzas e ingreso no cambian ni requieren publicación. Validación puntual de estilos calculados y builds de ambos productos.
