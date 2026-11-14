@@ -1,6 +1,6 @@
 "use client";
 import { LandingBuilderLoading } from "@/components/brand/LandingBuilderLoading";
-import { computeChannelFunnel, isStatisticsRepeat, type StatisticsChannel } from "@/lib/conversionJourneyStats";
+import { computeChannelFunnel, computeStatisticsPurchasePlayers, statisticsMessageCoverage, type StatisticsChannel } from "@/lib/conversionJourneyStats";
 
 import { useState, useMemo, useEffect } from "react";
 import { geoMercator, geoPath, type GeoPermissibleObjects } from "d3-geo";
@@ -74,6 +74,7 @@ const PCT_METRICS = new Set<MapMetric>(["pct_inicio", "pct_carga", "pct_recarga"
 const CURRENCY_METRICS = new Set<MapMetric>(["total_cargado", "carga_promedio"]);
 const ROAS_METRICS = new Set<MapMetric>(["roas_primera", "roas_total"]);
 const TIME_METRICS = new Set<MapMetric>(["tiempo_lead_purchase_prom"]);
+const MESSAGE_METRICS = new Set<MapMetric>(["leads", "pct_inicio", "pct_carga", "tiempo_lead_purchase_prom"]);
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PROVINCE NORMALIZATION
@@ -178,6 +179,7 @@ function colorScale(value: number, max: number): string {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 interface ProvinceData {
+  messageCoverage: ReturnType<typeof statisticsMessageCoverage>;
   contactos: number;
   reachedLead: number;
   reachedLeadLinkedToContact: number;
@@ -197,7 +199,7 @@ interface ProvinceData {
   leadToPurchaseAvgHours: number;
 }
 
-function buildProvinceData(
+export function buildProvinceData(
   contacts: FunnelContact[],
   conversions: ConversionRow[],
   allConversions: ConversionRow[],
@@ -217,19 +219,21 @@ function buildProvinceData(
     const allConvProv = allConversions.filter((c) => normalizeProvince(c.geo_region) === prov);
     const core = computeCoreStats(conversionsProv, contactsProv, allConvProv, premiumThreshold);
     const funnel = computeChannelFunnel(conversionsProv, channel);
+    const players = computeStatisticsPurchasePlayers(conversionsProv);
     const leadToPurchaseAvgHours = core.leadPurchaseHours.length > 0
       ? core.leadPurchaseHours.reduce((acc, n) => acc + n, 0) / core.leadPurchaseHours.length
       : 0;
     map.set(prov, {
+      messageCoverage: statisticsMessageCoverage(conversionsProv, channel),
       contactos: funnel.contacts,
-      reachedLead: channel === "atrio" ? funnel.contacts : funnel.messages,
-      reachedLeadLinkedToContact: channel === "atrio" ? funnel.contacts : funnel.messages,
-      reachedPurchase: conversionsProv.filter(row => row.purchase_event_id && !isStatisticsRepeat(row)).length,
+      reachedLead: funnel.messages,
+      reachedLeadLinkedToContact: funnel.messages,
+      reachedPurchase: players.firstPlayers,
       reachedPurchaseLinkedToLead: funnel.firstPurchases,
-      loadBase: channel === "atrio" ? funnel.contacts : funnel.messages,
-      reachedRepeat: core.adRepeatEvents,
-      repeatFromFirstInRange: funnel.repeats,
-      primerasCargas: conversionsProv.filter(row => row.purchase_event_id && !isStatisticsRepeat(row)).length,
+      loadBase: funnel.messages,
+      reachedRepeat: players.repeatPlayers,
+      repeatFromFirstInRange: players.repeatPlayersFromFirst,
+      primerasCargas: players.firstPlayers,
       recurrentes: core.repeatPlayers,
       totalCargado: core.totalRevenue,
       firstPurchaseRevenue: core.firstPurchaseEventRevenue,
@@ -244,13 +248,14 @@ function buildProvinceData(
   return map;
 }
 
-function getMetricValue(
+export function getMetricValue(
   d: ProvinceData | undefined,
   metric: MapMetric,
   adSpend: number,
   totalContacts: number,
-): number {
+): number | null {
   if (!d) return 0;
+  if (MESSAGE_METRICS.has(metric) && (!d.messageCoverage.measured || (metric !== "leads" && d.messageCoverage.unknownJourneys > 0))) return null;
   switch (metric) {
     case "contactos": return d.contactos;
     case "leads": return d.reachedLead;
@@ -259,7 +264,7 @@ function getMetricValue(
     case "cargas_totales": return d.purchaseCount;
     case "pct_inicio": return d.contactos > 0 ? (d.reachedLeadLinkedToContact / d.contactos) * 100 : 0;
     case "pct_carga": return d.loadBase > 0 ? (d.reachedPurchaseLinkedToLead / d.loadBase) * 100 : 0;
-    case "pct_recarga": return d.reachedPurchaseLinkedToLead > 0 ? (d.repeatFromFirstInRange / d.reachedPurchaseLinkedToLead) * 100 : 0;
+    case "pct_recarga": return d.primerasCargas > 0 ? (d.repeatFromFirstInRange / d.primerasCargas) * 100 : 0;
     case "carga_promedio": return d.purchaseCount > 0 ? d.totalCargado / d.purchaseCount : 0;
     case "carga_mediana": return d.cargaMediana;
     case "tiempo_lead_purchase_prom": return d.leadToPurchaseAvgHours;
@@ -282,7 +287,8 @@ function getMetricValue(
   return 0;
 }
 
-function formatMetricValue(value: number, metric: MapMetric): string {
+function formatMetricValue(value: number | null, metric: MapMetric): string {
+  if (value === null) return "Sin medición";
   if (PCT_METRICS.has(metric)) return `${value.toFixed(1)}%`;
   if (TIME_METRICS.has(metric)) {
     if (value <= 0) return "0 h";
@@ -334,8 +340,8 @@ export default function ArgentinaMap({
   adSpend?: number;
   channel?: StatisticsChannel;
 }) {
-  const metricLabels = channel === "atrio" ? { ...METRIC_LABELS, leads: "Solicitudes de usuario", pct_carga: "% de solicitudes que cargaron" } : METRIC_LABELS;
-  const metricTooltips = channel === "atrio" ? { ...METRIC_TOOLTIPS, leads: "Formularios válidos enviados por el CTA.", pct_carga: "Recorridos con solicitud que luego tuvieron una primera carga." } : METRIC_TOOLTIPS;
+  const metricLabels = METRIC_LABELS;
+  const metricTooltips = METRIC_TOOLTIPS;
   const [metric, setMetric] = useState<MapMetric>("contactos");
   const [hovered, setHovered] = useState<string | null>(null);
 
@@ -358,19 +364,22 @@ export default function ArgentinaMap({
   const globalMetricValue = useMemo(() => {
     const core = computeCoreStats(conversions, contacts, allConversions, premiumThreshold);
     const funnel = computeChannelFunnel(conversions, channel);
+    const players = computeStatisticsPurchasePlayers(conversions);
+    const coverage = statisticsMessageCoverage(conversions, channel);
+    if (MESSAGE_METRICS.has(metric) && (!coverage.measured || (metric !== "leads" && coverage.unknownJourneys > 0))) return null;
     const leadToPurchaseAvgHours = core.leadPurchaseHours.length > 0
       ? core.leadPurchaseHours.reduce((acc, n) => acc + n, 0) / core.leadPurchaseHours.length
       : 0;
 
     switch (metric) {
       case "contactos": return funnel.contacts;
-      case "leads": return channel === "atrio" ? funnel.contacts : funnel.messages;
-      case "primeras_cargas": return conversions.filter(row => row.purchase_event_id && !isStatisticsRepeat(row)).length;
-      case "recargas": return core.adRepeatEvents;
+      case "leads": return funnel.messages;
+      case "primeras_cargas": return players.firstPlayers;
+      case "recargas": return players.repeatPlayers;
       case "cargas_totales": return core.totalPurchases;
       case "pct_inicio": return funnel.contacts > 0 ? 100 * funnel.messages / funnel.contacts : 0;
-      case "pct_carga": return (channel === "atrio" ? funnel.contacts : funnel.messages) > 0 ? 100 * funnel.firstPurchases / (channel === "atrio" ? funnel.contacts : funnel.messages) : 0;
-      case "pct_recarga": return funnel.firstPurchases > 0 ? 100 * funnel.repeats / funnel.firstPurchases : 0;
+      case "pct_carga": return funnel.messages > 0 ? 100 * funnel.firstPurchases / funnel.messages : 0;
+      case "pct_recarga": return players.firstPlayers > 0 ? 100 * players.repeatPlayersFromFirst / players.firstPlayers : 0;
       case "carga_promedio": return core.totalPurchases > 0 ? core.totalRevenue / core.totalPurchases : 0;
       case "carga_mediana": return median(core.purchaseValues);
       case "tiempo_lead_purchase_prom": return leadToPurchaseAvgHours;
@@ -403,19 +412,19 @@ export default function ArgentinaMap({
   }, [geoData]);
 
   const { values, max } = useMemo(() => {
-    const vals = new Map<string, number>();
+    const vals = new Map<string, number | null>();
     let mx = 0;
     for (const p of provinces) {
       const v = getMetricValue(provinceData.get(p.key), metric, adSpend, totalContacts);
       vals.set(p.key, v);
-      if (v > mx) mx = v;
+      if (v !== null && v > mx) mx = v;
     }
     return { values: vals, max: mx };
   }, [provinces, provinceData, metric, adSpend, totalContacts]);
 
   const ranking = useMemo(() => {
     return [...values.entries()]
-      .filter(([, v]) => v > 0)
+      .filter((entry): entry is [string, number] => entry[1] !== null && entry[1] > 0)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10);
   }, [values]);
@@ -425,7 +434,7 @@ export default function ArgentinaMap({
     setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
   };
 
-  const hoveredValue = hovered ? values.get(hovered) ?? 0 : 0;
+  const hoveredValue = hovered ? values.get(hovered) ?? null : null;
   const hoveredData = hovered ? provinceData.get(hovered) : undefined;
 
   if (!geoData) {
@@ -446,7 +455,7 @@ export default function ArgentinaMap({
 
           {/* Metric selector */}
           <div className="flex flex-wrap gap-1.5 mb-5">
-            {(Object.keys(metricLabels) as MapMetric[]).filter(value => channel === "whatsapp" || !["pct_inicio", "tiempo_lead_purchase_prom"].includes(value))
+            {(Object.keys(metricLabels) as MapMetric[])
               .filter((m) => !ROAS_METRICS.has(m) || adSpend > 0)
               .map((m) => (
                 <div key={m} className="group relative">
@@ -544,7 +553,7 @@ export default function ArgentinaMap({
             Top provincias — {metricLabels[metric]}
           </h4>
           {ranking.length === 0 ? (
-            <p className="text-[11px] text-zinc-600">Sin datos con provincia</p>
+            <p className="text-[11px] text-zinc-600">{globalMetricValue === null ? "Sin medición del primer mensaje para este período." : "Sin datos con provincia"}</p>
           ) : (
             <div className="space-y-1.5">
               {ranking.map(([key, val], i) => {

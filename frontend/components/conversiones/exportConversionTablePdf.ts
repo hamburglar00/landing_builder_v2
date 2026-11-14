@@ -1,9 +1,12 @@
+import { internalConversionStage } from "@/lib/internalConversionEvents";
 import { buildFunnelContactsFromConversions, type ConversionRow } from "@/lib/conversionsDb";
 import { computeCoreStats } from "@/lib/conversionStats";
 import { formatCurrencyAmount, normalizeCurrencyCode } from "@/lib/currency";
 import {
   columnLabel,
   displayConversionStage,
+  displayInternalConversionStage,
+  displayMetaOriginEvidence,
   friendlyPixelAttributionSource,
   friendlyPurchaseType,
   friendlySourcePlatform,
@@ -62,6 +65,11 @@ export function formatConversionPdfDateRange(range: DateRange | null): string {
 function valueForColumn(row: ConversionRow, column: ConversionColumnKey): string {
   const raw = row as unknown as Record<string, unknown>;
   switch (column) {
+    case "internal_event": return displayInternalConversionStage(row);
+    case "meta_origin_evidence": return displayMetaOriginEvidence(row.meta_origin_evidence);
+    case "cta_clicked_event_time": return formatDateTime(row.cta_clicked_event_time);
+    case "conversation_started_event_time": return formatDateTime(row.conversation_started_event_time);
+    case "purchase_confirmed_event_time": return formatDateTime(row.purchase_confirmed_event_time);
     case "timestamp":
       return formatDateTime(row.created_at);
     case "phone":
@@ -154,10 +162,10 @@ export async function exportConversionTablePdf(options: ExportConversionTablePdf
   const rowEven = [12, 19, 27] as const;
   const rowOdd = [16, 24, 34] as const;
 
-  const purchases = rows.filter((row) => row.estado === "purchase");
-  const leads = rows.filter((row) => row.estado === "lead");
-  const registrations = rows.filter((row) => row.estado === "registration");
-  const contacts = rows.filter((row) => row.estado === "contact");
+  const purchases = rows.filter((row) => internalConversionStage(row) === "purchase");
+  const leads = rows.filter((row) => internalConversionStage(row) === "lead");
+  const registrations = rows.filter((row) => internalConversionStage(row) === "registration");
+  const contacts = rows.filter((row) => internalConversionStage(row) === "contact");
   const selectedEvents = new Set((selectedEventTypes ?? []).map((event) => event.toLowerCase()));
   const shouldShowEventCard = (event: string) =>
     selectedEvents.size === 0 || selectedEvents.has(event);

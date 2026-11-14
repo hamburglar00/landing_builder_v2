@@ -71,6 +71,8 @@ for (const [purchaseType, original] of [["first", 1_792_609_028], ["repeat", 1_7
   for (const fromMeta of [true, false]) {
     const { db, updates, logs } = database();
     const row = { id: "fixture-row", user_id: "fixture-owner", source_platform: "landing", currency: "ARS", valor: 1000, pixel_id: "123", from_meta_ads: fromMeta, purchase_type: purchaseType, purchase_payload_raw: JSON.stringify(normalized), purchase_capi_route: "website", purchase_capi_route_reason: "source_not_click_to_whatsapp" };
+    // The strengthened origin policy needs observed evidence, not a caller's boolean claim.
+    if (fromMeta) Object.assign(row, { fbc: `fb.1.${original * 1000}.SyntheticClick`, purchase_event_time: original });
     const processed = await api.sendToMetaCAPI(db, config, [], row, row.id, "Purchase", "stable-event", handlerTimes[purchaseType === "first" ? 0 : 1], { value: 1000, currency: "ARS", purchase_type: purchaseType });
     assert.equal(processed, true, "Intentional CAPI skip remains successfully processed");
     assert.ok(updates.some(update => update.purchase_status_capi === (fromMeta ? "skipped_old_event_time" : "skipped_not_meta_ads")));

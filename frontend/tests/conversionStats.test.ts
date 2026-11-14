@@ -5,6 +5,65 @@ import type { ConversionJourneyStartRow, ConversionRow } from "../lib/conversion
 process.env.NEXT_PUBLIC_SUPABASE_URL ??= "https://example.supabase.co";
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= "test-anon-key";
 
+test("Atrio historical rendering marks unmeasured messages without treating a public Lead as a conversation", async () => {
+  const React = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { default: StatsPanel } = await import("../components/conversiones/StatsPanel");
+  const record = conversionRow("legacy-cta", {
+    source_platform: "landing", contact_event_id: "cta", lead_event_id: "cta", estado: "lead",
+    contact_payload_raw: JSON.stringify({ source_platform: "landing", cta_destination: "atrio", landing_cta_event_version: 1,
+      event_id: "cta", landing_cta_meta_event: "Lead" }),
+  });
+  const html = renderToStaticMarkup(React.createElement(StatsPanel, {
+    canViewAtrio: true, channel: "atrio", channelLabels: { atrio: "Chat propio" }, availableChannels: ["atrio"],
+    conversions: [record], allConversions: [record], journeyStarts: [], funnelContacts: [], premiumThreshold: 200, dateRange: null, currency: "ARS",
+  }));
+  assert.match(html, /Mensajes recibidos/);
+  assert.match(html, /Sin medición del primer mensaje/);
+  assert.match(html, /recorridos históricos no tienen medición confirmada/);
+  assert.match(html, /Chat propio/);
+  assert.equal(record.lead_event_id, "cta");
+});
+
+test("a historical purchase remains visible by campaign without inventing a message or conversion rate", async () => {
+  const React = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { default: StatsPanel } = await import("../components/conversiones/StatsPanel");
+  const row = conversionRow("unmeasured-purchase", { source_platform: "landing",
+    contact_payload_raw: JSON.stringify({ source_platform: "landing", cta_destination: "atrio" }),
+    contact_event_id: "cta", purchase_event_id: "purchase", purchase_type: "first", valor: 25000, utm_campaign: "historia" });
+  const html = renderToStaticMarkup(React.createElement(StatsPanel, {
+    canViewAtrio: true, channel: "atrio", conversions: [row], allConversions: [row], journeyStarts: [],
+    funnelContacts: [], premiumThreshold: 200, dateRange: null, currency: "ARS",
+  }));
+  const campaignRow = html.match(/<tr[^>]*><td[^>]*>historia<\/td>(.*?)<\/tr>/)?.[1] ?? "";
+  assert.match(campaignRow, /<td[^>]*>—<\/td><td[^>]*>1<\/td><td[^>]*>—<\/td>/);
+  assert.match(campaignRow, /25[.,]000/);
+});
+
+test("the province map separates Atrio CTA, human messages and purchases, including missing historical measurement", async () => {
+  const { buildProvinceData, getMetricValue } = await import("../components/conversiones/ArgentinaMap");
+  const cta = conversionRow("cta-only", { geo_region: "Buenos Aires", internal_events_version: 1,
+    cta_clicked_event_id: "cta-only", cta_clicked_event_time: 100, contact_event_id: "cta-only", lead_event_id: "meta-cta-only" });
+  const journey = conversionRow("human", { geo_region: "Buenos Aires", internal_events_version: 1,
+    promo_code: "PROMO-b", external_id: "player-b", cta_clicked_event_id: "cta-human", cta_clicked_event_time: 100,
+    conversation_started_event_id: "human", conversation_started_event_time: 200,
+    purchase_confirmed_event_id: "purchase", purchase_confirmed_event_time: 300, purchase_type: "first", valor: 120 });
+  const data = [...buildProvinceData([], [cta, journey], [cta, journey], 200, "atrio").values()][0];
+  assert.equal(getMetricValue(data, "contactos", 0, 2), 2);
+  assert.equal(getMetricValue(data, "leads", 0, 2), 1);
+  assert.equal(getMetricValue(data, "pct_inicio", 0, 2), 50);
+  assert.equal(getMetricValue(data, "primeras_cargas", 0, 2), 1);
+  assert.equal(getMetricValue(data, "total_cargado", 0, 2), 120);
+  const legacy = conversionRow("legacy", { geo_region: "Buenos Aires", contact_event_id: "old", purchase_event_id: "old-buy",
+    purchase_type: "first", valor: 25000 });
+  const oldData = [...buildProvinceData([], [legacy], [legacy], 200, "atrio").values()][0];
+  assert.equal(getMetricValue(oldData, "leads", 0, 1), null);
+  assert.equal(getMetricValue(oldData, "pct_carga", 0, 1), null);
+  assert.equal(getMetricValue(oldData, "primeras_cargas", 0, 1), 1);
+  assert.equal(getMetricValue(oldData, "total_cargado", 0, 1), 25000);
+});
+
 function purchaseRow(
   id: string,
   phone: string,
@@ -412,8 +471,8 @@ test("expone la misma familia de metricas que usa Estadisticas", async () => {
 
   assert.equal(stats.uniqueContacts, 2);
   assert.equal(stats.uniqueLeadsLinkedToContact, 1);
-  assert.equal(stats.inferredLeadsFromContactPurchase, 1);
-  assert.equal(stats.firstLoadPurchasersLinkedToLead, 2);
+  assert.equal(stats.inferredLeadsFromContactPurchase, 0, "a purchase does not prove a human message");
+  assert.equal(stats.firstLoadPurchasersLinkedToLead, 1);
   assert.equal(stats.totalPurchases, 3);
   assert.equal(stats.totalRevenue, 450);
 });

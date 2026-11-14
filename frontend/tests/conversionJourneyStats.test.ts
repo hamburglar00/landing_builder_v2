@@ -4,6 +4,8 @@ import type { ConversionJourneyStartRow, ConversionRow } from "../lib/conversion
 import { STATISTICS_ORIGINS, computeChannelFunnel, createStatisticsChannelResolver, dedupeStatisticsEvents,
   scopeStatisticsChannel, scopeStatisticsStages, stageDate, statisticsEventRangeFilter, statisticsOrigin,
   statisticsRate, statisticsTemporalRows, countStatisticsVisitConversions, computeStatisticsPurchasePlayers } from "../lib/conversionJourneyStats";
+import { statisticsMessageCoverage, filterConversionsByActivityRange } from "../lib/conversionJourneyStats";
+import { projectInternalConversion } from "../lib/internalConversionEvents";
 
 const time = Math.floor(Date.parse("2026-11-04T15:00:00Z") / 1000);
 const range = { start: new Date("2026-11-04T00:00:00Z"), end: new Date("2026-11-04T23:59:59.999Z") };
@@ -14,6 +16,50 @@ const row = (id: string, extra: Partial<ConversionRow> = {}): ConversionRow => (
 const contact = (id: string, channel: "whatsapp" | "atrio", extra: Partial<ConversionRow> = {}) => row(id, {
   contact_event_id: `c-${id}`, contact_event_time: time,
   contact_payload_raw: JSON.stringify({ cta_destination: channel, landing_cta_meta_event: "CompleteRegistration", source_platform: "landing" }), ...extra,
+});
+
+test("table and funnel date filtering retains late operational activity without rewriting public Meta identity", async () => {
+  process.env.NEXT_PUBLIC_SUPABASE_URL ??= "https://example.supabase.co";
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= "test-anon-key";
+  const { buildFunnelContactsFromConversions } = await import("../lib/conversionsDb");
+  const old = time - 86400;
+  const cta = contact("old-cta", "atrio", { internal_events_version: 1, cta_clicked_event_id: "cta", cta_clicked_event_time: old,
+    contact_event_id: "cta", contact_event_time: old, lead_event_id: "cta", lead_event_time: old,
+    phone: "5491111111111", estado: "lead" });
+  const message = { ...cta, id: "message-today", conversation_started_event_id: "human", conversation_started_event_time: time };
+  const purchase = { ...cta, id: "purchase-today", phone: "5492222222222", purchase_confirmed_event_id: "purchase", purchase_confirmed_event_time: time,
+    purchase_event_id: "purchase", purchase_event_time: time, purchase_type: "first" as const, valor: 100 };
+  const account = { ...cta, id: "account-today", confirmed_registration_event_id: "account", confirmed_registration_event_time: time };
+  const input = [cta, message, purchase, account];
+  const filtered = filterConversionsByActivityRange(input, range);
+  assert.deepEqual(filtered.map(item => item.id), [message.id, purchase.id, account.id]);
+  assert.equal(filtered[0], message);
+  assert.equal(message.lead_event_id, "cta");
+  assert.equal(message.lead_event_time, old);
+  assert.equal(message.created_at, cta.created_at);
+  const funnel = buildFunnelContactsFromConversions(filtered.filter(item => item !== account));
+  assert.equal(funnel.length, 2);
+  assert.equal(funnel.reduce((sum, item) => sum + item.total_valor, 0), 100);
+});
+
+test("promoting legacy IDs without timestamps preserves their original created-at fallback", () => {
+  const legacy = row("upgraded-legacy", { internal_events_version: 1, cta_clicked_event_id: "old-cta", cta_clicked_event_time: null,
+    contact_event_id: "old-cta", contact_event_time: null, conversation_started_event_id: "human-now", conversation_started_event_time: time,
+    purchase_confirmed_event_id: "old-purchase", purchase_confirmed_event_time: null,
+    purchase_event_id: "old-purchase", purchase_event_time: null, purchase_type: "first", valor: 200 });
+  assert.equal(stageDate(legacy, "contact")?.getTime(), Date.parse(legacy.created_at));
+  assert.equal(stageDate(legacy, "purchase")?.getTime(), Date.parse(legacy.created_at));
+  assert.equal(computeStatisticsPurchasePlayers([legacy]).firstPlayers, 1);
+  const today = scopeStatisticsStages([legacy], range)[0];
+  assert.equal(today.lead_event_id, "human-now");
+  assert.equal(today.purchase_event_id, "");
+  const originalPeriod = { start: new Date("2026-11-01T00:00:00Z"), end: new Date("2026-11-01T23:59:59Z") };
+  const history = scopeStatisticsStages([legacy], originalPeriod)[0];
+  assert.equal(history.purchase_event_id, "old-purchase");
+  assert.equal(history.valor, 200);
+  assert.equal(history.lead_event_id, "");
+  assert.equal(legacy.purchase_event_time, null);
+  assert.equal(legacy.purchase_event_id, "old-purchase");
 });
 
 test("source is independent from channel and only the three approved origins are options", () => {
@@ -48,9 +94,10 @@ test("no synthetic lead or registration is inferred from a purchase", () => {
   const result = computeChannelFunnel(rows, "whatsapp");
   assert.equal(result.messages, 0); assert.equal(result.registrations, null); assert.equal(result.firstPurchases, 0);
 });
-test("Atrio links CTA directly to first purchase without requiring a Lead", () => {
+test("Atrio keeps purchases visible but a funnel progression requires a real message", () => {
   const result = computeChannelFunnel([contact("a", "atrio"), row("p", { purchase_event_id: "p", purchase_event_time: time + 30, purchase_type: "first" })], "atrio");
-  assert.equal(result.firstPurchases, 1); assert.equal(statisticsRate(result.firstPurchases, result.contacts), "100.0%");
+  assert.equal(result.firstPurchases, 0);
+  assert.deepEqual(statisticsMessageCoverage([contact("a", "atrio")], "atrio"), { measured: false, unknownJourneys: 1 });
 });
 test("WhatsApp follows real CTA, message, confirmed registration, first purchase and repeat", () => {
   const rows = [contact("a", "whatsapp"), row("l", { lead_event_id: "l", lead_event_time: time + 1 }),
@@ -157,14 +204,60 @@ test("rates without coverage or a valid denominator are not a fabricated zero", 
   assert.equal(statisticsRate(null, 10), "—"); assert.equal(statisticsRate(0, 0), "—"); assert.equal(statisticsRate(0, 10), "0.0%");
 });
 test("chart dates match the actual activity and purchase instead of the row date", () => {
-  const rows = statisticsTemporalRows([contact("a", "atrio", { purchase_event_id: "p", purchase_event_time: time + 86400 })], "atrio");
+  const rows = statisticsTemporalRows([contact("a", "atrio", { lead_event_id: "message", lead_event_time: time, purchase_event_id: "p", purchase_event_time: time + 86400 })], "atrio");
   assert.equal(rows.length, 2); assert.equal(rows[0].created_at, "2026-11-04T15:00:00.000Z");
   assert.equal(rows[1].created_at, "2026-11-05T15:00:00.000Z"); assert.equal(rows[1].contact_event_id, "");
 });
 test("database filter includes all four milestone timestamps and sanitizes invalid dates", () => {
   const query = statisticsEventRangeFilter(range.start.toISOString(), range.end.toISOString());
-  for (const name of ["created_at", "contact_event_time", "lead_event_time", "registration_event_time", "purchase_event_time"]) assert.ok(query.includes(name));
+  for (const name of ["created_at", "contact_event_time", "lead_event_time", "registration_event_time", "purchase_event_time", "cta_clicked_event_time", "conversation_started_event_time", "purchase_confirmed_event_time"]) assert.ok(query.includes(name));
   assert.equal(statisticsEventRangeFilter("invalid", "invalid"), "");
+});
+
+test("versioned Atrio milestones preserve public Meta Lead while counting the later human message", () => {
+  const source = contact("at-v1", "atrio", {
+    internal_events_version: 1,
+    cta_clicked_event_id: "cta", cta_clicked_event_time: time,
+    contact_event_id: "cta", lead_event_id: "cta", lead_event_time: time,
+    conversation_started_event_id: "message", conversation_started_event_time: time + 20,
+    purchase_confirmed_event_id: "purchase", purchase_confirmed_event_time: time + 60,
+    purchase_event_id: "purchase", purchase_event_time: time + 60, purchase_type: "first",
+    contact_payload_raw: JSON.stringify({ source_platform: "landing", cta_destination: "atrio", landing_cta_event_version: 1,
+      event_id: "cta", landing_cta_meta_event: "Lead" }),
+    lead_status_capi: "enviado", contact_status_capi: "", valor: 1000,
+  });
+  const stats = scopeStatisticsChannel([source, { ...source, id: "duplicate" }], [], "atrio", range);
+  assert.equal(stats.funnel.contacts, 1);
+  assert.equal(stats.funnel.messages, 1);
+  assert.equal(stats.funnel.firstPurchases, 1);
+  assert.equal(stats.conversions.filter(item => item.purchase_event_id).length, 1);
+  assert.equal(stageDate(stats.conversions[0], "lead")?.getTime(), (time + 20) * 1000);
+  assert.equal(source.lead_event_id, "cta", "public Meta identity is immutable");
+  assert.equal(source.lead_status_capi, "enviado", "delivery result remains intact");
+  assert.equal(stats.conversions[0].lead_event_id, "message", "only derived analytics uses internal identity");
+});
+
+test("versioned CTA alone never becomes a message even when Meta accepted Lead", () => {
+  const source = contact("at-v1", "atrio", { internal_events_version: 1,
+    cta_clicked_event_id: "cta", cta_clicked_event_time: time,
+    lead_event_id: "meta-lead", lead_event_time: time, lead_status_capi: "enviado", estado: "lead" });
+  const projected = projectInternalConversion(source);
+  assert.equal(projected.lead_event_id, "");
+  assert.equal(projected.estado, "contact");
+  assert.equal(source.lead_event_id, "meta-lead");
+  assert.deepEqual(statisticsMessageCoverage([source], "atrio"), { measured: true, unknownJourneys: 0 });
+});
+
+test("internal message dates survive range scoping without resurrecting the excluded CTA", () => {
+  const source = contact("at-v1", "atrio", { internal_events_version: 1,
+    cta_clicked_event_id: "cta", cta_clicked_event_time: time - 86400,
+    conversation_started_event_id: "human-message", conversation_started_event_time: time,
+    lead_event_id: "cta", lead_event_time: time - 86400 });
+  const rows = dedupeStatisticsEvents(scopeStatisticsStages([source], range));
+  assert.equal(rows[0].contact_event_id, "");
+  assert.equal(rows[0].lead_event_id, "human-message");
+  assert.equal(computeChannelFunnel(rows, "atrio").contacts, 0);
+  assert.equal(projectInternalConversion(rows[0]).contact_event_id, "", "repeated projection preserves scoped exclusions");
 });
 test("several CTA attempts during one visit cannot produce a conversion rate over 100 percent", () => {
   const start = { id: "visit", user_id: "owner", landing_id: "landing", source_platform: "landing", external_id: "visitor", first_seen_at: new Date(time * 1000).toISOString() } as ConversionJourneyStartRow;

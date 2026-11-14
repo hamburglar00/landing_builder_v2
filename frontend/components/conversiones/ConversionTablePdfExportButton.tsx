@@ -2,16 +2,17 @@
 
 import { useMemo, useState } from "react";
 import type { ConversionRow } from "@/lib/conversionsDb";
+import { internalConversionStage } from "@/lib/internalConversionEvents";
 import type { ConversionColumnKey } from "@/components/conversiones/conversionPageShared";
 import { exportConversionTablePdf } from "@/components/conversiones/exportConversionTablePdf";
 
 type EventKey = "contact" | "lead" | "registration" | "purchase";
 
 const EVENT_OPTIONS: { key: EventKey; label: string }[] = [
-  { key: "contact", label: "Contact" },
-  { key: "lead", label: "Lead" },
-  { key: "registration", label: "CompleteRegistration" },
-  { key: "purchase", label: "Purchase" },
+  { key: "contact", label: "Contact · CTA" },
+  { key: "lead", label: "Mensaje recibido" },
+  { key: "registration", label: "Alta confirmada" },
+  { key: "purchase", label: "Compra confirmada" },
 ];
 
 type Props = {
@@ -40,7 +41,7 @@ export default function ConversionTablePdfExportButton({
   const counts = useMemo(() => {
     return rows.reduce<Record<EventKey, number>>(
       (acc, row) => {
-        const status = String(row.estado ?? "").toLowerCase();
+        const status = internalConversionStage(row);
         if (status === "contact" || status === "lead" || status === "registration" || status === "purchase") {
           acc[status] += 1;
         }
@@ -52,7 +53,7 @@ export default function ConversionTablePdfExportButton({
 
   const selectedRows = useMemo(() => {
     return rows.filter((row) => {
-      const status = String(row.estado ?? "").toLowerCase();
+      const status = internalConversionStage(row);
       return (
         (status === "contact" && selectedEvents.contact) ||
         (status === "lead" && selectedEvents.lead) ||
@@ -76,7 +77,7 @@ export default function ConversionTablePdfExportButton({
       columns,
       filters: [
         ...filters,
-        `Eventos: ${EVENT_OPTIONS.filter((option) => selectedEvents[option.key]).map((option) => option.label).join(", ")}`,
+        `Etapas internas: ${EVENT_OPTIONS.filter((option) => selectedEvents[option.key]).map((option) => option.label).join(", ")}`,
       ],
       workspaceName,
       selectedEventTypes: EVENT_OPTIONS.filter((option) => selectedEvents[option.key]).map((option) => option.key),
@@ -97,7 +98,7 @@ export default function ConversionTablePdfExportButton({
       {open && !disabled ? (
         <div className="absolute right-0 top-full z-40 mt-2 w-64 rounded-xl border border-zinc-700 bg-zinc-950 p-3 shadow-2xl shadow-black/40">
           <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
-            Tipo de evento
+            Etapa interna
           </p>
           <div className="space-y-2">
             {EVENT_OPTIONS.map((option) => (

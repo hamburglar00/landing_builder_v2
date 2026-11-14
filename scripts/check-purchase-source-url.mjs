@@ -120,7 +120,8 @@ function fixture(provider, { contact = true, rootUrl = false, rawOnly = false } 
       }).then(resolve, reject);
       return (...args) => {
         if (method === 'select') columns = args[0];
-        else if (method === 'insert' || method === 'update') { mode = method; value = args[0]; }
+        // Match the JSON boundary of a real DB client, including nested origin evidence from the VM realm.
+        else if (method === 'insert' || method === 'update') { mode = method; value = structuredClone(args[0]); }
         else if (method === 'single' || method === 'maybeSingle') single = true;
         else if (method === 'limit') limit = args[0];
         else if (method === 'order') orders.push(args);
@@ -197,6 +198,52 @@ for (const explicit of [true, false]) {
   assert.equal(row.purchase_status_capi, 'skipped_not_meta_ads'); assert.equal(current.sent.length, 0);
   assert.equal(JSON.parse(row.purchase_payload_raw).action_event_id, input.action_event_id);
   results.push({ scenario: explicit ? 'created-first-explicit-url' : 'created-first-no-trusted-url', status: 'passed' });
+}
+
+// Replay the same exact promo across a delayed Purchase and a valid later one.
+// Occurrence times deliberately differ from today's webhook ingestion time.
+{
+  current = fixture('rey_de_ases');
+  const ctaTime = now - 86400, delayedTime = now - 4 * 86400;
+  const originalFbc = `fb.1.${(ctaTime - 60) * 1000}.OriginalTemporalClick`;
+  const observedAt = new Date(ctaTime * 1000).toISOString();
+  const rootRow = current.tables.conversions[0];
+  Object.assign(rootRow, { contact_event_time: ctaTime, created_at: observedAt, fbc: originalFbc,
+    meta_origin_evidence: { version: 1, classification: 'meta_ads', method: 'fbc', parameters: ['fbc'],
+      values: { fbc: originalFbc }, observed_at: observedAt } });
+  const contactId = rootRow.contact_event_id;
+
+  const delayed = await purchase({ ...payload('rey_de_ases', 'temporal-first'), event_time: delayedTime });
+  assert.equal(current.sent.length, 0, 'A Purchase preceding its captured CTA must not send CAPI');
+  assert.equal(delayed.row.purchase_type, 'first'); assert.equal(delayed.row.valor, 1000);
+  assert.equal(delayed.row.purchase_event_time, delayedTime);
+  assert.equal(delayed.row.contact_event_id, contactId); assert.equal(delayed.row.contact_event_time, ctaTime);
+  assert.equal(delayed.row.meta_origin_evidence.classification, 'meta_ads', 'Original acquisition evidence remains factual');
+  assert.equal(delayed.row.meta_origin_evidence.observed_at, observedAt);
+  assert.equal(delayed.row.meta_origin_evidence.values.fbc, originalFbc);
+  results.push({ scenario: 'delayed-first-preserves-cta-and-blocks-future-attribution', status: 'passed' });
+
+  const delayedRepeat = await purchase({ ...payload('rey_de_ases', 'temporal-repeat'), event_time: delayedTime + 30 });
+  assert.equal(current.sent.length, 0, 'A derived repeat must not bypass the same chronology guard');
+  assert.equal(delayedRepeat.row.purchase_type, 'repeat'); assert.equal(delayedRepeat.row.valor, 1000);
+  assert.equal(delayedRepeat.row.purchase_event_time, delayedTime + 30);
+  assert.notEqual(delayedRepeat.row.id, delayed.row.id);
+  assert.equal(delayedRepeat.row.contact_event_id, '', 'Derived Purchase does not fabricate a Contact');
+  assert.equal(delayedRepeat.row.meta_origin_evidence.observed_at, observedAt);
+  assert.equal(delayedRepeat.row.meta_origin_evidence.values.fbc, originalFbc);
+  results.push({ scenario: 'delayed-repeat-with-inherited-evidence-remains-blocked', status: 'passed' });
+
+  const validTime = now - 60;
+  const valid = await purchase({ ...payload('rey_de_ases', 'temporal-valid'), event_time: validTime });
+  assert.equal(current.sent.length, 1, 'A later actual Purchase with the same valid promo may send once');
+  assert.equal(valid.row.purchase_type, 'repeat'); assert.equal(valid.row.valor, 1000);
+  assert.equal(valid.row.purchase_event_time, validTime); assert.equal(valid.row.purchase_status_capi, 'enviado');
+  const sent = current.sent[0].payload.data[0];
+  assert.equal(sent.event_name, 'Purchase'); assert.equal(sent.event_time, validTime);
+  assert.equal(sent.event_id, valid.row.purchase_event_id); assert.equal(sent.user_data.fbc, originalFbc);
+  assert.equal(sent.custom_data.value, 1000); assert.equal(sent.custom_data.currency, 'ARS');
+  assert.equal(rootRow.contact_event_id, contactId); assert.equal(rootRow.meta_origin_evidence.observed_at, observedAt);
+  results.push({ scenario: 'later-valid-promo-purchase-restores-delivery-with-original-evidence', status: 'passed' });
 }
 assert.equal(externalRequests, 0);
 const report = { scope: 'Real PURCHASE and simple handlers plus real retry HTTP callback; in-memory DB/claim and all HTTP mocked. Provider labels exercise the shared handler, not provider APIs or SQL concurrency.',

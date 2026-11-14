@@ -1,5 +1,7 @@
 ﻿"use client";
 
+import { internalConversionStage } from "@/lib/internalConversionEvents";
+
 import { ActionNotice, useActionResult } from "@/components/ui/ActionNotice";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
@@ -42,6 +44,8 @@ import {
   columnsForTableView,
   conversionMatchesTableSearch,
   displayConversionStage,
+  displayInternalConversionStage,
+  displayMetaOriginEvidence,
   formatIntegerWithThousands,
   friendlyPixelAttributionSource,
   friendlyPurchaseType,
@@ -73,7 +77,7 @@ import {
   journeyStartAttribution,
   matchesConversionAttributionFilters,
 } from "@/components/conversiones/attributionFilters";
-import { STATISTICS_ORIGINS, statisticsOrigin, scopeStatisticsStages, type StatisticsChannel } from "@/lib/conversionJourneyStats";
+import { STATISTICS_ORIGINS, statisticsOrigin, scopeStatisticsStages, filterConversionsByActivityRange, type StatisticsChannel } from "@/lib/conversionJourneyStats";
 import { useConversionStatsFilters } from "@/components/conversiones/useConversionStatsFilters";
 import {
   ConversionPagination,
@@ -172,6 +176,8 @@ function cellValue(
   });
 
   switch (col) {
+    case "internal_event": return <td key={col} className={cell}>{displayInternalConversionStage(c, view === "technical")}</td>;
+    case "meta_origin_evidence": return <td key={col} className={dim} title={displayMetaOriginEvidence(c.meta_origin_evidence, true)}>{displayMetaOriginEvidence(c.meta_origin_evidence, view === "technical")}</td>;
     case "phone": return <td key={col} className={`${mono} text-zinc-200`} title={tip(c.phone)}>{c.phone || "-"}</td>;
     case "email": return <td key={col} className={dim} title={tip(c.email)}>{c.email || "-"}</td>;
     case "form_fn": return <td key={col} className={dim} title={tip(c.form_fn)}>{c.form_fn || "-"}</td>;
@@ -221,7 +227,7 @@ function cellValue(
     case "clientIP": return <td key={col} className={dimMono} title={tip(c.client_ip)}>{c.client_ip || "-"}</td>;
     case "agentuser": return <td key={col} className={dim} title={c.agent_user || "-"}>{truncateText(c.agent_user || "-", 35)}</td>;
     case "estado": {
-      const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
+      const isRepeat = internalConversionStage(c) === "purchase" && c.observaciones?.includes("REPEAT");
       return <td key={col} className={cell}>{estadoBadge(displayConversionStage(c), isRepeat)}</td>;
     }
     case "valor": return <td key={col} className={`${cell} text-zinc-200`} title={tip(c.valor)}>{c.valor > 0 ? formatIntegerWithThousands(c.valor) : "-"}</td>;
@@ -452,7 +458,7 @@ export default function AdminConversionesPage() {
       : rawJourneyStarts.filter((row) => normalizeCurrencyCode(row.workspace_currency) === currencyScope),
     [rawJourneyStarts, currencyScope],
   );
-  const activeConversions = useMemo(() => filterByDateRange(scopedConversions, dateRange), [scopedConversions, dateRange]);
+  const activeConversions = useMemo(() => filterConversionsByActivityRange(scopedConversions, dateRange), [scopedConversions, dateRange]);
   const activeFunnel = useMemo(
     () => buildFunnelContactsFromConversions(activeConversions),
     [activeConversions],
@@ -1491,13 +1497,13 @@ export default function AdminConversionesPage() {
                           </td>
                         </tr>
                       ) : displayRows.map((c, idx) => {
-                        const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
+                        const isRepeat = internalConversionStage(c) === "purchase" && c.observaciones?.includes("REPEAT");
                         const rowColor =
-                          c.estado === "lead"
+                          internalConversionStage(c) === "lead"
                             ? "bg-amber-950/18"
-                            : c.estado === "purchase" && isRepeat
+                            : internalConversionStage(c) === "purchase" && isRepeat
                               ? "bg-violet-950/20"
-                              : c.estado === "purchase"
+                              : internalConversionStage(c) === "purchase"
                                 ? "bg-rose-950/18"
                                 : "bg-zinc-950/40";
                         return (

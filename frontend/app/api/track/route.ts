@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   enqueueTrackEvent,
+  claimTrackEvent,
   markTrackEventDelivered,
   persistTrackEvent,
+  scheduleTrackEventRetry,
 } from "@/lib/tracking/queue";
 import {
   normalizePublicClientIp,
@@ -195,11 +197,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await deliverToUpstream(postUrl, payload);
+    // The request and cron compete for the same fenced lease. Persisting pending
+    // before an unclaimed immediate send otherwise lets both deliver concurrently.
+    const claimed = persisted.id ? await claimTrackEvent(persisted.id) : null;
+    if (persisted.id && !claimed) {
+      return NextResponse.json({ queued: true, persisted: true, status: "claimed_elsewhere" }, { status: 202 });
+    }
+    const result = await deliverToUpstream(claimed?.post_url ?? postUrl, claimed?.payload ?? payload);
 
     if (result.ok) {
-      if (persisted.id) {
-        await markTrackEventDelivered(persisted.id);
+      if (claimed) {
+        await markTrackEventDelivered(claimed.id, claimed.lease_token);
       }
 
       return NextResponse.json({
@@ -208,6 +216,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    if (claimed) {
+      await scheduleTrackEventRetry({ id: claimed.id, leaseToken: claimed.lease_token,
+        reason: result.details, upstreamStatus: result.upstreamStatus });
+    }
     const queued =
       persisted.ok ||
       (await enqueueTrackEvent({

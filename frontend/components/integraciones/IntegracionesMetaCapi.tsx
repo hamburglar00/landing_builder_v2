@@ -765,7 +765,7 @@ export default function IntegracionesMetaCapi() {
         send_contact_capi: false,
         send_lead_capi: true,
         send_complete_registration_capi: false,
-        meta_ads_only_capi: false,
+        meta_ads_only_capi: true,
         send_purchase_capi: true,
         include_purchase_type_capi: true,
         send_first_purchase_capi: true,
@@ -2101,12 +2101,20 @@ export default function IntegracionesMetaCapi() {
                   <SettingsSwitch
                     checked={draft.meta_ads_only_capi}
                     label="Solo eventos de Meta Ads"
-                    help="Activado: sólo envía conversiones con from_meta_ads = true. Se reconoce Meta Ads por fbc, utm_campaign o promo_code TAG-SUFIX de Chatrace, en ese orden. Desactivado: envía todos los orígenes."
+                    help="Limita los envíos por CAPI a recorridos con origen publicitario identificado. Los tipos de evento habilitados se eligen por separado."
                     onChange={() => setDraft((p) => (p ? { ...p, meta_ads_only_capi: !p.meta_ads_only_capi } : p))}
                   />
+                  <div role="status" className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs leading-relaxed text-amber-100">
+                    {draft.meta_ads_only_capi ? (
+                      <><strong>Sólo se enviará actividad con origen de Meta Ads identificado.</strong> Las consultas y cargas de recomendaciones, enlaces directos o conversaciones sin ese origen seguirán en tus estadísticas internas, pero no se enviarán por CAPI.</>
+                    ) : (
+                      <><strong>También se enviará actividad sin origen publicitario identificado.</strong> Meta podrá recibir los eventos que tengas habilitados aunque el cliente haya llegado por una recomendación, un enlace directo o una conversación anterior. Por ejemplo: consultas por WhatsApp, solicitudes de acceso y cargas o recargas. Esta actividad seguirá apareciendo en tus estadísticas internas y puede no atribuirse a ninguna campaña.</>
+                    )}
+                  </div>
                 </div>
                 <div className="pixel-settings-group mt-3">
                   <h5 className="mb-2 text-xs font-semibold text-zinc-300">Tipos de evento</h5>
+                  <p className="mb-3 text-xs text-zinc-400">Sólo se envían los tipos activados aquí. Cambiar el filtro de origen no activa Contact, Lead, CompleteRegistration ni Purchase.</p>
                   <SettingsSwitch
                     checked={draft.send_contact_capi}
                     label="Contact"

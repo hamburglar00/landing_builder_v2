@@ -1,3 +1,4 @@
+import { projectInternalConversion, type InternalEventFields } from "./internalConversionEvents";
 import { supabase } from "@/lib/supabaseClient";
 import { statisticsEventRangeFilter } from "@/lib/conversionJourneyStats";
 import {
@@ -132,7 +133,7 @@ export interface GerenciaAvailabilitySummary {
   availabilityPct: number | null;
 }
 
-export interface ConversionRow {
+export interface ConversionRow extends InternalEventFields {
   confirmed_registration_event_id?: string | null;
   confirmed_registration_event_time?: number | null;
   confirmed_registration_agency_id?: number | null;
@@ -159,6 +160,15 @@ export interface ConversionRow {
   fbp: string;
   fbc: string;
   from_meta_ads: boolean;
+  meta_origin_evidence?: {
+    version: number;
+    classification: "meta_ads" | "unidentified";
+    method: string;
+    parameters: string[];
+    values: Record<string, unknown>;
+    source_conversion_id?: string;
+    observed_at: string;
+  } | null;
   geo_source?: string;
   meta_pixel_id: string;
   dataset_id: string;
@@ -501,6 +511,7 @@ export function scopeConversionStagesToGerencia(
   gerenciaByPhone: Record<string, string[]>,
   matches: (labels: string[]) => boolean,
 ): ConversionRow | null {
+  row = projectInternalConversion(row);
   const hasContact = String(row.contact_event_id ?? "").trim() !== "" &&
     matches(getConversionGerenciaLabels(row, gerenciaByPhone, "contact"));
   const hasLead = String(row.lead_event_id ?? "").trim() !== "" &&
@@ -621,7 +632,7 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   send_contact_capi: false,
   send_lead_capi: true,
   send_complete_registration_capi: false,
-  meta_ads_only_capi: false,
+  meta_ads_only_capi: true,
   send_purchase_capi: true,
   include_purchase_type_capi: true,
   send_first_purchase_capi: true,
@@ -906,9 +917,11 @@ export async function updateAllVisibleColumns(
 const CONVERSIONS_SELECT = `
   id, internal_id, landing_id, user_id, landing_name,
   phone, email, form_fn, form_ln, form_email, form_phone, cuit_cuil, inferred_sex, sex_source, fn, ln, ct, st, zip, country,
-  fbp, fbc, from_meta_ads, geo_source, meta_pixel_id, pixel_id, dataset_id,
+  fbp, fbc, from_meta_ads, meta_origin_evidence, geo_source, meta_pixel_id, pixel_id, dataset_id,
   pixel_attribution_source, pixel_attribution_conversion_id,
   source_platform, ctwa_clid, atrio_id, atrio_client_id, atrio_slug, atrio_players_id,
+  internal_events_version, cta_clicked_event_id, cta_clicked_event_time,
+  conversation_started_event_id, conversation_started_event_time, purchase_confirmed_event_id, purchase_confirmed_event_time,
   contact_event_id, contact_event_time, sendContactPixel, contact_payload_raw,
   lead_event_id, lead_event_time, lead_payload_raw,
   purchase_event_id, purchase_event_time, purchase_payload_raw, purchase_coelsa_id, purchase_transaction_id,
@@ -1188,6 +1201,7 @@ function derivePurchaseType(row: ConversionRow): "first" | "repeat" | null {
 }
 
 export function buildFunnelContactsFromConversions(rows: ConversionRow[]): FunnelContact[] {
+  rows = rows.map(projectInternalConversion);
   const cleanText = (value: unknown): string => String(value ?? "").trim();
   const cleanDigits = (value: unknown): string => cleanText(value).replace(/\D/g, "");
   const stageContextKey = (row: ConversionRow): string => {

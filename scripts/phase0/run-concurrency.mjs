@@ -54,6 +54,7 @@ try {
   assert.ok(a>=0 && b>a);db.sql(wa.slice(a,b));
   const trackingMigration=read('supabase/migrations/20260629190000_constructor_tracking_queue.sql');
   db.sql(trackingMigration.slice(trackingMigration.indexOf('create table if not exists public.tracking_queue'),trackingMigration.indexOf('create table if not exists public.cron_config')));
+  db.sql(read('supabase/migrations/20261114185112_tracking_queue_leases.sql'));
   db.sql(`insert into auth.users(id) values ('${owner}');
     insert into public.landings values ('${landing}','synthetic-concurrency','${owner}','fair','messages_received');
     insert into public.gerencias values (1,'${owner}',1,'messages_received'),(2,'${owner}',2,'messages_received');
@@ -145,7 +146,7 @@ try {
   const trackingContext={exports:{},Date,console,process:{env:{NEXT_PUBLIC_SUPABASE_URL:api.url}},require:(name)=>{
     assert.equal(name,'@/lib/supabase/server');return {getSupabaseServerClient:()=>client};
   }};
-  runInNewContext(trackingSource,trackingContext);const tracking=trackingContext.exports;let trackId;
+  runInNewContext(trackingSource,trackingContext);const tracking=trackingContext.exports;let trackId,trackLease;
   await check('Tracking queue actual persist: concurrent identical events create one row',async()=>{
     const r=await Promise.all(Array.from({length:8},()=>tracking.persistTrackEvent({postUrl:'https://example.invalid',payload:{event_id:'synthetic-track'}})));
     assert.ok(r.every(x=>x.ok));assert.equal(r.filter(x=>x.isNew).length,1);assert.equal(new Set(r.map(x=>x.id)).size,1);trackId=r[0].id;
@@ -153,17 +154,19 @@ try {
   await check('Tracking queue actual claim: concurrent workers return the pending item once',async()=>{
     const r=await Promise.all(Array.from({length:8},()=>tracking.claimPendingTrackEvents(50)));
     assert.equal(r.flat().length,1);assert.equal(r.flat()[0].id,trackId);
+    trackLease=r.flat()[0].lease_token;
   });
   await check('Tracking retries: backoff excludes future work; due work claimed once',async()=>{
-    await tracking.scheduleTrackEventRetry({id:trackId,attemptCount:0,reason:'synthetic failure',upstreamStatus:503});
+    await tracking.scheduleTrackEventRetry({id:trackId,leaseToken:trackLease,reason:'synthetic failure',upstreamStatus:503});
     assert.equal(value(`select attempt_count from public.tracking_queue where id='${trackId}'`),'1');
     assert.equal((await tracking.claimPendingTrackEvents(50)).length,0);
     db.sql(`update public.tracking_queue set next_attempt_at=now()-interval '1 second' where id='${trackId}'`);
     const r=await Promise.all(Array.from({length:8},()=>tracking.claimPendingTrackEvents(50)));
     assert.equal(r.flat().length,1);
+    trackLease=r.flat()[0].lease_token;
   });
   await check('Tracking delivered: concurrent persistence replays retain sent identity',async()=>{
-    await tracking.markTrackEventDelivered(trackId);
+    await tracking.markTrackEventDelivered(trackId,trackLease);
     const r=await Promise.all(Array.from({length:8},()=>tracking.persistTrackEvent({postUrl:'https://example.invalid',payload:{event_id:'synthetic-track'}})));
     assert.ok(r.every(x=>x.alreadyDelivered&&!x.isNew&&x.id===trackId));
   });

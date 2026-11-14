@@ -85,7 +85,7 @@ export function serializeLandingCtaCapture(payload: RecordValue, legacyRaw: stri
   return JSON.stringify(compact);
 }
 
-export function landingCtaCapiEnabled(config: { send_lead_capi?: boolean; send_complete_registration_capi?: boolean },
+export function landingCtaCapiEnabled(config: { send_contact_capi?: boolean; send_lead_capi?: boolean; send_complete_registration_capi?: boolean },
   eventName: string, row: { contact_payload_raw?: unknown; contact_event_id?: unknown }): boolean {
   if (eventName === "Contact") {
     try {
@@ -96,5 +96,6 @@ export function landingCtaCapiEnabled(config: { send_lead_capi?: boolean; send_c
   }
   const selected = eventName === "Contact" ? frozenLandingCtaEvent(row) : null;
   return selected === "Lead" ? config.send_lead_capi !== false
-    : selected === "CompleteRegistration" ? config.send_complete_registration_capi === true : true;
+    : selected === "CompleteRegistration" ? config.send_complete_registration_capi === true
+    : eventName === "Contact" ? config.send_contact_capi !== false : true;
 }

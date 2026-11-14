@@ -1,4 +1,6 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { canUsePromoForJourney, evaluatePromoGerenciaCoherence } from "./event_attribution.ts";
+import { journeyCaptureIsAfterEvent } from "./meta_origin.ts";
 
 export type PurchasePixelAttributionSource =
   | "explicit_payload"
@@ -18,6 +20,13 @@ export interface PurchasePixelAttribution {
 }
 
 export interface PurchasePixelCandidate {
+  phone?: unknown;
+  assigned_gerencia_id?: unknown;
+  lead_gerencia_id?: unknown;
+  registration_gerencia_id?: unknown;
+  purchase_gerencia_id?: unknown;
+  atrio_id?: unknown;
+  atrio_players_id?: unknown;
   id?: string | null;
   pixel_id?: unknown;
   meta_pixel_id?: unknown;
@@ -25,6 +34,12 @@ export interface PurchasePixelCandidate {
   pixel_attribution_conversion_id?: unknown;
   promo_code?: unknown;
   contact_event_id?: unknown;
+  contact_event_time?: unknown;
+  cta_clicked_event_id?: unknown;
+  cta_clicked_event_time?: unknown;
+  lead_event_id?: unknown;
+  lead_event_time?: unknown;
+  meta_origin_evidence?: unknown;
   contact_payload_raw?: unknown;
   lead_payload_raw?: unknown;
   purchase_payload_raw?: unknown;
@@ -33,6 +48,8 @@ export interface PurchasePixelCandidate {
 }
 
 export interface PurchasePixelAttributionInput {
+  eventTime?: unknown;
+  identityContext?: PurchasePixelCandidate | null;
   inboundPixelId?: unknown;
   currentRow?: PurchasePixelCandidate | null;
   promoRoots?: PurchasePixelCandidate[];
@@ -42,6 +59,7 @@ export interface PurchasePixelAttributionInput {
 }
 
 export interface ResolvePurchasePixelAttributionInput {
+  eventTime?: unknown;
   userId: string;
   inboundPixelId?: unknown;
   currentRow?: PurchasePixelCandidate | null;
@@ -73,6 +91,14 @@ function payloadHasExplicitPixel(rawPayload: unknown): boolean {
 function candidatePixel(
   candidate: PurchasePixelCandidate | null | undefined,
 ): string {
+  if (normalizeText(candidate?.contact_event_id)) {
+    try {
+      const capture = JSON.parse(normalizeText(candidate?.contact_payload_raw));
+      const captureId = normalizeText(capture.contact_event_id || capture.event_id);
+      const capturedPixel = normalizePixelId(capture.meta_pixel_id || capture.pixel_id);
+      if (capturedPixel && (!captureId || captureId === normalizeText(candidate?.contact_event_id))) return capturedPixel;
+    } catch { /* Legacy captures without JSON retain their stored destination. */ }
+  }
   return normalizePixelId(candidate?.pixel_id) ||
     normalizePixelId(candidate?.meta_pixel_id);
 }
@@ -129,6 +155,10 @@ function candidateTrustSource(
   return null;
 }
 
+export function trustedJourneyPixel(candidate: PurchasePixelCandidate | null | undefined): string {
+  return candidateTrustSource(candidate) ? candidatePixel(candidate) : "";
+}
+
 function validConfiguredPixels(values: unknown[]): Set<string> {
   return new Set(values.map(normalizePixelId).filter(Boolean));
 }
@@ -159,8 +189,29 @@ export function choosePurchasePixelAttribution(
 ): PurchasePixelAttribution | null {
   const configured = validConfiguredPixels(input.configuredPixelIds);
   if (configured.size === 0) return null;
+  if (journeyCaptureIsAfterEvent(input.currentRow, input.eventTime)) return null;
+
+  const roots = sortPromoRoots(input.promoRoots ?? []).filter(root => {
+    const current = input.identityContext ?? input.currentRow;
+    const coherence = evaluatePromoGerenciaCoherence({ promoFound: true,
+      promoPlayerPhone: root.phone, eventPlayerPhone: current?.phone,
+      promoGerenciaId: root.assigned_gerencia_id || root.lead_gerencia_id || root.purchase_gerencia_id,
+      eventGerenciaId: current?.assigned_gerencia_id || current?.lead_gerencia_id || current?.registration_gerencia_id || current?.purchase_gerencia_id });
+    return canUsePromoForJourney(coherence) &&
+      !(normalizeText(root.atrio_id) && normalizeText(current?.atrio_id) && root.atrio_id !== current?.atrio_id) &&
+      !(normalizeText(root.atrio_players_id) && normalizeText(current?.atrio_players_id) && root.atrio_players_id !== current?.atrio_players_id);
+  });
+  // A positively future root must not be rescued by explicit/landing/single
+  // fallback, nor by selecting another campaign from the candidate collection.
+  if (roots.some(root => candidateTrustSource(root) && journeyCaptureIsAfterEvent(root, input.eventTime))) return null;
 
   const inboundPixel = normalizePixelId(input.inboundPixelId);
+  if (inboundPixel && !configured.has(inboundPixel)) return null;
+  const currentPixel = candidatePixel(input.currentRow);
+  const currentSource = candidateTrustSource(input.currentRow);
+  // Removing credentials never changes an already captured destination.
+  if (currentPixel && currentSource && !configured.has(currentPixel)) return null;
+  if (inboundPixel && currentPixel && currentSource && inboundPixel !== currentPixel) return null;
   if (inboundPixel && configured.has(inboundPixel)) {
     return {
       pixelId: inboundPixel,
@@ -169,8 +220,6 @@ export function choosePurchasePixelAttribution(
     };
   }
 
-  const currentPixel = candidatePixel(input.currentRow);
-  const currentSource = candidateTrustSource(input.currentRow);
   if (currentPixel && currentSource && configured.has(currentPixel)) {
     return {
       pixelId: currentPixel,
@@ -184,7 +233,11 @@ export function choosePurchasePixelAttribution(
     };
   }
 
-  for (const root of sortPromoRoots(input.promoRoots ?? [])) {
+  if ((input.promoRoots?.length ?? 0) > 0 && roots.length === 0) return null;
+  const rootPixels = new Set(roots.filter(root => candidateTrustSource(root)).map(candidatePixel).filter(Boolean));
+  if (rootPixels.size > 1) return null;
+  if (rootPixels.size === 1 && !configured.has(Array.from(rootPixels)[0])) return null;
+  for (const root of roots) {
     const pixelId = candidatePixel(root);
     if (!pixelId || !configured.has(pixelId) || !candidateTrustSource(root)) {
       continue;
@@ -197,6 +250,7 @@ export function choosePurchasePixelAttribution(
   }
 
   const landingPixel = normalizePixelId(input.landingById?.pixel_id);
+  if (landingPixel && !configured.has(landingPixel)) return null;
   if (landingPixel && configured.has(landingPixel)) {
     return {
       pixelId: landingPixel,
@@ -209,9 +263,10 @@ export function choosePurchasePixelAttribution(
     new Set(
       (input.landingTagMatches ?? [])
         .map((landing) => normalizePixelId(landing.pixel_id))
-        .filter((pixelId) => pixelId && configured.has(pixelId)),
+        .filter(Boolean),
     ),
   );
+  if (tagPixels.length > 1 || (tagPixels.length === 1 && !configured.has(tagPixels[0]))) return null;
   if (tagPixels.length === 1) {
     return {
       pixelId: tagPixels[0],
@@ -248,40 +303,45 @@ export async function resolvePurchasePixelAttribution(
 
   let promoRoots: PurchasePixelCandidate[] = [];
   if (promoCode) {
-    const { data } = await db
+    const { data, error } = await db
       .from("conversions")
       .select(
-        "id, pixel_id, meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id, promo_code, contact_event_id, contact_payload_raw, lead_payload_raw, purchase_payload_raw, source_platform, created_at",
+        "id, pixel_id, meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id, promo_code, contact_event_id, contact_event_time, cta_clicked_event_id, cta_clicked_event_time, lead_event_id, lead_event_time, meta_origin_evidence, contact_payload_raw, lead_payload_raw, purchase_payload_raw, source_platform, created_at, phone, assigned_gerencia_id, lead_gerencia_id, registration_gerencia_id, purchase_gerencia_id, atrio_id, atrio_players_id",
       )
       .eq("user_id", input.userId)
       .eq("promo_code", promoCode)
       .order("created_at", { ascending: true })
       .limit(100);
+    if (error) throw error; // Unavailable evidence is not an empty/unique candidate set.
     promoRoots = (data ?? []) as PurchasePixelCandidate[];
   }
 
   let landingById: { id?: unknown; pixel_id?: unknown } | null = null;
   if (landingId) {
-    const { data } = await db
+    const { data, error } = await db
       .from("landings")
       .select("id, pixel_id")
       .eq("user_id", input.userId)
       .eq("id", landingId)
       .maybeSingle();
+    if (error) throw error;
     landingById = data;
   }
 
   let landingTagMatches: Array<{ id?: unknown; pixel_id?: unknown }> = [];
   if (promoPrefix) {
-    const { data } = await db
+    const { data, error } = await db
       .from("landings")
       .select("id, pixel_id")
       .eq("user_id", input.userId)
       .ilike("landing_tag", promoPrefix);
+    if (error) throw error;
     landingTagMatches = data ?? [];
   }
 
   return choosePurchasePixelAttribution({
+    eventTime: input.eventTime,
+    identityContext: input.currentRow,
     inboundPixelId: input.inboundPixelId,
     currentRow,
     promoRoots,
@@ -290,3 +350,7 @@ export async function resolvePurchasePixelAttribution(
     configuredPixelIds: input.configuredPixelIds,
   });
 }
+
+/** Same evidence policy for Lead, registration and Purchase after journey matching. */
+export const resolveJourneyPixelAttribution = resolvePurchasePixelAttribution;
+export const chooseJourneyPixelAttribution = choosePurchasePixelAttribution;

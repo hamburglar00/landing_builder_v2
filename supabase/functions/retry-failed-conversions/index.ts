@@ -29,6 +29,7 @@ import { resolvePurchaseEventSourceUrl, sourceUrlFromPayload } from "../conversi
 import { landingCtaCapiEnabled, capiEventStorage, frozenLandingCtaEvent } from "../conversions/landing_cta_event.ts";
 import { hasActivePurchaseIngestEvent } from "../conversions/purchase_ingest.ts";
 import { logRetryQueueSelectionFailure } from "./queue_diagnostics.ts";
+import { metaOriginPatch } from "../conversions/meta_origin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -45,7 +46,9 @@ const PURCHASE_CAPI_RETRYABLE_STATUSES = ["", "error"];
 const CONTACT_LEAD_CAPI_RETRY_SELECT = `
   id, landing_id, user_id, landing_name,
   phone, email, fn, ln, ct, st, zip, country,
-  fbp, fbc, from_meta_ads, source_platform, ctwa_clid, pixel_id, dataset_id,
+  fbp, fbc, from_meta_ads, meta_origin_evidence, source_platform, ctwa_clid, pixel_id, dataset_id,
+  meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id,
+  assigned_gerencia_id, lead_gerencia_id, registration_gerencia_id, purchase_gerencia_id, atrio_id, atrio_players_id,
   contact_event_id, contact_event_time, contact_payload_raw,
   lead_event_id, lead_event_time, lead_payload_raw,
   purchase_event_id, purchase_event_time, purchase_payload_raw,
@@ -164,7 +167,7 @@ Deno.serve(async (req) => {
     const { data: rows, error } = await db
       .from("conversions")
       .select(
-        "id, created_at, landing_id, landing_name, user_id, phone, source_platform, ctwa_clid, pixel_id, dataset_id, meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id, purchase_attribution_conversion_id, contact_event_id, contact_payload_raw, lead_payload_raw, purchase_payload_raw, promo_code, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, currency, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, from_meta_ads, client_ip, agent_user, external_id, observaciones",
+        "id, created_at, landing_id, landing_name, user_id, phone, source_platform, ctwa_clid, pixel_id, dataset_id, meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id, purchase_attribution_conversion_id, contact_event_id, contact_event_time, contact_payload_raw, lead_event_time, lead_payload_raw, purchase_payload_raw, promo_code, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, currency, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, from_meta_ads, meta_origin_evidence, assigned_gerencia_id, lead_gerencia_id, registration_gerencia_id, purchase_gerencia_id, atrio_id, atrio_players_id, client_ip, agent_user, external_id, observaciones",
       )
       .eq("estado", "purchase")
       .in("purchase_status_capi", PURCHASE_CAPI_RETRYABLE_STATUSES)
@@ -301,6 +304,12 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      if ((row.meta_origin_evidence as {version?:number} | undefined)?.version !== 1) {
+        const origin = metaOriginPatch({},row);
+        const {error} = await db.from("conversions").update(origin).eq("id",row.id);
+        if (error) throw error;
+        Object.assign(row,origin);
+      }
       const userPixelConfigs = pixelConfigMap.get(String(row.user_id)) ?? [];
       const chatraceCfg = chatraceConfigMap.get(String(row.user_id)) ?? null;
       const whatsappCloudApiCfg = resolveWhatsappCloudApiRetryConfig(
@@ -404,6 +413,9 @@ Deno.serve(async (req) => {
         const attribution = await resolvePurchasePixelAttribution(db, {
           userId: String(row.user_id),
           currentRow: row,
+          eventTime: Number(row.purchase_event_time) > 0
+            ? Number(row.purchase_event_time)
+            : Math.floor(Date.parse(String(row.created_at)) / 1000),
           promoCode: row.promo_code,
           landingId: row.landing_id,
           configuredPixelIds: [
@@ -1769,6 +1781,29 @@ async function retrySingleContactLeadCapiEvent(
     return;
   }
 
+  if (!isContact && normalizeText(row.source_platform) !== "whatsapp_cloud_api") {
+    const base = configMap.get(String(row.user_id));
+    const pixels = pixelConfigMap.get(String(row.user_id)) || [];
+    const attribution = await resolvePurchasePixelAttribution(db, {
+      userId:String(row.user_id), currentRow:row, promoCode:row.promo_code, landingId:row.landing_id,
+      eventTime,
+      configuredPixelIds:[base?.pixel_id,...pixels.map(pixel=>pixel.pixel_id)],
+    });
+    if (!attribution) {
+      await skip(JSON.stringify({reason:"no_trusted_journey_pixel"}),{[statusField]:"skipped_no_trusted_pixel"});
+      return;
+    }
+    const pixelPatch = {pixel_id:attribution.pixelId,meta_pixel_id:attribution.pixelId,pixel_attribution_source:attribution.source,pixel_attribution_conversion_id:attribution.sourceConversionId};
+    const {error} = await db.from("conversions").update(pixelPatch).eq("id",row.id);
+    if (error) throw error;
+    Object.assign(row,pixelPatch);
+  }
+  if (row.meta_origin_evidence?.version !== 1) {
+    const origin = metaOriginPatch({},row);
+    const {error} = await db.from("conversions").update(origin).eq("id",row.id);
+    if (error) throw error;
+    Object.assign(row,origin);
+  }
   const config = resolveRetryConfig(row, configMap, pixelConfigMap);
   if (!config) {
     stats[failedKey]++;
@@ -1832,7 +1867,7 @@ async function retrySingleContactLeadCapiEvent(
     return;
   }
 
-  if (eventName === "Contact" && (config.send_contact_capi === false || !landingCtaCapiEnabled(config, eventName, row))) {
+  if (eventName === "Contact" && !landingCtaCapiEnabled(config, eventName, row)) {
     await skip(
       JSON.stringify({
         event_name: delivery.eventName,

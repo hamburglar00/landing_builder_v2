@@ -22,9 +22,12 @@ import {
   toValidEventTime,
 } from "./shared.ts";
 import { workspaceCapiEnabled, WORKSPACE_CAPI_DISABLED_STATUS } from "./workspace_capi.ts";
+import { metaOriginPatch, type MetaOriginEvidence } from "./meta_origin.ts";
+import { INTERNAL_CONVERSATION_ACTION, recordInternalConversation, verifyInternalConversationSignature } from "./internal_conversation.ts";
 import {
   type PurchasePixelAttribution,
-  resolvePurchasePixelAttribution,
+  resolveJourneyPixelAttribution,
+  trustedJourneyPixel,
 } from "./pixel_attribution.ts";
 import {
   canonicalizeInboundTrackingPayload,
@@ -178,6 +181,7 @@ interface ConversionRow {
   fbp: string;
   fbc: string;
   from_meta_ads?: boolean;
+  meta_origin_evidence?: MetaOriginEvidence;
   geo_source?: string;
   meta_pixel_id: string;
   dataset_id?: string;
@@ -1570,7 +1574,7 @@ function configuredPixelIds(
   );
 }
 
-async function resolveAndPersistPurchasePixel(
+async function resolveAndPersistJourneyPixel(
   db: SupabaseClient,
   config: ConversionsConfig,
   pixelConfigs: PixelConfigRow[],
@@ -1580,22 +1584,24 @@ async function resolveAndPersistPurchasePixel(
     inboundPixelId?: unknown;
     promoCode?: unknown;
     landingId?: unknown;
+    eventTime?: unknown;
   },
 ): Promise<
   { row: ConversionRow; attribution: PurchasePixelAttribution | null }
 > {
-  const attribution = await resolvePurchasePixelAttribution(db, {
+  const attribution = await resolveJourneyPixelAttribution(db, {
     userId: row.user_id,
     inboundPixelId: input.inboundPixelId,
     currentRow: row,
     promoCode: input.promoCode ?? row.promo_code,
     landingId: input.landingId ?? row.landing_id,
+    eventTime: input.eventTime,
     configuredPixelIds: configuredPixelIds(config, pixelConfigs),
   });
 
   if (!attribution) {
     return {
-      row: clearUntrustedStoredPixel(row),
+      row: { ...row, pixel_id: "", meta_pixel_id: "" },
       attribution: null,
     };
   }
@@ -1608,7 +1614,7 @@ async function resolveAndPersistPurchasePixel(
     pixel_attribution_conversion_id: attribution.sourceConversionId,
   };
 
-  await db
+  const { error: attributionError } = await db
     .from("conversions")
     .update({
       pixel_id: attribution.pixelId,
@@ -1617,13 +1623,14 @@ async function resolveAndPersistPurchasePixel(
       pixel_attribution_conversion_id: attribution.sourceConversionId,
     })
     .eq("id", rowId);
+  if (attributionError) throw attributionError;
 
   await writeLog(
     db,
     row.user_id,
-    "resolvePurchasePixelAttribution",
+    "resolveJourneyPixelAttribution",
     "INFO",
-    "Pixel Purchase resuelto",
+    "Pixel del recorrido resuelto",
     JSON.stringify({
       pixel_id: attribution.pixelId,
       source: attribution.source,
@@ -3381,6 +3388,24 @@ async function sendToMetaCAPI(
     pixelFallbackDisabledReason?: string;
   } = {},
 ): Promise<boolean> {
+  if (row.meta_origin_evidence?.version !== 1) {
+    const origin = metaOriginPatch({}, row);
+    const { error } = await db.from("conversions").update(origin).eq("id", rowId);
+    if (error) throw error;
+    row = { ...row, ...origin };
+  }
+  if ((eventName === "Lead" || eventName === "CompleteRegistration") && normalizedSourcePlatform(row.source_platform) !== "whatsapp_cloud_api") {
+    const raw = eventName === "Lead" ? row.lead_payload_raw : row.registration_payload_raw;
+    let inbound: Params = {};
+    try { inbound = JSON.parse(String(raw || "{}")); } catch { /* Legacy incomplete raw envelope. */ }
+    const resolved = await resolveAndPersistJourneyPixel(db, config, pixelConfigs, row, rowId, {
+      inboundPixelId: inbound.meta_pixel_id || inbound.pixel_id,
+      promoCode: row.promo_code, landingId: row.landing_id,
+      eventTime,
+    });
+    row = resolved.row;
+    options = { ...options, allowPixelFallback: false, pixelFallbackDisabledReason: "no_trusted_journey_pixel" };
+  }
   const delivery = capiEventStorage(eventName, row);
   if (!workspaceCapiEnabled(config, row.currency)) {
     const statusField = delivery.statusField;
@@ -4687,7 +4712,7 @@ async function handleContact(
     country: norm(geo.country),
     fbp: norm(p.fbp),
     fbc: norm(p.fbc),
-    from_meta_ads: toBool(p.from_meta_ads) || Boolean(inboundCtwaClid),
+    ...metaOriginPatch(p),
     geo_source: payloadGeoSource,
     meta_pixel_id: inboundMetaPixelId,
     dataset_id: inboundDatasetId,
@@ -4881,8 +4906,7 @@ async function handleContact(
 
   const isWhatsappCloudApiContact =
     normalizedSourcePlatform(row.source_platform) === "whatsapp_cloud_api";
-  const shouldSendContactCapi = effectiveConfig.send_contact_capi &&
-    landingCtaCapiEnabled(effectiveConfig, "Contact", row) &&
+  const shouldSendContactCapi = landingCtaCapiEnabled(effectiveConfig, "Contact", row) &&
     !isWhatsappCloudApiContact;
 
   if (shouldSendContactCapi) {
@@ -5426,7 +5450,7 @@ async function handleLead(
 
   // 2) No match -> create new LEAD row to avoid losing conversion
   if (!targetId) {
-    const resolvedPixelId = inboundMetaPixelId ||
+    const resolvedPixelId = trustedJourneyPixel(trustedLineage) || inboundMetaPixelId ||
       norm(trustedLineage?.pixel_id || trustedLineage?.meta_pixel_id);
     const inboundExternalId = norm(p.external_id);
     const generatedExternalId = inboundExternalId ||
@@ -5469,10 +5493,7 @@ async function handleLead(
       country: norm(geo.country) || trustedLineage?.country || "",
       fbp: norm(p.fbp) || trustedLineage?.fbp || "",
       fbc: norm(p.fbc) || trustedLineage?.fbc || "",
-      from_meta_ads: fromMetaAdsForRow(
-        trustedLineage?.from_meta_ads,
-        inboundCtwaClid || trustedLineage?.ctwa_clid,
-      ),
+      ...metaOriginPatch(p, trustedLineage),
       geo_source: payloadGeoSource !== "none"
         ? payloadGeoSource
         : (norm(trustedLineage?.geo_source) || "none"),
@@ -5693,6 +5714,10 @@ async function handleLead(
       .eq("id", targetId)
       .single();
     const currentRow = cur as ConversionRow | null;
+    if (trustedJourneyPixel(currentRow)) {
+      updates.pixel_id = trustedJourneyPixel(currentRow);
+      updates.meta_pixel_id = trustedJourneyPixel(currentRow);
+    }
     Object.assign(updates, urlAttribution(p, currentRow));
     updates.event_source_url = eventSourceUrl || currentRow?.event_source_url ||
       "";
@@ -5737,14 +5762,7 @@ async function handleLead(
     ) {
       updates.ctwa_clid = inboundCtwaClid;
     }
-    if (
-      fromMetaAdsForRow(
-        currentRow?.from_meta_ads,
-        inboundCtwaClid || currentRow?.ctwa_clid,
-      )
-    ) {
-      updates.from_meta_ads = true;
-    }
+    Object.assign(updates, metaOriginPatch(p, currentRow));
     if (
       inboundDatasetId &&
       !norm((cur as Record<string, unknown> | null)?.dataset_id)
@@ -5844,7 +5862,7 @@ async function handleLead(
   const fullRow = (fresh ?? row) as ConversionRow;
   if (ctx) ctx.inboxPromoCode = norm(fullRow.promo_code);
   const allowLeadPixelFallback = hasContactContext(fullRow);
-  const capiRow = clearUntrustedStoredPixel(fullRow);
+  const capiRow = fullRow;
 
   await writeLog(
     db,
@@ -5997,13 +6015,13 @@ async function handleCompleteRegistration(
       promoGerenciaId: promoJourneyGerenciaId(promoRow),
       eventGerenciaId: eventGerencia.gerencia_id,
     });
-    if (promoRow?.id && promoCoherence !== "player_phone_conflict") {
+    if (promoRow?.id && canUsePromoForJourney(promoCoherence)) {
       targetRow = promoRow;
       matchMode = `promo_${promoCoherence}`;
     }
   }
 
-  if (!targetRow) {
+  if (!targetRow && !promoCodeIsFull) {
     const trustedLineage = await findLatestTrustedGerenciaLineage(
       db,
       landing.user_id,
@@ -6016,7 +6034,7 @@ async function handleCompleteRegistration(
     }
   }
 
-  if (!targetRow) {
+  if (!targetRow && !promoCodeIsFull) {
     const { data } = await db
       .from("conversions")
       .select("*")
@@ -6059,6 +6077,7 @@ async function handleCompleteRegistration(
       phone: cleanPhone,
       estado: norm(targetRow.estado) === "purchase" ? "purchase" : "lead",
       ...urlAttribution(p, targetRow),
+      ...metaOriginPatch(p, targetRow),
       registration_event_id: registrationEventId,
       registration_event_time: registrationEventTime,
       registration_payload_raw: registrationPayloadRaw,
@@ -6072,7 +6091,7 @@ async function handleCompleteRegistration(
         targetRow.id,
       ),
     };
-    if (inboundMetaPixelId) {
+    if (inboundMetaPixelId && !trustedJourneyPixel(targetRow)) {
       updates.meta_pixel_id = inboundMetaPixelId;
       updates.pixel_id = inboundMetaPixelId;
     }
@@ -6144,7 +6163,7 @@ async function handleCompleteRegistration(
       db,
       effectiveConfig,
       pixelConfigs,
-      clearUntrustedStoredPixel(fullRow),
+      fullRow,
       targetRow.id,
       "CompleteRegistration",
       registrationEventId,
@@ -6198,7 +6217,7 @@ async function handleCompleteRegistration(
     country: norm(geo.country),
     fbp: norm(p.fbp),
     fbc: norm(p.fbc),
-    from_meta_ads: fromMetaAdsForRow(p.from_meta_ads, inboundCtwaClid),
+    ...metaOriginPatch(p),
     geo_source: payloadGeoSource,
     meta_pixel_id: resolvedPixelId,
     dataset_id: inboundDatasetId,
@@ -6326,7 +6345,7 @@ async function handleCompleteRegistration(
     db,
     effectiveConfig,
     pixelConfigs,
-    clearUntrustedStoredPixel(fullRow),
+    fullRow,
     inserted.id,
     "CompleteRegistration",
     registrationEventId,
@@ -6887,7 +6906,7 @@ async function handlePurchase(
         attributionSourceId,
       ),
     };
-    if (inboundMetaPixelId) {
+    if (inboundMetaPixelId && !trustedJourneyPixel(existingRow)) {
       updates.meta_pixel_id = inboundMetaPixelId;
       updates.pixel_id = inboundMetaPixelId;
     }
@@ -6916,14 +6935,7 @@ async function handlePurchase(
     ) {
       updates.ctwa_clid = inboundCtwaClid;
     }
-    if (
-      fromMetaAdsForRow(
-        existingRow?.from_meta_ads,
-        inboundCtwaClid || existingRow?.ctwa_clid,
-      )
-    ) {
-      updates.from_meta_ads = true;
-    }
+    Object.assign(updates, metaOriginPatch(p, existingRow));
     if (testEventCode) updates.test_event_code = testEventCode;
     if (existingRow?.lead_event_id) {
       updates.lead_event_id = existingRow.lead_event_id;
@@ -7019,7 +7031,7 @@ async function handlePurchase(
       targetId,
     ).single();
     const fullRow = (fresh ?? row) as ConversionRow;
-    const purchasePixel = await resolveAndPersistPurchasePixel(
+    const purchasePixel = await resolveAndPersistJourneyPixel(
       db,
       config,
       pixelConfigs,
@@ -7029,6 +7041,7 @@ async function handlePurchase(
         inboundPixelId: inboundMetaPixelId,
         promoCode: attributedPromoCode,
         landingId: fullRow.landing_id ?? landing.id,
+        eventTime: purchaseEventTime,
       },
     );
     const capiRow = purchasePixel.row;
@@ -7125,7 +7138,7 @@ async function handlePurchase(
         canUsePromoForJourney(promoCoherence)
       ? whatsappCloudApiAssignmentLineage.row
       : trustedReceiverLineage;
-    const firstPixel = inboundMetaPixelId ||
+    const firstPixel = trustedJourneyPixel(firstSource) || inboundMetaPixelId ||
       norm(firstSource?.pixel_id || firstSource?.meta_pixel_id);
     const guardedFirstWorkspaceResolution =
       await resolveGuardedWorkspaceResolution(
@@ -7176,10 +7189,7 @@ async function handlePurchase(
       country: geo.country || firstSource?.country || "",
       fbp: firstSource?.fbp || "",
       fbc: firstSource?.fbc || "",
-      from_meta_ads: fromMetaAdsForRow(
-        firstSource?.from_meta_ads,
-        inboundCtwaClid || firstSource?.ctwa_clid,
-      ),
+      ...metaOriginPatch(p, firstSource),
       geo_source: payloadGeoSource !== "none"
         ? payloadGeoSource
         : (norm(firstSource?.geo_source) || "none"),
@@ -7311,7 +7321,7 @@ async function handlePurchase(
       createdId,
     ).single();
     const fullRow = (fresh ?? row) as ConversionRow;
-    const purchasePixel = await resolveAndPersistPurchasePixel(
+    const purchasePixel = await resolveAndPersistJourneyPixel(
       db,
       config,
       pixelConfigs,
@@ -7321,6 +7331,7 @@ async function handlePurchase(
         inboundPixelId: inboundMetaPixelId,
         promoCode: attributedPromoCode,
         landingId: fullRow.landing_id ?? landing.id,
+        eventTime: purchaseEventTime,
       },
     );
     const capiRow = purchasePixel.row;
@@ -7417,10 +7428,11 @@ async function handlePurchase(
         canUsePromoForJourney(promoCoherence)
     ? whatsappCloudApiAssignmentLineage.row
     : (receiverPurchaseLineage ?? trustedReceiverLineage);
-  const repeatAttribution = await resolvePurchasePixelAttribution(db, {
+  const repeatAttribution = await resolveJourneyPixelAttribution(db, {
     userId: landing.user_id,
     inboundPixelId: inboundMetaPixelId,
     currentRow: repeatSourceRow,
+    eventTime: purchaseEventTime,
     promoCode: attributedPromoCode,
     landingId: repeatSourceRow?.landing_id ?? landing.id,
     configuredPixelIds: configuredPixelIds(config, pixelConfigs),
@@ -7478,10 +7490,7 @@ async function handlePurchase(
     country: geo.country || repeatSourceRow?.country || "",
     fbp: repeatSourceRow?.fbp ?? "",
     fbc: repeatSourceRow?.fbc ?? "",
-    from_meta_ads: fromMetaAdsForRow(
-      repeatSourceRow?.from_meta_ads,
-      repeatCtwaClid || repeatSourceRow?.ctwa_clid,
-    ),
+    ...metaOriginPatch(p, repeatSourceRow),
     geo_source: payloadGeoSource !== "none"
       ? payloadGeoSource
       : (norm(repeatSourceRow?.geo_source) || "none"),
@@ -7661,9 +7670,9 @@ async function handlePurchase(
     await writeLog(
       db,
       landing.user_id,
-      "resolvePurchasePixelAttribution",
+      "resolveJourneyPixelAttribution",
       "INFO",
-      "Pixel Purchase resuelto",
+      "Pixel del recorrido resuelto",
       JSON.stringify({
         pixel_id: repeatAttribution.pixelId,
         source: repeatAttribution.source,
@@ -7865,10 +7874,14 @@ async function handleSimplePurchase(
       )
       : null;
   const simpleSourceRow = srcRow as ConversionRow | null;
-  const simpleAttribution = await resolvePurchasePixelAttribution(db, {
+  const purchaseEventTime = toValidEventTime(
+    p.purchase_event_time || p.event_time || Math.floor(Date.now() / 1000),
+  );
+  const simpleAttribution = await resolveJourneyPixelAttribution(db, {
     userId: landing.user_id,
     inboundPixelId: inboundMetaPixelId,
     currentRow: simpleSourceRow,
+    eventTime: purchaseEventTime,
     promoCode: "",
     landingId: simpleSourceRow?.landing_id ?? landing.id,
     configuredPixelIds: configuredPixelIds(config, pixelConfigs),
@@ -7895,9 +7908,6 @@ async function handleSimplePurchase(
   const simpleRowWorkspaceCurrency = simpleRowWorkspaceResolution.currency;
 
   const purchaseEventId = purchaseClaim.eventId;
-  const purchaseEventTime = toValidEventTime(
-    p.purchase_event_time || p.event_time || Math.floor(Date.now() / 1000),
-  );
 
   const newRow: Omit<ConversionRow, "id"> = {
     landing_id: srcRow?.landing_id ?? (landing.id?.trim() || null),
@@ -7918,10 +7928,7 @@ async function handleSimplePurchase(
     country: srcRow?.country ?? "",
     fbp: srcRow?.fbp ?? "",
     fbc: srcRow?.fbc ?? "",
-    from_meta_ads: fromMetaAdsForRow(
-      srcRow?.from_meta_ads,
-      simpleCtwaClid || srcRow?.ctwa_clid,
-    ),
+    ...metaOriginPatch(p, srcRow),
     geo_source: norm((srcRow as Record<string, unknown> | null)?.geo_source) ||
       "none",
     meta_pixel_id: simpleInheritedPixel,
@@ -8078,9 +8085,9 @@ async function handleSimplePurchase(
     await writeLog(
       db,
       landing.user_id,
-      "resolvePurchasePixelAttribution",
+      "resolveJourneyPixelAttribution",
       "INFO",
-      "Pixel Purchase resuelto",
+      "Pixel del recorrido resuelto",
       JSON.stringify({
         pixel_id: simpleAttribution.pixelId,
         source: simpleAttribution.source,
@@ -8155,7 +8162,14 @@ async function handleConversions(
       return textResponse("Configuracion del servidor incompleta", 500);
     }
 
-    let params: Params = await req.json().catch(() => ({}));
+    const rawBody = await req.text();
+    let params: Params;
+    try { params = JSON.parse(rawBody); } catch { params = {}; }
+    if (!params || typeof params !== "object" || Array.isArray(params)) return textResponse("Payload invalido",400);
+    const internalConversation = norm(params.action).toUpperCase() === INTERNAL_CONVERSATION_ACTION;
+    if (internalConversation && !await verifyInternalConversationSignature(rawBody, req.headers, Deno.env.get("ATRIO_INTERNAL_EVENTS_SECRET") || "")) {
+      return textResponse("Firma interna invalida",401);
+    }
     // Freeze the occurrence time at acceptance, never when cron later resumes.
     params = ensurePayloadEventTime(params, Math.floor(Date.now() / 1000));
     params = canonicalizeInboundTrackingPayload(params, {
@@ -8270,6 +8284,10 @@ async function handleConversions(
       );
     }
 
+    if (internalConversation) {
+      const gerencia = await resolveEventGerenciaSnapshot(db,userId,norm(params.agency_id),sanitizePhone(params.bot_phone));
+      return await recordInternalConversation(db,userId,params,gerencia.gerencia_id);
+    }
     const rawAction = canonicalInboundAction(params.action);
     const rawEventName = norm(params.event_name);
     const eventNameAction = canonicalInboundAction(rawEventName);
@@ -8401,7 +8419,7 @@ async function handleConversions(
       send_contact_capi: false,
       send_lead_capi: true,
       send_complete_registration_capi: false,
-      meta_ads_only_capi: false,
+      meta_ads_only_capi: true,
       include_purchase_type_capi: true,
       send_first_purchase_capi: true,
       send_repeat_purchase_capi: true,

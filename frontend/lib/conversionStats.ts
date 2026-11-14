@@ -1,3 +1,4 @@
+import { projectInternalConversion } from "./internalConversionEvents";
 import type { ConversionJourneyStartRow, ConversionRow, FunnelContact, HomeOverviewStats } from "@/lib/conversionsDb";
 import { buildFunnelContactsFromConversions, classifyContact } from "@/lib/conversionsDb";
 
@@ -243,6 +244,7 @@ export function computeJourneyStartStats(
   journeyStarts: ConversionJourneyStartRow[],
   conversions: ConversionRow[],
 ): JourneyStartStats {
+  conversions = conversions.map(projectInternalConversion);
   const startKeys = new Set(
     journeyStarts
       .map((row) => firstNonEmpty(
@@ -293,6 +295,8 @@ export function computeCoreStats(
   allConversions: ConversionRow[],
   premiumThreshold: number,
 ): CoreStats {
+  conversions = conversions.map(projectInternalConversion);
+  allConversions = allConversions.map(projectInternalConversion);
   const isRepeatPurchase = (c: ConversionRow): boolean => {
     if ((c.purchase_event_id ?? "") === "") return false;
     if (c.purchase_type === "repeat") return true;
@@ -350,11 +354,6 @@ export function computeCoreStats(
     if (leadExternalKeysLinkedToContact.has(key)) {
       firstLoadPurchasersLinkedToLead++;
       firstExternalKeysLinkedToLead.add(key);
-      firstExternalKeysAttributed.add(key);
-    } else if (contactExternalKeys.has(key)) {
-      // If a first purchase is tied to a prior Contact but the Lead was lost,
-      // infer that one conversation happened so the funnel denominator stays fair.
-      inferredLeadsFromContactPurchase++;
       firstExternalKeysAttributed.add(key);
     }
   }
@@ -418,10 +417,8 @@ export function computeCoreStats(
   for (const journey of adJourneys.values()) {
     if (journey.hasContact) adContactJourneys++;
     if (journey.hasContact && journey.hasLead) adLeadJourneysLinkedToContact++;
-    const inferredLead = journey.hasContact && !journey.hasLead && journey.firstEvents > 0;
-    if (inferredLead) adInferredLeadJourneys++;
-    const hasLeadOrInference = journey.hasLead || inferredLead;
-    const hasAttributedFirst = journey.hasContact && hasLeadOrInference && journey.firstEvents > 0;
+    // Keep compatibility counters at zero: a purchase never proves a message.
+    const hasAttributedFirst = journey.hasContact && journey.hasLead && journey.firstEvents > 0;
     if (hasAttributedFirst) {
       adFirstPurchaseJourneysAttributed++;
       adFirstPurchaseEventsAttributed += journey.firstEvents;
@@ -540,6 +537,8 @@ export function computeStatsTruthMetrics({
   allConversions: ConversionRow[];
   premiumThreshold: number;
 }): StatsTruthMetrics {
+  conversions = conversions.map(projectInternalConversion);
+  allConversions = allConversions.map(projectInternalConversion);
   const core = computeCoreStats(conversions, funnelContacts, allConversions, premiumThreshold);
   const isRepeatPurchase = (c: ConversionRow): boolean => {
     if ((c.purchase_event_id ?? "") === "") return false;

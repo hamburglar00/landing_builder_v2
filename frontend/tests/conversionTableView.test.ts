@@ -7,6 +7,8 @@ import {
   columnsForTableView,
   FRIENDLY_HIDDEN_COLUMNS,
   displayConversionStage,
+  displayInternalConversionStage,
+  displayMetaOriginEvidence,
   type ConversionColumnKey,
 } from "../components/conversiones/conversionPageShared";
 
@@ -14,6 +16,28 @@ test("the canonical registration stage displays the actual CompleteRegistration 
   assert.equal(displayConversionStage({estado:"registration",source_platform:"landing"}),"CompleteRegistration");
   assert.equal(displayConversionStage({estado:"lead",source_platform:"landing"}),"lead");
   assert.equal(displayConversionStage({estado:"lead",source_platform:"whatsapp_cloud_api"}),"LeadSubmitted");
+});
+
+test("the table and PDF distinguish operational stages from accepted Meta events", () => {
+  const row = { internal_events_version: 1, cta_clicked_event_id: "cta", cta_clicked_event_time: 100,
+    contact_event_id: "cta", lead_event_id: "cta", lead_status_capi: "enviado", estado: "lead" };
+  assert.equal(displayConversionStage(row), "lead");
+  assert.equal(displayInternalConversionStage(row), "Contact · CTA");
+  assert.equal(displayInternalConversionStage(row, true), "cta_clicked");
+  assert.equal(displayInternalConversionStage({ ...row, conversation_started_event_id: "human-message" }), "Mensaje recibido");
+  assert.equal(displayMetaOriginEvidence({ classification: "meta_ads", method: "meta_campaign", parameters: ["utm_source", "utm_medium"], values: {} }), "meta_campaign · utm_source, utm_medium");
+  assert.deepEqual(columnsForTableView(["phone", "estado"], "friendly"), ["phone", "internal_event", "estado"]);
+});
+
+test("an internal conversation without a public event does not invent a Meta Lead", () => {
+  const row = { internal_events_version: 1, conversation_started_event_id: "human-message", estado: "lead", lead_event_id: "" };
+  assert.equal(displayConversionStage(row), "Sin evento Meta");
+  assert.equal(displayInternalConversionStage(row), "Mensaje recibido");
+  assert.equal(displayConversionStage({ ...row, internal_events_version: null }), "lead");
+  assert.equal(displayConversionStage({ ...row, lead_event_id: "actual-meta-lead" }), "lead");
+  const registered = { ...row, conversation_started_event_id: "", confirmed_registration_event_id: "created-account" };
+  assert.equal(displayInternalConversionStage(registered), "Alta confirmada");
+  assert.equal(displayConversionStage(registered), "Sin evento Meta");
 });
 
 const EXPECTED_HIDDEN_COLUMNS: ConversionColumnKey[] = [
@@ -90,6 +114,9 @@ const EXPECTED_HIDDEN_COLUMNS: ConversionColumnKey[] = [
   "purchase_atrio_players_id",
   "purchase_attribution_status",
   "purchase_attribution_conversion_id",
+  "cta_clicked_event_id", "cta_clicked_event_time",
+  "conversation_started_event_id", "conversation_started_event_time",
+  "purchase_confirmed_event_id", "purchase_confirmed_event_time",
 ];
 
 test("la vista reducida oculta exactamente las columnas técnicas solicitadas", () => {

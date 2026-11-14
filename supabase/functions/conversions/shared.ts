@@ -42,6 +42,7 @@ export interface ConversionRow {
   fbp: string;
   fbc: string;
   from_meta_ads?: boolean;
+  meta_origin_evidence?: import("./meta_origin.ts").MetaOriginEvidence;
   source_platform?: string;
   ctwa_clid?: string;
   atrio_id?: string;

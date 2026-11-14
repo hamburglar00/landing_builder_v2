@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   claimPendingTrackEvents,
-  markTrackEventDelivered,
-  scheduleTrackEventRetry,
 } from "@/lib/tracking/queue";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { deliverToUpstream } from "@/lib/tracking/upstream";
+import { deliverClaimedTrackEvent } from "@/lib/tracking/retryDelivery";
+
+export const maxDuration = 60;
 
 async function getTrackingRetrySecret() {
   try {
@@ -70,36 +70,33 @@ async function processRetry(
       ? requestedLimit
       : 50;
 
-  const items = await claimPendingTrackEvents(limit);
-  if (!items.length) {
-    return NextResponse.json({ ok: true, processed: 0, delivered: 0, retry: 0 });
-  }
-
+  const started = Date.now();
+  let processed = 0;
   let delivered = 0;
+  let acknowledged = 0;
   let retry = 0;
+  let leaseLost = 0;
 
-  for (const item of items) {
-    const result = await deliverToUpstream(item.post_url, item.payload, 2);
-    if (result.ok) {
-      delivered += 1;
-      await markTrackEventDelivered(item.id);
-      continue;
-    }
-
-    retry += 1;
-    await scheduleTrackEventRetry({
-      id: item.id,
-      attemptCount: item.attempt_count,
-      reason: result.details,
-      upstreamStatus: result.upstreamStatus,
-    });
+  // Claim just before delivery, in small concurrent batches. An invocation never
+  // holds a large batch of leases while preceding requests time out sequentially.
+  while (processed < limit && Date.now() - started < 40_000) {
+    const items = await claimPendingTrackEvents(Math.min(5, limit - processed));
+    if (!items.length) break;
+    const results = await Promise.all(items.map((item) => deliverClaimedTrackEvent(item)));
+    processed += items.length;
+    delivered += results.filter((value) => value === "delivered").length;
+    acknowledged += results.filter((value) => value === "acknowledged").length;
+    retry += results.filter((value) => value === "retry").length;
+    leaseLost += results.filter((value) => value === "lease_lost").length;
   }
 
   return NextResponse.json({
     ok: true,
-    processed: items.length,
+    processed,
     delivered,
+    acknowledged,
     retry,
+    leaseLost,
   });
 }
 

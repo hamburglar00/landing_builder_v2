@@ -1,4 +1,5 @@
 import type { DateRange } from "@/components/conversiones/DateRangeFilter";
+import { internalConversionStage, internalEventName } from "@/lib/internalConversionEvents";
 
 export const ALL_COLUMNS = [
   "phone","email","form_fn","form_ln","form_email","form_phone","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","dataset_id","pixel_attribution_source","pixel_attribution_conversion_id","source_platform","ctwa_clid","atrio_id","atrio_client_id","atrio_slug","atrio_players_id",
@@ -12,6 +13,8 @@ export const ALL_COLUMNS = [
   "purchase_bot_phone","purchase_player_username","purchase_agency_id","purchase_gerencia_label","purchase_incoming_promo_code","purchase_atrio_id","purchase_atrio_players_id","purchase_attribution_status","purchase_attribution_conversion_id",
   "device_type","geo_city","geo_region","geo_country","geo_source",
   "cuit_cuil","inferred_sex","sex_source",
+  "internal_event","meta_origin_evidence",
+  "cta_clicked_event_id","cta_clicked_event_time","conversation_started_event_id","conversation_started_event_time","purchase_confirmed_event_id","purchase_confirmed_event_time",
 ] as const;
 
 export type ConversionColumnKey = (typeof ALL_COLUMNS)[number];
@@ -92,6 +95,9 @@ export const FRIENDLY_HIDDEN_COLUMNS = new Set<ConversionColumnKey>([
   "purchase_atrio_players_id",
   "purchase_attribution_status",
   "purchase_attribution_conversion_id",
+  "cta_clicked_event_id", "cta_clicked_event_time",
+  "conversation_started_event_id", "conversation_started_event_time",
+  "purchase_confirmed_event_id", "purchase_confirmed_event_time",
 ]);
 
 const FRIENDLY_COLUMN_LABELS: Record<ConversionColumnKey, string> = {
@@ -134,7 +140,15 @@ const FRIENDLY_COLUMN_LABELS: Record<ConversionColumnKey, string> = {
   timestamp: "Fecha y hora",
   clientIP: "Dirección IP",
   agentuser: "Navegador",
-  estado: "Etapa",
+  estado: "Evento Meta seleccionado",
+  internal_event: "Etapa interna",
+  meta_origin_evidence: "Evidencia de Meta Ads",
+  cta_clicked_event_id: "ID interno de Contact",
+  cta_clicked_event_time: "Hora interna de Contact",
+  conversation_started_event_id: "ID interno del primer mensaje",
+  conversation_started_event_time: "Hora interna del primer mensaje",
+  purchase_confirmed_event_id: "ID interno de la compra",
+  purchase_confirmed_event_time: "Hora interna de la compra",
   valor: "Valor",
   currency: "Workspace",
   workspace_resolution_source: "Como se resolvio el workspace",
@@ -204,9 +218,11 @@ export function columnsForTableView(
   columns: readonly ConversionColumnKey[],
   view: ConversionTableView,
 ): ConversionColumnKey[] {
-  return view === "friendly"
-    ? columns.filter((column) => !FRIENDLY_HIDDEN_COLUMNS.has(column))
-    : [...columns];
+  if (view === "technical") return [...columns];
+  const visible = columns.filter((column) => !FRIENDLY_HIDDEN_COLUMNS.has(column));
+  // Existing saved column preferences must still explain the two meanings.
+  if (visible.includes("estado") && !visible.includes("internal_event")) visible.splice(visible.indexOf("estado"), 0, "internal_event");
+  return visible;
 }
 
 export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> = {
@@ -229,7 +245,15 @@ export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> =
   country: "Pais recibido en payload o enriquecido por geolocalizacion.",
   fbp: "Parametro fbp de Meta enviado por la fuente.",
   fbc: "Parametro fbc de Meta enviado por la fuente.",
-  from_meta_ads: "Indica origen probable en Meta Ads. True si trae fbc o utm_campaign; si solo trae promo_code valido (TAG-SUFIX), cuenta solo cuando source_platform es chatrace o whatsapp_cloud_api.",
+  from_meta_ads: "Origen publicitario identificado con evidencia registrada. Un utm_campaign por sí solo no acredita Meta Ads.",
+  meta_origin_evidence: "Método, parámetros y valores que justificaron la clasificación del origen. No significa que Meta haya atribuido el evento a una campaña.",
+  internal_event: "Hito operativo independiente de Meta: cta_clicked, conversation_started o purchase_confirmed. Una compra no prueba un mensaje y el Lead del CTA no lo reemplaza.",
+  cta_clicked_event_id: "Identidad del CTA interno, conservada aunque Meta reciba Lead o CompleteRegistration.",
+  cta_clicked_event_time: "Fecha original del CTA interno en segundos Unix.",
+  conversation_started_event_id: "Identidad del primer mensaje humano de este recorrido. No es el Lead publicitario del CTA.",
+  conversation_started_event_time: "Fecha original del primer mensaje humano de este recorrido en segundos Unix.",
+  purchase_confirmed_event_id: "Identidad de la compra confirmada, con su clasificación first/repeat existente.",
+  purchase_confirmed_event_time: "Fecha original de la compra confirmada en segundos Unix.",
   geo_source: "Fuente usada para completar geo: payload, ip, phone_prefix o none.",
   meta_pixel_id: "Pixel ID recibido en el payload de entrada (landing/chatrace/whatsapp_cloud_api/backend).",
   pixel_id: "Pixel ID efectivo usado para CAPI.",
@@ -254,7 +278,7 @@ export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> =
   purchase_payload_raw: "Payload crudo recibido para action=PURCHASE (trazabilidad).",
   clientIP: "IP recibida en payload (clientIP/client_ip_address).",
   agentuser: "User-Agent recibido en payload (agentuser/client_user_agent).",
-  estado: "Etapa actual: contact, lead, registration (CompleteRegistration) o purchase. El clic de Atrio conserva el evento elegido.",
+  estado: "Evento publicitario seleccionado: Contact, Lead, CompleteRegistration o Purchase. Consultar su estado CAPI para conocer la entrega; la etapa operativa se muestra por separado.",
   valor: "Monto de compra/carga recibido para Purchase.",
   currency: "Workspace/moneda asociada a la conversion y al monto (por ejemplo ARS o PYG).",
   workspace_resolution_source: "Nota de trazabilidad sobre la senal usada por backend para separar ARS/PYG.",
@@ -329,7 +353,7 @@ const FRIENDLY_COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>>
   from_meta_ads: "Indica si el recorrido parece venir de una publicidad de Meta.",
   pixel_attribution_source: "De donde tomamos el Pixel usado para atribuir la conversion.",
   pixel_attribution_conversion_id: "Registro anterior usado como referencia para mantener la atribucion.",
-  estado: "Etapa actual del recorrido: Contact, Lead, CompleteRegistration o Purchase.",
+  estado: "Evento elegido para Meta. Puede diferir del hito interno y no garantiza que se haya enviado.",
   valor: "Monto cargado o comprado en este evento.",
   currency: "Workspace/moneda donde quedo registrado el movimiento.",
   workspace_resolution_source: "Como decidimos en que workspace guardar el registro.",
@@ -427,8 +451,9 @@ export function conversionMatchesTableSearch(row: TableSearchRow, rawSearch: str
       || [row.facebook, row.portofolio, row.cp].some(value => String(value ?? "").trim().toLowerCase() === query);
   }
 
-  const hay = TABLE_SEARCH_TEXT_FIELDS
+  const hay = [...TABLE_SEARCH_TEXT_FIELDS
     .map((field) => field === "landing_resolution" ? `${row[field] || ""} ${landingResolutionLabel(row[field])}` : row[field])
+      , displayInternalConversionStage(row), internalEventName(row), displayMetaOriginEvidence(row.meta_origin_evidence)]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
@@ -446,8 +471,16 @@ export function normalizeSexValue(value: unknown): string {
 export function displayConversionStage(row: {
   estado?: string | null;
   source_platform?: string | null;
+  internal_events_version?: number | null;
+  contact_event_id?: string | null;
+  lead_event_id?: string | null;
+  registration_event_id?: string | null;
+  purchase_event_id?: string | null;
 }): string {
   const estado = String(row.estado ?? "").trim();
+  if (row.internal_events_version === 1 && ![
+    row.contact_event_id, row.lead_event_id, row.registration_event_id, row.purchase_event_id,
+  ].some(value => String(value ?? "").trim())) return "Sin evento Meta";
   if (
     estado === "lead" &&
     String(row.source_platform ?? "").trim().toLowerCase() ===
@@ -456,6 +489,22 @@ export function displayConversionStage(row: {
     return "LeadSubmitted";
   }
   return estado === "registration" ? "CompleteRegistration" : estado;
+}
+
+export function displayInternalConversionStage(row: Parameters<typeof internalEventName>[0], technical = false): string {
+  if (technical) return internalEventName(row) || "Sin medición";
+  const stage = internalConversionStage(row);
+  return stage === "contact" ? "Contact · CTA" : stage === "lead" ? "Mensaje recibido"
+    : stage === "purchase" ? "Compra confirmada" : stage === "registration" ? "Alta confirmada" : "Sin medición";
+}
+
+export function displayMetaOriginEvidence(value: unknown, technical = false): string {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return "Sin evidencia registrada";
+  const evidence = value as { classification?: unknown; method?: unknown; parameters?: unknown };
+  if (technical) return JSON.stringify(value);
+  if (evidence.classification !== "meta_ads") return "Origen no identificado";
+  const parameters = Array.isArray(evidence.parameters) ? evidence.parameters.filter(item => typeof item === "string").join(", ") : "";
+  return `${String(evidence.method || "Meta Ads")}${parameters ? ` · ${parameters}` : ""}`;
 }
 
 export function todayRange(): DateRange {

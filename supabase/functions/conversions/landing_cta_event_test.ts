@@ -5,6 +5,16 @@ const payload = { source_platform: 'landing', cta_destination: 'atrio', event_id
 const published = (template: number, event = 'Lead') => ({layout:{template},tracking:{ctaMetaEvent:event}});
 function row(capture: unknown) { return { country:'',st:'',ct:'',zip:'',contact_event_id:'cta-original',contact_payload_raw:JSON.stringify(capture),external_id:'fixture',event_source_url:'https://landing.fixture.test/test',currency:'ARS' } as any; }
 const config = {user_id:'owner',pixel_id:'123',meta_access_token:'fixture',meta_api_version:'v25.0',send_contact_capi:true} as any;
+Deno.test('CTA CAPI evaluates the selected public event independently of Contact configuration',()=>{
+  for(const template of [7,8,9]) {
+    const lead=row(freezeLandingCtaEvent(payload,published(template)));
+    assert(landingCtaCapiEnabled({send_contact_capi:false,send_lead_capi:true},'Contact',lead));
+    assert(!landingCtaCapiEnabled({send_contact_capi:true,send_lead_capi:false},'Contact',lead));
+    const registration=row(freezeLandingCtaEvent({...payload,cta_meta_event:'CompleteRegistration'},published(template,'CompleteRegistration')));
+    assert(landingCtaCapiEnabled({send_contact_capi:false,send_lead_capi:false,send_complete_registration_capi:true},'Contact',registration));
+  }
+  assert(!landingCtaCapiEnabled({send_contact_capi:false},'Contact',row(payload)));
+});
 Deno.test('canonical storage and delivery status match the frozen CTA event without changing its capture identity',()=>{
   for(const event of ['Lead','CompleteRegistration'] as const) {
     const captured={...row(freezeLandingCtaEvent({...payload,cta_meta_event:event},published(9,event))),contact_event_time:1234567890};

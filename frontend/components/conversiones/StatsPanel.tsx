@@ -7,8 +7,9 @@ import {
   type ConversionRow,
 } from "@/lib/conversionsDb";
 import { adJourneyKey, computeCoreStats, computeJourneyStartStats, computeStatsTruthMetrics } from "@/lib/conversionStats";
+import { projectInternalConversion } from "@/lib/internalConversionEvents";
 import { buildFunnelContactsFromConversions } from "@/lib/conversionsDb";
-import { computeChannelFunnel, computeStatisticsPurchasePlayers, countStatisticsVisitConversions, scopeStatisticsChannel, scopeStatisticsStages, stageDate, statisticsTemporalRows, statisticsRate, statisticsPlayerKey, type StatisticsChannel } from "@/lib/conversionJourneyStats";
+import { computeChannelFunnel, computeStatisticsPurchasePlayers, countStatisticsVisitConversions, scopeStatisticsChannel, scopeStatisticsStages, stageDate, statisticsTemporalRows, statisticsRate, statisticsMessageCoverage, statisticsPlayerKey, type StatisticsChannel } from "@/lib/conversionJourneyStats";
 import { formatCompactCurrency, formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
 import ArgentinaMap from "./ArgentinaMap";
 import { supabase } from "@/lib/supabaseClient";
@@ -329,6 +330,7 @@ function summarizeLeadGroups(
 }
 
 export function computeLeadRepeatStats(rows: ConversionRow[]): LeadRepeatStats {
+  rows = rows.map(projectInternalConversion);
   const byPhone = new Map<string, Array<{ tag: string; ts: number }>>();
   const byTagPhone = new Map<string, Array<{ tag: string; ts: number }>>();
   const contactJourneyKeys = new Set<string>();
@@ -426,6 +428,8 @@ function SortButton({
 }
 
 type StatsPanelProps = {
+  channelLabels?: Partial<Record<StatisticsChannel, string>>;
+  availableChannels?: StatisticsChannel[];
   canViewAtrio?: boolean;
   channel?: StatisticsChannel;
   onChannelChange?: (channel: StatisticsChannel) => void;
@@ -451,17 +455,17 @@ export default function StatsPanel(props: StatsPanelProps) {
   const contacts = useMemo(() => buildFunnelContactsFromConversions(scoped.conversions), [scoped.conversions]);
   return <div className="min-w-0 space-y-4" data-testid="channel-statistics" data-channel={channel}>
     {props.canViewAtrio === true && <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Canal de las estadísticas">
-      {(["whatsapp", "atrio"] as const).map(value => <button key={value} type="button" aria-pressed={channel === value}
+      {(props.availableChannels ?? ["whatsapp", "atrio"] as StatisticsChannel[]).map(value => <button key={value} type="button" aria-pressed={channel === value}
         onClick={() => { setChannel(value); props.onChannelChange?.(value); }}
         className={`rounded-full border px-4 py-2 text-xs font-bold transition ${channel === value ? "border-emerald-400/40 bg-emerald-400/15 text-emerald-300" : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-zinc-100"}`}>
-        {value === "whatsapp" ? "WhatsApp" : "Atrio"}
+        {props.channelLabels?.[value] ?? (value === "whatsapp" ? "WhatsApp" : "Atrio")}
       </button>)}
     </div>}
-    <p className="text-xs text-zinc-400">Todas las estadísticas corresponden a {channel === "whatsapp" ? "WhatsApp y a los filtros globales seleccionados" : "Atrio, con origen Landing y los filtros globales seleccionados"}.</p>
+    <p className="text-xs text-zinc-400">Todas las estadísticas corresponden a {props.channelLabels?.[channel] ? `${props.channelLabels[channel]}, con los filtros globales seleccionados` : channel === "whatsapp" ? "WhatsApp y a los filtros globales seleccionados" : "Atrio, con origen Landing y los filtros globales seleccionados"}.</p>
     {(scoped.unknownConversions > 0 || scoped.unknownStarts > 0) && <p className="break-words text-xs text-zinc-500" role="status">
       Sin canal histórico confirmado: {scoped.unknownConversions} registros y {scoped.unknownStarts} visitas. No se incluyen en los cálculos por canal.
     </p>}
-    {scoped.conversions.length === 0 && scoped.journeyStarts.length === 0 && <p className="text-sm text-zinc-400">No hay datos de {channel === "whatsapp" ? "WhatsApp" : "Atrio"} para esta selección.</p>}
+    {scoped.conversions.length === 0 && scoped.journeyStarts.length === 0 && <p className="text-sm text-zinc-400">No hay datos de {props.channelLabels?.[channel] ?? (channel === "whatsapp" ? "WhatsApp" : "Atrio")} para esta selección.</p>}
     <ChannelStatsPanel key={`${channel}-${props.currency}`} {...props} funnelContacts={contacts} conversions={scoped.conversions}
       allConversions={scoped.allConversions} journeyStarts={scoped.journeyStarts} channel={channel} funnel={scoped.funnel}
       adSpend={spend[spendKey] ?? ""} setAdSpend={value => setSpend(current => ({ ...current, [spendKey]: value }))} />
@@ -469,6 +473,7 @@ export default function StatsPanel(props: StatsPanelProps) {
 }
 
 function ChannelStatsPanel({
+  channelLabels,
   funnelContacts,
   conversions,
   allConversions,
@@ -484,8 +489,9 @@ function ChannelStatsPanel({
   adSpend,
   setAdSpend,
 }: StatsPanelProps & { channel: StatisticsChannel; funnel: ReturnType<typeof computeChannelFunnel>; adSpend: string; setAdSpend: (value: string) => void }) {
-  const activityLabel = channel === "atrio" ? "Solicitudes de usuario" : "Mensajes recibidos";
-  const activityStage = channel === "atrio" ? "contact" : "lead";
+  const activityLabel = "Mensajes recibidos";
+  const activityStage = "lead";
+  const messageCoverage = useMemo(() => statisticsMessageCoverage(conversions, channel), [conversions, channel]);
   const purchasePlayers = useMemo(() => computeStatisticsPurchasePlayers(conversions), [conversions]);
   const [hourlyLoadMetric, setHourlyLoadMetric] = useState<LoadMetric>("total");
   const [dailyLoadMetric, setDailyLoadMetric] = useState<LoadMetric>("total");
@@ -536,10 +542,10 @@ function ChannelStatsPanel({
       return !(c.observaciones ?? "").includes("REPEAT");
     };
     const uniqueContacts = truth.uniqueContacts;
-    const uniqueLeads = channel === "atrio" ? funnel.contacts : truth.uniqueLeads;
+    const uniqueLeads = truth.uniqueLeads;
     const realLeadsLinkedToContact = truth.realLeadsLinkedToContact;
     const inferredLeadsFromContactPurchase = truth.inferredLeadsFromContactPurchase;
-    const uniqueLeadsLinkedToContact = channel === "atrio" ? funnel.contacts : funnel.messages;
+    const uniqueLeadsLinkedToContact = funnel.messages;
     const firstLoadPurchasers = truth.firstLoadPurchasers;
     const firstLoadPurchasersLinkedToLead = funnel.firstPurchases;
     const firstLoadPlayersAttributed = new Set(conversions.filter(isFirstPurchase).map(statisticsPlayerKey)).size;
@@ -563,6 +569,7 @@ function ChannelStatsPanel({
     type SliceStats = {
       mensajes: number;
       cargas: number;
+      cargasVinculadas: number;
       revenue: number;
       firstRevenue: number;
       baseCargas: number | null;
@@ -574,12 +581,14 @@ function ChannelStatsPanel({
     ): SliceStats => {
       const slicedCore = computeCoreStats(convSlice, contactsSlice, allConvSlice, premiumThreshold);
       const milestones = computeChannelFunnel(convSlice, channel);
+      const coverage = statisticsMessageCoverage(convSlice, channel);
       return {
-        mensajes: channel === "atrio" ? milestones.contacts : convSlice.filter(row => row.lead_event_id).length,
-        cargas: milestones.firstPurchases,
+        mensajes: convSlice.filter(row => row.lead_event_id).length,
+        cargas: slicedCore.adFirstPurchaseEvents,
+        cargasVinculadas: milestones.firstPurchases,
         revenue: slicedCore.totalRevenue,
         firstRevenue: slicedCore.firstPurchaseEventRevenue,
-        baseCargas: channel === "atrio" ? milestones.contacts : milestones.messages,
+        baseCargas: coverage.measured && !coverage.unknownJourneys ? milestones.messages : null,
       };
     };
 
@@ -1075,10 +1084,11 @@ function ChannelStatsPanel({
       const bucketRows = scopeStatisticsStages(conversions, { start: bucket.start, end: bucket.end });
       const milestones = computeChannelFunnel(bucketRows, channel);
       const players = computeStatisticsPurchasePlayers(bucketRows);
-      const base = channel === "atrio" ? milestones.contacts : milestones.messages;
+      const coverage = statisticsMessageCoverage(bucketRows, channel);
+      const base = milestones.messages;
       return { day: bucket.label,
-        pct_inicio: bucket.future || channel === "atrio" || !milestones.contacts ? null : 100 * milestones.messages / milestones.contacts,
-        pct_carga: bucket.future || !base ? null : 100 * players.firstPlayers / base,
+        pct_inicio: bucket.future || !coverage.measured || coverage.unknownJourneys || !milestones.contacts ? null : 100 * milestones.messages / milestones.contacts,
+        pct_carga: bucket.future || !coverage.measured || coverage.unknownJourneys || !base ? null : 100 * milestones.firstPurchases / base,
         pct_recarga: bucket.future || !players.firstPlayers ? null : 100 * players.repeatPlayersFromFirst / players.firstPlayers,
       };
     });
@@ -1102,18 +1112,20 @@ function ChannelStatsPanel({
       landing?: string;
       mensajes: number;
       cargas: number;
+      cargasVinculadas: number;
+      baseCargas: number | null;
       revenue: number;
       firstRevenue: number;
     },
     key: TableSortKey,
   ) => {
     if (key === "name") return row.campaign ?? row.landing ?? "";
-    if (key === "pct") return row.mensajes > 0 ? row.cargas / row.mensajes : 0;
+    if (key === "pct") return row.baseCargas && row.baseCargas > 0 ? row.cargasVinculadas / row.baseCargas : 0;
     if (key === "roas1") return parsedAdSpend > 0 ? row.firstRevenue / parsedAdSpend : 0;
     if (key === "roasTotal") return parsedAdSpend > 0 ? row.revenue / parsedAdSpend : 0;
     return row[key];
   };
-  const sortRows = <T extends { mensajes: number; cargas: number; revenue: number; firstRevenue: number; campaign?: string; landing?: string }>(
+  const sortRows = <T extends { mensajes: number; cargas: number; cargasVinculadas: number; baseCargas: number | null; revenue: number; firstRevenue: number; campaign?: string; landing?: string }>(
     rows: T[],
     sort: { key: TableSortKey; direction: SortDirection },
   ) => {
@@ -1157,16 +1169,14 @@ function ChannelStatsPanel({
   const journeyPathSteps: JourneyPathStep[] = [
     { label: startSummaryLabel, value: measuredVisits ? stats.journeyStarts : "Sin medición", color: "text-emerald-300" },
     { label: channel === "atrio" ? "Solicitaron usuario" : "Clicks en el CTA", value: funnel.contacts, color: "text-zinc-100" },
-    ...(channel === "whatsapp" ? [
-      { label: "Mensajes recibidos", value: funnel.messages, color: "text-amber-300" },
-    ] : []),
+    { label: "Mensajes recibidos", value: messageCoverage.measured ? funnel.messages : "Sin medición", color: "text-amber-300" },
     { label: "Primeras cargas", value: purchasePlayers.firstPlayers, color: "text-sky-300" },
     { label: "Cargas -> recargas del periodo", value: purchasePlayers.repeatPlayersFromFirst, color: "text-fuchsia-300" },
   ];
   const journeyPathRates = [
     statisticsRate(measuredVisits ? contactsWithMeasuredVisit : null, measuredVisits ? stats.journeyStarts : null),
-    ...(channel === "whatsapp" ? [statisticsRate(funnel.messages, funnel.contacts)] : []),
-    statisticsRate(purchasePlayers.firstPlayers, channel === "atrio" ? funnel.contacts : funnel.messages),
+    statisticsRate(messageCoverage.measured ? funnel.messages : null, messageCoverage.unknownJourneys ? null : funnel.contacts),
+    statisticsRate(messageCoverage.measured ? funnel.firstPurchases : null, messageCoverage.unknownJourneys ? null : funnel.messages),
     statisticsRate(purchasePlayers.repeatPlayersFromFirst, purchasePlayers.firstPlayers),
   ];
 
@@ -1177,7 +1187,7 @@ function ChannelStatsPanel({
       clicks_cta: stats.uniqueContacts,
       canal: channel,
       tipo_actividad: activityLabel,
-      actividad_del_canal: channel === "atrio" ? funnel.contacts : funnel.messages,
+      actividad_del_canal: messageCoverage.measured ? funnel.messages : null,
       ...(channel === "atrio" ? { crearon_usuario: funnel.registrations } : {}),
       recorridos_cargaron: stats.firstLoadPurchasersLinkedToLead,
       recorridos_recargaron: stats.reachedRepeat,
@@ -1290,7 +1300,7 @@ function ChannelStatsPanel({
       {/*  RESUMEN GENERAL  */}
       <div>
         <SectionTitle>Resumen general</SectionTitle>
-        <div data-testid="statistics-summary" className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
+        <div data-testid="statistics-summary" className={`mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 ${channel === "atrio" ? "lg:grid-cols-8" : "lg:grid-cols-7"}`}>
           {showJourneyStartMetrics && (
             <KpiCard
               label={startSummaryLabel}
@@ -1304,12 +1314,12 @@ function ChannelStatsPanel({
             value={funnel.contacts}
             tooltip={contactSummaryTooltip}
           />
-          {channel === "whatsapp" && <KpiCard
-            label="Mensajes recibidos" value={conversions.filter(row => row.lead_event_id).length} color="text-amber-300"
-            tooltip="Eventos Lead reales recibidos en el período, aunque el CTA haya ocurrido antes. El recorrido calcula por separado las etapas vinculadas del período. No se infieren mensajes por una carga."
-          />}
+          <KpiCard
+            label="Mensajes recibidos" value={messageCoverage.measured ? conversions.filter(row => row.lead_event_id).length : "Sin medición"} color="text-amber-300"
+            tooltip="Primeros mensajes humanos de cada recorrido recibidos en el período, aunque el CTA haya ocurrido antes. Son hitos internos, independientes del evento enviado a Meta. No se infieren mensajes por una carga."
+          />
           {channel === "atrio" && <KpiCard label="Crearon usuario" value={funnel.registrations ?? "Sin medición"} color="text-teal-300"
-            tooltip="Altas confirmadas, deduplicadas por evento. El CompleteRegistration del CTA de Atrio es una solicitud y no se cuenta como alta. Los períodos sin eventos de alta confirmada no permiten reconstruir esta métrica." />}
+            tooltip={`Altas confirmadas, deduplicadas por evento. El CompleteRegistration del CTA de ${channelLabels?.atrio ?? "Atrio"} es una solicitud y no se cuenta como alta. Los períodos sin eventos de alta confirmada no permiten reconstruir esta métrica.`} />}
           <KpiCard
             label="Primeras cargas"
             value={stats.purchaseFirstCount}
@@ -1338,6 +1348,9 @@ function ChannelStatsPanel({
             tooltip="Recargas de jugadores que tuvieron una primera carga y después recargaron en el período seleccionado. El recorrido muestra esos jugadores una sola vez."
           />
         </div>
+        {messageCoverage.unknownJourneys > 0 && <p className="mt-2 text-xs text-zinc-500" role="status">
+          {messageCoverage.unknownJourneys} recorridos históricos no tienen medición confirmada del primer mensaje. No se reconstruyen mensajes desde un clic, un alta o una compra; las tasas que requieren esa medición se muestran como «—».
+        </p>}
       </div>
 
       {showJourneyStartMetrics && (
@@ -1352,8 +1365,8 @@ function ChannelStatsPanel({
 
       <div>
         <SectionTitle>Embudo de conversión</SectionTitle>
-        <p className="mt-2 text-xs text-zinc-500">Relación entre etapas del período; primeras cargas y paso a recarga se cuentan por jugador. «—» indica que falta medición o una base comparable.</p>
-        <div data-testid="statistics-funnel" className={`mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 ${channel === "whatsapp" ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
+        <p className="mt-2 text-xs text-zinc-500">Las tasas de CTA, mensaje y compra usan recorridos vinculados. Cargas → recargas cuenta jugadores del período. «—» indica que falta medición o una base comparable.</p>
+        <div data-testid="statistics-funnel" className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {journeyPathRates.map((rate, index) => <KpiCard key={index}
             label={`${journeyPathSteps[index].label} → ${journeyPathSteps[index + 1].label}`}
             value={rate} color="text-emerald-300" />)}
@@ -1553,7 +1566,7 @@ function ChannelStatsPanel({
               </button>
             </label>
           </div>
-          <ResponsiveContainer width="100%" height={240}>
+          {messageCoverage.measured ? (<ResponsiveContainer width="100%" height={240}>
             <ComposedChart data={hourlyMessagesChartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
               <XAxis
@@ -1579,7 +1592,7 @@ function ChannelStatsPanel({
               {hourlyMessagesSmaEnabled && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#22d3ee" strokeWidth={2} dot={false} />}
               <Legend wrapperStyle={{ fontSize: 11 }} />
             </ComposedChart>
-          </ResponsiveContainer>
+          </ResponsiveContainer>) : <p className="flex h-60 items-center justify-center text-sm text-zinc-500">Sin medición del primer mensaje para este período.</p>}
         </div>
 
         {!isTodayRange && (
@@ -1600,7 +1613,7 @@ function ChannelStatsPanel({
               </button>
             </label>
           </div>
-          <ResponsiveContainer width="100%" height={240}>
+          {messageCoverage.measured ? (<ResponsiveContainer width="100%" height={240}>
             <ComposedChart data={dailyMessagesChartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
               <XAxis
@@ -1628,7 +1641,7 @@ function ChannelStatsPanel({
               {dailyMessagesSmaEnabled && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#22d3ee" strokeWidth={2} dot={false} />}
               <Legend wrapperStyle={{ fontSize: 11 }} />
             </ComposedChart>
-          </ResponsiveContainer>
+          </ResponsiveContainer>) : <p className="flex h-60 items-center justify-center text-sm text-zinc-500">Sin medición del primer mensaje para este período.</p>}
         </div>
           </>
         )}
@@ -1771,7 +1784,7 @@ function ChannelStatsPanel({
                   </button>
                 </label>
               </div>
-              <ResponsiveContainer width="100%" height={240}>
+              {messageCoverage.measured ? (<ResponsiveContainer width="100%" height={240}>
                 <ComposedChart data={weekdayMessagesChartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                   <XAxis
@@ -1796,7 +1809,7 @@ function ChannelStatsPanel({
                   {weekdayMessagesSmaEnabled && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#22d3ee" strokeWidth={2} dot={false} />}
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                 </ComposedChart>
-              </ResponsiveContainer>
+              </ResponsiveContainer>) : <p className="flex h-60 items-center justify-center text-sm text-zinc-500">Sin medición del primer mensaje para este período.</p>}
             </div>
 
             <div className="order-6 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
@@ -1862,7 +1875,7 @@ function ChannelStatsPanel({
             </button>
             {funnelPctMenuOpen && (
               <div className="absolute right-0 top-8 z-20 w-52 rounded-lg border border-zinc-700 bg-zinc-900/95 p-2 shadow-xl">
-                {channel === "whatsapp" && <button
+                <button
                   type="button"
                   aria-pressed={funnelPctEnabled.inicio}
                   onClick={() => setFunnelPctEnabled((prev) => ({ ...prev, inicio: !prev.inicio }))}
@@ -1879,7 +1892,7 @@ function ChannelStatsPanel({
                     }`}
                   />
                   % inicio de conversación
-                </button>}
+                </button>
                 <button
                   type="button"
                   aria-pressed={funnelPctEnabled.carga}
@@ -1962,7 +1975,7 @@ function ChannelStatsPanel({
               formatter={(value) => `${Number(value ?? 0).toFixed(1)}%`}
             />
             <Legend wrapperStyle={{ fontSize: 10, color: "#a1a1aa" }} />
-            {channel === "whatsapp" && funnelPctEnabled.inicio && (
+            {funnelPctEnabled.inicio && (
               <Area type="monotone" dataKey="pct_inicio" name="% inicio de conversación" stroke="#fbbf24" strokeWidth={2.4} fill="url(#funnelInicioGradient)" dot={false} activeDot={{ r: 4, strokeWidth: 0, fill: "#fde68a" }} connectNulls={false} />
             )}
             {funnelPctEnabled.carga && (
@@ -2018,9 +2031,9 @@ function ChannelStatsPanel({
                     return (
                       <tr key={r.campaign}>
                         <td className="py-1.5 text-zinc-300 truncate">{r.campaign}</td>
-                        <td className="py-1.5 text-center text-zinc-400">{r.mensajes}</td>
+                        <td className="py-1.5 text-center text-zinc-400">{messageCoverage.measured ? r.mensajes : "—"}</td>
                         <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
-                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{statisticsRate(r.cargas, r.baseCargas)}</td>
+                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{statisticsRate(r.cargasVinculadas, r.baseCargas)}</td>
                         <td className="py-1.5 text-center text-zinc-400 tabular-nums">{formatCurrencyAmount(r.revenue, currency)}</td>
                         {parsedAdSpend > 0 && (
                           <>
@@ -2081,9 +2094,9 @@ function ChannelStatsPanel({
                     return (
                       <tr key={r.landing}>
                         <td className="py-1.5 text-zinc-300 truncate">{r.landing}</td>
-                        <td className="py-1.5 text-center text-zinc-400">{r.mensajes}</td>
+                        <td className="py-1.5 text-center text-zinc-400">{messageCoverage.measured ? r.mensajes : "—"}</td>
                         <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
-                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{statisticsRate(r.cargas, r.baseCargas)}</td>
+                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{statisticsRate(r.cargasVinculadas, r.baseCargas)}</td>
                         <td className="py-1.5 text-center text-zinc-400 tabular-nums">{formatCurrencyAmount(r.revenue, currency)}</td>
                         {parsedAdSpend > 0 && (
                           <>

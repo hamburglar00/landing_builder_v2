@@ -35,8 +35,8 @@ function publishedPixelId(landing: ResolvedAttributionLanding): string {
 /**
  * Consistency guard for NEW landing CONTACTs only, after existing deduplication.
  * V2 is provenance metadata, not signed proof of an advertising click. Legacy
- * and messaging channels retain their existing rules. UTM/CTWA are untouched;
- * the existing database trigger can still classify an explicit UTM as Meta.
+ * and messaging channels retain their existing scope rules. UTM/CTWA are
+ * classified separately by meta_origin.ts; arbitrary campaign names are insufficient.
  */
 export function guardNewContactLandingAttribution<T extends Payload>(
   payload: T,

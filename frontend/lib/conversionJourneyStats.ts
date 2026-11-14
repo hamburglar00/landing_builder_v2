@@ -1,3 +1,4 @@
+import { internalConversionStage, projectInternalConversion } from "./internalConversionEvents";
 import type { ConversionJourneyStartRow, ConversionRow } from "./conversionsDb";
 
 export type StatisticsChannel = "whatsapp" | "atrio";
@@ -76,6 +77,7 @@ export function createStatisticsChannelResolver(rows: ConversionRow[]) {
 }
 
 export function stageDate(row: ConversionRow, stage: ConversionStage): Date | null {
+  row = projectInternalConversion(row);
   const raw = row[`${stage}_event_time`];
   const numeric = Number(raw);
   const ms = raw !== null && raw !== undefined && text(raw) !== "" && Number.isFinite(numeric) && numeric > 0
@@ -88,22 +90,31 @@ export function inStatisticsRange(date: Date | null, range: StatisticsRange): bo
   return !!date && (!range || date >= range.start && date <= range.end);
 }
 
+/** Table/funnel membership uses activity dates, while keeping the original Meta row intact. */
+export function filterConversionsByActivityRange(rows: ConversionRow[], range: StatisticsRange): ConversionRow[] {
+  if (!range) return rows;
+  return rows.filter(row => {
+    if (inStatisticsRange(new Date(row.created_at), range)) return true;
+    const internal = projectInternalConversion(row);
+    return stages.some(stage => text(internal[`${stage}_event_id`]) && inStatisticsRange(stageDate(internal, stage), range));
+  });
+}
+
 /** A row's insertion date is not the date of all the events subsequently attached to it. */
 export function scopeStatisticsStages(rows: ConversionRow[], range: StatisticsRange): ConversionRow[] {
-  return rows.flatMap(row => {
+  return rows.map(projectInternalConversion).flatMap(row => {
     const result = { ...row };
     for (const stage of stages) if (!inStatisticsRange(stageDate(row, stage), range)) {
       result[`${stage}_event_id`] = "";
     }
-    // Legacy estado is a summary; never treat it as an additional received message.
-    if (!text(result.lead_event_id)) result.estado = "";
+    result.estado = internalConversionStage(result);
     return stages.some(stage => text(result[`${stage}_event_id`])) ? [result] : [];
   });
 }
 
 export function dedupeStatisticsEvents(rows: ConversionRow[]): ConversionRow[] {
   const seen = new Set<string>();
-  return rows.flatMap(row => {
+  return rows.map(projectInternalConversion).flatMap(row => {
     const result = { ...row };
     for (const stage of stages) {
       const id = text(row[`${stage}_event_id`]);
@@ -113,7 +124,7 @@ export function dedupeStatisticsEvents(rows: ConversionRow[]): ConversionRow[] {
       if (seen.has(key)) result[`${stage}_event_id`] = "";
       else seen.add(key);
     }
-    if (!text(result.lead_event_id)) result.estado = "";
+    result.estado = internalConversionStage(result);
     return stages.some(stage => text(result[`${stage}_event_id`])) ? [result] : [];
   });
 }
@@ -132,6 +143,7 @@ export function isStatisticsRepeat(row: ConversionRow): boolean {
 }
 
 export function computeChannelFunnel(rows: ConversionRow[], channel: StatisticsChannel) {
+  rows = rows.map(projectInternalConversion);
   const journeys = new Map<string, Partial<Record<ConversionStage, number>> & { repeat?: number }>();
   const registrationIds = new Set<string>();
   const contactsByPromo = new Map<string, ConversionRow[]>();
@@ -182,8 +194,9 @@ export function computeChannelFunnel(rows: ConversionRow[], channel: StatisticsC
     if (journey.contact === undefined) continue;
     contacts++;
     if (after(journey.lead, journey.contact)) messages++;
-    const preceding = channel === "atrio" ? journey.contact : after(journey.lead, journey.contact) ? journey.lead : undefined;
-    if (after(journey.registration, preceding)) registered++;
+    const preceding = after(journey.lead, journey.contact) ? journey.lead : undefined;
+    // A confirmed Atrio account is created before a person may choose to write.
+    if (after(journey.registration, channel === "atrio" ? journey.contact : preceding)) registered++;
     // Registration is specific to Full Carga, so it cannot gate a mixed WhatsApp funnel.
     if (after(journey.purchase, preceding)) {
       firstPurchases++;
@@ -194,6 +207,7 @@ export function computeChannelFunnel(rows: ConversionRow[], channel: StatisticsC
 }
 
 export function scopeStatisticsChannel(rows: ConversionRow[], starts: ConversionJourneyStartRow[], channel: StatisticsChannel, range: StatisticsRange) {
+  rows = rows.map(projectInternalConversion);
   if (channel === "atrio") {
     rows = rows.filter(row => statisticsOrigin(row) === "landing");
     starts = starts.filter(row => lower(row.source_platform) === "landing");
@@ -240,7 +254,19 @@ export function statisticsRate(numerator: number | null, denominator: number | n
   return numerator === null || denominator === null || denominator <= 0 ? "—" : `${(100 * numerator / denominator).toFixed(1)}%`;
 }
 
+/** Missing historical instrumentation is not evidence that nobody wrote. */
+export function statisticsMessageCoverage(rows: ConversionRow[], channel: StatisticsChannel) {
+  const internal = rows.map(projectInternalConversion);
+  const unknownJourneys = new Set(internal.filter(row => channel === "atrio" && row.internal_events_version !== 1 &&
+    text(row.contact_event_id) && !text(row.lead_event_id)).map(statisticsJourneyKey)).size;
+  return {
+    measured: channel === "whatsapp" || internal.some(row => row.internal_events_version === 1 || text(row.lead_event_id)),
+    unknownJourneys,
+  };
+}
+
 export function countStatisticsVisitConversions(starts: ConversionJourneyStartRow[], rows: ConversionRow[]): number {
+  rows = rows.map(projectInternalConversion);
   const candidates = new Map<string, ConversionJourneyStartRow[]>();
   const identity = (row: { user_id: string; landing_id: string | null; external_id: string; source_platform?: string }) =>
     `${row.user_id}::${lower(row.source_platform)}::${row.landing_id}::${row.external_id}`;
@@ -261,7 +287,7 @@ export function countStatisticsVisitConversions(starts: ConversionJourneyStartRo
 /** Validated PostgREST range: later milestones can be attached to older rows. */
 export function statisticsEventRangeFilter(startIso?: string | null, endIso?: string | null): string {
   const start = startIso ? new Date(startIso) : null, end = endIso ? new Date(endIso) : null;
-  return ["created_at", ...stages.map(stage => `${stage}_event_time`)].map(column => {
+  return ["created_at", ...stages.map(stage => `${stage}_event_time`), "cta_clicked_event_time", "conversation_started_event_time", "purchase_confirmed_event_time"].map(column => {
     const numeric = column !== "created_at";
     const parts = [start && Number.isFinite(start.getTime()) ? `${column}.gte.${numeric ? Math.ceil(start.getTime() / 1000) : start.toISOString()}` : "",
       end && Number.isFinite(end.getTime()) ? `${column}.lte.${numeric ? Math.floor(end.getTime() / 1000) : end.toISOString()}` : ""].filter(Boolean);
@@ -271,7 +297,8 @@ export function statisticsEventRangeFilter(startIso?: string | null, endIso?: st
 
 /** Independent chart points retain the date of their corresponding milestone. */
 export function statisticsTemporalRows(rows: ConversionRow[], channel: StatisticsChannel): ConversionRow[] {
-  const activity: ConversionStage = channel === "atrio" ? "contact" : "lead";
+  const activity: ConversionStage = "lead";
+  rows = rows.map(projectInternalConversion);
   return rows.flatMap(row => ([activity, "purchase"] as ConversionStage[]).flatMap(stage => {
     if (!text(row[`${stage}_event_id`])) return [];
     const date = stageDate(row, stage);

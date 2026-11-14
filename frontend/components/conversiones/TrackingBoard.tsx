@@ -1,4 +1,5 @@
 "use client";
+import { projectInternalConversion } from "@/lib/internalConversionEvents";
 
 import { TrashIcon } from "@/components/ui/TrashIcon";
 import { useActionMessage, ActionNotice, useActionFeedback } from "@/components/ui/ActionNotice";
@@ -185,7 +186,7 @@ export default function TrackingBoard({
     };
 
     const byPhoneGerencia = new Map<string, { phone: string; gerenciaId: number | null; rows: ConversionRow[] }>();
-    for (const c of conversions) {
+    for (const c of conversions.map(projectInternalConversion)) {
       if (!c.phone) continue;
       if (c.estado === "contact") continue;
       const phone = String(c.phone ?? "").replace(/\D/g, "") || c.phone;
