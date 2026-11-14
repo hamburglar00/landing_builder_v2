@@ -18,6 +18,7 @@ for(const [repo,name,source]of [['ganamos-gateway','Ganamos NET','ganamos-gatewa
    if(hasAge){await page.clock.runFor(6000);assert.equal(await page.locator('.ig-root').count(),0);await page.evaluate(()=>{document.querySelector('#native-age').style.display='none';window.ageClosedAt=Date.now();});}
    await page.clock.runFor(4790);assert.equal(await page.locator('.ig-root').count(),0,'Never appears before five seconds');
    await page.clock.runFor(300);await page.waitForTimeout(100);await page.clock.runFor(100);await page.locator('.ig-root').waitFor();
+   if(scenario==='notifications'){await page.getByRole('heading',{name:'¡No te pierdas nada! 🔔',exact:true}).waitFor();await page.getByText('Activá las notificaciones y enterate cuando se acredite tu carga, cuando te respondamos y cuando haya bonos nuevos.',{exact:true}).waitFor();}
    assert.equal(await page.locator('.ig-root').getAttribute('data-pwa-guide'),installed?'notifications':'install');
    if(hasAge)assert.ok(await page.evaluate(()=>Date.now()-window.ageClosedAt)>=5000);
    assert.equal(await page.getByRole('button',{name:/Safari se ve distinto/}).count(),0);assert.equal(Math.round((await page.locator('.ig-badge').boundingBox()).width),68);
