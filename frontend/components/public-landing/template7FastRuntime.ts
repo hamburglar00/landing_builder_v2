@@ -1,6 +1,6 @@
 import { buildPublicLandingRuntimeSource, buildRuntimeConfig } from "./PublicLandingRuntimeScript";
 import type { PublicLandingConfig } from "./types";
-import { GATEWAY_ENTRY_TRANSITION_RUNTIME, GATEWAY_ENTRY_BRANDS } from "../../lib/gateway-entry-transition";
+import { GATEWAY_ENTRY_TRANSITION_RUNTIME, resolveGatewayEntryBrand } from "../../lib/gateway-entry-transition";
 import { gatewayOriginFor } from "../../lib/reyDeAses/gatewayOrigins";
 import { adaptTemplate8Runtime } from "./template8Runtime";
 import { getMultiSkinBrand } from "../../lib/skin-branding";
@@ -24,7 +24,7 @@ export function buildTemplate7RuntimeConfig(
       template8Cards: (config.content?.template8?.cards || []).map((card, i) => {
         const skinCode = card.targetProvider === "multi_skin" ? card.multiSkinCode ?? "ganamos_plus" : null;
         const gatewayOrigin = gatewayOriginFor(card.targetProvider, skinCode) || "";
-        const brand = skinCode ? getMultiSkinBrand(skinCode) : GATEWAY_ENTRY_BRANDS[card.targetProvider];
+        const brand = resolveGatewayEntryBrand(card.targetProvider, skinCode ? getMultiSkinBrand(skinCode) : undefined)!;
         return { ...card, index: i + 1, gatewayOrigin, transitionBrand: brand,
           transitionLogo: gatewayOrigin + brand.logo.replace(/\.avif$/, ".webp"),
           transitionLogoAvif: brand.logo.endsWith('.avif') ? gatewayOrigin + brand.logo : "",
