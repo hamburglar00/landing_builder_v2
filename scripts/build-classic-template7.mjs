@@ -21,6 +21,9 @@ const fbcSource = '// GENERATED from landing-builder/frontend/lib/tracking/landi
 const registrationStatsTarget = path.join(classicRoot, "lib/reyDeAses/registrationStats.server.ts");
 const registrationStatsSource = '// GENERATED from landing-builder/frontend/lib/reyDeAses/registrationStats.server.ts.\n' +
   await readFile(path.join(root, 'frontend/lib/reyDeAses/registrationStats.server.ts'), 'utf8');
+const entryPolicyTarget = path.join(classicRoot, "lib/landing/gatewayEntry.ts");
+const entryPolicySource = "// GENERATED from landing-builder/frontend/lib/landing/gatewayEntry.ts.\n" +
+  await readFile(path.join(root, "frontend/lib/landing/gatewayEntry.ts"), "utf8");
 const result = await build({
   absWorkingDir: path.join(root, "frontend"),
   entryPoints: ["components/public-landing/template7ClassicEntry.ts"],
@@ -49,12 +52,14 @@ for(const name of await readdir(assetSource)){
 }
 if (process.argv.includes("--write")) {
   await writeFile(target, source);
+  await writeFile(entryPolicyTarget, entryPolicySource);
   await writeFile(resolutionTarget, resolutionSource);
   await writeFile(handoffTarget, handoffSource);
   await writeFile(fbcTarget, fbcSource);
   await writeFile(registrationStatsTarget, registrationStatsSource);
   console.log(`Generated shared Template 7 renderer (${Buffer.byteLength(source)} bytes, server-side only).`);
 } else {
+  if (await readFile(entryPolicyTarget, "utf8") !== entryPolicySource) throw new Error("Classic entry policy is out of sync.");
   const current = await readFile(target, "utf8");
   if (current !== source) throw new Error("Classic Template 7 is out of sync; regenerate before release.");
   if (await readFile(registrationStatsTarget, 'utf8') !== registrationStatsSource) throw new Error('Confirmed account statistics are out of sync.');

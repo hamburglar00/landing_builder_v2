@@ -1,3 +1,4 @@
+import { gatewayEntryWait, type GatewayEntryWait } from "../landing/gatewayEntry";
 import { confirmTemplate8Destination } from "../atrio/template7Destination.server";
 import { template8Provider, template8SkinCode } from "../landing/template8";
 import { resolveEffectiveLandingConfig } from "../landing/effectiveLandingConfig";
@@ -43,10 +44,11 @@ export type StartDependencies = {
   resolvePlayer(input: PlayerResolveRequest): Promise<ResolvedPlayer>;
   resolveAccount(request: Api2ResolveAccountRequest): Promise<TargetAccount>;
   linkProviderAccount(advisor: AssignedAdvisor, player: ResolvedPlayer, account: TargetAccount): Promise<LinkedProviderAccount>;
-  createHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount, skinCode: MultiSkinCode | null, promoCode?: string, entryFunnel?: EntryFunnelContext): Promise<HandoffResult>;
+  createHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount, skinCode: MultiSkinCode | null, promoCode?: string, entryFunnel?: EntryFunnelContext, entryWait?: GatewayEntryWait): Promise<HandoffResult>;
 };
 
 export type Template7PreparedStart = {
+  entryWait?: GatewayEntryWait;
   entryFunnel?: EntryFunnelContext;
   diagnosticTrace?: Record<string, string>;
   provider: TargetProvider;
@@ -133,6 +135,7 @@ export async function finalizeTemplate7PreparedStart(
         prepared.skinCode,
         prepared.promoCode,
         prepared.entryFunnel,
+        prepared.entryWait,
       ),
       ms => { timings.handoff = ms; }, prepared.diagnosticTrace,
     ),
@@ -262,6 +265,7 @@ async function handleTemplate7StartInner(
       } catch { /* Internal statistics must not change the result of an account operation. */ }
     }
     const prepared: Template7PreparedStart = {
+      ...(gatewayEntryWait(effectiveConfig.gatewayEntry) ? { entryWait: gatewayEntryWait(effectiveConfig.gatewayEntry) } : {}),
       diagnosticTrace: trace,
       ...(payload.entry_funnel ? { entryFunnel: { ...payload.entry_funnel, account_kind: account.created ? "new" : "existing" } } : {}),
       provider,

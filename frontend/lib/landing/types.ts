@@ -198,6 +198,8 @@ export interface LandingThemeConfig {
   targetProvider: TargetProvider;
   /** Pide WhatsApp de forma opcional en Template 7 y lo envía a Atrio si es válido. */
   template7WhatsappEnabled: boolean;
+  /** Optional: legacy rows inherit the product setting until explicitly configured. */
+  gatewayEntry?: import("./gatewayEntry").GatewayEntry;
   /** Sitio visual del proveedor Multi Skin. La cuenta subyacente es compartida. */
   multiSkinCode: MultiSkinCode;
   atrioRedirectUrl: string;

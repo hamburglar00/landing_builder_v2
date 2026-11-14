@@ -3,6 +3,12 @@ import test from 'node:test';
 import {canonicalStartHandoffUrl} from '../lib/reyDeAses/handoff-url';
 
 const origin='https://gateway.example.com';
+test('signed presentation survives canonicalization but duplicates and malformed proofs fail',()=>{
+  const proof='w1.payload.'+'x'.repeat(43), url=origin+'/start?t=opaque&ew='+proof;
+  assert.equal(canonicalStartHandoffUrl(url+'&unknown=ignored',origin),url);
+  assert.throws(()=>canonicalStartHandoffUrl(url+'&ew='+proof,origin));
+  assert.throws(()=>canonicalStartHandoffUrl(origin+'/start?t=opaque&ew=invalid',origin));
+});
 test('unknown and repeated advertising fields cannot authorize access or reject a valid handoff',()=>{
   const dirty=origin+'/start?t=opaque&ef=e1.diagnostic&new_meta_field=x&new_meta_field=y&fbclid=click&utm_future=abc&landing=diana&provider=evil&skin=wrong&advisor_id=foreign&return_to=https://evil.test';
   assert.equal(canonicalStartHandoffUrl(dirty,origin),origin+'/start?t=opaque&ef=e1.diagnostic');

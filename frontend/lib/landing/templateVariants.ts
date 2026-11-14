@@ -91,6 +91,7 @@ export function snapshotTemplateVariant(
 
 function globalConfig(config: LandingThemeConfig) {
   return {
+    gatewayEntry: config.gatewayEntry,
     marketCountry: config.marketCountry,
     sendContactPixel: config.sendContactPixel,
     ctaMetaEvent: config.ctaMetaEvent,
