@@ -66,9 +66,11 @@ function fmtDate(d: Date) {
 export default function DateRangeFilter({
   onChange,
   initialPreset = "maximo",
+  compact = false,
 }: {
   onChange: (range: DateRange | null) => void;
   initialPreset?: Preset;
+  compact?: boolean;
 }) {
   const [preset, setPreset] = useState<Preset>(initialPreset);
   const [showCustom, setShowCustom] = useState(false);
@@ -126,12 +128,12 @@ export default function DateRangeFilter({
             ? activeLabel
             : PRESET_LABELS[p],
         }))}
-        className="w-full sm:hidden"
+        className={compact ? "w-full" : "w-full sm:hidden"}
         buttonClassName="h-8 border-zinc-800 bg-[#0d0d11] px-2 text-[11px] font-medium text-zinc-200"
         menuClassName="right-0"
         title="Seleccionar rango de fechas"
       />
-      <div className="hidden items-center gap-1 overflow-x-auto rounded-lg border border-zinc-800/50 bg-[#0d0d11] p-0.5 sm:flex">
+      {!compact && <div className="hidden items-center gap-1 overflow-x-auto rounded-lg border border-zinc-800/50 bg-[#0d0d11] p-0.5 sm:flex">
         {(Object.keys(PRESET_LABELS) as Preset[]).map((p) => (
           <button
             key={p}
@@ -145,7 +147,7 @@ export default function DateRangeFilter({
             {p === "personalizado" && preset === "personalizado" && customStart ? activeLabel : PRESET_LABELS[p]}
           </button>
         ))}
-      </div>
+      </div>}
 
       {showCustom && (
         <div className="absolute right-0 top-full mt-2 z-50 w-[92vw] max-w-[320px] rounded-xl border border-zinc-700/60 bg-zinc-900/95 p-4 shadow-xl backdrop-blur-sm sm:w-auto sm:min-w-[280px]">

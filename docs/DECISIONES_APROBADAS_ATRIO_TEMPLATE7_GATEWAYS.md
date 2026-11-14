@@ -1,5 +1,15 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+## 13/11 — NexoBet: navegación, Marketing y marca
+
+Autorización posterior del usuario: publicar el lote de NexoBet (commit, push, migraciones y despliegue). Nexo mantiene el color actual del kit; Bet adopta el acento violeta o turquesa. Los trazos y la tipografía originales se conservan. Las extensiones opcionales de los componentes canónicos se versionan para que la copia de Nexo sea reproducible; no requieren vincular los servicios o las bases de ambos productos.
+
+El usuario pidió una sidebar única en NexoBet, con Mis plataformas (sin Mis gateways separado), Chats con Inbox/Difusiones/Promos, y Datos/Configuración fuera del chat. NexoBet ofrece WhatsApp como widget predeterminado y Según página como alternativa; se retira el tema Atrio solamente del producto NexoBet.
+
+Marketing de NexoBet reutiliza código versionado de Builder para Template 9, Funnel, Tabla, Estadísticas y Meta Pixel/CAPI, con identidad, datos y servicios propios. No se vinculan cuentas o bases entre productos. Las extensiones opcionales de presentación de los componentes canónicos conservan los valores predeterminados de Builder. No se cambian los flujos de los cuatro gateways ni API2 en este lote.
+
+Los modales internos de notificaciones de NexoBet deben usar la misma marca hexagonal oficial que su panel. La operación financiera y la deduplicación se conservan; los ejemplos visuales de Finanzas/Premios no crean recursos ni operaciones reales. La autorización de publicación posterior corresponde a NexoBet; los cambios opcionales del workspace canónico se versionan en una rama de Builder, sin publicar su frontend como parte de este lote.
+
 ### Publicación de Extensiones PBAdmin autorizada (12/11/2026)
 
 - Refuerzo del contrato ya aprobado: Abrir una vinculación exige que su Auth y perfil sigan existiendo, con el rol y administración correctos. No recrear identidades/perfiles borrados sólo porque la reserva siga marcada lista. Con una lectura incierta, conservar el estado y permitir reintentar; con identidad ausente, pedir nueva vinculación. Se comprobaron primero cuatro fallos reales de la orquestación y se agregan guardias y regresiones para ambos peers, sin otra migración ni cambios de cuentas productivas.

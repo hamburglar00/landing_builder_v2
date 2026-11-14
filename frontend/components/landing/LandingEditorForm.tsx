@@ -30,6 +30,7 @@ interface LandingEditorFormProps {
   onSave: () => void;
   onReset: () => void;
   showTemplateSection?: boolean;
+  chatProductName?: string;
   /** Optional utilities remain available in code while hidden in the editor. */
   showUtilityActions?: boolean;
   /** Sube la imagen a Supabase y devuelve la URL pública. Si se pasa, las imágenes se guardan en Storage. */
@@ -208,6 +209,7 @@ export function LandingEditorForm({
   onSave,
   onReset,
   showTemplateSection = true,
+  chatProductName = "Atrio",
   showUtilityActions = false,
   uploadImage,
   landingId,
@@ -1359,7 +1361,7 @@ export function LandingEditorForm({
                 Pedir WhatsApp
               </h3>
               <p className="mt-1 text-xs text-zinc-500">
-                Agrega un campo opcional. Si el número argentino es válido, se completa el teléfono del contacto en Atrio.
+              Agrega un campo opcional. Si el número argentino es válido, se completa el teléfono del contacto en {chatProductName}.
               </p>
             </div>
             <div className="flex items-center gap-3">

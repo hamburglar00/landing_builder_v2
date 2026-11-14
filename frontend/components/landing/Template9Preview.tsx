@@ -18,24 +18,27 @@ export function Template9Preview({ html, compact, gallery }: { html: string; com
       setAvailableHeight(Math.max(220, Math.min(640, window.innerHeight - 215)));
     };
     resize();
-    const observer = new ResizeObserver(resize);
+    let pending = 0;
+    const observer = new ResizeObserver(() => { cancelAnimationFrame(pending); pending = requestAnimationFrame(resize); });
     observer.observe(element);
     window.addEventListener("resize", resize);
-    return () => { observer.disconnect(); window.removeEventListener("resize", resize); };
+    return () => { cancelAnimationFrame(pending); observer.disconnect(); window.removeEventListener("resize", resize); };
   }, [gallery]);
   useEffect(() => {
     if (gallery) return;
     const frame = iframe.current;
-    let observer: ResizeObserver | undefined;
+    let pending = 0;
     const observe = () => {
-      observer?.disconnect();
       const body = frame?.contentDocument?.body;
       if (!body) return;
       const measure = () => setHeight(Math.max(844, Math.ceil(body.getBoundingClientRect().height), body.scrollHeight));
-      observer = new ResizeObserver(measure); observer.observe(body); measure();
+      // The document is inert and Template 9's logo has fixed dimensions. Measure
+      // after loading instead of observing an iframe whose viewport we resize.
+      // A cross-document ResizeObserver here causes feedback-loop browser errors.
+      cancelAnimationFrame(pending); pending = requestAnimationFrame(measure);
     };
     frame?.addEventListener("load", observe); observe();
-    return () => { frame?.removeEventListener("load", observe); observer?.disconnect(); };
+    return () => { cancelAnimationFrame(pending); frame?.removeEventListener("load", observe); };
   }, [gallery, html]);
   const fitScale = Math.min(1, scale, availableHeight / height);
   return <div ref={ref} data-template9-preview className={`relative overflow-hidden ${gallery ? "h-full w-full" : "mx-auto w-full max-w-[390px] rounded-xl"}`} style={gallery ? undefined : { height: height * fitScale }}>

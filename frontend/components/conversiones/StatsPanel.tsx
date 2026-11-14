@@ -426,6 +426,8 @@ function SortButton({
 }
 
 type StatsPanelProps = {
+  channelLabels?: Partial<Record<StatisticsChannel, string>>;
+  availableChannels?: StatisticsChannel[];
   canViewAtrio?: boolean;
   channel?: StatisticsChannel;
   onChannelChange?: (channel: StatisticsChannel) => void;
@@ -451,17 +453,17 @@ export default function StatsPanel(props: StatsPanelProps) {
   const contacts = useMemo(() => buildFunnelContactsFromConversions(scoped.conversions), [scoped.conversions]);
   return <div className="min-w-0 space-y-4" data-testid="channel-statistics" data-channel={channel}>
     {props.canViewAtrio === true && <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Canal de las estadísticas">
-      {(["whatsapp", "atrio"] as const).map(value => <button key={value} type="button" aria-pressed={channel === value}
+      {(props.availableChannels ?? ["whatsapp", "atrio"] as StatisticsChannel[]).map(value => <button key={value} type="button" aria-pressed={channel === value}
         onClick={() => { setChannel(value); props.onChannelChange?.(value); }}
         className={`rounded-full border px-4 py-2 text-xs font-bold transition ${channel === value ? "border-emerald-400/40 bg-emerald-400/15 text-emerald-300" : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-zinc-100"}`}>
-        {value === "whatsapp" ? "WhatsApp" : "Atrio"}
+        {props.channelLabels?.[value] ?? (value === "whatsapp" ? "WhatsApp" : "Atrio")}
       </button>)}
     </div>}
-    <p className="text-xs text-zinc-400">Todas las estadísticas corresponden a {channel === "whatsapp" ? "WhatsApp y a los filtros globales seleccionados" : "Atrio, con origen Landing y los filtros globales seleccionados"}.</p>
+    <p className="text-xs text-zinc-400">Todas las estadísticas corresponden a {props.channelLabels?.[channel] ? `${props.channelLabels[channel]}, con los filtros globales seleccionados` : channel === "whatsapp" ? "WhatsApp y a los filtros globales seleccionados" : "Atrio, con origen Landing y los filtros globales seleccionados"}.</p>
     {(scoped.unknownConversions > 0 || scoped.unknownStarts > 0) && <p className="break-words text-xs text-zinc-500" role="status">
       Sin canal histórico confirmado: {scoped.unknownConversions} registros y {scoped.unknownStarts} visitas. No se incluyen en los cálculos por canal.
     </p>}
-    {scoped.conversions.length === 0 && scoped.journeyStarts.length === 0 && <p className="text-sm text-zinc-400">No hay datos de {channel === "whatsapp" ? "WhatsApp" : "Atrio"} para esta selección.</p>}
+    {scoped.conversions.length === 0 && scoped.journeyStarts.length === 0 && <p className="text-sm text-zinc-400">No hay datos de {props.channelLabels?.[channel] ?? (channel === "whatsapp" ? "WhatsApp" : "Atrio")} para esta selección.</p>}
     <ChannelStatsPanel key={`${channel}-${props.currency}`} {...props} funnelContacts={contacts} conversions={scoped.conversions}
       allConversions={scoped.allConversions} journeyStarts={scoped.journeyStarts} channel={channel} funnel={scoped.funnel}
       adSpend={spend[spendKey] ?? ""} setAdSpend={value => setSpend(current => ({ ...current, [spendKey]: value }))} />
@@ -469,6 +471,7 @@ export default function StatsPanel(props: StatsPanelProps) {
 }
 
 function ChannelStatsPanel({
+  channelLabels,
   funnelContacts,
   conversions,
   allConversions,
@@ -1309,7 +1312,7 @@ function ChannelStatsPanel({
             tooltip="Eventos Lead reales recibidos en el período, aunque el CTA haya ocurrido antes. El recorrido calcula por separado las etapas vinculadas del período. No se infieren mensajes por una carga."
           />}
           {channel === "atrio" && <KpiCard label="Crearon usuario" value={funnel.registrations ?? "Sin medición"} color="text-teal-300"
-            tooltip="Altas confirmadas, deduplicadas por evento. El CompleteRegistration del CTA de Atrio es una solicitud y no se cuenta como alta. Los períodos sin eventos de alta confirmada no permiten reconstruir esta métrica." />}
+            tooltip={`Altas confirmadas, deduplicadas por evento. El CompleteRegistration del CTA de ${channelLabels?.atrio ?? "Atrio"} es una solicitud y no se cuenta como alta. Los períodos sin eventos de alta confirmada no permiten reconstruir esta métrica.`} />}
           <KpiCard
             label="Primeras cargas"
             value={stats.purchaseFirstCount}
