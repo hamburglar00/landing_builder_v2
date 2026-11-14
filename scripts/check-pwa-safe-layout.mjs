@@ -31,6 +31,10 @@ for(const repo of repos){
      const canvas=await page.locator('#webview').boundingBox(),header=await frame.locator('#provider-header').boundingBox(),nav=await frame.locator('#provider-nav').boundingBox();
      assert.ok(header.y>=55&&header.y+header.height<=height-34);assert.ok(nav.y>=55&&nav.y+nav.height<=height-34);assert.ok(Math.abs(canvas.y-55)<1);
      for(const button of await frame.locator('#provider-nav button').all()){const bounds=await button.boundingBox();assert.ok(bounds.y+bounds.height<=height-34);}
+     await frame.evaluate(()=>{const provider=document.createElement('iframe');provider.id='gateway-casino';provider.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:0';provider.srcdoc='<style>html,body{margin:0}footer{position:fixed;bottom:0;left:0;right:0;height:72px;background:purple;color:white}</style><footer>Menú completo del proveedor</footer>';document.body.append(provider);});
+     const childFooter=frame.frameLocator('#gateway-casino').locator('footer');await childFooter.waitFor();
+     const shell=await frame.locator('#gateway-casino').boundingBox(),child=await childFooter.boundingBox();assert.ok(shell.y+shell.height<=height-34-15,'Installed provider iframe reserves its own bottom margin');assert.ok(child.y+child.height<=shell.y+shell.height,'Provider menu fits inside the installed iframe');
+     await frame.locator('#gateway-casino').evaluate(e=>e.remove());
      await page.screenshot({path:fileURLToPath(new URL(engine+'-'+repo+'-'+width+'-installed.png',output))});
     }else{
      await frame.addScriptTag({content:guide});
@@ -43,7 +47,7 @@ for(const repo of repos){
       await frame.locator('.ig-x').click();assert.equal(await frame.locator('#gateway-chat-button').evaluate(e=>getComputedStyle(e).visibility),'visible');
      }
     }
-    assert.deepEqual(errors,[]);results.push({repo,engine,installed,width,height,simulatedNativeInsets:installed,headerAndFooterVisible:true,modalOwnsLauncher:!installed});await context.close();
+    assert.deepEqual(errors,[]);results.push({repo,engine,installed,width,height,simulatedNativeInsets:installed,installedProviderIframeFits:installed,headerAndFooterVisible:true,modalOwnsLauncher:!installed});await context.close();
    }
   }finally{await browser.close();}
  }
