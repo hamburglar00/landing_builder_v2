@@ -2,7 +2,7 @@
 
 ## Estado
 
-Implementación local en worktrees aislados, con validación focalizada completada; publicación pendiente. Sin migraciones productivas, envíos de prueba a Meta, replays históricos ni operaciones financieras. El checkpoint previo verificado está en `C:/Users/Leo/Desktop/V2/CURSOR/.checkpoints/meta-journey-20261114-154737` (8 repositorios, 58 artefactos verificados por SHA256). Una comparación posterior de los ocho HEAD, parches del índice/working tree y bytes de archivos nuevos confirmó que el trabajo original sigue intacto (34 verificaciones).
+Publicación autorizada por Leo y realizada el 14/11. Las migraciones, funciones y despliegues productivos se detallan abajo. No se generaron eventos de prueba a Meta, replays históricos ni operaciones financieras. El checkpoint previo verificado está en `C:/Users/Leo/Desktop/V2/CURSOR/.checkpoints/meta-journey-20261114-154737` (8 repositorios, 58 artefactos verificados por SHA256). Una comparación posterior de los ocho HEAD, parches del índice/working tree y bytes de archivos nuevos confirmó que el trabajo original seguía intacto (34 verificaciones).
 
 | Producto | Base aislada | Alcance |
 | --- | --- | --- |
@@ -43,17 +43,17 @@ Los labels de proveedores en fixtures ejercitan handlers compartidos, no sus API
 
 | Producto | Commit de implementación | Push | Migración/despliegue |
 | --- | --- | --- | --- |
-| Builder | `bf4d1ad9d306a47420846dde9aaffe8ae23f623b` | Pendiente | Pendiente |
-| Atrio | `ddd68e88685c7ba8c88b65a15b09f142d8ecf93b` y `99bc678dae6d4c210736da40c9a8ae25746124d7` | Pendiente | Pendiente |
-| NexoBet | `4c777e1388551265f3a64ea8fc0b48d18b89756f` | Pendiente | Pendiente |
-| Clásico | Sin cambios de fuente; receptor compartido de Builder | No requiere nuevo push | Recibirá el backend al publicar Builder |
-| Cuatro gateways/Worker | Sin cambios de fuente; contratos/SDK verificados | No requiere nuevo push | Recibirán la medición del backend al publicar Atrio/Nexo |
+| Builder | `bf4d1ad9d306a47420846dde9aaffe8ae23f623b`, documentación `fe0ba37f` | `main` | Migraciones `20261114185112` y `20261114185220`; funciones `conversions` v180 y `retry-failed-conversions` v56; Vercel `dpl_Bax1LyjYHfUGBngkG1nqT1gXJUcj` READY en `constructor.panelbotadmin.com` y `mkt.panelbotadmin.com` |
+| Atrio | `ddd68e88685c7ba8c88b65a15b09f142d8ecf93b` y `99bc678dae6d4c210736da40c9a8ae25746124d7` | `fix/internal-conversation-journey-20261114` | Migración `20261114185254`; Vercel `dpl_FE14F15Q2DGV2Q33f2MpmPkfRm3x` READY en `atrio.website` y `www.atrio.website` |
+| NexoBet | `4c777e1388551265f3a64ea8fc0b48d18b89756f` | `fix/meta-journey-20261114` | Migración `20261114190148`; Vercel `dpl_DxdwBKcATPscDDn52ZcrFwaDC1QR` READY en `nexobet.fun` |
+| Clásico | Sin cambios de fuente; receptor compartido de Builder | No requiere nuevo push | Backend Builder actualizado |
+| Cuatro gateways/Worker | Sin cambios de fuente; contratos/SDK verificados | No requiere nuevo push | Consumen la medición del backend Atrio/Nexo actualizado |
 
-Worktrees: `../landing-builder-meta-journey`, `../internal-chat-meta-journey` y `../NexoBet-meta-journey`. Los nueve pins de estadísticas Nexo y el clasificador apuntan al commit de código Builder; las 51 fuentes ajenas a este lote conservan sus revisiones previas. No hay fuentes compartidas marcadas como working tree pendiente. El lote productivo permanece abierto hasta migraciones, claves dedicadas, builds y verificación de cada publicación.
+Worktrees: `../landing-builder-meta-journey`, `../internal-chat-meta-journey` y `../NexoBet-meta-journey`. Los nueve pins de estadísticas Nexo y el clasificador apuntan al commit de código Builder; las 51 fuentes ajenas a este lote conservan sus revisiones previas. No hay fuentes compartidas marcadas como working tree pendiente. La clave dedicada fue configurada en Supabase Builder y Vercel Atrio. Las compilaciones Preview y de producción quedaron READY; las rutas `/login` responden 200 y el cron de Atrio sin autenticación responde 401, con programación cada cinco minutos. Al comprobar por primera vez las outboxes nuevas estaban vacías: todavía no se ha confirmado un recorrido natural completo posterior al despliegue.
 
 ## Orden de publicación y reversión
 
-Publicación pendiente: antes de activar, completar builds de producción y verificación del despliegue por producto. Aplicar primero migraciones aditivas; luego receptor/retry, frontend Builder, Atrio y Nexo por separado. Configurar la clave dedicada antes del transporte de Atrio. Comprobar cron/outbox y acuses sin generar conversiones de negocio como prueba; esperar que terminen requests de versiones anteriores de la cola antes de evaluar fencing. Trabajos viejos en processing requieren revisión, no replay manual. Builder debe integrar en `main`, proyecto `landing-builder-v2-k259`, raíz `frontend`, y comprobar READY más ambos dominios; una rama de Preview no acredita producción.
+Orden ejecutado: migraciones Builder, receptor/retry, `main` y frontend Builder; migración y despliegue Atrio; migración y despliegue Nexo. Se verificaron dominios y cron. Trabajos viejos en processing requieren revisión, no replay manual. Seguir observando outboxes y acuses naturales sin generar conversiones de negocio como prueba.
 
 Revertir código por producto a sus revisiones previas conservando columnas, outboxes, recibos e identidades. Desactivar transporte interno si hace falta; no borrar eventos ni reenviar los aceptados. La clasificación futura y los defaults tienen que revertirse expresamente si se revierte esa política. Los archivos originales con cambios del usuario permanecen intactos.
 
@@ -62,4 +62,4 @@ Revertir código por producto a sus revisiones previas conservando columnas, out
 - NexoBet conserva deliberadamente la identidad existente por `landing_id, device_id`; el usuario acuerda separar su rediseño del lote actual. Las campañas sucesivas del mismo navegador requieren ese trabajo independiente, sin cambiar aquí la identidad del gateway.
 - Limitación anterior en altas de cuenta confirmadas: un alta dentro del período con CTA anterior puede faltar si la conversión no tiene otro hito en rango, porque primero se consultan conversiones y después se adjuntan `conversion_account_registrations`. No afecta la recuperación por fechas de CTA, mensajes, primera compra ni recompra de este contrato. Su corrección requiere recuperar claves exactas propietario/landing/promo desde las altas paginadas, conservando RLS, límites y ocultos; queda como tarea separada.
 - No se certificó concurrencia entre sesiones independientes de PostgreSQL: las pruebas de locks y fencing se ejecutaron con PGlite. No hubo pruebas con publicidad real ni mensajes/compras de producción.
-- El disco local quedó sin espacio durante la validación. Se completaron comprobaciones de tipos y pruebas sin emitir builds; no se ejecutó un nuevo build completo de producción. La limpieza propuesta de caché npm fue rechazada por revisión automática y no se realizó. La evidencia visual móvil/escritorio de Nexo precede a los últimos ajustes de datos de la tabla; no se presenta como nueva prueba visual posterior.
+- El disco local quedó sin espacio durante la validación. Los builds completos se ejecutaron posteriormente en Vercel y quedaron READY. La limpieza propuesta de caché npm fue rechazada por revisión automática y no se realizó. La evidencia visual móvil/escritorio de Nexo precede a los últimos ajustes de datos de la tabla; no se presenta como nueva prueba visual posterior.
