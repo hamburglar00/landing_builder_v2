@@ -201,6 +201,11 @@ test("account finaliza en el mismo viaje y finalize compatible no duplica la vin
 test("renewing an expired pass preserves the account and never resolves or provisions a player again", async () => {
   const token = await prepareToken();
   const trace = { links: 0, handoffs: 0 }, dependencies = deps(trace);
+  const readLanding = dependencies.db.landing;
+  dependencies.db.landing = async id => {
+    const row = (await readLanding(id))!;
+    return { ...row, config: { ...(row.config as object), gatewayEntry: { mode: "credentials", seconds: 9 } } };
+  };
   const account = await handleTemplate7PreparationAccount(new Request("https://mkt.example.com/api/template7/preparations/account", {
     method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}` },
     body: JSON.stringify({token}),
@@ -208,9 +213,10 @@ test("renewing an expired pass preserves the account and never resolves or provi
   const {continuation_token} = await account.json() as {continuation_token:string};
   dependencies.resolvePlayer = async () => { throw Error("must not resolve another identity"); };
   dependencies.resolveAccount = async () => { throw Error("must not create another account"); };
-  dependencies.createHandoff = async (_provider, _advisor, _device, player, selected) => {
+  dependencies.createHandoff = async (_provider, _advisor, _device, player, selected, _skin, _promo, _funnel, entryWait) => {
     assert.equal(player.player_id, playerId); assert.equal(player.player_provider_account_id, providerAccountId);
     assert.equal(selected.username, "player"); trace.handoffs++;
+    assert.deepEqual(entryWait, { enabled: true, seconds: 9, continueButtonEnabled: true });
     return {handoff_url:"https://gateway.example.com/start?t=fresh-pass",expires_at:"2026-10-29T23:00:00Z",binding_created:false};
   };
   const renewed = await handleTemplate7PreparationFinalize(new Request("https://mkt.example.com/api/template7/preparations/finalize", {
