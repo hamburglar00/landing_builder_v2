@@ -1667,3 +1667,7 @@ Publicación comprobada de UX-021/022: Atrio, NexoBet y los cuatro gateways, inc
 - Revisar y sincronizar tambi?n NexoBet (m?dulo Builder 1.2.1). La galer?a y la vista previa siguen el mismo tama?o. Ajustar espacios de Rey en ventanas compactas para mantener formulario, pie y cookies accesibles. Las dem?s marcas conservan sus medidas.
 - Excepciones: los cuatro gateways, Atrio y sus gu?as no presentan esta landing; no requieren cambios ni publicaci?n. Sin cambios en recursos, configuraci?n guardada, ingreso, Meta, API2/Panel3 o bases de datos. Las p?ginas legales mantienen su cabecera.
 - Validaci?n y publicaci?n por producto: `docs/validation/template9-rey-logo-20261113.md`.
+
+### Chat liviano y configuración del asesor — 13/11/2026
+
+Decisión explícita de Leo: oscurecer sin blur al abrir chat y modales; halo de cada marca, corrección de teclado iOS/Android y menú/posición standalone. Notificaciones centrado sin punta y textos acordados; instalación elevada con degradados y CTA en una línea. Invitaciones compactas con estilo de Subir comprobante y confirmación real. Unificar burbujas/ficha del asesor, gesto de regreso, Telegram y configuración de billeteras; retirar Disponible/Ausente y su envío automático, sin alterar acceso de administradores, cuentas Nexo ni finanzas. UX-023 contiene disparadores, excepciones y validación focalizada. Nexo conserva adaptadores y temas; alcance común en los cuatro gateways y Worker.
