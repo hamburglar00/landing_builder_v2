@@ -5,7 +5,7 @@ import path from "node:path";
 import { loadProductPaths } from "./product-worktrees.mjs";
 const productPath = loadProductPaths();
 const canonical = pathToFileURL(productPath("landing-autologuin") + path.sep);
-const source = await readFile(new URL("src/lib/gateway-entry-transition.ts", canonical), "utf8");
+const source = (await readFile(new URL("src/lib/gateway-entry-transition.ts", canonical), "utf8")).replaceAll("\r\n", "\n");
 const { build } = createRequire(new URL("../frontend/package.json", import.meta.url))("esbuild");
 const bundled = await build({ absWorkingDir: fileURLToPath(canonical), entryPoints: ["src/lib/gateway-entry-transition.ts"],
   bundle: true, write: false, platform: "node", format: "esm", target: "es2022" });
