@@ -1671,3 +1671,7 @@ Publicación comprobada de UX-021/022: Atrio, NexoBet y los cuatro gateways, inc
 ### Chat liviano y configuración del asesor — 13/11/2026
 
 Decisión explícita de Leo: oscurecer sin blur al abrir chat y modales; halo de cada marca, corrección de teclado iOS/Android y menú/posición standalone. Notificaciones centrado sin punta y textos acordados; instalación elevada con degradados y CTA en una línea. Invitaciones compactas con estilo de Subir comprobante y confirmación real. Unificar burbujas/ficha del asesor, gesto de regreso, Telegram y configuración de billeteras; retirar Disponible/Ausente y su envío automático, sin alterar acceso de administradores, cuentas Nexo ni finanzas. UX-023 contiene disparadores, excepciones y validación focalizada. Nexo conserva adaptadores y temas; alcance común en los cuatro gateways y Worker.
+
+### Lectura del inbox del asesor — 14/11/2026
+
+Leo confirma texto general de ambos remitentes en 15 px / peso 500, manteniendo 700 para credenciales y CBU/Titular con valores. Incluye las invitaciones y ayuda del inbox, conservando los pesos de títulos, CTA y recibos. Fuente Atrio; Nexo conserva adaptadores y temas. El widget del cliente sigue en 600. No modifica gateways/SDK/Worker ni datos financieros; esos productos no requieren publicación. Prueba acotada de estilos calculados en Chromium y WebKit para ambos inbox y build de ambos productos. Registro canónico: internal-chat/docs/CATALOGO_UX.md, ajuste de UX-023.
