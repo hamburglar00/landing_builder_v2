@@ -47,7 +47,8 @@ export function adaptTemplate8Runtime(source: string, classic: boolean): string 
             transitionRoot.dataset.palette = brand.background;
             transitionRoot.style.setProperty('--entry-background',brand.background);
             transitionRoot.style.setProperty('--entry-accent',brand.accent || '#f6c84b');
-            transitionRoot.style.setProperty('--entry-track',(brand.accent || '#f6c84b') + '33');
+            transitionRoot.style.setProperty('--entry-primary',brand.primary || brand.accent);
+            transitionRoot.style.setProperty('--entry-track',(brand.accent || '#f6c84b') + '26');
             transitionRoot.style.setProperty('--entry-accent-text',brand.accentText || '#171105');
             transitionRoot.style.setProperty('--entry-glow',brand.glow);
             transitionRoot.querySelectorAll('[data-entry-source]').forEach(function(source) {

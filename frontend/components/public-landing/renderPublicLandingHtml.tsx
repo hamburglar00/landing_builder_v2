@@ -761,8 +761,9 @@ function renderTemplate8(params: RenderParams) {
 }
 function renderTemplate(params: RenderParams) {
   if (params.config.layout?.template === 9) {
-    const brand = getTemplate9Brand(params.config.tracking?.target_provider || "rey_de_ases", params.config.tracking?.skin_code);
-    return renderTemplate9View(params.config, false, params.legalBasePath || `/l/${encodeURIComponent(params.slug)}`) + renderGatewayEntryTransition(params.config.tracking?.target_provider || "rey_de_ases", { stage: "creating", brand: { name: brand.name, logo: brand.logo, background: brand.deep, glow: brand.primary + "55", accent: brand.secondary, accentText: "#ffffff" } }) + TEMPLATE9_UI_SCRIPT;
+    const code = params.config.tracking?.skin_code;
+    const brand = params.config.tracking?.target_provider === "multi_skin" && isMultiSkinCode(code) ? getMultiSkinBrand(code) : undefined;
+    return renderTemplate9View(params.config, false, params.legalBasePath || `/l/${encodeURIComponent(params.slug)}`) + renderGatewayEntryTransition(params.config.tracking?.target_provider || "rey_de_ases", { stage: "creating", gatewayOrigin: template7GatewayOrigin(params.config), brand }) + TEMPLATE9_UI_SCRIPT;
   }
   if (params.config.layout?.template === 8) return renderTemplate8(params);
   if (params.config.layout?.template === 7) return renderTemplate7(params);
