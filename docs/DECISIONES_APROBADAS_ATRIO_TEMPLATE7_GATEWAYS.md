@@ -1659,3 +1659,11 @@ Leo ratifica: ambos modales PWA quedan encima del chat; ocultar/restaurar burbuj
 Leo pide retirar «¿Tu Safari se ve distinto?» de iOS y agrandar círculo/logo de las dos guías. Insignia 68 px, imagen 48 px; asesor Atrio usa su símbolo sin margen interno. En NET/+ no coincidir con la confirmación nativa de edad: esperar a que desaparezca y otros cinco segundos, reiniciar si reaparece y suspender temporalmente la ayuda propia sin completarla ni modificar el consentimiento. Gracia inicial de cinco segundos para las ayudas; no retrasar la preparación del gateway. Otros proveedores y marcas se conservan. UX-022 registra disparadores, excepciones y pruebas.
 
 Publicación comprobada de UX-021/022: Atrio, NexoBet y los cuatro gateways, incluido Worker. 70 comprobaciones públicas correctas; insignia 68 px / imagen 48 px, prioridad de edad + cinco segundos y capas/áreas seguras. Fuentes, deployments y limitación de hardware en [entrega](../../internal-chat/docs/validation/pwa-safe-layout-20261113.md). Sin cambios financieros ni publicación del frontend de Builder.
+
+
+### Template 9: logo de Rey de Ases a 1,5? (13/11/2026)
+
+- Pedido confirmado: aumentar s?lo el logo de Rey de Ases un 50 % en los motores cl?sico y constructor. Fuente can?nica: `frontend/lib/landing/template9.ts` y CSS compartido de Template 9; cl?sico recibe el bundle generado.
+- Revisar y sincronizar tambi?n NexoBet (m?dulo Builder 1.2.1). La galer?a y la vista previa siguen el mismo tama?o. Ajustar espacios de Rey en ventanas compactas para mantener formulario, pie y cookies accesibles. Las dem?s marcas conservan sus medidas.
+- Excepciones: los cuatro gateways, Atrio y sus gu?as no presentan esta landing; no requieren cambios ni publicaci?n. Sin cambios en recursos, configuraci?n guardada, ingreso, Meta, API2/Panel3 o bases de datos. Las p?ginas legales mantienen su cabecera.
+- Validaci?n y publicaci?n por producto: `docs/validation/template9-rey-logo-20261113.md`.

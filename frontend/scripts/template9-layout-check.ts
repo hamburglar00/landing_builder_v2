@@ -44,9 +44,13 @@ for(const [name,engine]of [['Chromium',playwright.chromium],['WebKit',playwright
         await page.locator('.template9__card').evaluate(el=>el.getAnimations().forEach(a=>a.finish()));
         await page.locator('.template9__logo').evaluate((img:HTMLImageElement)=>img.decode());
         const metrics=await page.evaluate(()=>{
-          const root=document.querySelector<HTMLElement>('.template9')!,wrap=document.querySelector<HTMLElement>('.template9__wrap')!,footer=document.querySelector('.template9__footer')!,notice=document.querySelector('.template9__cookies')!,cta=document.querySelector('.template9__cta')!;
-          return {rootOverflowX:root.scrollWidth-root.clientWidth,wrapOverflowX:wrap.scrollWidth-wrap.clientWidth,wrapOverflowY:wrap.scrollHeight-wrap.clientHeight,documentOverflowY:document.documentElement.scrollHeight-innerHeight,footerBottom:footer.getBoundingClientRect().bottom,noticeTop:notice.getBoundingClientRect().top,ctaTop:cta.getBoundingClientRect().top,ctaBottom:cta.getBoundingClientRect().bottom,ctaColor:getComputedStyle(cta).color};
+          const root=document.querySelector<HTMLElement>('.template9')!,wrap=document.querySelector<HTMLElement>('.template9__wrap')!,footer=document.querySelector('.template9__footer')!,notice=document.querySelector('.template9__cookies')!,cta=document.querySelector('.template9__cta')!,logo=document.querySelector<HTMLImageElement>('.template9__logo')!;
+          const enlarged=Math.min(logo.clientWidth/logo.naturalWidth,logo.clientHeight/logo.naturalHeight),saved=root.style.getPropertyValue('--t9-logo-scale');
+          root.style.setProperty('--t9-logo-scale','1');const original=Math.min(logo.clientWidth/logo.naturalWidth,logo.clientHeight/logo.naturalHeight);
+          if(saved)root.style.setProperty('--t9-logo-scale',saved);else root.style.removeProperty('--t9-logo-scale');
+          return {logoRatio:enlarged/original,rootOverflowX:root.scrollWidth-root.clientWidth,wrapOverflowX:wrap.scrollWidth-wrap.clientWidth,wrapOverflowY:wrap.scrollHeight-wrap.clientHeight,documentOverflowY:document.documentElement.scrollHeight-innerHeight,footerBottom:footer.getBoundingClientRect().bottom,noticeTop:notice.getBoundingClientRect().top,ctaTop:cta.getBoundingClientRect().top,ctaBottom:cta.getBoundingClientRect().bottom,ctaColor:getComputedStyle(cta).color};
         });
+        assert.ok(Math.abs(metrics.logoRatio-(provider==='rey_de_ases'?1.5:1))<0.01,`${label}: painted logo scale ${metrics.logoRatio}`);
         assert.ok(metrics.rootOverflowX<=1&&metrics.wrapOverflowX<=1,`${label}: horizontal overflow ${JSON.stringify(metrics)}`);
         assert.ok(metrics.wrapOverflowY<=1&&metrics.documentOverflowY<=1,`${label}: vertical overflow ${JSON.stringify(metrics)}`);
         assert.ok(metrics.footerBottom<=metrics.noticeTop+1,`${label}: cookie overlap ${JSON.stringify(metrics)}`);
