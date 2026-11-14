@@ -1611,3 +1611,11 @@ Se retiran el endpoint privado de exportación y su clave dedicada. El autologin
 - Mantener el token cifrado de recuperación por origen, prioridad de la cookie vigente, claves anteriores de Rey, aislamiento de skin y backend, y confirmación de la cookie exacta antes de navegar. No exponer claves en URL, logs o almacenamiento público. Incógnito u otro navegador pueden carecer de la sesión anterior.
 - Fuente canónica del ingreso: Rey; sincronizar y comprobar los cuatro gateways. Conservar adaptadores de proveedor y el Worker de Ganamos+. Atrio incorpora la validación; NexoBet recibe la adaptación equivalente con transporte y activación propios. Builder sólo cambia sincronizador, pruebas y documentación; SDK y widget permanecen iguales.
 - No requiere cambios, migraciones ni despliegue nuevo de API2/Panel3. Autorización de Git para este lote; no ejecutar operaciones reales ni incluir los cambios locales de slots. Publicación y comprobación productiva se registran separadamente de commit/push. Orden futuro: Atrio/NexoBet antes de los gateways, incluido Worker.
+
+
+### Template 9: logo de Rey de Ases a 1,5? (13/11/2026)
+
+- Pedido confirmado: aumentar s?lo el logo de Rey de Ases un 50 % en los motores cl?sico y constructor. Fuente can?nica: `frontend/lib/landing/template9.ts` y CSS compartido de Template 9; cl?sico recibe el bundle generado.
+- Revisar y sincronizar tambi?n NexoBet (m?dulo Builder 1.2.1). La galer?a y la vista previa siguen el mismo tama?o. Ajustar espacios de Rey en ventanas compactas para mantener formulario, pie y cookies accesibles. Las dem?s marcas conservan sus medidas.
+- Excepciones: los cuatro gateways, Atrio y sus gu?as no presentan esta landing; no requieren cambios ni publicaci?n. Sin cambios en recursos, configuraci?n guardada, ingreso, Meta, API2/Panel3 o bases de datos. Las p?ginas legales mantienen su cabecera.
+- Validaci?n y publicaci?n por producto: `docs/validation/template9-rey-logo-20261113.md`.
