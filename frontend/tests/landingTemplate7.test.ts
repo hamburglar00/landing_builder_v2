@@ -179,11 +179,11 @@ test("Template 7 inicia bootstrap antes del Pixel y conserva Contact sin duplica
   });
   const html = renderPublicLandingHtml({ slug: "prueba-7", config: built as PublicLandingConfig });
   const bootstrapAt = html.indexOf('window.__T7_FETCH_JSON__("/api/client-identity/bootstrap"');
-  const pixelAt = html.indexOf("fbq('track', 'PageView')");
+  const pixelAt = html.indexOf("fbq('trackSingle', \"123456\", 'PageView')");
   const runtimeAt = html.indexOf('data-template7-runtime defer');
   assert.ok(bootstrapAt > 0 && bootstrapAt < pixelAt && pixelAt < runtimeAt);
   assert.match(publicRuntime, /recordLandingJourneyStart\(\);/);
-  assert.equal(html.match(/fbq\('track', 'PageView'\)/g)?.length, 1);
+  assert.equal(html.match(/fbq\('trackSingle', "123456", 'PageView'\)/g)?.length, 1);
   assert.match(html, /ready\.then\(init,init\)/);
   assert.match(publicRuntime, /shouldSkipContact = context\.shouldSkipContact \|\| \(cfg\.template === 7 && template7ContactSent\)/);
   assert.match(publicRuntime, /if \(!shouldSkipContact\) markContactSent/);

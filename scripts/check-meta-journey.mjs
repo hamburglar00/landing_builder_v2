@@ -94,6 +94,7 @@ for (const template of [7, 8, 9]) for (const selected of ['Lead', 'CompleteRegis
     const state = fixture(template, selected), row = await contact(state);
     assert.equal(state.sent.length, 1);
     const event = emitted(state)[0];
+    assert.equal(event.action_source, 'website');
     assert.equal(event.event_name, selected); assert.equal(event.event_id, state.input.contact_event_id);
     assert.equal(event.event_time, state.input.contact_event_time);
     assert.equal(event.user_data.fbc, state.input.fbc);
@@ -174,7 +175,7 @@ for (const action of ['Lead', 'Purchase']) {
     else {
       // Traditional WhatsApp uses a real Contact then a public human LEAD;
       // Atrio uses its separately signed internal-message action above.
-      const response = await h.api.handleLead(state.db, { action: 'LEAD', source_platform: 'landing',
+      const response = await h.api.handleLead(state.db, { action: 'LEAD', bot_phone: '5491160000000',
         phone: '00000001', promo_code: state.input.promo_code,
         action_event_id: 'human-pixel-conflict', meta_pixel_id: otherPixel, event_time: h.now - 300 },
         state.landing, state.config, state.tables.conversions_pixel_configs, {});
@@ -190,7 +191,7 @@ await check('traditional WhatsApp Contact -> human Lead retains the captured pix
   const state = fixture(1, 'Lead', { send_contact_capi: true });
   Object.assign(state.input, { cta_destination: 'whatsapp', lead_capture_form: false, form_fn: '', cta_meta_event: undefined });
   const capture = await contact(state), original = capture.contact_payload_raw;
-  const response = await h.api.handleLead(state.db, { action: 'LEAD', source_platform: 'landing',
+  const response = await h.api.handleLead(state.db, { action: 'LEAD', bot_phone: '5491160000000',
     phone: '00000001', promo_code: state.input.promo_code, action_event_id: 'real-whatsapp-human', event_time: h.now - 300 },
     state.landing, state.config, [], {});
   assert.equal(response.status, 200, await response.clone().text());
@@ -198,6 +199,15 @@ await check('traditional WhatsApp Contact -> human Lead retains the captured pix
   assert.equal(capture.pixel_id, h.pixel); assert.equal(capture.contact_payload_raw, original);
   assert.equal(emitted(state)[1].user_data.fbc, state.input.fbc);
   assert.equal(capture.meta_origin_evidence.method, 'fbc');
+  assert.equal(emitted(state)[0].action_source, 'website');
+  assert.equal(emitted(state)[1].action_source, 'chat');
+  assert.equal(emitted(state)[1].event_source_url, undefined);
+  await purchase(state, 'whatsapp-purchase', { source_platform: undefined, emitter_platform: undefined,
+    atrio_id: undefined, bot_phone: '5491160000000' });
+  assert.equal(emitted(state).at(-1).event_name, 'Purchase');
+  assert.equal(emitted(state).at(-1).action_source, 'chat');
+  assert.equal(emitted(state).at(-1).event_source_url, undefined);
+  assert.equal(emitted(state).at(-1).user_data.fbc, state.input.fbc);
 });
 
 await check('an internal message waits for its exact CTA, and still records when the public event is disabled', async () => {

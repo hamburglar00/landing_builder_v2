@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createServer } from "node:http";
+import { createRequire } from "node:module";
+import path from "node:path";
+import { build } from "esbuild";
 import { createPhoneDiagnostics, phoneCorsHeaders } from "../../supabase/functions/landing-phone/diagnostics";
 import { renderClassicPublicLandingHtml, renderPublicLandingHtml } from "../components/public-landing/renderPublicLandingHtml";
-import { buildPublicLandingRuntimeSource } from "../components/public-landing/PublicLandingRuntimeScript";
 import { PUBLIC_LANDING_CSS } from "../components/public-landing/publicLandingCss";
 import type { PublicLandingConfig } from "../components/public-landing/types";
 
@@ -14,7 +16,13 @@ test("browser: all six templates in both engines reuse late assignments and keep
   const previous = { url: process.env.NEXT_PUBLIC_SUPABASE_URL, key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY };
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://synthetic.supabase.invalid";
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "synthetic-public-key";
-  const source = buildPublicLandingRuntimeSource(true);
+  // Use the production generator compiler. tsx's keepNames injects __name into
+  // serialized functions (e.g. Template 4 fitting), which isn't browser code.
+  const bundle = await build({ absWorkingDir: process.cwd(), entryPoints: ["components/public-landing/PublicLandingRuntimeScript.tsx"],
+    bundle: true, write: false, platform: "node", format: "cjs", target: "es2020", jsx: "automatic", external: ["react", "react/jsx-runtime"] });
+  const generated = { exports: {} as { buildPublicLandingRuntimeSource?: (funnel: boolean) => string } };
+  new Function("module", "exports", "require", bundle.outputFiles[0].text)(generated, generated.exports, createRequire(path.join(process.cwd(), "package.json")));
+  const source = generated.exports.buildPublicLandingRuntimeSource!(true);
   assert.equal(source.split("window.location.assign(redirectUrl);").length, 2);
   // Stop at the navigation boundary so no external destination opens and browser assertions survive.
   const runtime = source.replace("window.location.assign(redirectUrl);", "window.__outbound.push(redirectUrl);");
@@ -158,6 +166,7 @@ test("browser: all six templates in both engines reuse late assignments and keep
         await page.clock.runFor(1500);
         const pixel = await page.evaluate(() => (window as any).__pixelCalls.filter((call: any[]) => call.includes("Contact")));
         assert.equal(pixel.length, 1, label + " one successful Contact");
+        assert.deepEqual(pixel[0].slice(0, 3), ["trackSingle", "123456789", "Contact"], label + " exact pixel target");
         const contact = tracks.find(item => item.payload?.event_name === "Contact");
         assert.ok(contact, label + " matching server tracking");
         assert.equal(pixel[0].at(-1).eventID, contact.payload.event_id, label + " shared Pixel/CAPI event ID");

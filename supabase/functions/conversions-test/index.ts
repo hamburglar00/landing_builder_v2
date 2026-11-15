@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { workspaceCapiEnabled } from "../conversions/workspace_capi.ts";
+import { evaluateMetaReceipt } from "../conversions/meta_receipt.ts";
 import {
   buildFakeConversionRow,
   buildMetaRequest,
@@ -154,7 +155,7 @@ Deno.serve(async (req) => {
     });
     status = res.status;
     metaText = await res.text();
-    ok = res.ok;
+    ok = evaluateMetaReceipt(res.status, metaText).accepted;
   } catch (e) {
     error = e;
   }

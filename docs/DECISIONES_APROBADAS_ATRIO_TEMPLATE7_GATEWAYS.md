@@ -1,5 +1,11 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+## 14/11 — Endurecimiento de recibos y contexto Meta
+
+Leo autoriza el lote auditado y un checkpoint previo. Captura/CTA sigue website; Lead de API2 WhatsApp y Purchase confirmado por conversaciones WhatsApp/Atrio/Nexo usan chat según el sobre de su evento. El primer mensaje Atrio sigue exclusivamente interno. Se preservan IDs, fechas, píxel del recorrido y Estadísticas. URL de adquisición desde Contact vinculado, separada de event_source_url; chat no presenta esa landing como lugar de compra. Recibos Meta estrictos, cookies completas con tiempo original, normalización comprobada y trackSingle. Mantener SDK oficial y Graph v25; probar v26 no autoriza cambiar el default. Pruebas sintéticas autorizadas sólo al píxel 989122687083119, sin filas de negocio.
+
+Fuente Builder; revisar y sincronizar Nexo con datos/adaptadores propios y clásico con su bundle. Atrio y cuatro gateways/Worker conservan sus emisores/SDK, verificados mediante el receptor compartido; no requieren cambio de fuente. API2/finanzas y rediseño de identidad Nexo quedan fuera. Checkpoint de once árboles y estado local, pruebas y orden de publicación en [validación](validation/meta-capi-hardening-20261114.md). No se confunde implementación local con publicación.
+
 ## 14/11 — Recorrido interno y entrega Meta independientes
 
 - Leo autoriza implementar con cuidado la propuesta auditada y pide un checkpoint previo de los proyectos. Checkpoint local verificado de ocho repositorios: `../.checkpoints/meta-journey-20261114-154737`, con bundles, parches del índice/working tree, archivos nuevos y hashes; no altera los cambios en curso.

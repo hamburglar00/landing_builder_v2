@@ -1,5 +1,8 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { frozenLandingCtaEvent } from "./landing_cta_event.ts";
+import { normalizeMetaFbc, normalizeMetaFbp } from "./meta_cookies.ts";
+import { resolveMetaActionSource } from "./meta_action_source.ts";
+import { sanitizeMetaEventSourceUrl } from "./meta_source_url.ts";
 
 // Shared types kept in sync with conversions/index.ts
 export interface ConversionsConfig {
@@ -472,94 +475,22 @@ export function normalizeCurrencyCode(
     : "ARS";
 }
 
-function normalizeMetaParamValue(v: unknown): string {
-  return String(v ?? "").trim();
-}
-
-function nowMetaTs(): string {
-  return String(Date.now());
-}
-
-const META_FBC_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
-const META_FBC_CLOCK_SKEW_MS = 5 * 60 * 1000;
-
-function normalizeMetaCreationTimeMs(raw: string): number | null {
-  if (!/^\d+$/.test(raw)) return null;
-  const numeric = Number(raw);
-  if (!Number.isFinite(numeric) || numeric <= 0) return null;
-  // Meta documents fbc/fbp creation_time in milliseconds. Some legacy rows
-  // may contain seconds, so normalize those before deciding freshness.
-  return numeric < 1_000_000_000_000 ? numeric * 1000 : numeric;
-}
-
-function isFreshMetaFbcCreationTime(
-  creationTimeMs: number,
-  nowMs = Date.now(),
-): boolean {
-  if (!Number.isFinite(creationTimeMs) || creationTimeMs <= 0) return false;
-  if (creationTimeMs > nowMs + META_FBC_CLOCK_SKEW_MS) return false;
-  return nowMs - creationTimeMs <= META_FBC_MAX_AGE_MS;
-}
-
-// Meta _fbp expected: fb.1.<timestamp>.<random>
-function normalizeFbp(raw: unknown): string {
-  const value = normalizeMetaParamValue(raw);
-  if (!value) return "";
-  // Accept legacy and extended variants:
-  // - fb.1.<creation_time>.<random_number>
-  // - fb.1.<creation_time>.<random_number>.<appendix>
-  if (/^fb\.1\.\d+\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)?$/.test(value)) {
-    return value;
-  }
-
-  // If only the last token/random piece arrives, wrap it into a valid fbp shape.
-  if (/^[A-Za-z0-9_-]{6,}$/.test(value)) {
-    return `fb.1.${nowMetaTs()}.${value}`;
-  }
-
-  return "";
-}
-
-// Meta _fbc expected: fb.1.<timestamp>.<fbclid>
-function normalizeFbc(raw: unknown): string {
-  const value = normalizeMetaParamValue(raw);
-  if (!value) return "";
-  // Accept legacy and extended variants:
-  // - fb.1.<creation_time>.<fbclid>
-  // - fb.1.<creation_time>.<fbclid>.<appendix>
-  const wrapped = value.match(
-    /^fb\.1\.(\d+)\.([A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)?)$/,
-  );
-  if (wrapped) {
-    const creationTimeMs = normalizeMetaCreationTimeMs(wrapped[1]);
-    if (!creationTimeMs || !isFreshMetaFbcCreationTime(creationTimeMs)) {
-      return "";
-    }
-    return `fb.1.${Math.floor(creationTimeMs)}.${wrapped[2]}`;
-  }
-
-  // If we receive fbclid directly, convert to fbc.
-  if (/^[A-Za-z0-9_-]{8,}$/.test(value)) {
-    return `fb.1.${nowMetaTs()}.${value}`;
-  }
-
-  return "";
-}
-
 export function sanitizeIp(v: unknown): string {
   let ip = String(v ?? "").trim();
   if (!ip) return "";
   if (ip.includes(",")) ip = ip.split(",")[0].trim();
-  ip = ip.replace(/^\[|\]$/g, "");
-  ip = ip.replace(/%.+$/, "");
+  const bracketed = /^\[([^\]]+)\](?::\d+)?$/.exec(ip);
+  if (bracketed) ip = bracketed[1];
   if (/^\d{1,3}(?:\.\d{1,3}){3}:\d+$/.test(ip)) {
     ip = ip.split(":")[0];
   }
-  ip = ip.replace(/[^\dA-Fa-f:.]/g, "");
+  // Never repair arbitrary text into an apparently real client IP.
+  if (!/^[\dA-Fa-f:.]+$/.test(ip)) return "";
   return ip;
 }
 
 function isValidPublicIpv4(ip: string): boolean {
+  if (!/^(?:0|[1-9]\d{0,2})(?:\.(?:0|[1-9]\d{0,2})){3}$/.test(ip)) return false;
   const parts = ip.split(".").map(Number);
   if (
     parts.length !== 4 ||
@@ -581,30 +512,29 @@ function isValidPublicIpv4(ip: string): boolean {
 function isLikelyPublicIpv6(ip: string): boolean {
   const lower = ip.toLowerCase();
   if (!lower.includes(":")) return false;
-  if (!/^[0-9a-f:]+$/.test(lower)) return false;
-  if (lower === "::" || lower === "::1") return false;
+  let canonical: string;
+  try {
+    canonical = new URL(`http://[${lower}]/`).hostname.slice(1, -1);
+  } catch { return false; }
+  if (canonical === "::" || canonical === "::1") return false;
   if (
-    lower.startsWith("fc") || lower.startsWith("fd") ||
-    lower.startsWith("fe80:")
+    canonical.startsWith("fc") || canonical.startsWith("fd") ||
+    /^fe[89ab]/.test(canonical) || /^fe[cdef]/.test(canonical)
   ) return false;
-  if (lower.startsWith("ff")) return false;
-  if (lower.startsWith("2001:db8:")) return false;
-  return lower.includes("::") || lower.split(":").filter(Boolean).length >= 3;
+  if (canonical.startsWith("ff")) return false;
+  if (canonical.startsWith("2001:db8:")) return false;
+  const mapped = /^::ffff:([\da-f]+):([\da-f]+)$/.exec(canonical);
+  if (mapped) {
+    const high = parseInt(mapped[1], 16), low = parseInt(mapped[2], 16);
+    return isValidPublicIpv4(`${high >> 8}.${high & 255}.${low >> 8}.${low & 255}`);
+  }
+  return true;
 }
 
 export function normalizePublicClientIp(rawIp: unknown): string {
-  let ip = sanitizeIp(rawIp);
+  const ip = sanitizeIp(rawIp);
   if (!ip) return "";
-  if (!ip.includes(".") && !ip.includes(":") && ip.length === 12) {
-    ip = ip.replace(/(\d{3})(\d{3})(\d{3})(\d{3})/, "$1.$2.$3.$4");
-  }
-  if (
-    !ip.includes(".") && !ip.includes(":") && ip.length >= 8 && ip.length <= 11
-  ) {
-    const m = ip.match(/\d{1,3}/g);
-    if (m) ip = m.join(".");
-  }
-  if (ip.includes(".") && isValidPublicIpv4(ip)) return ip;
+  if (!ip.includes(":") && ip.includes(".") && isValidPublicIpv4(ip)) return ip;
   if (ip.includes(":") && isLikelyPublicIpv6(ip)) return ip;
   return "";
 }
@@ -616,7 +546,11 @@ export function normalizeIpToMeta(rawIp: string): Record<string, string> {
 }
 
 export async function sha256(value: string): Promise<string> {
-  const data = new TextEncoder().encode(value.trim().toLowerCase());
+  return await sha256Exact(value.trim().toLowerCase());
+}
+
+async function sha256Exact(value: string): Promise<string> {
+  const data = new TextEncoder().encode(value);
   const hash = await crypto.subtle.digest("SHA-256", data);
   return Array.from(new Uint8Array(hash))
     .map((b) => b.toString(16).padStart(2, "0"))
@@ -632,26 +566,28 @@ function normalizeBase(value: string): string {
 }
 
 function normalizeEmail(value: string): string {
-  return normalizeBase(value).replace(/\s+/g, "");
+  return String(value ?? "").trim().toLowerCase();
 }
 
 function normalizePhoneForMeta(value: string): string {
   let phone = String(value ?? "").trim().replace(/[^\d]/g, "");
   if (!phone) return "";
   // Common cleanup for intl prefix typed as 00...
-  if (phone.startsWith("00")) phone = phone.slice(2);
+  phone = phone.replace(/^0+/, "");
   return phone;
 }
 
 function normalizeName(value: string): string {
   // Meta recommends lowercase and removing punctuation/symbols.
-  return normalizeBase(value)
-    .replace(/[^\p{L}\s]/gu, "")
+  return String(value ?? "").trim().toLowerCase()
+    .replace(/[^\p{L}\p{M}\s]/gu, "")
     .replace(/\s+/g, "");
 }
 
 function normalizeExternalId(value: string): string {
-  return normalizeBase(value).replace(/\s+/g, "");
+  // This is an opaque advertiser ID, also given to Pixel. Do not turn two
+  // different case/accent/space-sensitive identifiers into the same identity.
+  return String(value ?? "").trim();
 }
 
 function normalizeCity(value: string): string {
@@ -775,13 +711,13 @@ export async function buildUserData(
   if (normalizedState) ud.st = await sha256(normalizedState);
   if (normalizedZip) ud.zp = await sha256(normalizedZip);
   if (normalizedCountry) ud.country = await sha256(normalizedCountry);
-  const normalizedFbp = normalizeFbp(row.fbp);
-  const normalizedFbc = normalizeFbc(row.fbc);
+  const normalizedFbp = normalizeMetaFbp(row.fbp);
+  const normalizedFbc = normalizeMetaFbc(row.fbc);
   if (normalizedFbp) ud.fbp = normalizedFbp;
   if (normalizedFbc) ud.fbc = normalizedFbc;
   if (row.client_ip) Object.assign(ud, normalizeIpToMeta(row.client_ip));
   if (row.agent_user) ud.client_user_agent = row.agent_user;
-  if (externalId) ud.external_id = await sha256(externalId);
+  if (externalId) ud.external_id = await sha256Exact(externalId);
   return ud;
 }
 
@@ -810,7 +746,7 @@ export async function buildBusinessMessagingUserData(
   if (normalizedState) ud.st = await sha256(normalizedState);
   if (normalizedZip) ud.zp = await sha256(normalizedZip);
   if (normalizedCountry) ud.country = await sha256(normalizedCountry);
-  if (externalId) ud.external_id = await sha256(externalId);
+  if (externalId) ud.external_id = await sha256Exact(externalId);
   return ud;
 }
 
@@ -963,7 +899,8 @@ export async function buildMetaRequest(
   overrideTestEventCode?: string,
 ): Promise<MetaRequest> {
   const userData = await buildUserData(row, config.send_geo_capi !== false);
-  const srcUrl = row.event_source_url || "";
+  const actionSource = resolveMetaActionSource(row, eventName);
+  const srcUrl = sanitizeMetaEventSourceUrl(row.event_source_url);
   const metaEventName = eventName === "Contact" ? frozenLandingCtaEvent(row) || eventName : eventName;
 
   // deno-lint-ignore no-explicit-any
@@ -971,8 +908,8 @@ export async function buildMetaRequest(
     event_name: metaEventName,
     event_time: eventTime,
     event_id: eventId,
-    action_source: "website",
-    event_source_url: srcUrl,
+    action_source: actionSource,
+    ...(actionSource === "website" ? { event_source_url: srcUrl } : {}),
     user_data: userData,
   };
   if (customData || metaEventName === "CompleteRegistration") eventPayload.custom_data = {
@@ -1052,8 +989,8 @@ export function buildFakeConversionRow(event: MetaEventName): ConversionRow {
     st: "Buenos Aires",
     zip: "1000",
     country: "AR",
-    fbp: "fb.1.1699999999.1234567890",
-    fbc: "fb.1.1699999999.AbCdEfGhIj",
+    fbp: "fb.1.1699999999000.1234567890",
+    fbc: "fb.1.1699999999000.AbCdEfGhIj",
     pixel_id: "",
     contact_event_id: "",
     contact_event_time: null,

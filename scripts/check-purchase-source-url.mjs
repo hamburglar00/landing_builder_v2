@@ -151,7 +151,8 @@ function checkEvent(row, expectedUrl, expectedFbc = current.base.fbc) {
   assert.equal(row.fbc, expectedFbc); assert.equal(row.valor, 1000); assert.equal(row.currency, 'ARS');
   assert.equal(row.purchase_status_capi, 'enviado');
   const sent = current.sent.at(-1); assert.equal(sent.url, `https://graph.facebook.com/v25.0/${pixel}/events`);
-  const event = sent.payload.data[0]; assert.equal(event.event_source_url, expectedUrl);
+  const event = sent.payload.data[0]; assert.equal(event.action_source, "chat");
+  assert.ok(!("event_source_url" in event), "Acquisition URL is internal, not the chat conversion location");
   assert.equal(event.event_id, row.purchase_event_id); assert.equal(event.event_time, now - 120);
   assert.equal(event.user_data.fbc, expectedFbc); assert.equal(event.custom_data.value, 1000);
   return event;
@@ -176,15 +177,15 @@ for (const provider of ['rey_de_ases', 'ases_del_norte', 'ganamos_net', 'multi_s
   assert.equal(retry.status, 200, (await retry.clone().text()) + ' ' + JSON.stringify(current.diagnostics));
   assert.equal(current.sent.length, sendsBeforeRetry + 1, 'Retry sends exactly one Purchase');
   const retryEvent = current.sent.at(-1).payload.data[0];
-  assert.equal(retryEvent.event_source_url, sourceUrl); assert.equal(retryEvent.event_id, identity); assert.equal(retryEvent.event_time, now - 120);
+  assert.equal(retryEvent.action_source, "chat"); assert.ok(!("event_source_url" in retryEvent)); assert.equal(retryEvent.event_id, identity); assert.equal(retryEvent.event_time, now - 120);
   assert.equal(retryEvent.user_data.fbc, fbc); assert.equal(repeat.row.purchase_status_capi, 'enviado');
   assert.equal(repeat.row.event_source_url, 'https://landing.example.invalid/', 'Retry repairs only the wire, never historical URL');
   results.push({ provider, checks: ['first', 'repeat', 'duplicate', 'retry'], status: 'passed' });
 }
 for (const scenario of ['raw-contact', 'explicit-root', 'simple']) {
   current = fixture('multi_skin', { rootUrl: scenario === 'raw-contact' });
-  const expected = scenario === 'explicit-root' ? 'https://explicit.example.invalid/' : sourceUrl;
-  const result = await purchase(payload('multi_skin', scenario, scenario === 'explicit-root' ? expected : undefined), scenario === 'simple');
+  const expected = sourceUrl;
+  const result = await purchase(payload('multi_skin', scenario, scenario === 'explicit-root' ? 'https://explicit.example.invalid/' : undefined), scenario === 'simple');
   checkEvent(result.row, expected); results.push({ scenario, status: 'passed' });
 }
 for (const explicit of [true, false]) {
@@ -192,7 +193,7 @@ for (const explicit of [true, false]) {
   const input = { ...payload('multi_skin', 'created-first', explicit ? sourceUrl : undefined), source_platform: 'landing', meta_pixel_id: pixel };
   const { row } = await purchase(input);
   assert.equal(current.tables.conversions.length, 1);
-  assert.equal(row.purchase_type, 'first'); assert.equal(row.event_source_url, explicit ? sourceUrl : '');
+  assert.equal(row.purchase_type, 'first'); assert.equal(row.event_source_url, '', 'Unverified integration URL is not acquisition evidence');
   assert.equal(row.purchase_event_time, now - 120); assert.equal(row.pixel_id, pixel); assert.equal(row.fbc, '');
   assert.equal(row.valor, 1000); assert.equal(row.currency, 'ARS');
   assert.equal(row.purchase_status_capi, 'skipped_not_meta_ads'); assert.equal(current.sent.length, 0);

@@ -1,0 +1,53 @@
+{
+  "pixel_id": "989122687083119",
+  "mode": "test_event_code",
+  "synthetic_identity": true,
+  "builder_conversion_rows_created": false,
+  "tested_at": "2026-11-15T00:28:03Z",
+  "results": [
+    {
+      "version": "v25.0",
+      "event_name": "Lead",
+      "action_source": "chat",
+      "event_source_url_present": false,
+      "event_id": "meta-capi-hardening-test:bbf9fbb4-8d72-43b2-a591-cdec83270f57",
+      "http_status": 200,
+      "events_received": 1,
+      "accepted": true,
+      "fbtrace_id": "ArWCqBZXtifelOK69iP52CR"
+    },
+    {
+      "version": "v25.0",
+      "event_name": "Purchase",
+      "action_source": "chat",
+      "event_source_url_present": false,
+      "event_id": "meta-capi-hardening-test:99a835d5-e692-47dd-abe3-acc9233658d3",
+      "http_status": 200,
+      "events_received": 1,
+      "accepted": true,
+      "fbtrace_id": "AIYzwaEFBrLoiS-HH297D0G"
+    },
+    {
+      "version": "v26.0",
+      "event_name": "Lead",
+      "action_source": "chat",
+      "event_source_url_present": false,
+      "event_id": "meta-capi-hardening-test:cbe9290a-172a-4d3c-b04c-708ec9417a81",
+      "http_status": 200,
+      "events_received": 1,
+      "accepted": true,
+      "fbtrace_id": "AXck9RRooKzfPaCYy4vq5x2"
+    },
+    {
+      "version": "v26.0",
+      "event_name": "Purchase",
+      "action_source": "chat",
+      "event_source_url_present": false,
+      "event_id": "meta-capi-hardening-test:b6154b46-7c07-448a-a50c-4a8201931a53",
+      "http_status": 200,
+      "events_received": 1,
+      "accepted": true,
+      "fbtrace_id": "AAoUX1deG-DjnM-M-mEb5Kl"
+    }
+  ]
+}

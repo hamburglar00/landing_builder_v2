@@ -191,7 +191,7 @@ export function buildPixelInitScript(
           external_id: externalId
         });
 
-        fbq('track', 'PageView');
+        fbq('trackSingle', ${escapeScriptJson(safePixelId)}, 'PageView');
 
         window.__META = {
           PIXEL_ID: ${escapeScriptJson(safePixelId)},

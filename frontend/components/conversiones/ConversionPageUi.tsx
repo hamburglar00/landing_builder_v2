@@ -367,6 +367,7 @@ export function estadoBadge(estado: string, isRepeat = false) {
 
 export function statusText(status: string) {
   if (status === "enviado") return <span className="text-emerald-400">enviado</span>;
+  if (status === "unconfirmed_meta_receipt") return <span className="text-amber-300">sin confirmación: requiere revisión</span>;
   if (status === "error") return <span className="text-red-400">error</span>;
   if (status === "skipped_meta_crawler") return <span className="text-zinc-400">omitido bot meta</span>;
   if (status === "skipped_contact_capi_disabled") return <span className="text-amber-300">omitido: Contact desactivado</span>;
@@ -399,14 +400,10 @@ export function isSuccessfulMetaResponse(log: MetaResponseLog): boolean {
   }
 
   try {
-    const parsed = JSON.parse(log.response_meta) as {
-      error?: unknown;
-      events_received?: number | string;
-    };
-    const eventsReceived = typeof parsed.events_received === "number"
-      ? parsed.events_received
-      : Number(parsed.events_received ?? 0);
-    return !parsed.error && Number.isFinite(eventsReceived) && eventsReceived > 0;
+    const parsed: unknown = JSON.parse(log.response_meta);
+    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) return false;
+    return !("error" in parsed) &&
+      "events_received" in parsed && parsed.events_received === 1;
   } catch {
     return false;
   }

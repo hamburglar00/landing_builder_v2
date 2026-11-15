@@ -104,7 +104,7 @@ for (const provider of ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_s
       assert.match(html, /fetchpriority="low"/);
       assert.match(html, /data-image-fallback/);
       assert.equal(html.split('function firePixelContact(').length - 1, 1);
-      assert.equal(html.split("fbq('track', 'PageView')").length - 1, 1);
+      assert.equal(html.split("fbq('trackSingle', \"123456789\", 'PageView')").length - 1, 1);
       assert.match(html, /form_phone: formPhone/);
       assert.match(html, /promo_code: promoCode/);
       assert.match(html, /event_id: eventId/);

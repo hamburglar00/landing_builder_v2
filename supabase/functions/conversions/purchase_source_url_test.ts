@@ -30,12 +30,12 @@ function database(options: { base?: string; linked?: Record<string, unknown>[] }
   return { db, reads };
 }
 
-Deno.test("explicit valid website URL wins including an explicitly supplied root", async () => {
+Deno.test("integration URLs cannot override the matched acquisition, including an explicit root", async () => {
   for (const explicitUrl of ["https://landing.test/", "https://other.test/l/diana?landing=chosen#entry", "http://legacy.test/gast"]) {
     const { db, reads } = database();
     const result = await resolvePurchaseEventSourceUrl(db, { userId: owner, explicitUrl, matchedRow: { ...row, event_source_url: "https://landing.test/previous" } });
-    assert(result === explicitUrl, "Keep explicit URL precedence and captured spelling");
-    assert(reads.length === 0, "Explicit URL needs no lookup");
+    assert(result === "https://landing.test/previous", "Keep matched acquisition precedence");
+    assert(reads.length === 0, "Matched capture needs no lookup");
   }
 });
 
@@ -60,10 +60,10 @@ Deno.test("original CONTACT repairs an inherited root and preserves Builder /l/"
   assert(result === "https://builder.test/l/diana" && reads.length === 0, "CONTACT has the real motor's URL");
 });
 
-Deno.test("current matched URL precedes a different old CONTACT URL", async () => {
+Deno.test("original CONTACT URL repairs a later overwritten row URL", async () => {
   const { db } = database();
   const result = await resolvePurchaseEventSourceUrl(db, { userId: owner, matchedRow: { ...row, event_source_url: "https://builder.test/l/current", contact_payload_raw: JSON.stringify({ event_source_url: "https://landing.test/old" }) } });
-  assert(result === "https://builder.test/l/current", "Do not rewrite an intact selected URL");
+  assert(result === "https://landing.test/old", "The captured acquisition wins over a later overwritten URL");
 });
 
 Deno.test("malformed or truncated CONTACT JSON uses only the trusted configured fallback", async () => {
@@ -124,14 +124,14 @@ Deno.test("duplicate IDs are read once, and missing lineage falls back without r
   assert(reads.length === 2 && JSON.stringify(reads[0].filters.id) === JSON.stringify([sourceId]), "One lineage read and one settings read only");
 });
 
-Deno.test("a retry preserves the resolved URL and original explicit root without mutation", async () => {
+Deno.test("a retry preserves the same captured acquisition without mutation", async () => {
   const { db, reads } = database();
   const original = { ...row, event_source_url: "https://landing.test/", contact_payload_raw: '{"event_source_url":"https://landing.test/gast"}' };
   const first = await resolvePurchaseEventSourceUrl(db, { userId: owner, matchedRow: original });
   const replay = await resolvePurchaseEventSourceUrl(db, { userId: owner, matchedRow: { ...original, event_source_url: first } });
   assert(first === replay && replay === "https://landing.test/gast", "Replay keeps the URL of the same journey");
   assert(original.event_source_url === "https://landing.test/" && reads.length === 0, "Resolver does not mutate persisted source rows");
-  assert(await resolvePurchaseEventSourceUrl(db, { userId: owner, explicitUrl: sourceUrlFromPayload('{"event_source_url":"https://landing.test/"}'), matchedRow: original }) === "https://landing.test/", "An explicitly saved root remains explicit on retry");
+  assert(await resolvePurchaseEventSourceUrl(db, { userId: owner, explicitUrl: sourceUrlFromPayload('{"event_source_url":"https://landing.test/"}'), matchedRow: original }) === "https://landing.test/gast", "An integration root cannot override Contact during retry");
 });
 
 Deno.test("WhatsApp Cloud API routing markers survive unchanged", async () => {
@@ -141,4 +141,21 @@ Deno.test("WhatsApp Cloud API routing markers survive unchanged", async () => {
     const result = await resolvePurchaseEventSourceUrl(db, { userId: owner, explicitUrl: explicit ? marker : undefined, matchedRow: { ...row, event_source_url: marker } });
     assert(result === marker && reads.length === 0, "Do not replace the selected WABA source with a website");
   }
+});
+
+Deno.test("captured route wins and removes PII while retaining a safe landing override", async () => {
+  const { db, reads } = database();
+  const result = await resolvePurchaseEventSourceUrl(db, { userId: owner,
+    explicitUrl: "https://foreign.test/checkout?email=other%40example.test",
+    matchedRow: { ...row, event_source_url: "https://foreign.test/old-overwrite",
+      contact_payload_raw: JSON.stringify({ event_source_url: "https://landing.test/gast?landing=diana&email=private%40example.test&token=secret#private" }) },
+  });
+  assert(result === "https://landing.test/gast?landing=diana", "Preserve only captured routing, not URL PII");
+  assert(reads.length === 0, "Captured Contact needs no external lookup");
+});
+
+Deno.test("an unverified integration URL cannot create acquisition without a trusted landing", async () => {
+  const { db, reads } = database();
+  assert(await resolvePurchaseEventSourceUrl(db, { userId: owner, explicitUrl: "https://foreign.test/checkout" }) === "", "No guessed acquisition from external URL");
+  assert(reads.length === 0, "No unrelated lookup to make the foreign URL trusted");
 });

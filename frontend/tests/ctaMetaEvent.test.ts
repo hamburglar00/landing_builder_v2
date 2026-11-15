@@ -22,9 +22,9 @@ for(const template of ['template7','template8','template9'] as TemplateOption[])
       assert.equal(published.tracking.ctaMetaEvent,event);assert.equal(cfg.ctaMetaEvent,event);
       const calls:unknown[][]=[];
       runInNewContext(pixelFunction+';firePixelContact("original-id");',{cfg,window:{fbq:(...args:unknown[])=>calls.push(args)}});
-      assert.equal(calls.length,1);assert.equal(calls[0][1],event);
-      assert.equal((calls[0][3] as any).eventID,'original-id');
-      assert.equal((calls[0][2] as any).status,event==='CompleteRegistration'?'registered':undefined);
+      assert.equal(calls.length,1);assert.equal(calls[0][0],'trackSingle');assert.equal(calls[0][1],'123');assert.equal(calls[0][2],event);
+      assert.equal((calls[0][4] as any).eventID,'original-id');
+      assert.equal((calls[0][3] as any).status,event==='CompleteRegistration'?'registered':undefined);
       assert.equal(switchLandingTemplate(switchLandingTemplate(theme,'template2'),template).ctaMetaEvent,event);
     }
   });

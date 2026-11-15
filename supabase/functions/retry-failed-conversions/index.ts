@@ -1,3 +1,4 @@
+import { evaluateMetaReceipt, requiresMetaReceiptReview } from "../conversions/meta_receipt.ts";
 import {
   createClient,
   type SupabaseClient,
@@ -837,6 +838,7 @@ Deno.serve(async (req) => {
       const conversionRow: ConversionRow = {
         landing_id: null,
         user_id: row.user_id,
+        source_platform: row.source_platform ?? "",
         landing_name: "",
         phone: row.phone ?? "",
         email: row.email ?? "",
@@ -858,7 +860,7 @@ Deno.serve(async (req) => {
         lead_payload_raw: "",
         purchase_event_id: eventId,
         purchase_event_time: eventTime,
-        purchase_payload_raw: "",
+        purchase_payload_raw: row.purchase_payload_raw ?? "",
         client_ip: row.client_ip ?? "",
         agent_user: row.agent_user ?? "",
         device_type: "",
@@ -962,7 +964,8 @@ Deno.serve(async (req) => {
           ? "✅ PURCHASE REPEAT OK"
           : "✅ PURCHASE OK";
 
-        if (res.status === 200 && isMetaResponseOk(resText)) {
+        const receipt = evaluateMetaReceipt(res.status, resText);
+        if (receipt.accepted) {
           const obs = appendObs(row.observaciones ?? "", successMsg);
           await db.from("conversions").update({
             purchase_status_capi: "enviado",
@@ -987,7 +990,8 @@ Deno.serve(async (req) => {
         } else {
           const obs = appendObs(row.observaciones ?? "", "ERROR PURCHASE");
           await db.from("conversions").update({
-            purchase_status_capi: "error",
+            purchase_status_capi: requiresMetaReceiptReview(res.status, receipt, !useBusinessMessaging)
+              ? "unconfirmed_meta_receipt" : "error",
             purchase_event_id: eventId,
             purchase_event_time: eventTime,
             ...(useBusinessMessaging && businessMessagingDatasetId
@@ -1993,13 +1997,14 @@ async function retrySingleContactLeadCapiEvent(
     detail: string,
     responseRaw = "",
     retryableNext = false,
+    errorStatus: "error" | "unconfirmed_meta_receipt" = "error",
   ) => {
     stats[failedKey]++;
     const nextRetryCount = retryCount + 1;
     const shouldKeepRetrying = retryableNext &&
       nextRetryCount < MAX_CONTACT_LEAD_CAPI_RETRIES;
     await db.from("conversions").update({
-      [statusField]: "error",
+      [statusField]: errorStatus,
       [retryableField]: shouldKeepRetrying,
       [retryCountField]: nextRetryCount,
       [lastRetryField]: nowIso,
@@ -2028,10 +2033,9 @@ async function retrySingleContactLeadCapiEvent(
       body: JSON.stringify(metaReq.body),
     });
     const resText = await res.text();
-    const isTransientHttp = res.status === 429 || res.status === 408 ||
-      res.status >= 500;
+    const receipt = evaluateMetaReceipt(res.status, resText);
 
-    if (res.status === 200 && isMetaResponseOk(resText)) {
+    if (receipt.accepted) {
       stats[succeededKey]++;
       await db.from("conversions").update({
         [statusField]: "enviado",
@@ -2057,12 +2061,14 @@ async function retrySingleContactLeadCapiEvent(
       return;
     }
 
+    const requiresReview = requiresMetaReceiptReview(res.status, receipt, !useBusinessMessaging);
     await fail(
       `HTTP ${res.status} retry ${
         retryCount + 1
       }/${MAX_CONTACT_LEAD_CAPI_RETRIES}: ${resText}`,
       resText,
-      isTransientHttp,
+      requiresReview ? false : receipt.retryable,
+      requiresReview ? "unconfirmed_meta_receipt" : "error",
     );
   } catch (err) {
     await fail(
@@ -2165,22 +2171,6 @@ function isChatraceMetaCapiDisabled(
   const sourcePlatform = normalizeText(row.source_platform).toLowerCase();
   if (sourcePlatform !== "chatrace") return false;
   return chatraceMetaCapiMap.get(String(row.user_id)) === false;
-}
-
-function isMetaResponseOk(raw: string): boolean {
-  let parsed: Record<string, unknown> | null = null;
-  try {
-    parsed = raw ? JSON.parse(raw) as Record<string, unknown> : null;
-  } catch {
-    parsed = null;
-  }
-  if (!parsed) return true;
-  if ("error" in parsed) return false;
-  const eventsReceivedRaw = parsed.events_received;
-  const eventsReceived = typeof eventsReceivedRaw === "number"
-    ? eventsReceivedRaw
-    : Number(eventsReceivedRaw);
-  return !Number.isFinite(eventsReceived) || eventsReceived > 0;
 }
 
 async function writeConversionLog(

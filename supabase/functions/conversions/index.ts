@@ -1,3 +1,4 @@
+import { evaluateMetaReceipt, requiresMetaReceiptReview } from "./meta_receipt.ts";
 import {
   createClient,
   SupabaseClient,
@@ -4237,13 +4238,14 @@ async function sendToMetaCAPI(
     detail: string,
     responseRaw = "",
     retryable = false,
+    errorStatus: "error" | "unconfirmed_meta_receipt" = "error",
   ) => {
     const { data: current } = await db.from("conversions").select(
       "observaciones",
     ).eq("id", rowId).single();
     const obs = appendObservation(current?.observaciones ?? "", errMsg);
     const updates: Record<string, unknown> = {
-      [statusField]: "error",
+      [statusField]: errorStatus,
       observaciones: obs,
     };
     if (traceDatasetId) updates.dataset_id = traceDatasetId;
@@ -4283,41 +4285,9 @@ async function sendToMetaCAPI(
       })();
 
       const resText = await res.text();
-      const isTransientHttp = res.status === 429 || res.status === 408 ||
-        res.status >= 500;
+      const receipt = evaluateMetaReceipt(res.status, resText);
 
-      if (res.status === 200) {
-        let responseJson: Record<string, unknown> | null = null;
-        try {
-          responseJson = resText
-            ? JSON.parse(resText) as Record<string, unknown>
-            : null;
-        } catch {
-          responseJson = null;
-        }
-
-        const hasErrorObject =
-          !!(responseJson && typeof responseJson === "object" &&
-            "error" in responseJson);
-        const eventsReceivedRaw =
-          responseJson && typeof responseJson === "object"
-            ? (responseJson as Record<string, unknown>).events_received
-            : undefined;
-        const eventsReceived = typeof eventsReceivedRaw === "number"
-          ? eventsReceivedRaw
-          : Number(eventsReceivedRaw);
-        const hasZeroEventsReceived = Number.isFinite(eventsReceived) &&
-          eventsReceived <= 0;
-
-        if (hasErrorObject || hasZeroEventsReceived) {
-          await persistError(
-            `HTTP 200 inconsistente (attempt ${attempt}/${maxAttempts}): ${resText}`,
-            resText,
-            false,
-          );
-          return false;
-        }
-
+      if (receipt.accepted) {
         const { data: current } = await db.from("conversions").select(
           "observaciones",
         ).eq("id", rowId).single();
@@ -4381,11 +4351,19 @@ async function sendToMetaCAPI(
         return true;
       }
 
-      if (!isTransientHttp || attempt === maxAttempts) {
+      if (requiresMetaReceiptReview(res.status, receipt, !useBusinessMessaging)) {
         await persistError(
-          `HTTP ${res.status} (attempt ${attempt}/${maxAttempts}): ${resText}`,
+          `HTTP ${res.status} ${receipt.reason}: entrega Business Messaging sin confirmacion; revisar antes de reenviar`,
+          resText, false, "unconfirmed_meta_receipt",
+        );
+        return false;
+      }
+
+      if (!receipt.retryable || attempt === maxAttempts) {
+        await persistError(
+          `HTTP ${res.status} ${receipt.reason} (attempt ${attempt}/${maxAttempts}): ${resText}`,
           resText,
-          isTransientHttp,
+          receipt.retryable,
         );
         return false;
       }

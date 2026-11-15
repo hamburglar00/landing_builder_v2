@@ -84,7 +84,7 @@ test("genera un único bootstrap de Meta Pixel y un único PageView", () => {
     occurrences(html, "https://connect.facebook.net/en_US/fbevents.js"),
     1,
   );
-  assert.equal(occurrences(html, "fbq('track', 'PageView')"), 1);
+  assert.equal(occurrences(html, "fbq('trackSingle', \"123456789\", 'PageView')"), 1);
   assert.equal(occurrences(html, "fbq('init', \"123456789\""), 1);
   assert.equal(occurrences(html, pixelScript), 1);
   assert.equal(occurrences(html, pixelNoscript), 1);
@@ -96,7 +96,7 @@ test("mantiene estable el bloque activo de Meta Pixel", () => {
 
   assert.equal(
     sha256(pixelScript),
-    "be13960ae1245fa97a0ca99127d12d83d3679fe58c372257754f1331529c6ec6",
+    "c5778e931b54be88c18d2ac04310a48a737d1f0b0b713fe8e52ac026c4c128eb",
   );
   assert.equal(
     sha256(pixelNoscript),
@@ -104,7 +104,7 @@ test("mantiene estable el bloque activo de Meta Pixel", () => {
   );
   assert.match(pixelScript, /landing-builder:123456:slug-test/);
   assert.match(pixelScript, /sanitizeAddressBar/);
-  assert.match(pixelScript, /fbq\('track', 'PageView'\)/);
+  assert.match(pixelScript, /fbq\('trackSingle', "123456", 'PageView'\)/);
   assert.match(pixelScript, /external_id: externalId/);
   assert.match(pixelNoscript, /facebook\.com\/tr\?id=123456&amp;ev=PageView/);
 });
@@ -155,7 +155,7 @@ test("conserva Contact con eventID y deduplicación local", () => {
   assert.equal(
     occurrences(
       source,
-      'window.fbq("track", eventName, data, { eventID: eventId })',
+      'window.fbq("trackSingle", pixelId, eventName, data, { eventID: eventId })',
     ),
     1,
   );

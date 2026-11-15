@@ -1148,10 +1148,12 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
       function firePixelContact(eventId) {
         try {
           if (!cfg.sendContactPixel || !window.fbq) return;
+          var pixelId = String(cfg.pixelId || "").replace(/\\D+/g, "");
+          if (!pixelId) return;
           var eventName = cfg.ctaMetaEvent || "Contact";
           var data = { source: "main_button" };
           if (eventName === "CompleteRegistration") data.status = "registered";
-          window.fbq("track", eventName, data, { eventID: eventId });
+          window.fbq("trackSingle", pixelId, eventName, data, { eventID: eventId });
         } catch (e) {}
       }
 

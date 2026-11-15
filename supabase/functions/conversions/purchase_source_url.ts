@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sanitizeMetaEventSourceUrl } from "./meta_source_url.ts";
 
 export type PurchaseSourceRow = {
   id?: unknown;
@@ -14,7 +15,7 @@ function text(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-/** Keep the captured URL intact; parsing validates it without rebuilding its query. */
+/** Validate provenance first; remove query data and fragments before persistence/delivery. */
 function websiteUrl(value: unknown, allowRoot: boolean): string {
   const raw = text(value);
   if (!raw || /[\u0000-\u0020\u007f]/.test(raw)) return "";
@@ -23,7 +24,7 @@ function websiteUrl(value: unknown, allowRoot: boolean): string {
     if (!['http:', 'https:'].includes(parsed.protocol) || !parsed.hostname ||
       parsed.username || parsed.password) return "";
     if (!allowRoot && !parsed.pathname.replace(/\//g, "")) return "";
-    return raw;
+    return sanitizeMetaEventSourceUrl(raw);
   } catch {
     return "";
   }
@@ -46,8 +47,8 @@ function matchedUrl(row: PurchaseSourceRow | null): string {
   // This is a routing marker, not a website. Preserve the selected WABA.
   const marker = text(row.event_source_url);
   if (/^whatsapp-cloud-api:\/\/\d+\/?$/.test(marker)) return marker;
-  return websiteUrl(row.event_source_url, false) ||
-    websiteUrl(sourceUrlFromPayload(row.contact_payload_raw), false);
+  return websiteUrl(sourceUrlFromPayload(row.contact_payload_raw), false) ||
+    websiteUrl(row.event_source_url, false);
 }
 
 /** Resolve only after the handler has selected its tenant-scoped journey. */
@@ -61,16 +62,12 @@ export async function resolvePurchaseEventSourceUrl(
     landingName?: string;
   },
 ): Promise<string> {
-  const explicit = websiteUrl(input.explicitUrl, true);
-  if (explicit) return explicit;
-  // Preserve the pre-existing Business Messaging source marker as well.
-  const explicitMarker = text(input.explicitUrl);
-  if (/^whatsapp-cloud-api:\/\/\d+\/?$/.test(explicitMarker)) return explicitMarker;
-
   const matched = input.matchedRow?.user_id === input.userId
     ? input.matchedRow : null;
-  const captured = matchedUrl(matched);
-  if (captured) return captured;
+  const capturedContact = websiteUrl(sourceUrlFromPayload(matched?.contact_payload_raw), false);
+  if (capturedContact) return capturedContact;
+  const capturedMarker = text(matched?.event_source_url);
+  if (/^whatsapp-cloud-api:\/\/\d+\/?$/.test(capturedMarker)) return capturedMarker;
 
   // One bounded hop through existing lineage IDs; no phone/promo/inbox search.
   const ids = [...new Set([
@@ -93,17 +90,30 @@ export async function resolvePurchaseEventSourceUrl(
     }
   }
 
+  const captured = matchedUrl(matched);
+  if (captured) return captured;
+
+  // Dedicated Business Messaging routing markers are not acquisition URLs.
+  const explicitMarker = text(input.explicitUrl);
+  if (/^whatsapp-cloud-api:\/\/\d+\/?$/.test(explicitMarker)) return explicitMarker;
+
   const name = text(matched?.landing_name) || text(input.landingName);
   // Match the public landing/revalidation name contract, including legacy dots.
   // The leading alphanumeric character excludes standalone . and .. segments.
   if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,199}$/.test(name)) return "";
   const { data } = await db.from("settings").select("url_base").eq("id", 1)
     .maybeSingle();
+  // Reject query/fragment on the configured base before sanitizing it.
+  if (/[?#]/.test(text(data?.url_base))) return "";
   const base = websiteUrl(data?.url_base, true);
   if (!base) return "";
   const parsed = new URL(base);
   if (parsed.search || parsed.hash) return "";
   // The configured base owns its route prefix (including /l/ for Builder).
   // Do not infer a motor from a hostname or from an inherited broken root URL.
-  return `${base.replace(/\/+$/, "")}/${encodeURIComponent(name)}`;
+  const canonical = `${base.replace(/\/+$/, "")}/${encodeURIComponent(name)}`;
+  // An integration URL is usable only when it names the already-authorized
+  // route. It can never introduce another domain, route or landing override.
+  const explicit = websiteUrl(input.explicitUrl, true);
+  return explicit === canonical ? explicit : canonical;
 }
