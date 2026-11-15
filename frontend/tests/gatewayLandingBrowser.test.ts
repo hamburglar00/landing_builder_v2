@@ -13,6 +13,7 @@ test("Gateway T7/T9: stable form, scoped identity/destination/tracking and one C
       const context = await browser.newContext({ viewport: { width, height: 844 } });
       const page = await context.newPage(); const requests: Array<{ operation: string; body: Record<string, unknown> }> = [];
       const errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
+      const nativeCollectorLoaded = page.waitForRequest(request => request.url().includes("/l/demo/_assets/vendor/atrio-meta-click/v1/collect-click-id."));
       const id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
       const config: PublicLandingConfig = { schemaVersion: 1, updatedAt: "2026-11-14", id, name: "demo", comment: "", layout: { template, ctaPosition: "bottom" },
         tracking: { pixelId: "123456789", postUrl: "https://example.supabase.co/functions/v1/conversions?name=fixture", landingTag: "TEST", target_provider: "ganamos_net", ctaDestination: "atrio" },
@@ -42,6 +43,7 @@ test("Gateway T7/T9: stable form, scoped identity/destination/tracking and one C
       });
       await page.goto("https://gateway.example.test/l/demo?utm_source=fixture&campana=retained");
       await page.waitForFunction(() => (window as Window & { __T7_RUNTIME_READY__?: boolean }).__T7_RUNTIME_READY__ === true);
+      await nativeCollectorLoaded;
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1), false);
       assert.ok(requests.some(r => r.operation === "client-identity/bootstrap"));
       assert.ok(requests.some(r => r.operation === "template7/destination"));

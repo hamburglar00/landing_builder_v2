@@ -44,3 +44,11 @@ El 14/11 a las 22:46 de Argentina se comprobaron las seis páginas públicas de 
 Se verificaron las bases remotas y ascendencia antes del push fast-forward; no hubo force-push, sobrescritura de trabajo ajeno ni cambio regional. Builder `4da7bedb` añade únicamente la adenda de decisiones a la fuente probada `33fe3281`. Los candidatos READY `dpl_6uwhSXrFLSbk4bACurTKnrNuux6u` / `dpl_7DJHxs8PikDeKB8VumdeVEh5pVUK` se promovieron; los autodeploys Git de main quedaron luego como deployments productivos, con el mismo código. La metadata Git y los dominios se verificaron después.
 
 Evidencia pública filtrada: [páginas y hashes](gateway-engine-public-smoke-20261114.json), [metadata de publicación](gateway-engine-publication-20261114.json). Este cierre documental se publica sólo en la rama del lote para evitar un build adicional sin cambios de código. No se cambia automáticamente el motor de una campaña existente.
+
+## Corrección de paridad EBP detectada en el piloto
+
+La comparación de solicitudes detectó que el colector EBP nativo de Meta no se descargaba desde Gateway: `landingFbc.collectNative` admitía sólo `/vendor/...`, mientras el renderer nuevo emitía `/l/{slug}/_assets/vendor/...`. Pixel y el envío de tracking seguían presentes; no se consideró equivalencia completa hasta corregir ese colector.
+
+Se admite exclusivamente el mismo archivo versionado bajo la ruta original y los prefijos cerrados de Builder/Nexo. Se siguen rechazando URL externa, doble barra de host, traversal literal/codificado, query y archivos fuera del colector permitido. Ocho pruebas focalizadas pasaron, incluidas nueve variantes de URL y T7/T9 en móvil/desktop comprobando la solicitud real del colector. Los runtimes se regeneraron en Builder y Clásico sin retirar hashes antiguos. Nexo utiliza actualmente un adaptador Meta propio, no importa este helper y no incorpora EBP nativo; se conserva esa excepción sin conectar un helper inutilizado.
+
+La corrección no modifica el motor de alta ni crea nuevas cuentas. Su publicación y comprobación GET del colector se agregan al informe coordinado; las cifras del primer piloto no se presentan como rendimiento de esta revisión posterior.

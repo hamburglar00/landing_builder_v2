@@ -137,7 +137,9 @@ export function getLandingFbc(config: LandingFbcConfig): Collector {
         catch { finish(); }
       };
       if (browser.__ATRIO_META_COLLECT_CLICK_ID__) { run(); return; }
-      if (!/^\/vendor\/atrio-meta-click\/v1\/collect-click-id\.[a-f0-9]+\.js$/.test(source)) { finish(); return; }
+      // Gateway serves the same immutable collector below its closed landing
+      // asset namespace. Keep external URLs, queries and traversal disallowed.
+      if (!/^(?:\/l\/(?:nexobet\/)?[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}\/_assets)?\/vendor\/atrio-meta-click\/v1\/collect-click-id\.[a-f0-9]+\.js$/.test(source)) { finish(); return; }
       let script = document.querySelector<HTMLScriptElement>('script[data-atrio-meta-click="v1"]');
       let created = false;
       if (!script) {
