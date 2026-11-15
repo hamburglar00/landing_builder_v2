@@ -49,6 +49,7 @@ PageView y CTA se dirigen con trackSingle al píxel configurado. Se mantienen el
 - Navegador: 43 pruebas Builder y 7 clásico; 18 escenarios Chromium de asignación tardía/retorno/deduplicación T1–T6 de ambos motores. Dos pruebas adicionales de transportes y tres de prueba de IP.
 - Aislamiento FBC: 208/208, 26 escenarios × cuatro runtimes T7/T8 clásico/constructor × Chromium/WebKit, con el SDK oficial real y transporte interceptado. Evidencia local del script existente: `.vercel/audit-fbc-20261031/scoped-browser-results.json` (el nombre del directorio es histórico).
 - TypeScript Builder/clásico, generadores de assets, módulo Marketing Nexo y diff check correctos. Los cinco runtimes nuevos tienen nombres por contenido; no se eliminan los anteriores. Los cuatro SDK de gateway permanecen idénticos.
+- UI de recibos: cinco pruebas, incluidas 17 respuestas inválidas y el estado visible de revisión; TypeScript final correcto. Nexo recibe sólo esa fuente compartida actualizada, conservando los otros 59 pins del workspace.
 - Nexo tiene pruebas de adaptadores, navegador Chromium/WebKit, SQL PGlite aplicando su migración nueva y TypeScript; véase [su registro](../../NexoBet-meta-hardening/docs/validation/meta-capi-hardening-20261114.md). PGlite no certifica contención entre conexiones independientes.
 
 Prueba real autorizada: Lead y Purchase chat, sin event_source_url, aceptados individualmente en v25.0 y v26.0 con HTTP 200 y events_received=1. Sólo external_id sintético hasheado; Purchase de prueba ARS 1. Tokens retenidos en memoria, fuera de código/logs. [Recibos y fbtrace_id](meta-capi-hardening-test-events-20261114.json). Confirma aceptación de esos payloads, no atribución o rendimiento de campañas. Graph permanece en v25.0 por defecto; no se migra automáticamente a v26.
@@ -60,6 +61,16 @@ Auditoría agregada de logs de siete días hasta el 15/11 00:28 UTC: 530 Contact
 Revisar e integrar Builder preservando cualquier publicación concurrente. Publicar sus funciones conversions, retry-failed-conversions y conversions-test, y frontend desde main. Publicar clásico por separado. En Nexo aplicar primero `20261115002734_nexobet_meta_capi_hardening.sql` y luego su aplicación. Comprobar READY/dominos y recibos naturales por producto, sin simular operaciones monetarias. No necesitan despliegue nuevo Atrio, los cuatro gateways/Worker ni API2.
 
 No hay migración Builder en este lote. Nexo modifica funciones, no reescribe las filas históricas: conserva permisos privados, URL de adquisición y cookie original de primera observación. Para revertir, recuperar las revisiones previas de código y las funciones Nexo documentadas en Git; no borrar recibos/identidades ni reemitir conversiones aceptadas. Los builds y comprobaciones de dominios productivos quedan para esa publicación; los tests locales no se presentan como un deployment.
+
+## Commits locales revisados
+
+| Producto | Commit de implementación | Push/publicación |
+| --- | --- | --- |
+| Builder | `cbdb937870351d01ccc1c7ee820994d2c96dca92` | No realizados |
+| Clásico | `47b4c502ef05e0511594e185d2fcf53054a085d0` | No realizados |
+| NexoBet | `93a0f62dcca703743ba2f9f52224e7e244451764` | No realizados |
+
+Ramas aisladas `fix/meta-capi-hardening-20261114` en cada repositorio. Los contratos nuevos y la UI compartida de Nexo apuntan al commit canónico Builder; el clasificador mantiene su pin previo `bf4d1ad9`. La revisión final de Nexo añade 25 pruebas afectadas de atribución/entrega, dos de UI y 19 SQL, además del TypeScript final. Su marcador interno conserva la primera observación de un clic vencido durante capturas anteriores al CTA, sin enviarlo ni modificar la identidad vigente por landing/dispositivo.
 
 ## Fuentes técnicas
 
