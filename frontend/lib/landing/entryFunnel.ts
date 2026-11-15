@@ -27,11 +27,13 @@ export const ENTRY_FUNNEL_ERRORS = [
   "login_unavailable", "session_unavailable", "chat_unavailable", "request_timeout",
   "network_error", "rate_limited", "invalid_entry", "unknown",
 ] as const;
-export const ENTRY_FUNNEL_ORIGINS = ["https://landing.panelbotadmin.com", "https://mkt.panelbotadmin.com", "https://nexobet.fun"];
+export const ENTRY_FUNNEL_ORIGINS = ["https://landing.panelbotadmin.com", "https://mkt.panelbotadmin.com", "https://constructor.panelbotadmin.com", "https://nexobet.fun"];
+/** The gateway proxy exposes one closed collector route per published landing. */
+export const ENTRY_FUNNEL_GATEWAY_PATH = /^\/l\/(?:nexobet\/)?[A-Za-z0-9][A-Za-z0-9_-]{0,79}\/_api\/entry-funnel$/;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export type EntryFunnelTemplate = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 export type EntryFunnelProvenance = {
-  engine?: "classic" | "constructor" | "nexobet";
+  engine?: "classic" | "constructor" | "nexobet" | "gateway";
   /** SHA of the landing release, carried unchanged through the gateway. */
   release?: string;
   environment?: "production" | "preview" | "development" | "unknown";
@@ -42,6 +44,7 @@ export type EntryFunnelProvenance = {
 };
 export type EntryFunnelContext = EntryFunnelProvenance & {
   landing_id: string; flow_id: string; template: EntryFunnelTemplate; telemetry_origin: string; started_at: number;
+  telemetry_path?: string;
   attempt_id?: string; attempt_number?: number; account_kind?: "new" | "existing"; navigation_id?: string;
 };
 export const ENTRY_PHONE_READINESS = ["ready", "pending", "failed", "unknown"] as const;
@@ -89,7 +92,7 @@ const providers = ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_skin"]
 const skins = ["jugamos", "ganamos_plus", "casino_zeus", "bet30", "gana_en_casa", "celu_apuestas", "casino_zeta", "oro_puro", "fortu_bet", "gran_poseidon", "kona_bet", "mega_faraon", "camel_bet", "rhino_play"];
 const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === "object" && !Array.isArray(value);
 export function entryFunnelProvenance(value: Record<string, unknown>): EntryFunnelProvenance | null {
-  if (value.engine !== undefined && (typeof value.engine !== "string" || !["classic", "constructor", "nexobet"].includes(value.engine)) ||
+  if (value.engine !== undefined && (typeof value.engine !== "string" || !["classic", "constructor", "nexobet", "gateway"].includes(value.engine)) ||
     value.release !== undefined && (typeof value.release !== "string" || !/^[0-9a-f]{7,40}$/.test(value.release)) ||
     value.environment !== undefined && (typeof value.environment !== "string" || !["production", "preview", "development", "unknown"].includes(value.environment)) ||
     value.source !== undefined && (typeof value.source !== "string" || !["synthetic", "unknown"].includes(value.source)) ||
@@ -109,14 +112,17 @@ function validAttempt(value: Record<string, unknown>): boolean {
     (value.account_kind === undefined || value.account_kind === "new" || value.account_kind === "existing");
 }
 
-export function validateEntryFunnelContext(value: unknown, now = Date.now()): EntryFunnelContext | null {
+export function validateEntryFunnelContext(value: unknown, now = Date.now(), trustedGatewayOrigins: readonly string[] = []): EntryFunnelContext | null {
   if (!record(value) || !uuid.test(String(value.landing_id)) || !uuid.test(String(value.flow_id)) ||
     ![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(Number(value.template)) || typeof value.template !== "number" ||
-    !ENTRY_FUNNEL_ORIGINS.includes(String(value.telemetry_origin)) || typeof value.started_at !== "number" ||
+    (value.engine === "gateway"
+      ? typeof value.telemetry_path !== "string" || !ENTRY_FUNNEL_GATEWAY_PATH.test(value.telemetry_path) || !trustedGatewayOrigins.includes(String(value.telemetry_origin))
+      : value.telemetry_path !== undefined || !ENTRY_FUNNEL_ORIGINS.includes(String(value.telemetry_origin))) || typeof value.started_at !== "number" ||
     !Number.isSafeInteger(value.started_at) || value.started_at > now + 60_000 || value.started_at < now - 86_400_000 || !validAttempt(value) || !entryFunnelProvenance(value) ||
     value.navigation_id !== undefined && (typeof value.navigation_id !== "string" || !uuid.test(value.navigation_id))) return null;
   return { ...entryFunnelProvenance(value), landing_id: String(value.landing_id), flow_id: String(value.flow_id), template: value.template as EntryFunnelTemplate,
     telemetry_origin: String(value.telemetry_origin), started_at: value.started_at,
+    ...(value.engine === "gateway" ? { telemetry_path: String(value.telemetry_path) } : {}),
     ...(value.attempt_id ? { attempt_id: String(value.attempt_id), attempt_number: Number(value.attempt_number) } : {}),
     ...(value.account_kind ? { account_kind: value.account_kind as "new" | "existing" } : {}),
     ...(value.navigation_id ? { navigation_id: String(value.navigation_id) } : {}) };

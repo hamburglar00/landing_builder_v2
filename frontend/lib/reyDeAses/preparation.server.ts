@@ -1,4 +1,5 @@
 import { entryRequestTrace } from "../landing/entryFunnel.server";
+import { entryFunnelGatewayOrigins } from "../landing/entryFunnel.origins.server";
 import { createCipheriv, createDecipheriv, randomBytes, timingSafeEqual } from "node:crypto";
 import { isMultiSkinCode } from "../multi-skin-catalog";
 import { validateEntryFunnelContext, type EntryFunnelContext } from "../landing/entryFunnel";
@@ -178,7 +179,7 @@ export async function handleTemplate7PreparationAccount(
       return json({ error: "invalid_request" }, 400);
     }
     const claims = decryptClaims(data.token, env, now);
-    diagnosticContext = validateEntryFunnelContext(claims.payload.entry_funnel, now);
+    diagnosticContext = validateEntryFunnelContext(claims.payload.entry_funnel, now, entryFunnelGatewayOrigins(env));
     const headers = new Headers({ "Content-Type": "application/json", Origin: "https://template7.internal" });
     for (const [field, value] of Object.entries(entryRequestTrace(request))) if (["flow_id", "attempt_id", "navigation_id", "request_id"].includes(field)) headers.set("x-entry-" + field.replace(/_/g, "-"), value);
     const cookies = [`${CLIENT_ID_COOKIE_NAME}=${claims.identity.deviceId}`];

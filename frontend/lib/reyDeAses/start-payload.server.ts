@@ -1,5 +1,6 @@
 import type { StartRequest } from "./contracts";
 import { validateEntryFunnelContext } from "../landing/entryFunnel";
+import { entryFunnelGatewayOrigins } from "../landing/entryFunnel.origins.server";
 import { normalizeArgentinaWhatsapp } from "../landing/argentinaWhatsapp";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -13,7 +14,7 @@ const ATTRIBUTION_KEYS = ["landing", "landing_resolution", "facebook", "portofol
 export function parseTemplate7StartPayload(value: unknown): StartRequest | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const data = value as Record<string, unknown>;
-  const funnel = validateEntryFunnelContext(data.entry_funnel);
+  const funnel = validateEntryFunnelContext(data.entry_funnel, Date.now(), entryFunnelGatewayOrigins());
   if (data.card_index !== undefined && (!Number.isInteger(data.card_index) || Number(data.card_index) < 1 || Number(data.card_index) > 6)) return null;
   const name = typeof data.name === "string" ? data.name.trim().replace(/\s+/g, " ") : "";
   if (!UUID_PATTERN.test(String(data.landing_id ?? "")) || !SLUG_PATTERN.test(String(data.landing_slug ?? "")) ||

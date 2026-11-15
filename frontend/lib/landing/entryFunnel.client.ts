@@ -5,6 +5,7 @@ export type EntryFunnelClient = { flowId: string; beginAttempt(): void; emit(nam
 export function installEntryFunnel(config: {
   navigationKind?: "preparation" | "gateway"; landingId?: string; template?: number; entryTemplate?: number; template8?: boolean; targetProvider?: string; skinCode?: string;
   telemetry?: EntryFunnelProvenance; componentRelease?: string; diagnosticProof?: () => string | undefined;
+  apiBase?: string;
 }, suppliedContext?: EntryFunnelContext, endpoint = "/api/entry-funnel"): EntryFunnelClient | undefined {
   const browser = window as typeof window & { __entryFunnel?: EntryFunnelClient; __ENTRY_FUNNEL_NAVIGATION__?: { id: string; started_at: number }; __ENTRY_FUNNEL_METADATA__?: EntryFunnelProvenance; __ENTRY_FUNNEL_EARLY__?: { started_at?: number; context?: EntryFunnelContext; timings?: string[]; events?: Array<{ name: string; at: number; id?: string; error_code?: string; navigation_id?: string; navigation_started_at?: number; attempt_id?: string; attempt_number?: number }> } };
   if (browser.__entryFunnel) {
@@ -19,7 +20,7 @@ export function installEntryFunnel(config: {
   const landing = suppliedContext?.landing_id || config.landingId;
   if (![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(Number(template)) || !uuid.test(String(landing))) return;
   const provenance = (value: EntryFunnelProvenance = {}): EntryFunnelProvenance => ({
-    ...(typeof value.engine === "string" && ["classic", "constructor", "nexobet"].includes(value.engine) ? { engine: value.engine } : {}),
+    ...(typeof value.engine === "string" && ["classic", "constructor", "nexobet", "gateway"].includes(value.engine) ? { engine: value.engine } : {}),
     ...(typeof value.release === "string" && /^[0-9a-f]{7,40}$/.test(value.release) ? { release: value.release } : {}),
     ...(typeof value.environment === "string" && ["production", "preview", "development", "unknown"].includes(value.environment) ? { environment: value.environment } : {}),
     ...(typeof value.source === "string" && ["synthetic", "unknown"].includes(value.source) ? { source: value.source } : {}),
@@ -27,10 +28,18 @@ export function installEntryFunnel(config: {
   });
   const metadata = provenance(suppliedContext || config.telemetry || browser.__ENTRY_FUNNEL_METADATA__);
   if (!suppliedContext) {
-    metadata.engine ||= location.origin === "https://landing.panelbotadmin.com" ? "classic" : location.origin === "https://mkt.panelbotadmin.com" ? "constructor" : undefined;
+    metadata.engine ||= location.origin === "https://landing.panelbotadmin.com" ? "classic" : ["https://mkt.panelbotadmin.com", "https://constructor.panelbotadmin.com"].includes(location.origin) ? "constructor" : undefined;
     metadata.environment ||= "unknown";
     metadata.source = navigator.webdriver === true ? "synthetic" : metadata.source || "unknown";
   }
+  const gatewayPath = /^\/l\/(?:nexobet\/)?[A-Za-z0-9][A-Za-z0-9_-]{0,79}\/_api\/entry-funnel$/;
+  const configuredPath = config.apiBase ? config.apiBase + "/entry-funnel" : undefined;
+  const telemetryPath = suppliedContext?.telemetry_path || configuredPath || browser.__ENTRY_FUNNEL_EARLY__?.context?.telemetry_path;
+  if (metadata.engine === "gateway" && (!telemetryPath || !gatewayPath.test(telemetryPath)) ||
+      metadata.engine !== "gateway" && telemetryPath !== undefined) return;
+  // A supplied context can run after a cross-origin handoff: its caller owns the
+  // authenticated proxy endpoint. Only the landing itself selects this local path.
+  if (!suppliedContext && telemetryPath) endpoint = telemetryPath;
   const allowed = ["navigation_started", "phone_at_click", "phone_wait_completed", "wallet_result", "welcome_visible", "wallet_visible", "telemetry_loss", "page_visible", "form_visible", "name_focus", "name_started", "name_valid", "skin_selected", "cta_clicked", "destination_ready", "account_ready", "login_confirmed", "gateway_loaded", "iframe_loaded", "chat_bootstrap_ready", "welcome_ready", "wallet_ready", "chat_usable", "chat_ready", "entry_error", "visibility_hidden", "resumed", "stage_timing", "casino_account_ready", "entry_retry", "attempt_started", "cta_available", "outbound_requested"];
   const phases = ["phone_owner", "phone_plan", "phone_cache", "phone_select", "phone_total", "landing_dns", "landing_connect", "landing_tls", "landing_ttfb", "landing_download", "landing_navigation",
     "gateway_dns", "gateway_connect", "gateway_tls", "gateway_ttfb", "gateway_download", "gateway_navigation",
@@ -75,6 +84,7 @@ export function installEntryFunnel(config: {
       if (stored && uuid.test(stored.flow_id) && stored.landing_id === landing && stored.template === template &&
         (!stored.engine || !metadata.engine || stored.engine === metadata.engine) &&
         (stored.release === undefined || metadata.release === undefined || stored.release === metadata.release) &&
+        stored.telemetry_path === telemetryPath &&
         stored.telemetry_origin === location.origin && Number.isSafeInteger(stored.started_at) &&
         stored.started_at <= now && stored.started_at > now - 86400000) context = stored;
     }
@@ -82,7 +92,8 @@ export function installEntryFunnel(config: {
   const earlyStart = Number(early?.started_at);
   if (!context) context = { landing_id: String(landing), flow_id: id(), template: template as EntryFunnelTemplate, telemetry_origin: location.origin, started_at: Number.isSafeInteger(earlyStart) && earlyStart <= now && earlyStart > now - 86400000 ? earlyStart : now };
   const flow: EntryFunnelContext = { ...metadata, landing_id: context.landing_id, flow_id: context.flow_id, template: context.template,
-    telemetry_origin: context.telemetry_origin, started_at: context.started_at };
+    telemetry_origin: context.telemetry_origin, started_at: context.started_at,
+    ...(telemetryPath ? { telemetry_path: telemetryPath } : {}) };
   if (uuid.test(String(context.attempt_id)) && Number.isInteger(context.attempt_number) && Number(context.attempt_number) >= 1 && Number(context.attempt_number) <= 1000) {
     flow.attempt_id = context.attempt_id; flow.attempt_number = context.attempt_number;
     if (context.account_kind === "new" || context.account_kind === "existing") flow.account_kind = context.account_kind;

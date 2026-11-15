@@ -1,4 +1,4 @@
-import { entryFunnelProvenance, type EntryFunnelProvenance, type EntryFunnelTemplate } from "./entryFunnel";
+import { ENTRY_FUNNEL_GATEWAY_PATH, entryFunnelProvenance, type EntryFunnelProvenance, type EntryFunnelTemplate } from "./entryFunnel";
 
 /** Public, non-personal build metadata only. An absent SHA is deliberately unknown. */
 export function publicEntryFunnelMetadata(engine: NonNullable<EntryFunnelProvenance["engine"]>): EntryFunnelProvenance {
@@ -23,7 +23,7 @@ export function buildEntryFunnelMetadataScript(engine: NonNullable<EntryFunnelPr
  * Do not persist a second pending queue: the factory would replay it twice.
  * Only the closed metadata and event fields below can leave the browser. */
 const EARLY_PUBLIC_TELEMETRY = `(function(c){
-var w=window,m=c.telemetry;
+var w=window,m=c.telemetry,endpoint=c.telemetryPath||'/api/entry-funnel';
 m.source=navigator.webdriver===true?'synthetic':m.source;
 w.__ENTRY_FUNNEL_METADATA__=Object.assign({},m);
 if(w.__entryFunnel||w.__ENTRY_FUNNEL_EARLY__)return;
@@ -38,8 +38,9 @@ function id(){
 var key='entry-funnel:v1:'+c.landingId,now=Date.now(),old,start=Math.round(performance.timeOrigin||now);
 if(!Number.isSafeInteger(start)||start>now||start<=now-86400000)start=now;
 try{old=JSON.parse(sessionStorage.getItem(key)||'null')}catch(_){}
-if(!old||!uuid.test(String(old.flow_id))||old.landing_id!==c.landingId||old.template!==c.template||old.telemetry_origin!==location.origin||!Number.isSafeInteger(old.started_at)||old.started_at>now||old.started_at<=now-86400000||(old.engine&&old.engine!==m.engine)||(old.release!==undefined&&m.release!==undefined&&old.release!==m.release))old=null;
+if(!old||!uuid.test(String(old.flow_id))||old.landing_id!==c.landingId||old.template!==c.template||old.telemetry_origin!==location.origin||old.telemetry_path!==c.telemetryPath||!Number.isSafeInteger(old.started_at)||old.started_at>now||old.started_at<=now-86400000||(old.engine&&old.engine!==m.engine)||(old.release!==undefined&&m.release!==undefined&&old.release!==m.release))old=null;
 var f=Object.assign({},m,{landing_id:c.landingId,flow_id:old?old.flow_id:id(),template:c.template,telemetry_origin:location.origin,started_at:old?old.started_at:start});
+if(c.telemetryPath)f.telemetry_path=c.telemetryPath;
 if(old&&uuid.test(String(old.attempt_id))&&Number.isInteger(old.attempt_number)&&old.attempt_number>=1&&old.attempt_number<=1000){f.attempt_id=old.attempt_id;f.attempt_number=old.attempt_number;if(['new','existing'].includes(old.account_kind))f.account_kind=old.account_kind;}
 var nav=w.__ENTRY_FUNNEL_NAVIGATION__={id:id(),started_at:start};f.navigation_id=nav.id;
 var e=w.__ENTRY_FUNNEL_EARLY__={started_at:f.started_at,context:Object.assign({},f),events:[]};
@@ -73,8 +74,8 @@ function flush(){
     });
     if(!events.length)return;
     var body=JSON.stringify({landing_id:f.landing_id,flow_id:f.flow_id,template:f.template,events:events});
-    try{if(navigator.sendBeacon&&navigator.sendBeacon('/api/entry-funnel',new Blob([body],{type:'text/plain'})))return;}catch(_){}
-    if(typeof fetch==='function')fetch('/api/entry-funnel',{method:'POST',body:body,headers:{'Content-Type':'application/json'},credentials:'same-origin',cache:'no-store',keepalive:true}).catch(function(){});
+    try{if(navigator.sendBeacon&&navigator.sendBeacon(endpoint,new Blob([body],{type:'text/plain'})))return;}catch(_){}
+    if(typeof fetch==='function')fetch(endpoint,{method:'POST',body:body,headers:{'Content-Type':'application/json'},credentials:'same-origin',cache:'no-store',keepalive:true}).catch(function(){});
   }catch(_){}
 }
 e.record=stage;e.flush=flush;e.beginAttempt=beginAttempt;
@@ -94,8 +95,13 @@ setTimeout(function(){if(active()){stage('entry_error','request_timeout');flush(
 /** Small inline bootstrap; no request, account or marketing side effect on load. */
 export function buildLandingEntryFunnelScript(config: {
   landingId: string; template: EntryFunnelTemplate; engine: NonNullable<EntryFunnelProvenance["engine"]>;
+  apiBase?: string;
 }): string {
+  const telemetryPath = config.apiBase ? config.apiBase + "/entry-funnel" : undefined;
+  if (config.engine === "gateway" ? !telemetryPath || !ENTRY_FUNNEL_GATEWAY_PATH.test(telemetryPath) : telemetryPath !== undefined)
+    throw new Error("Invalid gateway telemetry route");
   const settings = JSON.stringify({ landingId: config.landingId, template: config.template,
+    ...(telemetryPath ? { telemetryPath } : {}),
     telemetry: publicEntryFunnelMetadata(config.engine) }).replace(/</g, "\\u003c");
   return `try{${EARLY_PUBLIC_TELEMETRY}(${settings});}catch(_){};`;
 }
