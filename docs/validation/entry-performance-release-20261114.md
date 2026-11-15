@@ -15,7 +15,7 @@
 - Clásico: 13 pruebas aprobadas de alta, identidad, handoff y política por landing.
 - Generador de activos, generador clásico y sincronización de transiciones: verificación correcta desde el árbol integrado.
 - No se crearon usuarios reales ni se ejecutaron movimientos financieros.
-- Ambos builds remotos están READY, con entorno de producción y `--skip-domain`: no se promovieron dominios ni se publicó en main.
+- Ambos builds remotos iniciales quedaron READY, con entorno de producción y `--skip-domain`, antes de promover dominios o publicar en main. El cierre posterior se registra al final de este informe.
 - Builder: `dpl_4YZDbo2i5GWCtkn2KTnVPLidFw2P`, código `b9691805`; clásico: `dpl_DAsP8TNkNMwWjyohXzg2CrMuCegp`, código `9b34df6f`.
 - Smoke autenticado de `/l/diana`, `/l/atriopili`, `/l/asesdelnorte` en Builder y las tres rutas equivalentes del clásico: HTTP 200, formulario temprano y barra de progreso presentes. Assets públicos HTTP 200 con SHA256 coincidente con sus nombres: Builder `4f9032b0691643c3fde34f07`; clásico `6b54c7fcfe03b01e8c2e8919`. No equivale a completar un alta real.
 
@@ -78,3 +78,20 @@ El punto de mayor interés en Rey es el handoff/login: en la muestra anterior, e
 La mejora concreta de este lote evita un viaje backend: cuando la landing tiene política propia, el gateway recibe la presentación firmada junto con el handoff y omite `/api/gateway/entry-settings`. Esa consulta antes corría en paralelo al login y tenía límite de 1.500 ms; por eso no se promete ahorrar 1.500 ms en cada ingreso. Las landings antiguas conservan el fallback global y sus modos históricos.
 
 No se cambió ninguna región ni se activaron rutas experimentales para producir una mejora aparente. La carga progresiva existente, la preparación del chat paralela al login y el control de sesión continúan activos.
+
+## Publicación y cierre
+
+Comprobado el 14/11/2026 a las 21:10 de Argentina (15/11 00:10 UTC). Después de confirmar lectores compatibles en los cuatro gateways, incluido el Worker, ambos repositorios avanzaron a main sin force y con comprobaciones de HEAD, árbol limpio y ancestro remoto. No se sustituyó el checkout compartido ni se incorporaron archivos ajenos sin revisión.
+
+| Producto | Git main | Código desplegado | Deployment productivo | Dominios comprobados |
+| --- | --- | --- | --- | --- |
+| Builder | `51a97467d86a8410033b37c0dbc74ee2895e8569` | `b9691805e1aec5c0ea829f24c10915015b18e9ab` | `dpl_4YZDbo2i5GWCtkn2KTnVPLidFw2P` | `constructor.panelbotadmin.com`, `mkt.panelbotadmin.com` |
+| Clásico | `9b34df6f3175b12f53e2f52472301c0a71371c76` | mismo SHA | `dpl_3VuHuc6rQCsD4VbXWihu6GMFXwyW` | `landing.panelbotadmin.com` |
+
+Clásico se publicó mediante el despliegue automático de Git main, sin ejecutar otro build manual. En Builder no apareció un nuevo deployment productivo para el push a main; se promovió el candidato READY construido con entorno de producción. Antes de hacerlo se comprobó que main y ese candidato difieren exclusivamente en los dos documentos de decisiones/evidencia. No se cambió configuración de Vercel ni se promovió un build de entorno preview.
+
+Comprobaciones públicas: seis páginas (`atriopili`, `asesdelnorte`, `diana` por motor), todas HTTP 200 con formulario temprano, barra y runtime de esta entrega. Ambos assets responden HTTP 200, coinciden por SHA256 con el nombre publicado y conservan `public, max-age=31536000, immutable`. Los tres dominios resuelven a los IDs READY de la tabla; el alias `mkt` también sirve el formulario y runtime correctos. No se crearon usuarios reales ni se repitieron suites después de publicar.
+
+Evidencia pública filtrada: [entry-performance-publish-20261114.json](entry-performance-publish-20261114.json). La fuente canónica original también quedó accesible en `source/entry-performance-20261114` → `6c3f56b4`, que contiene `31e28b31`, `55df9f18` y `e8eb8c37`; `10be27ef` conserva `feature/nexobet-template8-ui-source`. Los SHA originales referidos por Nexo siguen alcanzables aunque la integración de main use cherry-picks.
+
+Este cierre documental se conserva en la rama release; no provoca otra integración a main ni requiere repetir la publicación. El reporte general de Atrio registra por separado los demás productos, migraciones y Worker.

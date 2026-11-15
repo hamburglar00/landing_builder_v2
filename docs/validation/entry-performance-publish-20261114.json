@@ -1,0 +1,117 @@
+{
+  "checkedAt": "2026-11-15T00:10:46.276Z",
+  "pages": [
+    {
+      "engine": "builder",
+      "url": "https://constructor.panelbotadmin.com/l/atriopili",
+      "status": 200,
+      "form": true,
+      "progress": true,
+      "runtime": "/public-assets/template-entry/t7-builder-4f9032b0691643c3fde34f07.js",
+      "textMatches": true
+    },
+    {
+      "engine": "builder",
+      "url": "https://constructor.panelbotadmin.com/l/asesdelnorte",
+      "status": 200,
+      "form": true,
+      "progress": true,
+      "runtime": "/public-assets/template-entry/t7-builder-4f9032b0691643c3fde34f07.js",
+      "textMatches": true
+    },
+    {
+      "engine": "builder",
+      "url": "https://constructor.panelbotadmin.com/l/diana",
+      "status": 200,
+      "form": true,
+      "progress": true,
+      "runtime": "/public-assets/template-entry/t7-builder-4f9032b0691643c3fde34f07.js",
+      "textMatches": true
+    },
+    {
+      "engine": "classic",
+      "url": "https://landing.panelbotadmin.com/atriopili",
+      "status": 200,
+      "form": true,
+      "progress": true,
+      "runtime": "/public-assets/template-entry/t7-classic-6b54c7fcfe03b01e8c2e8919.js",
+      "textMatches": true
+    },
+    {
+      "engine": "classic",
+      "url": "https://landing.panelbotadmin.com/asesdelnorte",
+      "status": 200,
+      "form": true,
+      "progress": true,
+      "runtime": "/public-assets/template-entry/t7-classic-6b54c7fcfe03b01e8c2e8919.js",
+      "textMatches": true
+    },
+    {
+      "engine": "classic",
+      "url": "https://landing.panelbotadmin.com/diana",
+      "status": 200,
+      "form": true,
+      "progress": true,
+      "runtime": "/public-assets/template-entry/t7-classic-6b54c7fcfe03b01e8c2e8919.js",
+      "textMatches": true
+    }
+  ],
+  "assets": [
+    {
+      "engine": "builder",
+      "url": "https://constructor.panelbotadmin.com/public-assets/template-entry/t7-builder-4f9032b0691643c3fde34f07.js",
+      "status": 200,
+      "bytes": 86379,
+      "hash": "4f9032b0691643c3fde34f07",
+      "expected": "4f9032b0691643c3fde34f07",
+      "hashMatches": true,
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "engine": "classic",
+      "url": "https://landing.panelbotadmin.com/public-assets/template-entry/t7-classic-6b54c7fcfe03b01e8c2e8919.js",
+      "status": 200,
+      "bytes": 86116,
+      "hash": "6b54c7fcfe03b01e8c2e8919",
+      "expected": "6b54c7fcfe03b01e8c2e8919",
+      "hashMatches": true,
+      "cacheControl": "public, max-age=31536000, immutable"
+    }
+  ],
+  "domains": [
+    {
+      "domain": "constructor.panelbotadmin.com",
+      "id": "dpl_4YZDbo2i5GWCtkn2KTnVPLidFw2P",
+      "url": "landing-builder-v2-k259-bf8plj8pf-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "target": "production"
+    },
+    {
+      "domain": "mkt.panelbotadmin.com",
+      "id": "dpl_4YZDbo2i5GWCtkn2KTnVPLidFw2P",
+      "url": "landing-builder-v2-k259-bf8plj8pf-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "target": "production"
+    },
+    {
+      "domain": "landing.panelbotadmin.com",
+      "id": "dpl_3VuHuc6rQCsD4VbXWihu6GMFXwyW",
+      "url": "public-landing-deosyn15d-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "target": "production"
+    }
+  ],
+  "mktAlias": {
+    "status": 200,
+    "form": true,
+    "runtimeMatches": true
+  },
+  "git": {
+    "builder": "51a97467d86a8410033b37c0dbc74ee2895e8569",
+    "classic": "9b34df6f3175b12f53e2f52472301c0a71371c76"
+  },
+  "deployed": {
+    "builder": "b9691805e1aec5c0ea829f24c10915015b18e9ab",
+    "classic": "9b34df6f3175b12f53e2f52472301c0a71371c76"
+  }
+}
