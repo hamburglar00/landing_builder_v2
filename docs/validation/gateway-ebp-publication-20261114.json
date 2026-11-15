@@ -1,0 +1,49 @@
+{
+  "checkedAt": "2026-11-15T01:58:18.426Z",
+  "deployments": [
+    {
+      "id": "dpl_AkX9HnudAL5E1JyjGYtfa9r48C3v",
+      "url": "landing-builder-v2-k259-mepitl02g-juanclouds-projects.vercel.app",
+      "readyState": "READY",
+      "target": "production",
+      "source": "git",
+      "gitSource": {
+        "ref": "main",
+        "repoId": 1178164732,
+        "sha": "3149d2b383c1bf9d013a9ceab94f87aff0c5eefb",
+        "type": "github",
+        "prId": null
+      },
+      "githubCommitSha": "3149d2b383c1bf9d013a9ceab94f87aff0c5eefb",
+      "githubCommitRef": "main",
+      "aliases": [
+        "mkt.panelbotadmin.com",
+        "constructor.panelbotadmin.com",
+        "landing-builder-v2-k259.vercel.app",
+        "landing-builder-v2-k259-git-main-juanclouds-projects.vercel.app"
+      ]
+    },
+    {
+      "id": "dpl_HDT6wnNuxPdgz7g6C8uydY3cQPn2",
+      "url": "public-landing-d79qiqw91-juanclouds-projects.vercel.app",
+      "readyState": "READY",
+      "target": "production",
+      "source": "git",
+      "gitSource": {
+        "ref": "main",
+        "repoId": 1178220740,
+        "sha": "660ac761944c4ee0ca82e524a515e03adafe9cb9",
+        "type": "github",
+        "prId": null
+      },
+      "githubCommitSha": "660ac761944c4ee0ca82e524a515e03adafe9cb9",
+      "githubCommitRef": "main",
+      "aliases": [
+        "landing.panelbotadmin.com",
+        "public-landing-bl.vercel.app",
+        "public-landing-bl-juanclouds-projects.vercel.app",
+        "public-landing-bl-git-main-juanclouds-projects.vercel.app"
+      ]
+    }
+  ]
+}

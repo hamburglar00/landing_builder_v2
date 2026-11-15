@@ -1,0 +1,18 @@
+[
+  {
+    "origin": "https://constructor.panelbotadmin.com",
+    "file": "t7-builder-dbd8eb2c9460bc3b598a1112.js",
+    "status": 200,
+    "bytes": 87063,
+    "hash": "dbd8eb2c9460bc3b598a1112",
+    "match": true
+  },
+  {
+    "origin": "https://landing.panelbotadmin.com",
+    "file": "t7-classic-d45ea3a09fcaeada552759a8.js",
+    "status": 200,
+    "bytes": 86800,
+    "hash": "d45ea3a09fcaeada552759a8",
+    "match": true
+  }
+]

@@ -1,0 +1,45 @@
+{
+  "checkedAt": "2026-11-15T01:57:45.323Z",
+  "rows": [
+    {
+      "engine": "gateway",
+      "url": "https://www.ganamosnet.icu/l/diana",
+      "status": 200,
+      "responses": [
+        {
+          "origin": "https://www.ganamosnet.icu",
+          "path": "/l/diana/_assets/vendor/atrio-meta-click/v1/collect-click-id.313adead513e2b9aab4f3efb.js",
+          "status": 200,
+          "event": null
+        },
+        {
+          "origin": "https://connect.facebook.net",
+          "path": "/en_US/fbevents.js",
+          "status": 200,
+          "event": null
+        }
+      ],
+      "preparations": 0
+    },
+    {
+      "engine": "classic",
+      "url": "https://landing.panelbotadmin.com/diana",
+      "status": 200,
+      "responses": [
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "path": "/vendor/atrio-meta-click/v1/collect-click-id.313adead513e2b9aab4f3efb.js",
+          "status": 200,
+          "event": null
+        },
+        {
+          "origin": "https://connect.facebook.net",
+          "path": "/en_US/fbevents.js",
+          "status": 200,
+          "event": null
+        }
+      ],
+      "preparations": 0
+    }
+  ]
+}
