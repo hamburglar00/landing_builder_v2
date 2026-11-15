@@ -1,0 +1,124 @@
+{
+  "published": true,
+  "releaseDate": "2026-11-14 America/Argentina/Buenos_Aires",
+  "builder": {
+    "commit": "5bde97943f437feb9543c6d56b955f741a979df4",
+    "branch": "main",
+    "deployment": "dpl_5ybtGKUjXnBSuaKyRJs1xwPgdcUS",
+    "url": "landing-builder-v2-k259-qydn9y8e6-juanclouds-projects.vercel.app",
+    "state": "READY",
+    "domains": [
+      "constructor.panelbotadmin.com",
+      "mkt.panelbotadmin.com"
+    ],
+    "functions": {
+      "conversions": 181,
+      "retry-failed-conversions": 57,
+      "conversions-test": 18
+    },
+    "previousDeployment": "dpl_4YZDbo2i5GWCtkn2KTnVPLidFw2P",
+    "intermediateVerifiedCandidate": "dpl_JBhiLJcgoFccxw32z2xV9WsT9KMg"
+  },
+  "classic": {
+    "commit": "7d24515065fa8906137794a0cfb311f174c42376",
+    "branch": "main",
+    "deployment": "dpl_6k7iEEAas1yh3otK61uGPc5kJdUc",
+    "state": "READY",
+    "domains": [
+      "landing.panelbotadmin.com",
+      "public-landing-bl.vercel.app"
+    ],
+    "documentationCommit": "1ea42faa8e13690c8c28c43c79d69011db7c5a95",
+    "previousDeployment": "dpl_3VuHuc6rQCsD4VbXWihu6GMFXwyW"
+  },
+  "nexo": {
+    "commit": "93a0f62dcca703743ba2f9f52224e7e244451764",
+    "branch": "fix/meta-capi-hardening-20261114",
+    "deployment": "dpl_CwVBtCy1R5nsZTE5eBMVZnbBkc54",
+    "state": "READY",
+    "domains": [
+      "nexobet.fun",
+      "www.nexobet.fun"
+    ],
+    "migration": "20261115004905",
+    "documentationCommit": "db87b941970dfc27a834e647f2ae98a67ca6f7dd",
+    "previousDeployment": "dpl_A4ZtH3wAUxQfcyCVCM8nAeEzBJoy",
+    "publishedLandingsAvailableForSmoke": 0
+  },
+  "naturalMetaObservation": {
+    "since": "2026-11-15T00:50:00Z",
+    "rows": [
+      {
+        "observed_at": "2026-11-15 00:54:54.166376+00",
+        "level": "INFO",
+        "message": "Meta CAPI omitido por politica de origen",
+        "event_name": null,
+        "action_source": null,
+        "events_received": null,
+        "error_code": null,
+        "count": 3
+      },
+      {
+        "observed_at": "2026-11-15 00:54:54.166376+00",
+        "level": "INFO",
+        "message": "Meta CAPI respuesta",
+        "event_name": "Contact",
+        "action_source": "website",
+        "events_received": "1",
+        "error_code": null,
+        "count": 1
+      },
+      {
+        "observed_at": "2026-11-15 00:54:54.166376+00",
+        "level": "INFO",
+        "message": "Meta CAPI respuesta",
+        "event_name": "Lead",
+        "action_source": "chat",
+        "events_received": "1",
+        "error_code": null,
+        "count": 3
+      },
+      {
+        "observed_at": "2026-11-15 00:54:54.166376+00",
+        "level": "INFO",
+        "message": "Meta CAPI respuesta",
+        "event_name": "Purchase",
+        "action_source": "chat",
+        "events_received": "1",
+        "error_code": null,
+        "count": 5
+      },
+      {
+        "observed_at": "2026-11-15 00:54:54.166376+00",
+        "level": "INFO",
+        "message": "Modo payload Purchase CAPI",
+        "event_name": null,
+        "action_source": null,
+        "events_received": null,
+        "error_code": null,
+        "count": 5
+      },
+      {
+        "observed_at": "2026-11-15 00:54:54.166376+00",
+        "level": "INFO",
+        "message": "Ruta Purchase CAPI fijada",
+        "event_name": null,
+        "action_source": null,
+        "events_received": null,
+        "error_code": null,
+        "count": 9
+      },
+      {
+        "observed_at": "2026-11-15 00:54:54.166376+00",
+        "level": "WARN",
+        "message": "Meta CAPI omitido: pixel fallback deshabilitado",
+        "event_name": null,
+        "action_source": null,
+        "events_received": null,
+        "error_code": null,
+        "count": 1
+      }
+    ],
+    "interpretation": "Aggregate log rows, not campaign attribution or guaranteed unique conversions. No synthetic events generated during this publication."
+  }
+}

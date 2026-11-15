@@ -1,0 +1,313 @@
+{
+  "verified_at": "2026-11-15T00:50:40.768283+00:00",
+  "project_id": "fdkjkzpjqfbaavylapun",
+  "expected_commit": "5bde97943f437feb9543c6d56b955f741a979df4",
+  "comparison": "UTF-8 contents with CRLF normalized to LF",
+  "functions": [
+    {
+      "name": "conversions",
+      "version": 181,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "files": [
+        {
+          "path": "supabase/functions/conversions/index.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "5cb53c2427a85e5e595474094510123f6538e59c3d01c90bd9f8db8d2ecd9f1b",
+          "commit_sha256": "5cb53c2427a85e5e595474094510123f6538e59c3d01c90bd9f8db8d2ecd9f1b"
+        },
+        {
+          "path": "supabase/functions/conversions/meta_receipt.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "88c48d47ade42a08334a206ab3370e2b2c4c71370d2af5a5fd7a9b3f38923e1c",
+          "commit_sha256": "88c48d47ade42a08334a206ab3370e2b2c4c71370d2af5a5fd7a9b3f38923e1c"
+        },
+        {
+          "path": "supabase/functions/conversions/shared.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "dc14953e0e32c4c4eb19f83706d8fe67b065833bdb4c6fdd56a260eafadcbf52",
+          "commit_sha256": "dc14953e0e32c4c4eb19f83706d8fe67b065833bdb4c6fdd56a260eafadcbf52"
+        },
+        {
+          "path": "supabase/functions/conversions/landing_cta_event.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "b882214ff2548986aefe2a03160bf13d37ce719875466020e38561a9516aa1e8",
+          "commit_sha256": "b882214ff2548986aefe2a03160bf13d37ce719875466020e38561a9516aa1e8"
+        },
+        {
+          "path": "supabase/functions/conversions/meta_cookies.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "2cfe6d1e525025f745386ffad347d3f5a37680e6776f3de58f11e42e574fb7d5",
+          "commit_sha256": "2cfe6d1e525025f745386ffad347d3f5a37680e6776f3de58f11e42e574fb7d5"
+        },
+        {
+          "path": "supabase/functions/conversions/meta_action_source.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "4b6df1550b7783bae1a976f9109f272e5c01fb2c0f0c81867ddc47bb4fa08197",
+          "commit_sha256": "4b6df1550b7783bae1a976f9109f272e5c01fb2c0f0c81867ddc47bb4fa08197"
+        },
+        {
+          "path": "supabase/functions/conversions/meta_source_url.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "139498a10fda326c0106651f3ccf91553572e8990d91169bf4902278397fbb0e",
+          "commit_sha256": "139498a10fda326c0106651f3ccf91553572e8990d91169bf4902278397fbb0e"
+        },
+        {
+          "path": "supabase/functions/conversions/workspace_capi.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "4e611bfc5c6e6ae80113bd24fd5e303382827865c5ee92f13b3c11f400e6b5f6",
+          "commit_sha256": "4e611bfc5c6e6ae80113bd24fd5e303382827865c5ee92f13b3c11f400e6b5f6"
+        },
+        {
+          "path": "supabase/functions/conversions/meta_origin.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "235a72b2e03335609e947f1676a3a693bb07510e6c6d01931d9ca9bc182a6594",
+          "commit_sha256": "235a72b2e03335609e947f1676a3a693bb07510e6c6d01931d9ca9bc182a6594"
+        },
+        {
+          "path": "supabase/functions/conversions/internal_conversation.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "01e0b2e8464c7236b9e9b2fe55cab94695c96e41cfd6533fdcce070a09bddd9d",
+          "commit_sha256": "01e0b2e8464c7236b9e9b2fe55cab94695c96e41cfd6533fdcce070a09bddd9d"
+        },
+        {
+          "path": "supabase/functions/conversions/event_attribution.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "a4e18e1a1746ce3c8b277f298dc1f87f736a19feb5e7a85e5e71f8a50ccbce32",
+          "commit_sha256": "a4e18e1a1746ce3c8b277f298dc1f87f736a19feb5e7a85e5e71f8a50ccbce32"
+        },
+        {
+          "path": "supabase/functions/conversions/pixel_attribution.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "4ce76aa24cebc8f2501384792eb2586b1e55e7267b023de5e28f69a6f2ca0a6f",
+          "commit_sha256": "4ce76aa24cebc8f2501384792eb2586b1e55e7267b023de5e28f69a6f2ca0a6f"
+        },
+        {
+          "path": "supabase/functions/conversions/inbound_tracking.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "202a568bcf9dfc9ec4981b8d665235074ac0d9d34b59eff6c1ca86aeeea620a7",
+          "commit_sha256": "202a568bcf9dfc9ec4981b8d665235074ac0d9d34b59eff6c1ca86aeeea620a7"
+        },
+        {
+          "path": "supabase/functions/conversions/url_attribution.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "9c8171c23a86772efcd70f76c1f613a74d07494523e54f14d042182deb9d4487",
+          "commit_sha256": "9c8171c23a86772efcd70f76c1f613a74d07494523e54f14d042182deb9d4487"
+        },
+        {
+          "path": "supabase/functions/conversions/event_time.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "c3206bb1164f53644242f918164afbe37711d5c57048e989ba45889adf5e3042",
+          "commit_sha256": "c3206bb1164f53644242f918164afbe37711d5c57048e989ba45889adf5e3042"
+        },
+        {
+          "path": "supabase/functions/conversions/purchase_source_url.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "51a39408f0b8fb87aa8491afde834cd7532f4a639e4e70e8d9dad2af54ed0896",
+          "commit_sha256": "51a39408f0b8fb87aa8491afde834cd7532f4a639e4e70e8d9dad2af54ed0896"
+        },
+        {
+          "path": "supabase/functions/conversions/landing_attribution.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "3bf021877026e3117aef09d9ad2a8b29e80dbf0d131651b27e6065f4ce3f73c0",
+          "commit_sha256": "3bf021877026e3117aef09d9ad2a8b29e80dbf0d131651b27e6065f4ce3f73c0"
+        },
+        {
+          "path": "supabase/functions/conversions/tracking_diagnostics.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "9bb7737e19a32cced48bbebf5efd77256447e73d014935b940f2a5b79cb0ef80",
+          "commit_sha256": "9bb7737e19a32cced48bbebf5efd77256447e73d014935b940f2a5b79cb0ef80"
+        },
+        {
+          "path": "supabase/functions/conversions/purchase_ingest.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "4820b3f1454c6e68997d2383510c915317564f6a025f58e09a834b42cf4272d8",
+          "commit_sha256": "4820b3f1454c6e68997d2383510c915317564f6a025f58e09a834b42cf4272d8"
+        }
+      ]
+    },
+    {
+      "name": "retry-failed-conversions",
+      "version": 57,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "files": [
+        {
+          "path": "supabase/functions/retry-failed-conversions/index.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "618ef4f2a0deaa7b1630694556be49e940d2d1f138cb957e651294c187c59faf",
+          "commit_sha256": "618ef4f2a0deaa7b1630694556be49e940d2d1f138cb957e651294c187c59faf"
+        },
+        {
+          "path": "supabase/functions/conversions/meta_receipt.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "88c48d47ade42a08334a206ab3370e2b2c4c71370d2af5a5fd7a9b3f38923e1c",
+          "commit_sha256": "88c48d47ade42a08334a206ab3370e2b2c4c71370d2af5a5fd7a9b3f38923e1c"
+        },
+        {
+          "path": "supabase/functions/conversions/shared.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "dc14953e0e32c4c4eb19f83706d8fe67b065833bdb4c6fdd56a260eafadcbf52",
+          "commit_sha256": "dc14953e0e32c4c4eb19f83706d8fe67b065833bdb4c6fdd56a260eafadcbf52"
+        },
+        {
+          "path": "supabase/functions/conversions/landing_cta_event.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "b882214ff2548986aefe2a03160bf13d37ce719875466020e38561a9516aa1e8",
+          "commit_sha256": "b882214ff2548986aefe2a03160bf13d37ce719875466020e38561a9516aa1e8"
+        },
+        {
+          "path": "supabase/functions/conversions/meta_cookies.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "2cfe6d1e525025f745386ffad347d3f5a37680e6776f3de58f11e42e574fb7d5",
+          "commit_sha256": "2cfe6d1e525025f745386ffad347d3f5a37680e6776f3de58f11e42e574fb7d5"
+        },
+        {
+          "path": "supabase/functions/conversions/meta_action_source.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "4b6df1550b7783bae1a976f9109f272e5c01fb2c0f0c81867ddc47bb4fa08197",
+          "commit_sha256": "4b6df1550b7783bae1a976f9109f272e5c01fb2c0f0c81867ddc47bb4fa08197"
+        },
+        {
+          "path": "supabase/functions/conversions/meta_source_url.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "139498a10fda326c0106651f3ccf91553572e8990d91169bf4902278397fbb0e",
+          "commit_sha256": "139498a10fda326c0106651f3ccf91553572e8990d91169bf4902278397fbb0e"
+        },
+        {
+          "path": "supabase/functions/conversions/pixel_attribution.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "4ce76aa24cebc8f2501384792eb2586b1e55e7267b023de5e28f69a6f2ca0a6f",
+          "commit_sha256": "4ce76aa24cebc8f2501384792eb2586b1e55e7267b023de5e28f69a6f2ca0a6f"
+        },
+        {
+          "path": "supabase/functions/conversions/event_attribution.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "a4e18e1a1746ce3c8b277f298dc1f87f736a19feb5e7a85e5e71f8a50ccbce32",
+          "commit_sha256": "a4e18e1a1746ce3c8b277f298dc1f87f736a19feb5e7a85e5e71f8a50ccbce32"
+        },
+        {
+          "path": "supabase/functions/conversions/meta_origin.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "235a72b2e03335609e947f1676a3a693bb07510e6c6d01931d9ca9bc182a6594",
+          "commit_sha256": "235a72b2e03335609e947f1676a3a693bb07510e6c6d01931d9ca9bc182a6594"
+        },
+        {
+          "path": "supabase/functions/conversions/workspace_capi.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "4e611bfc5c6e6ae80113bd24fd5e303382827865c5ee92f13b3c11f400e6b5f6",
+          "commit_sha256": "4e611bfc5c6e6ae80113bd24fd5e303382827865c5ee92f13b3c11f400e6b5f6"
+        },
+        {
+          "path": "supabase/functions/conversions/purchase_source_url.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "51a39408f0b8fb87aa8491afde834cd7532f4a639e4e70e8d9dad2af54ed0896",
+          "commit_sha256": "51a39408f0b8fb87aa8491afde834cd7532f4a639e4e70e8d9dad2af54ed0896"
+        },
+        {
+          "path": "supabase/functions/conversions/purchase_ingest.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "4820b3f1454c6e68997d2383510c915317564f6a025f58e09a834b42cf4272d8",
+          "commit_sha256": "4820b3f1454c6e68997d2383510c915317564f6a025f58e09a834b42cf4272d8"
+        },
+        {
+          "path": "supabase/functions/retry-failed-conversions/queue_diagnostics.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "7c0adfb52bf863005ab7edc2c37b44d7c26c2d7ae4297548920439e3369d60ed",
+          "commit_sha256": "7c0adfb52bf863005ab7edc2c37b44d7c26c2d7ae4297548920439e3369d60ed"
+        }
+      ]
+    },
+    {
+      "name": "conversions-test",
+      "version": 18,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "files": [
+        {
+          "path": "supabase/functions/conversions-test/index.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "aeedeb0d81129ff31f582c32c2ad1f4010c7ef1a68734811fa79dcb4422d39b0",
+          "commit_sha256": "aeedeb0d81129ff31f582c32c2ad1f4010c7ef1a68734811fa79dcb4422d39b0"
+        },
+        {
+          "path": "supabase/functions/conversions/workspace_capi.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "4e611bfc5c6e6ae80113bd24fd5e303382827865c5ee92f13b3c11f400e6b5f6",
+          "commit_sha256": "4e611bfc5c6e6ae80113bd24fd5e303382827865c5ee92f13b3c11f400e6b5f6"
+        },
+        {
+          "path": "supabase/functions/conversions/shared.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "dc14953e0e32c4c4eb19f83706d8fe67b065833bdb4c6fdd56a260eafadcbf52",
+          "commit_sha256": "dc14953e0e32c4c4eb19f83706d8fe67b065833bdb4c6fdd56a260eafadcbf52"
+        },
+        {
+          "path": "supabase/functions/conversions/landing_cta_event.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "b882214ff2548986aefe2a03160bf13d37ce719875466020e38561a9516aa1e8",
+          "commit_sha256": "b882214ff2548986aefe2a03160bf13d37ce719875466020e38561a9516aa1e8"
+        },
+        {
+          "path": "supabase/functions/conversions/meta_cookies.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "2cfe6d1e525025f745386ffad347d3f5a37680e6776f3de58f11e42e574fb7d5",
+          "commit_sha256": "2cfe6d1e525025f745386ffad347d3f5a37680e6776f3de58f11e42e574fb7d5"
+        },
+        {
+          "path": "supabase/functions/conversions/meta_action_source.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "4b6df1550b7783bae1a976f9109f272e5c01fb2c0f0c81867ddc47bb4fa08197",
+          "commit_sha256": "4b6df1550b7783bae1a976f9109f272e5c01fb2c0f0c81867ddc47bb4fa08197"
+        },
+        {
+          "path": "supabase/functions/conversions/meta_source_url.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "139498a10fda326c0106651f3ccf91553572e8990d91169bf4902278397fbb0e",
+          "commit_sha256": "139498a10fda326c0106651f3ccf91553572e8990d91169bf4902278397fbb0e"
+        },
+        {
+          "path": "supabase/functions/conversions/meta_receipt.ts",
+          "matches_reviewed_commit": true,
+          "remote_sha256": "88c48d47ade42a08334a206ab3370e2b2c4c71370d2af5a5fd7a9b3f38923e1c",
+          "commit_sha256": "88c48d47ade42a08334a206ab3370e2b2c4c71370d2af5a5fd7a9b3f38923e1c"
+        }
+      ]
+    }
+  ],
+  "negative_auth_checks": [
+    {
+      "function": "conversions",
+      "case": "missing_routing_name",
+      "status": 400,
+      "passed": true,
+      "response": "Falta parametro 'name' en la URL",
+      "expected_status": 400
+    },
+    {
+      "function": "retry-failed-conversions",
+      "case": "missing_cron_secret",
+      "status": 401,
+      "passed": true,
+      "response": "{\"error\":\"No autorizado\"}"
+    },
+    {
+      "function": "conversions-test",
+      "case": "missing_authorization",
+      "status": 401,
+      "passed": true,
+      "response": "{\n  \"error\": \"Missing authorization header\"\n}"
+    },
+    {
+      "function": "conversions",
+      "case": "missing_signature",
+      "route_name": "synthetic_non_business_name",
+      "expected_status": 401,
+      "status": 401,
+      "passed": true,
+      "response": "Firma interna invalida"
+    }
+  ],
+  "valid_business_events_sent": 0,
+  "database_mutations": 0
+}

@@ -1,0 +1,159 @@
+{
+  "checked_at": "2026-11-15T00:52:22Z",
+  "pages": [
+    {
+      "host": "constructor.panelbotadmin.com",
+      "path": "/login",
+      "status": 200,
+      "has_form": false,
+      "scoped_pageview": false,
+      "scripts": []
+    },
+    {
+      "host": "constructor.panelbotadmin.com",
+      "path": "/l/diana",
+      "status": 200,
+      "has_form": true,
+      "scoped_pageview": true,
+      "scripts": [
+        "/public-assets/template-entry/t7-builder-5b5781ef09b7f1c75ae777f6.js"
+      ]
+    },
+    {
+      "host": "constructor.panelbotadmin.com",
+      "path": "/l/atriopili",
+      "status": 200,
+      "has_form": true,
+      "scoped_pageview": true,
+      "scripts": [
+        "/public-assets/template-entry/t7-builder-5b5781ef09b7f1c75ae777f6.js"
+      ]
+    },
+    {
+      "host": "constructor.panelbotadmin.com",
+      "path": "/l/asesdelnorte",
+      "status": 200,
+      "has_form": true,
+      "scoped_pageview": true,
+      "scripts": [
+        "/public-assets/template-entry/t7-builder-5b5781ef09b7f1c75ae777f6.js"
+      ]
+    },
+    {
+      "host": "mkt.panelbotadmin.com",
+      "path": "/login",
+      "status": 200,
+      "has_form": false,
+      "scoped_pageview": false,
+      "scripts": []
+    },
+    {
+      "host": "mkt.panelbotadmin.com",
+      "path": "/l/diana",
+      "status": 200,
+      "has_form": true,
+      "scoped_pageview": true,
+      "scripts": [
+        "/public-assets/template-entry/t7-builder-5b5781ef09b7f1c75ae777f6.js"
+      ]
+    },
+    {
+      "host": "mkt.panelbotadmin.com",
+      "path": "/l/atriopili",
+      "status": 200,
+      "has_form": true,
+      "scoped_pageview": true,
+      "scripts": [
+        "/public-assets/template-entry/t7-builder-5b5781ef09b7f1c75ae777f6.js"
+      ]
+    },
+    {
+      "host": "mkt.panelbotadmin.com",
+      "path": "/l/asesdelnorte",
+      "status": 200,
+      "has_form": true,
+      "scoped_pageview": true,
+      "scripts": [
+        "/public-assets/template-entry/t7-builder-5b5781ef09b7f1c75ae777f6.js"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "path": "/public-assets/template-entry/t7-builder-5b5781ef09b7f1c75ae777f6.js",
+      "status": 200,
+      "sha256": "5b5781ef09b7f1c75ae777f64206a13f6ef549cf110f4f0dbff940dbc48231f2",
+      "matches_reviewed_source": true,
+      "scoped_cta": true,
+      "cache_control": "public, max-age=31536000, immutable"
+    }
+  ],
+  "final_git_deployment_verification": {
+    "checked_at": "2026-11-15T00:54:56Z",
+    "deployment": "dpl_5ybtGKUjXnBSuaKyRJs1xwPgdcUS",
+    "commit": "5bde97943f437feb9543c6d56b955f741a979df4",
+    "pages": [
+      {
+        "host": "constructor.panelbotadmin.com",
+        "path": "/login",
+        "http": 200,
+        "scoped_pageview": false
+      },
+      {
+        "host": "constructor.panelbotadmin.com",
+        "path": "/l/diana",
+        "http": 200,
+        "scoped_pageview": true
+      },
+      {
+        "host": "mkt.panelbotadmin.com",
+        "path": "/login",
+        "http": 200,
+        "scoped_pageview": false
+      },
+      {
+        "host": "mkt.panelbotadmin.com",
+        "path": "/l/diana",
+        "http": 200,
+        "scoped_pageview": true
+      }
+    ],
+    "assets": [
+      {
+        "path": "/public-assets/template-entry/landing-ed33aeadd0b484dcf064eddb.js",
+        "http": 200,
+        "sha256": "ed33aeadd0b484dcf064eddb8a084ec2a47a2843d1c7ea7ed186bf31d3b6b058",
+        "matches_reviewed_source": true,
+        "scoped_cta": true
+      },
+      {
+        "path": "/public-assets/template-entry/t7-builder-5b5781ef09b7f1c75ae777f6.js",
+        "http": 200,
+        "sha256": "5b5781ef09b7f1c75ae777f64206a13f6ef549cf110f4f0dbff940dbc48231f2",
+        "matches_reviewed_source": true,
+        "scoped_cta": true
+      },
+      {
+        "path": "/public-assets/template-entry/t7-classic-0e9af7782480cfe959abcae1.js",
+        "http": 200,
+        "sha256": "0e9af7782480cfe959abcae107a3a02246253dcfba80de620a47fe387cade338",
+        "matches_reviewed_source": true,
+        "scoped_cta": true
+      },
+      {
+        "path": "/public-assets/template-entry/t8-builder-2e2396dd64f5100cca75ea87.js",
+        "http": 200,
+        "sha256": "2e2396dd64f5100cca75ea87f7ffced256f940d6a2f9d571d56eb67fbb0c7efa",
+        "matches_reviewed_source": true,
+        "scoped_cta": true
+      },
+      {
+        "path": "/public-assets/template-entry/t8-classic-7a71d6e49abda0401e7219b5.js",
+        "http": 200,
+        "sha256": "7a71d6e49abda0401e7219b5c296f867b5d4c3b60235458b4912ac193109385b",
+        "matches_reviewed_source": true,
+        "scoped_cta": true
+      }
+    ]
+  }
+}

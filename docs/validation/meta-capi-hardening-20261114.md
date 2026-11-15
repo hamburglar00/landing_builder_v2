@@ -2,7 +2,7 @@
 
 ## Estado y checkpoint
 
-Implementación local autorizada por Leo después de revisar la propuesta. Sin push, publicación ni migraciones remotas de este lote. Las únicas escrituras externas de validación fueron cuatro eventos sintéticos en modo Test Events al píxel expresamente autorizado `989122687083119`; no se crearon conversiones en Builder ni operaciones de negocio.
+Publicado por autorización expresa de Leo el 14/11, con commits y push por producto, funciones Builder desplegadas y migración Nexo aplicada. No se generaron eventos sintéticos durante la publicación ni operaciones de negocio. Los cuatro eventos Test Events al píxel autorizado `989122687083119` corresponden a la validación previa del lote.
 
 Checkpoint verificable anterior a las modificaciones: `C:/Users/Leo/Desktop/V2/CURSOR/.checkpoints/meta-capi-hardening-20261114-212335`. Ocho proyectos originales y tres worktrees del lote anterior, once bundles verificados, parches binarios de working tree/índice y archivos nuevos no ignorados; 76 artefactos comprobados por SHA256, cero omisiones. Excluye dependencias, secretos ignorados y bases productivas. Su README describe recuperación en una carpeta independiente.
 
@@ -56,19 +56,33 @@ Prueba real autorizada: Lead y Purchase chat, sin event_source_url, aceptados in
 
 Auditoría agregada de logs de siete días hasta el 15/11 00:28 UTC: 530 Contact, 742 Lead y 2.782 Purchase con recibo 1. Purchase incluía 878 IP, 360 distintas, ninguna compartida por más de un teléfono hasheado; cuatro IP de Lead tenían varios teléfonos. Ninguna coincidía con los patrones privados comprobados. Son filas de log, no conversiones únicas ni resultados atribuibles a campañas. No demuestra ausencia de problemas de IP fuera de esa muestra ni justifica retirar señales en masa.
 
-## Publicación posterior y reversión
+## Publicación y reversión
 
-Revisar e integrar Builder preservando cualquier publicación concurrente. Publicar sus funciones conversions, retry-failed-conversions y conversions-test, y frontend desde main. Publicar clásico por separado. En Nexo aplicar primero `20261115002734_nexobet_meta_capi_hardening.sql` y luego su aplicación. Comprobar READY/dominos y recibos naturales por producto, sin simular operaciones monetarias. No necesitan despliegue nuevo Atrio, los cuatro gateways/Worker ni API2.
+Builder integró `5bde9794` en main sin force y conservando su versión publicada. Se verificó primero el candidato construido con entorno de producción; después de desplegar las funciones se promovió ese candidato y el build automático de Git main terminó READY con el mismo commit. La verificación final usa el deployment de Git. Clásico integró su main vigente con árbol idéntico al revisado y se publicó por Git. Nexo aplicó la migración privada antes de promover su candidato READY. No necesitaron despliegue nuevo Atrio, los cuatro gateways/Worker ni API2.
 
-No hay migración Builder en este lote. Nexo modifica funciones, no reescribe las filas históricas: conserva permisos privados, URL de adquisición y cookie original de primera observación. Para revertir, recuperar las revisiones previas de código y las funciones Nexo documentadas en Git; no borrar recibos/identidades ni reemitir conversiones aceptadas. Los builds y comprobaciones de dominios productivos quedan para esa publicación; los tests locales no se presentan como un deployment.
+| Producto | Deployment productivo comprobado | Dominio / fuente |
+| --- | --- | --- |
+| Builder | `dpl_5ybtGKUjXnBSuaKyRJs1xwPgdcUS` | constructor.panelbotadmin.com y mkt.panelbotadmin.com; main `5bde9794` |
+| Clásico | `dpl_6k7iEEAas1yh3otK61uGPc5kJdUc` | landing.panelbotadmin.com; main `7d245150` |
+| NexoBet | `dpl_CwVBtCy1R5nsZTE5eBMVZnbBkc54` | nexobet.fun y www.nexobet.fun; fuente `93a0f62` |
 
-## Commits locales revisados
+Funciones Builder ACTIVE: conversions v181, retry-failed-conversions v57, conversions-test v18. Read-back exacto de 19/19, 14/14 y 8/8 archivos respectivamente; verify_jwt=false conservado con autenticación propia intacta. Las tres comprobaciones sin autorización devolvieron 401. [Evidencia de funciones](meta-capi-hardening-edge-publish-20261114.json).
+
+Migración Nexo aplicada `20261115004905_nexobet_meta_capi_hardening.sql`; el servicio asignó ese timestamp y el archivo local sustituyó al borrador `20261115002734` sin cambiar el SQL revisado. Cuerpos remotos y permisos coinciden; sin nuevos avisos de seguridad. Diecinueve comprobaciones SQL posteriores al cambio de nombre aprobadas. Commit documental/migración final de Nexo `db87b94`; el de clásico `1ea42faa`, ambos pusheados en sus ramas de lote.
+
+Builder verificó las tres landings conocidas y login en ambos dominios; en el deployment final, cinco runtimes con hash exacto y trackSingle. Clásico verificó diez lecturas públicas y el SDK oficial intacto. Nexo: login/warm 200, chat GET/POST sin autorización 401; no hay landings publicadas Nexo para comprobar un GET real 200 de esa ruta. Sus recorridos se verificaron antes con navegador interceptado; no se inventaron filas para el smoke. [HTTP Builder](meta-capi-hardening-builder-http-20261114.json), [registro consolidado](meta-capi-hardening-production-20261114.json).
+
+Entre 00:50 y 00:54:54 UTC del 15/11 aparecieron recibos naturales aceptados: un Contact website, tres Lead chat y cinco Purchase chat, todos con events_received=1; ningún error CAPI en esa muestra. Las omisiones por origen y píxel siguen sus políticas. Son filas de log de recepción, no resultados atribuibles a campañas; no se enviaron pruebas nuevas para obtener esta evidencia.
+
+No hay migración Builder en este lote. Nexo modifica funciones, sin reescribir históricos, y conserva permisos privados, URL y primera observación de cookies. Para revertir, usar las revisiones/deployments previos documentados y las funciones Nexo anteriores; no borrar recibos/identidades ni reemitir conversiones aceptadas. Las referencias de reversión están en el registro consolidado. Los builds productivos, dominios y HTTP quedaron comprobados.
+
+## Commits de implementación revisados
 
 | Producto | Commit de implementación | Push/publicación |
 | --- | --- | --- |
-| Builder | `cbdb937870351d01ccc1c7ee820994d2c96dca92` | No realizados |
-| Clásico | `47b4c502ef05e0511594e185d2fcf53054a085d0` | No realizados |
-| NexoBet | `93a0f62dcca703743ba2f9f52224e7e244451764` | No realizados |
+| Builder | `cbdb937870351d01ccc1c7ee820994d2c96dca92` | Integrado en main `5bde9794`, publicado |
+| Clásico | `47b4c502ef05e0511594e185d2fcf53054a085d0` | Integrado en main `7d245150`, publicado |
+| NexoBet | `93a0f62dcca703743ba2f9f52224e7e244451764` | Rama de lote pusheada, publicado |
 
 Ramas aisladas `fix/meta-capi-hardening-20261114` en cada repositorio. Los contratos nuevos y la UI compartida de Nexo apuntan al commit canónico Builder; el clasificador mantiene su pin previo `bf4d1ad9`. La revisión final de Nexo añade 25 pruebas afectadas de atribución/entrega, dos de UI y 19 SQL, además del TypeScript final. Su marcador interno conserva la primera observación de un clic vencido durante capturas anteriores al CTA, sin enviarlo ni modificar la identidad vigente por landing/dispositivo.
 
