@@ -32,4 +32,15 @@ Después de aplicarlas: cero landings seleccionaron todavía Gateway; RLS contin
 
 Advisors de seguridad antes/después sin cambios: 6 avisos informativos RLS sin política, 25 search_path mutables, 1 extensión en public, 26 funciones definer ejecutables por anon, 42 por authenticated y 1 aviso de protección de contraseñas. Son hallazgos previos, no se modificaron como parte de este lote.
 
-Los despliegues candidatos y las pruebas públicas finales se registran al concluir la coordinación con los cuatro gateways y Nexo. No se cambia automáticamente el motor de una campaña existente.
+## Publicación Builder y Clásico
+
+El 14/11 a las 22:46 de Argentina se comprobaron las seis páginas públicas de los tres proveedores, con respuestas 200, formulario HTML y recursos nuevos con SHA-256 coincidente. La entrada del bridge sin firma respondió 401. Estas comprobaciones no crearon cuentas ni cambiaron el motor de una landing. El piloto firmado y el recorrido completo Gateway quedan en el informe coordinado de Atrio.
+
+| Producto | Git main publicado | Deployment productivo READY | Dominios |
+| --- | --- | --- | --- |
+| Builder | `4da7bedb41f9b81749e36c3cd2fb35fea1df8f83` | `dpl_EsT8pNSJitqaHFabfATCCX3pCbwa` | `mkt.panelbotadmin.com`, `constructor.panelbotadmin.com` |
+| Clásico | `727637afc893baba563f98295e11df2e420a2b4a` | `dpl_Dhi5fnAQ8oZXFX3gJpD3yGhGwwA2` | `landing.panelbotadmin.com` |
+
+Se verificaron las bases remotas y ascendencia antes del push fast-forward; no hubo force-push, sobrescritura de trabajo ajeno ni cambio regional. Builder `4da7bedb` añade únicamente la adenda de decisiones a la fuente probada `33fe3281`. Los candidatos READY `dpl_6uwhSXrFLSbk4bACurTKnrNuux6u` / `dpl_7DJHxs8PikDeKB8VumdeVEh5pVUK` se promovieron; los autodeploys Git de main quedaron luego como deployments productivos, con el mismo código. La metadata Git y los dominios se verificaron después.
+
+Evidencia pública filtrada: [páginas y hashes](gateway-engine-public-smoke-20261114.json), [metadata de publicación](gateway-engine-publication-20261114.json). Este cierre documental se publica sólo en la rama del lote para evitar un build adicional sin cambios de código. No se cambia automáticamente el motor de una campaña existente.

@@ -1,0 +1,80 @@
+{
+  "checkedAt": "2026-11-15T01:46:28.134Z",
+  "preview": false,
+  "pages": [
+    {
+      "engine": "builder",
+      "url": "https://constructor.panelbotadmin.com/l/atriopili",
+      "finalUrl": "https://constructor.panelbotadmin.com/l/atriopili",
+      "status": 200,
+      "form": true,
+      "runtime": "/public-assets/template-entry/t7-builder-9ca1a2d54e9f2b646b14c2d5.js"
+    },
+    {
+      "engine": "builder",
+      "url": "https://constructor.panelbotadmin.com/l/asesdelnorte",
+      "finalUrl": "https://constructor.panelbotadmin.com/l/asesdelnorte",
+      "status": 200,
+      "form": true,
+      "runtime": "/public-assets/template-entry/t7-builder-9ca1a2d54e9f2b646b14c2d5.js"
+    },
+    {
+      "engine": "builder",
+      "url": "https://constructor.panelbotadmin.com/l/diana",
+      "finalUrl": "https://constructor.panelbotadmin.com/l/diana",
+      "status": 200,
+      "form": true,
+      "runtime": "/public-assets/template-entry/t7-builder-9ca1a2d54e9f2b646b14c2d5.js"
+    },
+    {
+      "engine": "classic",
+      "url": "https://landing.panelbotadmin.com/atriopili",
+      "finalUrl": "https://landing.panelbotadmin.com/atriopili",
+      "status": 200,
+      "form": true,
+      "runtime": "/public-assets/template-entry/t7-classic-7dbe4637fc9fec8809eefbe2.js"
+    },
+    {
+      "engine": "classic",
+      "url": "https://landing.panelbotadmin.com/asesdelnorte",
+      "finalUrl": "https://landing.panelbotadmin.com/asesdelnorte",
+      "status": 200,
+      "form": true,
+      "runtime": "/public-assets/template-entry/t7-classic-7dbe4637fc9fec8809eefbe2.js"
+    },
+    {
+      "engine": "classic",
+      "url": "https://landing.panelbotadmin.com/diana",
+      "finalUrl": "https://landing.panelbotadmin.com/diana",
+      "status": 200,
+      "form": true,
+      "runtime": "/public-assets/template-entry/t7-classic-7dbe4637fc9fec8809eefbe2.js"
+    }
+  ],
+  "assets": [
+    {
+      "engine": "builder",
+      "path": "/public-assets/template-entry/t7-builder-9ca1a2d54e9f2b646b14c2d5.js",
+      "status": 200,
+      "bytes": 87000,
+      "expected": "9ca1a2d54e9f2b646b14c2d5",
+      "hash": "9ca1a2d54e9f2b646b14c2d5",
+      "hashMatches": true,
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "engine": "classic",
+      "path": "/public-assets/template-entry/t7-classic-7dbe4637fc9fec8809eefbe2.js",
+      "status": 200,
+      "bytes": 86737,
+      "expected": "7dbe4637fc9fec8809eefbe2",
+      "hash": "7dbe4637fc9fec8809eefbe2",
+      "hashMatches": true,
+      "cacheControl": "public, max-age=31536000, immutable"
+    }
+  ],
+  "rejectedUnsigned": {
+    "status": 401,
+    "body": "{\"error\":\"landing_unavailable\"}"
+  }
+}
