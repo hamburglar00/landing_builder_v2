@@ -17,9 +17,9 @@ export function template9LegalLinks(basePath: string, preview = false) {
 }
 
 /** Branded informational pages only: no Pixel, entry runtime or account requests. */
-export function renderTemplate9LegalHtml(config: PublicLandingConfig, page: string, basePath: string): string | null {
+export function renderTemplate9LegalHtml(config: PublicLandingConfig, page: string, basePath: string, assetBase = ""): string | null {
   if (config.layout?.template !== 9 || !Object.hasOwn(TEMPLATE9_LEGAL_PAGES, page)) return null;
-  const brand = getTemplate9Brand(config.tracking?.target_provider || "rey_de_ases", config.tracking?.skin_code);
+  const brand = getTemplate9Brand(config.tracking?.target_provider || "rey_de_ases", config.tracking?.skin_code, assetBase);
   const name = escape(brand.name);
   const country = (config.workspaceCurrency || config.tracking?.currency) === "PYG" ? "Paraguay" : "Argentina";
   const title = TEMPLATE9_LEGAL_PAGES[page as keyof typeof TEMPLATE9_LEGAL_PAGES];

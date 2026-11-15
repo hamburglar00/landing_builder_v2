@@ -6,6 +6,7 @@ const BUILDER_CONFIG_CACHE_VERSION = "4";
 
 export async function getPublicLandingConfig(
   name: string,
+  options: { fresh?: boolean } = {},
 ): Promise<PublicLandingConfig | null> {
   const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -23,8 +24,9 @@ export async function getPublicLandingConfig(
       apikey: anonKey,
       Authorization: `Bearer ${anonKey}`,
     },
-    cache: "force-cache",
-    next: { tags: [`landing-config:${name}`] },
+    ...(options.fresh ? { cache: "no-store" as const, signal: AbortSignal.timeout(8000) } : {
+      cache: "force-cache" as const, next: { tags: [`landing-config:${name}`] },
+    }),
   });
 
   if (response.status === 404) return null;

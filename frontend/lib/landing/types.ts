@@ -62,7 +62,7 @@ export type TemplateOption =
  * classic: dominio historico landing.panelbotadmin.com/<name>.
  * constructor: dominio del constructor con ruta /l/<name>.
  */
-export type PublishTarget = "classic" | "constructor";
+export type PublishTarget = "classic" | "constructor" | "gateway";
 
 /** Mercado principal de la landing, usado para interpretar teléfonos locales. */
 export type LandingMarketCountry = "AR" | "PY";

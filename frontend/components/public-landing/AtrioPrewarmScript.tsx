@@ -3,6 +3,7 @@ type Props = {
   slug: string;
   landingId: string;
   deviceIdScript?: string;
+  apiBase?: string;
 };
 
 function escapeScriptJson(value: unknown) {
@@ -16,7 +17,7 @@ function escapeScriptJson(value: unknown) {
 }
 
 /** Starts persisted destination selection after identity, while the form renders. */
-export default function AtrioPrewarmScript({ slug, landingId, deviceIdScript = "" }: Props) {
+export default function AtrioPrewarmScript({ slug, landingId, deviceIdScript = "", apiBase = "/api" }: Props) {
   if (!slug || !landingId) return null;
   const script = `
     (function () {
@@ -29,7 +30,7 @@ export default function AtrioPrewarmScript({ slug, landingId, deviceIdScript = "
           var active = null, cancelled = false;
           var pending = Promise.resolve(window.__LB_IDENTITY_READY__ || true).then(function (ready) {
             if (cancelled || ready !== true) return null;
-            active = window.__T7_FETCH_JSON__("/api/template7/destination", {
+            active = window.__T7_FETCH_JSON__(${escapeScriptJson(apiBase + "/template7/destination")}, {
             method: "POST", credentials: "same-origin",
             headers: {
               "Content-Type": "application/json"

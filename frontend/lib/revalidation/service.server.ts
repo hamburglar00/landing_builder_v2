@@ -4,7 +4,7 @@ import { assertLocalSyntheticSecret, destinationFor, isLandingName, type Destina
 import type { RevalidationAction, RevalidationResult } from "./types";
 
 export type Actor = { id: string; role: "admin" | "client" };
-export type AuthorizedLanding = { id: string; user_id: string; name: string; publish_target: "classic" | "constructor" };
+export type AuthorizedLanding = { id: string; user_id: string; name: string; publish_target: "classic" | "constructor" | "gateway" };
 export type RevalidationBackend = {
   authenticate: (token: string) => Promise<Actor | null>;
   landing: (actor: Actor, token: string, id: string) => Promise<AuthorizedLanding | null>;
@@ -43,7 +43,7 @@ function actionFrom(value: unknown): RevalidationAction | null {
   const row = value as Record<string, unknown>;
   if (Object.keys(row).length !== 3 || Object.keys(row).some(k => !["action", "landingId", "publishTarget"].includes(k))) return null;
   if (row.action !== "publish" && row.action !== "test-classic") return null;
-  if (row.publishTarget !== "classic" && row.publishTarget !== "constructor") return null;
+  if (row.publishTarget !== "classic" && row.publishTarget !== "constructor" && row.publishTarget !== "gateway") return null;
   if (typeof row.landingId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(row.landingId)) return null;
   return { action: row.action, landingId: row.landingId, publishTarget: row.publishTarget };
 }
@@ -73,6 +73,11 @@ export async function handlePanelRevalidation(request: Request, dependencies: De
     if (action.action === "publish" && action.publishTarget !== landing.publish_target) return denied(409, "target_changed");
     // The administrative diagnostic is explicitly classic; publication uses persisted state.
     const motor = action.action === "test-classic" ? "classic" : landing.publish_target;
+    if (motor === "gateway") {
+      if (dependencies.backend.prepareAssets) await dependencies.backend.prepareAssets(actor, token, landing);
+      // Gateway documents revalidate within 15s, with no stale-while-revalidate window.
+      return safeJson({ ok: true, revalidated: true, propagationSeconds: 15 });
+    }
     const destination = destinationFor(dependencies.environment, motor);
     const secret = await dependencies.backend.secret();
     if (!secret) return denied(503, "not_configured");

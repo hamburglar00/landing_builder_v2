@@ -9,6 +9,8 @@ import { getSettings } from "@/lib/settingsDb";
 import { invokeFunction } from "@/lib/supabaseFunctions";
 import type { Landing } from "@/lib/landing/types";
 import { fetchLandingsForAdmin, createLanding } from "@/lib/landing/landingsDb";
+import { useGatewayOriginCatalog } from "@/lib/landing/useGatewayOriginCatalog";
+import { gatewayPublicationOrigin } from "@/lib/landing/gatewayPublication";
 import { buildLandingPublicUrl } from "@/lib/landing/publicUrls";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import { LandingPreview } from "@/components/landing/LandingPreview";
@@ -233,12 +235,13 @@ export default function AdminLandingsPage() {
 }
 
 function LandingCard({ landing, urlBase }: { landing: Landing; urlBase: string | null }) {
+  const gatewayCatalog = useGatewayOriginCatalog(landing.publishTarget === "gateway");
   const publicUrl =
     landing.landingType === "external"
       ? urlBase
         ? `${urlBase.replace(/\/$/, "")}/${landing.name}`
         : "#"
-      : buildLandingPublicUrl(landing.name, landing.publishTarget, urlBase);
+      : buildLandingPublicUrl(landing.name, landing.publishTarget, urlBase, gatewayPublicationOrigin(landing.config, gatewayCatalog));
 
   return (
     <div
@@ -272,7 +275,7 @@ function LandingCard({ landing, urlBase }: { landing: Landing; urlBase: string |
                 </div>
                 <div className="pointer-events-auto flex items-center gap-1.5 pt-1">
                   <a
-                    href={publicUrl}
+                    href={publicUrl || undefined}
                     target="_blank"
                     rel="noreferrer"
                     onClick={(e) => e.stopPropagation()}

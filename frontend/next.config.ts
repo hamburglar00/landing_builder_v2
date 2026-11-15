@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  outputFileTracingIncludes: {
+    "/api/gateway-landings/**": ["./public/public-assets/template-entry/*", "./public/public-assets/template9/*", "./public/vendor/meta-capi-param-builder/1.3.1/*", "./public/vendor/atrio-meta-click/v1/*"],
+  },
   async headers() {
     return [
       { source: "/pbadmin/callback", headers: [

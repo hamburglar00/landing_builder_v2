@@ -447,6 +447,7 @@ export default function AdminLandingEditarPage() {
         name: landing.name,
         publishTarget: landing.publishTarget,
         classicBaseUrl: urlBase,
+        config: configToSave,
       });
       notify("Landing guardada y publicada.");
       router.push(BASE);
@@ -612,6 +613,7 @@ export default function AdminLandingEditarPage() {
 
         {landing.landingType !== "external" && (
           <PublishTargetSection
+            config={landing.config}
             landingName={landing.name}
             publishTarget={landing.publishTarget}
             classicBaseUrl={urlBase}

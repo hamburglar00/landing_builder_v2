@@ -446,6 +446,7 @@ export default function DashboardLandingEditarPage() {
         name: landing.name,
         publishTarget: landing.publishTarget,
         classicBaseUrl: urlBase,
+        config: configToSave,
       });
       notify("Landing guardada y publicada.");
       router.push("/dashboard/landings");
@@ -619,6 +620,7 @@ export default function DashboardLandingEditarPage() {
 
         {landing.landingType !== "external" && (
           <PublishTargetSection
+            config={landing.config}
             landingName={landing.name}
             publishTarget={landing.publishTarget}
             classicBaseUrl={urlBase}

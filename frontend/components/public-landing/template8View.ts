@@ -13,7 +13,7 @@ type RenderParams = {
   cachedPhone?: PublicLandingPhoneResponse | null;
   canonicalUrl?: string;
   legalBasePath?: string;
-  engine?: 'classic' | 'constructor';
+  engine?: 'classic' | 'constructor' | 'gateway';
 };
 
 type ResponsiveImage = {

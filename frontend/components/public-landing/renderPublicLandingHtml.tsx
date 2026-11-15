@@ -33,7 +33,10 @@ type RenderParams = {
   cachedPhone?: PublicLandingPhoneResponse | null;
   canonicalUrl?: string;
   legalBasePath?: string;
-  engine?: 'classic' | 'constructor';
+  engine?: 'classic' | 'constructor' | 'gateway';
+  apiBase?: string;
+  assetBase?: string;
+  recoveryNamespace?: string;
 };
 
 type ResponsiveImage = {
@@ -127,8 +130,8 @@ function buildImageSrcSet(image?: ResponsiveImage) {
     .join(", ");
 }
 
-function buildPreloadLinks(config: PublicLandingConfig) {
-  if (config.layout?.template === 9) return `<link rel="preload" as="image" href="${getTemplate9Brand(config.tracking?.target_provider || "rey_de_ases", config.tracking?.skin_code).logo}" fetchpriority="high">`;
+function buildPreloadLinks(config: PublicLandingConfig, assetBase = "") {
+  if (config.layout?.template === 9) return `<link rel="preload" as="image" href="${getTemplate9Brand(config.tracking?.target_provider || "rey_de_ases", config.tracking?.skin_code, assetBase).logo}" fetchpriority="high">`;
   if (config.layout?.template === 7) {
     const logo = config.content;
     return logo?.logoUrl
@@ -686,7 +689,7 @@ function renderTemplate(params: RenderParams) {
   if (params.config.layout?.template === 9) {
     const code = params.config.tracking?.skin_code;
     const brand = params.config.tracking?.target_provider === "multi_skin" && isMultiSkinCode(code) ? getMultiSkinBrand(code) : undefined;
-    return renderTemplate9View(params.config, false, params.legalBasePath || `/l/${encodeURIComponent(params.slug)}`) + renderGatewayEntryTransition(params.config.tracking?.target_provider || "rey_de_ases", { stage: "creating", gatewayOrigin: template7GatewayOrigin(params.config), brand }) + TEMPLATE9_UI_SCRIPT;
+    return renderTemplate9View(params.config, false, params.legalBasePath || `/l/${encodeURIComponent(params.slug)}`, params.assetBase) + renderGatewayEntryTransition(params.config.tracking?.target_provider || "rey_de_ases", { stage: "creating", gatewayOrigin: template7GatewayOrigin(params.config), brand }) + TEMPLATE9_UI_SCRIPT;
   }
   if (params.config.layout?.template === 8) return renderTemplate8(params);
   if (params.config.layout?.template === 7) return renderTemplate7(params);
@@ -719,7 +722,8 @@ export function renderPublicLandingHtml(params: RenderParams) {
   const phonePrewarmScript = isTemplate7 ? "" : renderScriptElement(
     PhonePrewarmScript({ slug, initialPhone: cachedPhone }),
   );
-  const runtimeAsset = isTemplate7 ? renderTemplate7RuntimeAsset(slug, config) : null;
+  const transport = { apiBase: params.apiBase, assetBase: params.assetBase, ...(engine === "gateway" ? { engine } : {}) };
+  const runtimeAsset = isTemplate7 ? renderTemplate7RuntimeAsset(slug, config, "", transport) : null;
   const runtimeScript = runtimeAsset
       ? runtimeAsset.script
     : `${renderScriptElement(PublicLandingRuntimeScript({ slug, config, engine }))}<script data-public-landing-runtime src="/public-assets/template-entry/${publicLandingRuntimeAsset.name}" defer></script>`;
@@ -727,13 +731,13 @@ export function renderPublicLandingHtml(params: RenderParams) {
     ? `<script>(()=>{const input=document.querySelector('[data-template7-name]');if(!input)return;const names=${JSON.stringify(TEMPLATE7_EXAMPLE_NAMES)};input.placeholder='Ej.: '+names[Math.floor(Math.random()*names.length)];})();</script>`
     : "";
 
-  const html = `<!doctype html><html lang="es"${template4Background}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><script>${buildLandingEntryFunnelScript({ landingId: config.id || '', template: (config.layout?.template || 1) as EntryFunnelTemplate, engine })}</script><title>${escapeHtml(
+  const html = `<!doctype html><html lang="es"${template4Background}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><script>${buildLandingEntryFunnelScript({ landingId: config.id || '', template: (config.layout?.template || 1) as EntryFunnelTemplate, engine, apiBase: params.apiBase })}</script><title>${escapeHtml(
     metadata.title,
   )}</title>${buildPublicMetadataTags(
     config,
     slug,
     canonicalUrl,
-  )}${PUBLIC_LANDING_FAVICON_LINK}<meta name="theme-color" content="${themeColor}">${
+  )}${params.assetBase ? PUBLIC_LANDING_FAVICON_LINK.replace('href="/', `href="${escapeHtml(params.assetBase)}/`) : PUBLIC_LANDING_FAVICON_LINK}<meta name="theme-color" content="${themeColor}">${
     supabaseOrigin
       ? `<link rel="preconnect" href="${escapeHtml(supabaseOrigin)}" crossorigin><link rel="dns-prefetch" href="${escapeHtml(supabaseOrigin)}">`
       : ""
@@ -745,7 +749,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     pixelId
       ? '<link rel="preconnect" href="https://www.facebook.com"><link rel="preconnect" href="https://connect.facebook.net">'
       : ""
-  }${runtimeAsset ? runtimeAsset.preload + runtimeAsset.config : ""}${isTemplate7 ? buildClientIdentityBootstrapScript(isTemplate8 ? undefined : { slug, landingId: config.id || "" }) + (isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug, landingId: config.id || "" }))) : ""}${phonePrewarmScript}${buildPreloadLinks(config)}${isTemplate7 ? `<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS + (config.layout?.template === 9 ? TEMPLATE9_CSS : "")}</style>` : `<link rel="stylesheet" href="/public-assets/template-entry/${publicLandingStyleAsset.name}">`}${pixelScriptForTemplate(
+  }${runtimeAsset ? runtimeAsset.preload + runtimeAsset.config : ""}${isTemplate7 ? buildClientIdentityBootstrapScript(isTemplate8 ? undefined : { slug, landingId: config.id || "" }, { apiBase: params.apiBase, recoveryNamespace: params.recoveryNamespace }) + (isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug, landingId: config.id || "", apiBase: params.apiBase }))) : ""}${phonePrewarmScript}${buildPreloadLinks(config, params.assetBase)}${isTemplate7 ? `<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS + (config.layout?.template === 9 ? TEMPLATE9_CSS : "")}</style>` : `<link rel="stylesheet" href="/public-assets/template-entry/${publicLandingStyleAsset.name}">`}${pixelScriptForTemplate(
     pixelId,
     slug,
     config.tracking?.phoneCountryCode || "54",
@@ -754,7 +758,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
   )}</head><body${template4Background}>${buildPixelNoscript(pixelId)}${renderTemplate(params)}${template7PlaceholderScript}${renderPrivacyFooter(
     config,
   )}${runtimeScript}${isTemplate7 ? resourceWarmup(config) : ""}</body></html>`;
-  if (!isTemplate7 || isTemplate8) return html;
+  if (!isTemplate7 || isTemplate8 || engine === "gateway") return html;
   const reentry = buildTemplate7ReentryScript(gatewayOrigin, `/l/${encodeURIComponent(slug)}`, config.tracking?.target_provider !== "multi_skin");
   return reentry ? guardTemplate7ReentryScripts(html).replace("<head>", "<head>" + reentry) : html;
 }

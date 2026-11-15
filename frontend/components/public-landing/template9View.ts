@@ -5,8 +5,8 @@ import { template9LegalLinks } from "./template9Legal";
 const escape = (value: string) => value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 
 /** Shared by public Builder, classic and the editor preview. No tracking or account logic. */
-export function renderTemplate9View(config: PublicLandingConfig, preview: boolean | "gallery" = false, basePath = "/l/" + encodeURIComponent(config.name || "preview")): string {
-  const brand = getTemplate9Brand(config.tracking?.target_provider || "rey_de_ases", config.tracking?.skin_code);
+export function renderTemplate9View(config: PublicLandingConfig, preview: boolean | "gallery" = false, basePath = "/l/" + encodeURIComponent(config.name || "preview"), assetBase = ""): string {
+  const brand = getTemplate9Brand(config.tracking?.target_provider || "rey_de_ases", config.tracking?.skin_code, assetBase);
   const title = (config.content?.title || []).map(s => s.trim()).filter(Boolean).join("\n") || TEMPLATE9_DEFAULTS.titleLine1;
   const titleHtml = title === TEMPLATE9_DEFAULTS.titleLine1 ? "Creá tu <b>cuenta gratis</b>" : escape(title).replaceAll("\n", "<br>");
   const subtitle = (config.content?.subtitle || []).map(s => s.trim()).filter(Boolean).join("\n") || TEMPLATE9_DEFAULTS.subtitleLine1;

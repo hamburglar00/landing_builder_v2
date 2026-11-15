@@ -13,7 +13,9 @@ import { fitTemplate4Messages } from "./template4Motion";
 type Props = {
   slug: string;
   config: PublicLandingConfig;
-  engine?: 'classic' | 'constructor';
+  engine?: 'classic' | 'constructor' | 'gateway';
+  apiBase?: string;
+  assetBase?: string;
 };
 
 const SOCIAL_PROOF_ITEMS = [
@@ -71,10 +73,12 @@ function escapeScriptJson(value: unknown) {
   });
 }
 
-export function buildRuntimeConfig({ slug, config, engine = 'constructor' }: Props) {
+export function buildRuntimeConfig({ slug, config, engine = 'constructor', apiBase = '/api', assetBase = '' }: Props) {
   const runtimeConfig = {
     slug,
     engine,
+    apiBase,
+    assetBase,
     automaticLandingSelection: engine === 'classic',
     landingId: config.id,
     landingName: config.name,
@@ -106,8 +110,8 @@ export function buildRuntimeConfig({ slug, config, engine = 'constructor' }: Pro
     phoneSelectionMode: config.phoneSelection?.mode || "",
     backgroundMode: config.background?.mode || "",
     metaIpCollectorUrl: process.env.NEXT_PUBLIC_META_IP_COLLECTOR_URL || "",
-    metaParamBuilderSrc: META_PARAM_BUILDER_PUBLIC_PATH,
-    metaEbpCollectorSrc: META_EBP_COLLECTOR_URL,
+    metaParamBuilderSrc: assetBase + META_PARAM_BUILDER_PUBLIC_PATH,
+    metaEbpCollectorSrc: assetBase + META_EBP_COLLECTOR_URL,
     whatsappPrefillText:
       config.interactions?.enabled && config.interactions.whatsappPrefillText
         ? config.interactions.whatsappPrefillText
@@ -205,7 +209,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
         var advisorSlug = firstNonEmpty([atrioData && atrioData.atrioSlug, atrioData && atrioData.atrio_slug]);
         var atrioClientId = firstNonEmpty([atrioData && atrioData.atrioClientId, atrioData && atrioData.atrio_client_id]);
         if (!advisorId || !advisorSlug || !atrioClientId) return Promise.reject(new Error("advisor unavailable"));
-        return fetchWithEntryRecovery("/api/template7/prepare", {
+        return fetchWithEntryRecovery((cfg.apiBase || "/api") + "/template7/prepare", {
           method: "POST",
           credentials: "same-origin",
           cache: "no-store",
@@ -803,10 +807,10 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
         if (navigator && "sendBeacon" in navigator) {
           try {
             var blob = new Blob([body], { type: "application/json" });
-            if (navigator.sendBeacon("/api/track", blob)) return Promise.resolve();
+            if (navigator.sendBeacon((cfg.apiBase || "/api") + "/track", blob)) return Promise.resolve();
           } catch (e) {}
         }
-        return fetch("/api/track", {
+        return fetch((cfg.apiBase || "/api") + "/track", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: body,
@@ -818,10 +822,10 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
         if (navigator && "sendBeacon" in navigator) {
           try {
             var blob = new Blob([body], { type: "application/json" });
-            if (navigator.sendBeacon("/api/journey-start", blob)) return Promise.resolve(true);
+            if (navigator.sendBeacon((cfg.apiBase || "/api") + "/journey-start", blob)) return Promise.resolve(true);
           } catch (e) {}
         }
-        return fetch("/api/journey-start", {
+        return fetch((cfg.apiBase || "/api") + "/journey-start", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: body,

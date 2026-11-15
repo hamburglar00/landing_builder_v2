@@ -52,7 +52,7 @@ t7AssetTimer=setTimeout(t7AssetFailure,10000);
 window.__ENTRY_FUNNEL_EARLY__=window.__ENTRY_FUNNEL_EARLY__||{started_at:Math.round(performance.timeOrigin||Date.now()),events:[]};
 function t7Provenance(value){
   value=value||{};var result={};
-  if(typeof value.engine==='string'&&['classic','constructor','nexobet'].includes(value.engine))result.engine=value.engine;
+  if(typeof value.engine==='string'&&['classic','constructor','nexobet','gateway'].includes(value.engine))result.engine=value.engine;
   if(typeof value.release==='string'&&/^[0-9a-f]{7,40}$/.test(value.release))result.release=value.release;
   if(typeof value.environment==='string'&&['production','preview','development','unknown'].includes(value.environment))result.environment=value.environment;
   if(typeof value.source==='string'&&['synthetic','unknown'].includes(value.source))result.source=value.source;
@@ -88,7 +88,7 @@ function t7EarlyFlush(){
     if(early&&typeof early.flush==='function'){early.flush();return;}
     if(!flow||!early.events.length||!navigator.sendBeacon)return;
     var events=early.events.filter(function(event){return event.id}).map(function(event){return Object.assign(t7Provenance(flow),{id:event.id,name:event.name,elapsed_ms:Math.max(0,Math.min(86400000,event.at-flow.started_at)),navigation_id:event.navigation_id,navigation_elapsed_ms:Math.max(0,Math.min(86400000,event.at-event.navigation_started_at)),component:'landing',...(flow.release?{component_release:flow.release}:{}),...(event.error_code?{error_code:event.error_code}:{})})});
-    navigator.sendBeacon('/api/entry-funnel',new Blob([JSON.stringify({landing_id:flow.landing_id,flow_id:flow.flow_id,template:flow.template,events:events})],{type:'text/plain'}));
+    navigator.sendBeacon((window.__PUBLIC_LANDING_RUNTIME_CONFIG__?.apiBase || '/api') + '/entry-funnel',new Blob([JSON.stringify({landing_id:flow.landing_id,flow_id:flow.flow_id,template:flow.template,events:events})],{type:'text/plain'}));
   }catch(e){}
 }
 if(typeof window.__ENTRY_FUNNEL_EARLY__.flush!=='function'){
@@ -126,14 +126,14 @@ function t7Early(event){
 ['focusin','input','click','submit'].forEach(function(type){window.addEventListener(type,t7Early,true)});
 `;
 
-export function renderTemplate7RuntimeAsset(slug: string, config: PublicLandingConfig, deviceIdScript = "") {
+export function renderTemplate7RuntimeAsset(slug: string, config: PublicLandingConfig, deviceIdScript = "", transport: { apiBase?: string; assetBase?: string; engine?: "gateway" } = {}) {
   const asset = template7RuntimeAsset(config.layout?.template === 8 ? 8 : 7, !!deviceIdScript);
-  const settings = JSON.stringify(buildTemplate7RuntimeConfig(slug, config, deviceIdScript))
+  const settings = JSON.stringify(buildTemplate7RuntimeConfig(slug, config, deviceIdScript, transport))
     .replace(/[<>&\u2028\u2029]/g, value => `\\u${value.charCodeAt(0).toString(16).padStart(4, "0")}`);
   const identity = deviceIdScript
     ? `(function(){${deviceIdScript};window.__TEMPLATE7_GET_DEVICE_ID__=getOrCreateDeviceId;})();`
     : "";
-  const url = `/public-assets/template-entry/${asset.name}`;
+  const url = `${transport.assetBase || ""}/public-assets/template-entry/${asset.name}`;
   return {
     preload: `<link rel="preload" as="script" href="${url}">`,
     config: `<script data-template7-runtime-config>window.__PUBLIC_LANDING_RUNTIME_CONFIG__=${settings};window.__T7_RUNTIME_ASSET_URL__=${JSON.stringify(url)};${identity}${EARLY_FORM}</script>`,

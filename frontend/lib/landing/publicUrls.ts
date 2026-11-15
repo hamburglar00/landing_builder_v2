@@ -35,8 +35,10 @@ export function buildLandingPublicUrl(
   name: string,
   publishTarget: PublishTarget,
   classicBaseUrl?: string | null,
+  gatewayOrigin?: string | null,
 ): string {
   const encodedName = encodeURIComponent(name);
+  if (publishTarget === "gateway") return gatewayOrigin ? `${normalizeBaseUrl(gatewayOrigin)}/l/${encodedName}` : "";
   if (publishTarget === "constructor") {
     return `${getLandingPublicBaseUrl(publishTarget, classicBaseUrl)}/l/${encodedName}`;
   }

@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabaseClient";
 import { normalizeCurrency, type ReportingCurrency } from "@/lib/currency";
 import type { Landing, LandingThemeConfig, PhoneKind, PublishTarget } from "./types";
+import { supportsGatewayPublication, supportsGatewayLandingName } from "./gatewayPublication";
 import { DEFAULT_CONFIG } from "./mocks";
 import type { LandingConfigPayload } from "./buildLandingConfig";
 
@@ -259,6 +260,9 @@ export async function updateLanding(
     landingConfig?: LandingConfigPayload;
   },
 ): Promise<void> {
+  if (payload.publishTarget === "gateway" && !supportsGatewayPublication(payload.config)) throw new Error("Gateway requiere Template 7 o 9 con destino Atrio.");
+  if (payload.publishTarget === "gateway" && payload.name?.toLowerCase() === "nexobet") throw new Error("El nombre nexobet está reservado en el motor Gateway. Elegí otro nombre para esta landing.");
+  if (payload.publishTarget === "gateway" && payload.name !== undefined && !supportsGatewayLandingName(payload.name)) throw new Error("Gateway admite nombres de hasta 80 caracteres, con letras, números, guiones y guiones bajos.");
   const body: Record<string, unknown> = {};
   if (payload.landingType !== undefined) body.landing_type = payload.landingType;
   if (payload.workspaceCurrency !== undefined) body.workspace_currency = payload.workspaceCurrency;

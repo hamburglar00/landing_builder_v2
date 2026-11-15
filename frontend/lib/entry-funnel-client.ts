@@ -16,7 +16,7 @@ export const GATEWAY_ENTRY_FUNNEL_SCRIPT = `
       if(!context||typeof context!=='object'||![7,8,9].includes(context.template))return;
       var uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       if(!uuid.test(context.flow_id)||!uuid.test(context.landing_id)||
-        !['https://landing.panelbotadmin.com','https://mkt.panelbotadmin.com','https://nexobet.fun'].includes(context.telemetry_origin)||
+        (context.engine==='gateway' ? context.telemetry_origin!==location.origin||typeof context.telemetry_path!=='string'||!/^\\/l\\/(?:nexobet\\/)?[A-Za-z0-9][A-Za-z0-9_-]{0,79}\\/_api\\/entry-funnel$/.test(context.telemetry_path) : !['https://landing.panelbotadmin.com','https://mkt.panelbotadmin.com','https://constructor.panelbotadmin.com','https://nexobet.fun'].includes(context.telemetry_origin))||
         !Number.isSafeInteger(context.started_at)||context.started_at>Date.now()+60000||context.started_at<Date.now()-86400000)return;
       proof=typeof context.diagnostic_proof==='string'&&/^e1\\.[A-Za-z0-9_-]{1,2000}$/.test(context.diagnostic_proof)?context.diagnostic_proof:undefined;
       client=install({navigationKind:typeof window.__gatewayEntryFunnelDeferCookie==='boolean'?'preparation':'gateway',componentRelease:${JSON.stringify(componentRelease)},diagnosticProof:function(){return proof;}},context,'/api/entry-funnel');

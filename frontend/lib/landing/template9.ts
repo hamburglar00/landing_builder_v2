@@ -17,12 +17,13 @@ const providers: Record<string, Template9Brand> = {
 };
 
 /** Presentation only. The saved provider/skin remains the authority for entry. */
-export function getTemplate9Brand(provider: string, skin?: unknown): Template9Brand {
+export function getTemplate9Brand(provider: string, skin?: unknown, assetBase = ""): Template9Brand {
   if (provider === "multi_skin" && isMultiSkinCode(skin) && skin !== "ganamos_plus") {
     const brand = getMultiSkinBrand(skin);
-    return { name: brand.name, logo: `/public-assets/template9/${skin}_logo.webp`, primary: brand.primary, secondary: brand.secondary, highlight: brand.secondary, deep: brand.background };
+    return { name: brand.name, logo: `${assetBase}/public-assets/template9/${skin}_logo.webp`, primary: brand.primary, secondary: brand.secondary, highlight: brand.secondary, deep: brand.background };
   }
-  return providers[provider] || providers.rey_de_ases;
+  const brand = providers[provider] || providers.rey_de_ases;
+  return { ...brand, logo: assetBase + brand.logo };
 }
 
 export function template9Style(brand: Template9Brand) {

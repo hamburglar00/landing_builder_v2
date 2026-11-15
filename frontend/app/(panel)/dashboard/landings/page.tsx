@@ -7,6 +7,8 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import type { Landing } from "@/lib/landing/types";
 import { fetchLandings, createLanding } from "@/lib/landing/landingsDb";
+import { useGatewayOriginCatalog } from "@/lib/landing/useGatewayOriginCatalog";
+import { gatewayPublicationOrigin } from "@/lib/landing/gatewayPublication";
 import { buildLandingPublicUrl } from "@/lib/landing/publicUrls";
 import { fetchLandingGerencias, setLandingGerencias } from "@/lib/gerencias/gerenciasDb";
 import { fetchLandingAtrioAssignments, setLandingAtrioAssignments } from "@/lib/atrio/atrioDb";
@@ -317,12 +319,13 @@ function LandingCard({
   duplicating: boolean;
   onDuplicate: (landing: Landing) => void;
 }) {
+  const gatewayCatalog = useGatewayOriginCatalog(landing.publishTarget === "gateway");
   const publicUrl =
     landing.landingType === "external"
       ? urlBase
         ? `${urlBase.replace(/\/$/, "")}/${landing.name}`
         : "#"
-      : buildLandingPublicUrl(landing.name, landing.publishTarget, urlBase);
+      : buildLandingPublicUrl(landing.name, landing.publishTarget, urlBase, gatewayPublicationOrigin(landing.config, gatewayCatalog));
 
   return (
     <div
@@ -350,7 +353,7 @@ function LandingCard({
         </div>
         <div className="pointer-events-auto flex items-center gap-1.5 pt-1">
           <a
-            href={publicUrl}
+            href={publicUrl || undefined}
             target="_blank"
             rel="noreferrer"
             onClick={(e) => e.stopPropagation()}

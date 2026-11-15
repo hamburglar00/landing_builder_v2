@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useGatewayOriginCatalog } from "@/lib/landing/useGatewayOriginCatalog";
+import { gatewayPublicationOrigin, supportsGatewayPublication, supportsGatewayLandingName, type GatewayPublicationConfig } from "@/lib/landing/gatewayPublication";
 import type { PublishTarget } from "@/lib/landing/types";
 import {
   buildLandingPublicUrl,
@@ -11,6 +13,7 @@ import {
 
 type PublishTargetSectionProps = {
   landingName: string;
+  config?: Partial<GatewayPublicationConfig>;
   publishTarget: PublishTarget;
   classicBaseUrl?: string | null;
   onChange: (publishTarget: PublishTarget) => void;
@@ -28,6 +31,12 @@ const TARGETS: Array<{
   pros: string[];
   cons: string[];
 }> = [
+  { value: "gateway", title: "Gateway", profile: "Landing y acceso en el mismo sitio",
+    recommendation: "Disponible para Templates 7 y 9 con destino Atrio. La landing se publica en el dominio del casino.",
+    comparison: [{ label: "Carga inicial", value: "Formulario HTML listo, con los mismos recursos y tracking del Constructor." }, { label: "Ingreso", value: "Continúa al gateway dentro del mismo dominio." }, { label: "Publicación", value: "Los cambios se reflejan en un máximo de 15 segundos." }],
+    pros: ["Conserva el editor, el diseño, Pixel/CAPI y las conversiones.", "Evita cambiar de dominio al continuar hacia el gateway."],
+    cons: ["Requiere un gateway compatible y configurado.", "Su rendimiento se compara con los otros motores; compartir dominio no elimina las esperas del proveedor."],
+  },
   {
     value: "classic",
     title: "Clásico",
@@ -37,11 +46,11 @@ const TARGETS: Array<{
     comparison: [
       {
         label: "Carga inicial",
-        value: "Buena, aunque más pesada: necesita iniciar React/Next.",
+        value: "Templates 7, 8 y 9 entregan el formulario HTML listo; las otras plantillas usan React/Next.",
       },
       {
-        label: "Teléfono",
-        value: "Lo precarga al iniciar la app y reintenta si la red demora.",
+        label: "Ingreso",
+        value: "Las plantillas con Atrio preparan el destino y continúan al dominio del gateway.",
       },
       {
         label: "Actualizaciones",
@@ -49,25 +58,25 @@ const TARGETS: Array<{
       },
     ],
     pros: [
-      "Motor histórico, estable y muy probado en campañas reales.",
+      "Templates 7, 8 y 9 comparten el formulario y el runtime liviano con el Constructor.",
       "Conserva la URL actual: no hace falta editar anuncios existentes.",
       "Su despliegue separado aísla los cambios del motor principal.",
     ],
     cons: [
-      "Descarga e inicializa una aplicación React antes de quedar plenamente interactivo.",
-      "La búsqueda anticipada del teléfono comienza después de esa inicialización.",
+      "Las plantillas anteriores requieren iniciar React antes de habilitar sus funciones.",
+      "El recorrido hacia Atrio continúa en otro dominio.",
     ],
   },
   {
     value: "constructor",
     title: "Constructor",
-    profile: "Rendimiento recomendado",
+    profile: "Publicación desde el Constructor",
     recommendation:
-      "Es la opción recomendada para campañas nuevas o cuando la prioridad es abrir y responder lo más rápido posible.",
+      "Publica la landing dentro del Constructor. Para elegir por velocidad, compará el recorrido completo del proveedor que usás.",
     comparison: [
       {
         label: "Carga inicial",
-        value: "Más rápida: entrega HTML listo y no necesita iniciar React.",
+        value: "Entrega HTML listo. Templates 7, 8 y 9 comparten el formulario liviano con el Clásico.",
       },
       {
         label: "Teléfono",
@@ -79,8 +88,8 @@ const TARGETS: Array<{
       },
     ],
     pros: [
-      "Menos JavaScript y CTA disponible antes, especialmente en móviles lentos.",
-      "Inicia la obtención del teléfono antes que el motor Clásico.",
+      "El formulario se entrega listo, sin depender de la hidratación de React.",
+      "Prepara el destino mientras el cliente completa sus datos.",
       "Publicación, tracking y mejoras quedan centralizados en un solo motor.",
     ],
     cons: [
@@ -93,10 +102,15 @@ const TARGETS: Array<{
 
 export function PublishTargetSection({
   landingName,
+  config,
   publishTarget,
   classicBaseUrl,
   onChange,
 }: PublishTargetSectionProps) {
+  const gatewayCatalog = useGatewayOriginCatalog(supportsGatewayPublication(config));
+  const reservedGatewayName = landingName.toLowerCase() === "nexobet";
+  const gatewayOrigin = supportsGatewayLandingName(landingName) ? gatewayPublicationOrigin(config, gatewayCatalog) : null;
+  const gatewayUrl = buildLandingPublicUrl(landingName, "gateway", null, gatewayOrigin);
   const [currentUrlCopied, setCurrentUrlCopied] = useState(false);
   const [openInfo, setOpenInfo] = useState<PublishTarget | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -106,6 +120,7 @@ export function PublishTargetSection({
     landingName,
     publishTarget,
     classicBaseUrl,
+    gatewayOrigin,
   );
   const classicUrl = `${getClassicLandingBaseUrl(classicBaseUrl)}/${encodeURIComponent(
     landingName,
@@ -173,11 +188,12 @@ export function PublishTargetSection({
         Motor de publicación
       </h3>
 
-      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {TARGETS.map((target) => {
+      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {[...TARGETS].sort((a, b) => ["classic", "constructor", "gateway"].indexOf(a.value) - ["classic", "constructor", "gateway"].indexOf(b.value)).map((target) => {
           const active = publishTarget === target.value;
+          const unavailable = target.value === "gateway" && !gatewayOrigin;
           const targetUrl =
-            target.value === "constructor" ? constructorUrl : classicUrl;
+            target.value === "gateway" ? gatewayUrl || (reservedGatewayName ? "El nombre nexobet está reservado" : "Requiere Template 7/9 y gateway") : target.value === "constructor" ? constructorUrl : classicUrl;
           const infoOpen = openInfo === target.value;
           const infoId = `publish-target-${target.value}-info`;
 
@@ -196,6 +212,7 @@ export function PublishTargetSection({
                   setOpenInfo(null);
                   onChange(target.value);
                 }}
+                disabled={unavailable}
                 aria-pressed={active}
                 aria-label={`Usar motor ${target.title}`}
                 className={`absolute inset-0 rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 ${

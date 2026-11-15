@@ -2,7 +2,7 @@ export type RevalidationMotor = "classic" | "constructor";
 export type RevalidationAction = {
   action: "publish" | "test-classic";
   landingId: string;
-  publishTarget: RevalidationMotor;
+  publishTarget: RevalidationMotor | "gateway";
 };
 
 export type RevalidationResult = {

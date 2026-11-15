@@ -16,9 +16,10 @@ export function buildTemplate7RuntimeConfig(
   slug: string,
   config: PublicLandingConfig,
   classicDeviceIdScript = "",
+  transport: { apiBase?: string; assetBase?: string; engine?: "gateway" } = {},
 ) {
   const isTemplate8 = config.layout?.template === 8;
-  return { ...buildRuntimeConfig({ slug, config }), socialProofItems: [], automaticLandingSelection: !!classicDeviceIdScript,
+  return { ...buildRuntimeConfig({ slug, config, ...transport }), socialProofItems: [], automaticLandingSelection: !!classicDeviceIdScript,
     ...(config.layout?.template === 9 ? { template: 7, entryTemplate: 9, ctaDestination: "atrio" } : {}),
     ...(isTemplate8 ? { template: 7, entryTemplate: 8, template8: true, ctaDestination: "atrio", targetProvider: "", cardIndex: null,
       template8Cards: (config.content?.template8?.cards || []).map((card, i) => {
@@ -93,7 +94,7 @@ export function buildTemplate7FastRuntime(
         var active = null, cancelled = false;
         var promise = template7ReadyIdentity(retryIdentity).then(function(ready) {
           if (cancelled || ready !== true) return null;
-          active = window.__T7_FETCH_JSON__('/api/template7/destination', {
+          active = window.__T7_FETCH_JSON__((cfg.apiBase || '/api') + '/template7/destination', {
             method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
           }, 12000);
           return active;
@@ -168,7 +169,7 @@ export function buildTemplate7FastRuntime(
           var entryAttempt = ++template7EntryGeneration;
           window.__T7_ENTRY_STARTED__ = true; clickLocked = true;
           if (template7Transition) template7Transition.start('preparing');
-          return fetchWithEntryRecovery('/api/template7/prepare', {
+          return fetchWithEntryRecovery((cfg.apiBase || '/api') + '/template7/prepare', {
             method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},
             body:JSON.stringify({${classicDeviceIdScript ? "device_id:getOrCreateDeviceId()," : ""}landing_id:cfg.landingId,landing_slug:cfg.slug,
               entry_funnel:window.__entryFunnel?window.__entryFunnel.context():undefined,
@@ -194,7 +195,7 @@ export function buildTemplate7FastRuntime(
             if (!advisor.existingName || !advisor.promoCode || window.__T7_ENTRY_STARTED__) return;
             return resume(advisor,advisor.existingName,advisor.promoCode);
           }
-          return fetch('/api/template7/warm', {
+          return fetch((cfg.apiBase || '/api') + '/template7/warm', {
             method: 'POST', credentials: 'same-origin', cache: 'no-store',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ${classicDeviceIdScript ? "device_id: getOrCreateDeviceId(), " : ""}landing_id: cfg.landingId, landing_slug: cfg.slug,
