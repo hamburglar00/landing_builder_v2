@@ -23,7 +23,7 @@ test("native EBP loads from legacy and scoped Gateway assets, rejecting external
       });
       await page.goto("https://gateway.example/l/demo");
       await page.evaluate(`window.fixtureCollector = (${buildLandingFbcFactoryScript()})({landingId:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',slug:'demo',workspaceCurrency:'ARS',pixelId:'123456'});`);
-      await page.evaluate(source => (window as Window & { fixtureCollector: { collectNative(value: string): Promise<void> } }).fixtureCollector.collectNative(source), source);
+      await page.evaluate(source => (window as Window & { fixtureCollector?: { collectNative(value: string): Promise<void> } }).fixtureCollector!.collectNative(source), source);
       assert.deepEqual(scripts, accepted ? ["https://gateway.example" + source] : [], source);
       await context.close();
     }
