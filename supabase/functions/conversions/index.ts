@@ -5372,7 +5372,9 @@ async function handleLead(
     ? (whatsappCloudApiAssignmentLineage &&
         canUsePromoForJourney(promoCoherence)
       ? whatsappCloudApiAssignmentLineage.row
-      : await findLatestTrustedGerenciaLineage(
+      // A full, unmatched code starts its own journey. The previous journey
+      // for this phone/gerencia cannot supply its advertising context.
+      : promoCodeIsFull ? null : await findLatestTrustedGerenciaLineage(
         db,
         landing.user_id,
         cleanPhone,
@@ -7413,9 +7415,9 @@ async function handlePurchase(
     );
   }
 
-  // Repeat purchase => inherit only from the same receiver gerencia. If no
-  // trustworthy lineage exists there, keep the event direct/unattributed.
-  const repeatSourceRow = isAtrioSource && promoRow?.id &&
+  // An exact coherent promo owns the whole context, for WhatsApp and Atrio.
+  // Resolving its pixel separately must never combine A's pixel with B's FBC.
+  const repeatSourceRow = promoRow?.id &&
       canUsePromoForJourney(promoCoherence)
     ? promoRow
     : whatsappCloudApiAssignmentLineage &&
