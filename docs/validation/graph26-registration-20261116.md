@@ -16,4 +16,18 @@ La tabla oficial de [versiones Graph](https://developers.facebook.com/docs/graph
 
 La compilación local con Vercel CLI falló por ENOSPC durante instalación, antes de crear candidato. Se retiraron únicamente dependencias temporales nuevas y la copia local de un audit anterior; se conserva el checkpoint. La publicación usará compilación remota de Vercel y comprobación READY antes de asignar dominios.
 
-Pendiente al momento de este registro: validación final, commits/push, migración, funciones y frontend por producto. La evidencia de cierre se añadirá después de verificar producción.
+Publicado y comprobado. Builder comiteado y pusheado en main `bdb631951516a11e27d9045dfe90768ab685d86b`; migración aplicada `20261116144142_graph26_capi` y archivo local alineado con esa versión. Doce configuraciones base y veinte píxeles quedaron en v26, con sus defaults comprobados.
+
+Funciones ACTIVE: conversions 182, retry-failed-conversions 58, conversions-test 19. Lectura posterior verifica exactamente 19/19, 14/14 y 8/8 archivos; verify_jwt=false y autenticación propia conservados. Petición interna sin firma con nombre receptor, cron sin secreto y test endpoint sin sesión: 401. Un sobre vacío sin receptor devuelve 400 por validación, comportamiento existente.
+
+Frontend Builder final `dpl_GLiuw9A7aFfky9zqn7nS7BD8hqZh`, construido desde Git main bdb63195, READY y comprobado en constructor.panelbotadmin.com y mkt.panelbotadmin.com. Candidato previo `dpl_DtUxy3PmwCZS5cST7n53EUAvsUvV`, construido/remotamente probado y promovido, sustituido por el despliegue de main. Login 200 y prueba de conexión sin sesión 401.
+
+Nexo `1182a2057b37f71ac697729ba24f1862e7cbd75d`, pusheado a fix/graph26-registration-20261116, deployment `dpl_5zf6F81G4uoqUG4KBPAay6Bjz4Sx` READY. Dominios nexobet.fun, www.nexobet.fun y nexobet-seven.vercel.app comprobados contra ese SHA. Login/warmup 200; chat sin sesión y bridge con slug válido sin firma 401. Sin migración Nexo. Los datos y la identidad del lote paralelo permanecen independientes.
+
+Resultado final: 169 pruebas Deno, 64 frontend Builder, 45 Nexo, TypeScript y ambos builds remotos aprobados; 24 comprobaciones de handlers Purchase/retry v26, 66 de recibos y 20 de recorrido/aislamiento. Marketing 1.3.1: 24 pins; workspace 1.2.4: 60 pins. Una comparación final confirma 59 verificaciones de parches y archivos nuevos originales sin diferencias respecto del checkpoint.
+
+Muestra natural posterior a la migración, desde 14:41:43 hasta 14:45:44 UTC: siete filas de recibo Purchase chat con events_received=1. No son siete conversiones únicas atribuibles en campañas. No se reenvían eventos históricos para comprobar el despliegue. [Evidencia de producción y reversión](graph26-production-20261116.json).
+
+Lectura de control adicional con la función de consulta real y un cliente administrativo en memoria, sin escrituras: del 1/11 al 17/11, 40 altas confirmadas únicas, coincidentes con la comprobación SQL agregada. La primera lectura no completó la validación; una repetición sin cambios de código terminó correctamente. No se imprimieron datos de clientes ni claves.
+
+Reversión: Builder dpl_AkX9HnudAL5E1JyjGYtfa9r48C3v; Nexo dpl_6zqAc7az7RGHMxNo5ME2tw6CVoyy. Respaldos de funciones previas en .vercel/graph26-edge-backup; conservar IDs/recibos y, si fuera necesario volver de versión, restituir v25 en los mismos campos/defaults sin alterar conversiones ni repetir envíos.

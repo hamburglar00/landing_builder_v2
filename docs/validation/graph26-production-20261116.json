@@ -1,0 +1,116 @@
+{
+  "domains": [
+    {
+      "domain": "constructor.panelbotadmin.com",
+      "deployment": "dpl_GLiuw9A7aFfky9zqn7nS7BD8hqZh",
+      "state": "READY",
+      "url": "landing-builder-v2-k259-h19722qqz-juanclouds-projects.vercel.app",
+      "sha": "bdb631951516a11e27d9045dfe90768ab685d86b"
+    },
+    {
+      "domain": "mkt.panelbotadmin.com",
+      "deployment": "dpl_GLiuw9A7aFfky9zqn7nS7BD8hqZh",
+      "state": "READY",
+      "url": "landing-builder-v2-k259-h19722qqz-juanclouds-projects.vercel.app",
+      "sha": "bdb631951516a11e27d9045dfe90768ab685d86b"
+    },
+    {
+      "domain": "nexobet.fun",
+      "deployment": "dpl_5zf6F81G4uoqUG4KBPAay6Bjz4Sx",
+      "state": "READY",
+      "url": "nexobet-kfub1qzze-juanclouds-projects.vercel.app",
+      "sha": "1182a2057b37f71ac697729ba24f1862e7cbd75d"
+    },
+    {
+      "domain": "www.nexobet.fun",
+      "deployment": "dpl_5zf6F81G4uoqUG4KBPAay6Bjz4Sx",
+      "state": "READY",
+      "url": "nexobet-kfub1qzze-juanclouds-projects.vercel.app",
+      "sha": "1182a2057b37f71ac697729ba24f1862e7cbd75d"
+    },
+    {
+      "domain": "nexobet-seven.vercel.app",
+      "deployment": "dpl_5zf6F81G4uoqUG4KBPAay6Bjz4Sx",
+      "state": "READY",
+      "url": "nexobet-kfub1qzze-juanclouds-projects.vercel.app",
+      "sha": "1182a2057b37f71ac697729ba24f1862e7cbd75d"
+    }
+  ],
+  "published": true,
+  "builderMain": "bdb631951516a11e27d9045dfe90768ab685d86b",
+  "nexoCommit": "1182a2057b37f71ac697729ba24f1862e7cbd75d",
+  "migration": "20261116144142_graph26_capi",
+  "configVersions": {
+    "conversions_config": {
+      "v26.0": 12
+    },
+    "conversions_pixel_configs": {
+      "v26.0": 20
+    }
+  },
+  "edgeFunctions": {
+    "conversions": {
+      "version": 182,
+      "filesVerified": 19,
+      "verify_jwt": false
+    },
+    "retry-failed-conversions": {
+      "version": 58,
+      "filesVerified": 14,
+      "verify_jwt": false
+    },
+    "conversions-test": {
+      "version": 19,
+      "filesVerified": 8,
+      "verify_jwt": false
+    }
+  },
+  "tests": {
+    "deno": 169,
+    "builderFrontend": 64,
+    "nexo": 45,
+    "purchaseHandlerChecks": 24,
+    "metaReceiptScenarios": 66,
+    "journeyScenarios": 20,
+    "controlledLiveV26TestEvents": 6
+  },
+  "http": {
+    "builderLoginDomains": 2,
+    "nexoLogin": 200,
+    "nexoWarmupDomains": 2,
+    "nexoChatUnauthenticated": 401,
+    "nexoGatewayValidSlugUnsigned": 401,
+    "builderInternalUnsignedWithReceiverName": 401,
+    "builderCronUnsigned": 401,
+    "builderTestEndpointUnsigned": 401
+  },
+  "naturalMetaObservation": {
+    "since": "2026-11-16T14:41:43Z",
+    "observedAt": "2026-11-16T14:45:44.23618Z",
+    "event": "Purchase",
+    "actionSource": "chat",
+    "acceptedLogRows": 7,
+    "events_received": 1,
+    "meaning": "Receipt log rows, not unique attributed campaign conversions"
+  },
+  "checkpointOriginalWorktrees": {
+    "patchAndNewFileChecks": 59,
+    "differences": 0
+  },
+  "rollback": {
+    "builderDeployment": "dpl_AkX9HnudAL5E1JyjGYtfa9r48C3v",
+    "nexoDeployment": "dpl_6zqAc7az7RGHMxNo5ME2tw6CVoyy",
+    "edgeVersions": {
+      "conversions": 181,
+      "retry-failed-conversions": 57,
+      "conversions-test": 18
+    },
+    "configurationVersion": "v25.0",
+    "edgeBackup": ".vercel/graph26-edge-backup"
+  },
+  "limitations": [
+    "Test Events acceptance and short production observation do not certify future attribution in campaigns.",
+    "Nexo uses its own report which already includes registration_at; no Nexo SQL migration.",
+    "No new SDK or gateway/Worker publication is necessary; their Builder/Nexo endpoints were updated."
+  ]
+}
