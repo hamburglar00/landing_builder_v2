@@ -1,0 +1,87 @@
+{
+  "domains": [
+    {
+      "domain": "constructor.panelbotadmin.com",
+      "deployment": "dpl_BzGbHiA4eeD39dycbrjrLLu24eeN",
+      "state": "READY",
+      "loginStatus": 200
+    },
+    {
+      "domain": "mkt.panelbotadmin.com",
+      "deployment": "dpl_BzGbHiA4eeD39dycbrjrLLu24eeN",
+      "state": "READY",
+      "loginStatus": 200
+    }
+  ],
+  "mainSha": "7cb86ad083d3c12d2e08823c8ae8573ed69b169b",
+  "publishedUi": [
+    {
+      "route": "/dashboard/conversiones",
+      "status": 200,
+      "newLogDetailsInPublishedBundle": true
+    },
+    {
+      "route": "/admin/conversiones",
+      "status": 200,
+      "newLogDetailsInPublishedBundle": true
+    }
+  ],
+  "published": true,
+  "scope": "Builder only; NexoBet explicitly assigned to another session",
+  "implementationCommit": "7cb86ad083d3c12d2e08823c8ae8573ed69b169b",
+  "branch": "main",
+  "migration": "20261116160158_meta_transport_log_metadata",
+  "edgeFunctions": {
+    "conversions": {
+      "version": 183,
+      "verifiedFiles": 20,
+      "verify_jwt": false
+    },
+    "retry-failed-conversions": {
+      "version": 59,
+      "verifiedFiles": 15,
+      "verify_jwt": false
+    }
+  },
+  "tests": {
+    "senderAndRetryMetadataScenarios": 29,
+    "receiptRegressionScenarios": 66,
+    "journeyRegressionScenarios": 20,
+    "denoTests": 172,
+    "uiTests": 8,
+    "typescript": true,
+    "remoteProductionBuild": true
+  },
+  "naturalObservation": {
+    "since": "2026-11-16T16:03:20Z",
+    "until": "2026-11-16T16:04:55.493582Z",
+    "acceptedReceiptRows": {
+      "Contact": 1,
+      "Lead": 1,
+      "Purchase": 2
+    },
+    "meta_api_version": "v26.0",
+    "meta_http_status": 200,
+    "meta_attempt": 1,
+    "events_received": 1
+  },
+  "historicalRowsWithFilledMetadata": 0,
+  "security": {
+    "existingNoticeGroups": 6,
+    "newFindingsIgnoringObservationTimestamp": 0,
+    "conversionLogsRlsEnabled": true,
+    "unsignedInternalReceiverStatus": 401,
+    "unsignedCronStatus": 401
+  },
+  "originalWorktree": {
+    "patchAndNewFileChecks": 4,
+    "differences": 0
+  },
+  "rollback": {
+    "frontendDeployment": "dpl_HizrvUYxyv2fadsSs6dTBwzVKh6k",
+    "conversionsVersion": 182,
+    "retryVersion": 58,
+    "sourceBackup": ".vercel/meta-log-backup",
+    "migration": "Leave nullable columns in place; do not erase logs or resend accepted events."
+  }
+}

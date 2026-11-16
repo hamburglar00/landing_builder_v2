@@ -1,0 +1,27 @@
+{
+  "state": "local-only",
+  "branch": "fix/journey-tracking-20261116",
+  "baseCode": "7cb86ad083d3c12d2e08823c8ae8573ed69b169b",
+  "checks": {
+    "newRealHandlerScenarios": 4,
+    "internalJourneyRegressions": 20,
+    "metaReceiptRegressions": 66,
+    "metaTransportRegressions": 29,
+    "purchaseProviderRegressions": 24,
+    "denoTests": 172,
+    "denoCheck": "passed",
+    "nexoPinnedSourceReview": "24 verified; unchanged; Nexo implemented in another session"
+  },
+  "realNetworkRequests": 0,
+  "productionWrites": 0,
+  "sourceFiles": [
+    {
+      "path": "supabase/functions/conversions/index.ts",
+      "sha256": "ca93444b74bf40cf04be204ae84d9dff1dd0c524e43b2e85a21f80cdc183d1fa"
+    },
+    {
+      "path": "scripts/check-journey-context-isolation.mjs",
+      "sha256": "a747217897df690221a9bdb997c80e4e39059f86d3a3bd1612842e3e3b79e079"
+    }
+  ]
+}

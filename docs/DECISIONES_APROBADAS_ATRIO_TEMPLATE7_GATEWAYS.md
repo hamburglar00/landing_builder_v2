@@ -1,5 +1,19 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+## 16/11 — Contexto de un único recorrido y entrega duradera en API2
+
+Leo autoriza implementar las dos correcciones auditadas de Builder y el registro previo al envío/recuperación persistente en API2; API2 exclusivamente local en `feature/atrio-integration`. Un promo completo nuevo B sin Contact coincidente no hereda publicidad de A. Una compra/recompra con promo exacto coherente toma su contexto completo de ese recorrido, tanto WhatsApp como Atrio. Conservar hitos operativos, eventos Meta, filtros, IDs, fechas y controles de pertenencia. La evidencia de origen permanece separada del código de recorrido.
+
+En API2, el recorrido recibido es independiente del acuse HTTP. Guardar B antes del envío; fijar el recorrido de cada compra y recuperar la misma notificación sin retroceder de C a B. Mensajes sin código mantienen el recorrido y repetir el código vigente no crea otro. Errores temporales se recuperan desde SQL; conflictos definitivos de cliente receptor quedan bloqueados para revisión. Sin reparación/reenvío masivo de históricos ni cambios financieros. NexoBet continúa en otra sesión; clásico y cuatro gateways/Worker consumen el mismo receptor sin cambios de SDK/ingreso. Fuente, alcance, checkpoint y pruebas en [validación](validation/journey-tracking-20261116.md).
+
+Decisión posterior del 16/11: Leo acepta conservar la captura actual de timestamp al construir el evento en API2 y autoriza publicar exclusivamente Builder. Integrar en main y comprobar función, READY y los dos dominios. API2, su migración y NexoBet continúan fuera de esa publicación. Conservar IDs, fecha recibida y contexto en reintentos; no añadir la extracción de timestamps de mensajes/operaciones a este lote.
+
+## 16/11 — Metadatos del transporte CAPI, sólo Builder
+
+Leo autoriza implementar y publicar únicamente Builder; NexoBet se implementa en otra sesión de VS Code y queda expresamente fuera de esta entrega. Añadir a los logs nuevos versión Graph, estado HTTP real y número de llamada dentro de la ejecución. La versión usa facebook-api-version cuando sea válida y, en su ausencia, la versión solicitada en la ruta; nunca guardar la URL ni tokens en esos campos. Cada ejecución posterior de cron comienza su ordinal HTTP en 1; no inferir un total histórico de intentos.
+
+La pantalla de logs de admin y cliente muestra esos campos cuando existen. Los históricos conservan NULL, sin relleno ni reenvíos. Mantener nombres/IDs/fechas, payload, píxel, matching, políticas de origen, aceptación estricta y reintentos. Clásico y cuatro gateways/Worker consumen el receptor único; no requieren cambios de SDK/ingreso ni publicación independiente. API2/Atrio conservan emisores. Registro: [validación](validation/meta-log-metadata-20261116.md).
+
 ## 16/11 — Graph v26 y fecha propia de altas confirmadas
 
 Leo autoriza implementar, comprobar regresiones y publicar ambos cambios. Sustituye la decisión anterior de conservar Graph v25: Pixel/CAPI convencional, comprobación de conexión, configuraciones existentes v25 y nuevos valores predeterminados pasan a v26 tras aceptación controlada. Mantener versiones explícitas diferentes y la configuración propia de WhatsApp Cloud API. No cambia SDK Pixel, nombres/IDs/fechas de eventos ni reglas de origen, recorrido y reintento.

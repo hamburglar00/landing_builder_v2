@@ -1,4 +1,5 @@
 import { evaluateMetaReceipt, requiresMetaReceiptReview } from "../conversions/meta_receipt.ts";
+import { metaTransportLog, type MetaTransportLogFields } from "../conversions/meta_transport_log.ts";
 import {
   createClient,
   type SupabaseClient,
@@ -952,12 +953,14 @@ Deno.serve(async (req) => {
 
       retried++;
 
+      let transport = metaTransportLog(metaReq.apiUrl, 1);
       try {
         const res = await fetch(metaReq.apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(metaReq.body),
         });
+        transport = metaTransportLog(metaReq.apiUrl, 1, res);
         const resText = await res.text();
 
         const successMsg = isRepeat
@@ -982,9 +985,10 @@ Deno.serve(async (req) => {
             row.id,
             "INFO",
             "Meta CAPI retry Purchase OK",
-            "HTTP 200",
+            `HTTP ${res.status}`,
             JSON.stringify(metaReq.body),
             resText,
+            transport,
           );
           succeeded++;
         } else {
@@ -1008,6 +1012,7 @@ Deno.serve(async (req) => {
             `HTTP ${res.status}: ${resText}`,
             JSON.stringify(metaReq.body),
             resText,
+            transport,
           );
         }
       } catch (err) {
@@ -1028,6 +1033,7 @@ Deno.serve(async (req) => {
           String(err),
           JSON.stringify(metaReq.body),
           "",
+          transport,
         );
       }
     }
@@ -1988,6 +1994,7 @@ async function retrySingleContactLeadCapiEvent(
       eventTime,
     );
   const metaPayloadRaw = JSON.stringify(metaReq.body);
+  let transport = metaTransportLog(metaReq.apiUrl, 1);
   const traceDatasetId = useBusinessMessaging
     ? normalizeText(whatsappCloudApiCfg?.meta_messaging_dataset_id)
     : "";
@@ -2023,6 +2030,7 @@ async function retrySingleContactLeadCapiEvent(
       detail,
       metaPayloadRaw,
       responseRaw,
+      transport,
     );
   };
 
@@ -2032,6 +2040,7 @@ async function retrySingleContactLeadCapiEvent(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(metaReq.body),
     });
+    transport = metaTransportLog(metaReq.apiUrl, 1, res);
     const resText = await res.text();
     const receipt = evaluateMetaReceipt(res.status, resText);
 
@@ -2054,9 +2063,10 @@ async function retrySingleContactLeadCapiEvent(
         row.id,
         "INFO",
         `Meta CAPI retry ${delivery.eventName} OK`,
-        `HTTP 200 retry ${retryCount + 1}/${MAX_CONTACT_LEAD_CAPI_RETRIES}`,
+        `HTTP ${res.status} retry ${retryCount + 1}/${MAX_CONTACT_LEAD_CAPI_RETRIES}`,
         metaPayloadRaw,
         resText,
+        transport,
       );
       return;
     }
@@ -2182,6 +2192,7 @@ async function writeConversionLog(
   detail: string,
   payloadMeta: string,
   responseMeta: string,
+  transport?: MetaTransportLogFields,
 ): Promise<void> {
   try {
     await db.from("conversion_logs").insert({
@@ -2194,6 +2205,7 @@ async function writeConversionLog(
       result: detail.slice(0, 4000),
       payload_meta: payloadMeta.slice(0, 20000),
       response_meta: responseMeta.slice(0, 20000),
+      ...transport,
     });
   } catch (err) {
     console.error(

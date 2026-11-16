@@ -1,4 +1,5 @@
 import { evaluateMetaReceipt, requiresMetaReceiptReview } from "./meta_receipt.ts";
+import { metaTransportLog, type MetaTransportLogFields } from "./meta_transport_log.ts";
 import {
   createClient,
   SupabaseClient,
@@ -2302,6 +2303,7 @@ async function writeLog(
   responseMeta?: string,
   payloadReceived?: string,
   result?: string,
+  transport?: MetaTransportLogFields,
 ): Promise<boolean> {
   const diagnostics = requestDiagnostics.get(db);
   if (diagnostics) detail = diagnostics.annotateDetail(detail);
@@ -2327,6 +2329,7 @@ async function writeLog(
         result: (result ?? detail ?? "").slice(0, 4000),
         payload_meta: (payloadMeta ?? "").slice(0, 20000),
         response_meta: (responseMeta ?? "").slice(0, 20000),
+        ...transport,
       });
       return true;
     } catch (err) {
@@ -4233,6 +4236,7 @@ async function sendToMetaCAPI(
   const maxAttempts = 3;
   const baseDelayMs = 500;
   const metaPayloadRaw = JSON.stringify(body);
+  let transport = metaTransportLog(apiUrl, 1);
 
   const persistError = async (
     detail: string,
@@ -4261,10 +4265,14 @@ async function sendToMetaCAPI(
       rowId,
       metaPayloadRaw,
       responseRaw,
+      undefined,
+      undefined,
+      transport,
     );
   };
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    transport = metaTransportLog(apiUrl, attempt);
     try {
       const controller = new AbortController();
       const timeout = setTimeout(
@@ -4284,6 +4292,7 @@ async function sendToMetaCAPI(
         }
       })();
 
+      transport = metaTransportLog(apiUrl, attempt, res);
       const resText = await res.text();
       const receipt = evaluateMetaReceipt(res.status, resText);
 
@@ -4305,10 +4314,13 @@ async function sendToMetaCAPI(
           "sendToMetaCAPI",
           "INFO",
           "Meta CAPI respuesta",
-          `HTTP 200 (attempt ${attempt}/${maxAttempts})`,
+          `HTTP ${res.status} (attempt ${attempt}/${maxAttempts})`,
           rowId,
           metaPayloadRaw,
           resText,
+          undefined,
+          undefined,
+          transport,
         );
         if (!primaryLogOk) {
           const backupOk = await writeLog(
@@ -4325,6 +4337,7 @@ async function sendToMetaCAPI(
                 "status enviado confirmado, fallo persistencia del log primario",
             }),
             rowId,
+            undefined, undefined, undefined, undefined, transport,
           );
           if (!backupOk) {
             console.error(
@@ -4346,6 +4359,7 @@ async function sendToMetaCAPI(
             "Meta CAPI recuperado tras reintento",
             JSON.stringify({ eventName, eventId, attempt }),
             rowId,
+            undefined, undefined, undefined, undefined, transport,
           );
         }
         return true;
@@ -4382,6 +4396,7 @@ async function sendToMetaCAPI(
           maxAttempts,
         }),
         rowId,
+        metaPayloadRaw, resText, undefined, undefined, transport,
       );
       await new Promise((r) => setTimeout(r, baseDelayMs * attempt));
     } catch (e) {
@@ -4411,6 +4426,7 @@ async function sendToMetaCAPI(
           error: errorDetail,
         }),
         rowId,
+        metaPayloadRaw, "", undefined, undefined, transport,
       );
       await new Promise((r) => setTimeout(r, baseDelayMs * attempt));
     }
@@ -5356,7 +5372,9 @@ async function handleLead(
     ? (whatsappCloudApiAssignmentLineage &&
         canUsePromoForJourney(promoCoherence)
       ? whatsappCloudApiAssignmentLineage.row
-      : await findLatestTrustedGerenciaLineage(
+      // A full, unmatched code starts its own journey. The previous journey
+      // for this phone/gerencia cannot supply its advertising context.
+      : promoCodeIsFull ? null : await findLatestTrustedGerenciaLineage(
         db,
         landing.user_id,
         cleanPhone,
@@ -7397,9 +7415,9 @@ async function handlePurchase(
     );
   }
 
-  // Repeat purchase => inherit only from the same receiver gerencia. If no
-  // trustworthy lineage exists there, keep the event direct/unattributed.
-  const repeatSourceRow = isAtrioSource && promoRow?.id &&
+  // An exact coherent promo owns the whole context, for WhatsApp and Atrio.
+  // Resolving its pixel separately must never combine A's pixel with B's FBC.
+  const repeatSourceRow = promoRow?.id &&
       canUsePromoForJourney(promoCoherence)
     ? promoRow
     : whatsappCloudApiAssignmentLineage &&
