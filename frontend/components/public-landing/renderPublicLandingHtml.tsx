@@ -36,6 +36,8 @@ type RenderParams = {
   engine?: 'classic' | 'constructor' | 'gateway';
   apiBase?: string;
   assetBase?: string;
+  /** Public config-free files only; identity, tracking and API stay on apiBase/assetBase. */
+  publicAssetBase?: string;
   recoveryNamespace?: string;
 };
 
@@ -689,7 +691,7 @@ function renderTemplate(params: RenderParams) {
   if (params.config.layout?.template === 9) {
     const code = params.config.tracking?.skin_code;
     const brand = params.config.tracking?.target_provider === "multi_skin" && isMultiSkinCode(code) ? getMultiSkinBrand(code) : undefined;
-    return renderTemplate9View(params.config, false, params.legalBasePath || `/l/${encodeURIComponent(params.slug)}`, params.assetBase) + renderGatewayEntryTransition(params.config.tracking?.target_provider || "rey_de_ases", { stage: "creating", gatewayOrigin: template7GatewayOrigin(params.config), brand }) + TEMPLATE9_UI_SCRIPT;
+    return renderTemplate9View(params.config, false, params.legalBasePath || `/l/${encodeURIComponent(params.slug)}`, params.publicAssetBase ?? params.assetBase) + renderGatewayEntryTransition(params.config.tracking?.target_provider || "rey_de_ases", { stage: "creating", gatewayOrigin: template7GatewayOrigin(params.config), brand }) + TEMPLATE9_UI_SCRIPT;
   }
   if (params.config.layout?.template === 8) return renderTemplate8(params);
   if (params.config.layout?.template === 7) return renderTemplate7(params);
@@ -722,7 +724,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
   const phonePrewarmScript = isTemplate7 ? "" : renderScriptElement(
     PhonePrewarmScript({ slug, initialPhone: cachedPhone }),
   );
-  const transport = { apiBase: params.apiBase, assetBase: params.assetBase, ...(engine === "gateway" ? { engine } : {}) };
+  const transport = { apiBase: params.apiBase, assetBase: params.assetBase, publicAssetBase: params.publicAssetBase, ...(engine === "gateway" ? { engine } : {}) };
   const runtimeAsset = isTemplate7 ? renderTemplate7RuntimeAsset(slug, config, "", transport) : null;
   const runtimeScript = runtimeAsset
       ? runtimeAsset.script
@@ -737,7 +739,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     config,
     slug,
     canonicalUrl,
-  )}${params.assetBase ? PUBLIC_LANDING_FAVICON_LINK.replace('href="/', `href="${escapeHtml(params.assetBase)}/`) : PUBLIC_LANDING_FAVICON_LINK}<meta name="theme-color" content="${themeColor}">${
+  )}${params.publicAssetBase ? `<link rel="preconnect" href="${escapeHtml(params.publicAssetBase)}">` : ""}${params.assetBase ? PUBLIC_LANDING_FAVICON_LINK.replace('href="/', `href="${escapeHtml(params.assetBase)}/`) : PUBLIC_LANDING_FAVICON_LINK}<meta name="theme-color" content="${themeColor}">${
     supabaseOrigin
       ? `<link rel="preconnect" href="${escapeHtml(supabaseOrigin)}" crossorigin><link rel="dns-prefetch" href="${escapeHtml(supabaseOrigin)}">`
       : ""
@@ -749,7 +751,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     pixelId
       ? '<link rel="preconnect" href="https://www.facebook.com"><link rel="preconnect" href="https://connect.facebook.net">'
       : ""
-  }${runtimeAsset ? runtimeAsset.preload + runtimeAsset.config : ""}${isTemplate7 ? buildClientIdentityBootstrapScript(isTemplate8 ? undefined : { slug, landingId: config.id || "" }, { apiBase: params.apiBase, recoveryNamespace: params.recoveryNamespace }) + (isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug, landingId: config.id || "", apiBase: params.apiBase }))) : ""}${phonePrewarmScript}${buildPreloadLinks(config, params.assetBase)}${isTemplate7 ? `<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS + (config.layout?.template === 9 ? TEMPLATE9_CSS : "")}</style>` : `<link rel="stylesheet" href="/public-assets/template-entry/${publicLandingStyleAsset.name}">`}${pixelScriptForTemplate(
+  }${runtimeAsset ? runtimeAsset.preload + runtimeAsset.config : ""}${isTemplate7 ? buildClientIdentityBootstrapScript(isTemplate8 ? undefined : { slug, landingId: config.id || "" }, { apiBase: params.apiBase, recoveryNamespace: params.recoveryNamespace }) + (isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug, landingId: config.id || "", apiBase: params.apiBase }))) : ""}${phonePrewarmScript}${buildPreloadLinks(config, params.publicAssetBase ?? params.assetBase)}${isTemplate7 ? `<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS + (config.layout?.template === 9 ? TEMPLATE9_CSS : "")}</style>` : `<link rel="stylesheet" href="/public-assets/template-entry/${publicLandingStyleAsset.name}">`}${pixelScriptForTemplate(
     pixelId,
     slug,
     config.tracking?.phoneCountryCode || "54",

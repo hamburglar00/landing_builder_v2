@@ -9,7 +9,7 @@ import type { PublicLandingConfig } from "../components/public-landing/types";
 test("Gateway T7/T9: stable form, scoped identity/destination/tracking and one CTA handoff, without real accounts", async () => {
   const browser = await chromium.launch({ headless: true });
   try {
-    for (const template of [7, 9]) for (const width of [390, 1365]) {
+    for (const template of [7, 9]) for (const width of [390, 1365]) for (const directAssets of [false, true]) {
       const context = await browser.newContext({ viewport: { width, height: 844 } });
       const page = await context.newPage(); const requests: Array<{ operation: string; body: Record<string, unknown> }> = [];
       const errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
@@ -19,9 +19,13 @@ test("Gateway T7/T9: stable form, scoped identity/destination/tracking and one C
         tracking: { pixelId: "123456789", postUrl: "https://example.supabase.co/functions/v1/conversions?name=fixture", landingTag: "TEST", target_provider: "ganamos_net", ctaDestination: "atrio" },
         content: { title: ["Crear cuenta"], subtitle: ["Tu acceso"], logoUrl: "", ctaText: "Crear cuenta" } };
       const html = renderPublicLandingHtml({ slug: "demo", config, engine: "gateway", canonicalUrl: "https://gateway.example.test/l/demo",
-        apiBase: "/l/demo/_api", assetBase: "/l/demo/_assets", recoveryNamespace: "template7:gateway:builder:identity-recovery:v1" });
+        apiBase: "/l/demo/_api", assetBase: "/l/demo/_assets", ...(directAssets ? { publicAssetBase: "https://constructor.panelbotadmin.com" } : {}), recoveryNamespace: "template7:gateway:builder:identity-recovery:v1" });
       await context.route("**/*", async route => {
         const url = new URL(route.request().url());
+        if (url.origin === "https://constructor.panelbotadmin.com" && directAssets && /^\/public-assets\/(?:template-entry|template9)\/[a-zA-Z0-9_.-]+$/.test(url.pathname)) {
+          const body = await readFile(path.join(process.cwd(), "public", url.pathname.slice(1)));
+          return route.fulfill({ contentType: url.pathname.endsWith(".js") ? "application/javascript" : "image/webp", body });
+        }
         if (url.origin !== "https://gateway.example.test") return route.abort();
         if (url.pathname === "/l/demo") return route.fulfill({ contentType: "text/html", body: html });
         if (url.pathname.startsWith("/l/demo/_assets/")) {
@@ -44,6 +48,7 @@ test("Gateway T7/T9: stable form, scoped identity/destination/tracking and one C
       await page.goto("https://gateway.example.test/l/demo?utm_source=fixture&campana=retained");
       await page.waitForFunction(() => (window as Window & { __T7_RUNTIME_READY__?: boolean }).__T7_RUNTIME_READY__ === true);
       await nativeCollectorLoaded;
+      assert.equal(new URL(await page.locator("script[data-template7-runtime]").getAttribute("src") as string, page.url()).origin, directAssets ? "https://constructor.panelbotadmin.com" : "https://gateway.example.test");
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1), false);
       assert.ok(requests.some(r => r.operation === "client-identity/bootstrap"));
       assert.ok(requests.some(r => r.operation === "template7/destination"));

@@ -126,14 +126,14 @@ function t7Early(event){
 ['focusin','input','click','submit'].forEach(function(type){window.addEventListener(type,t7Early,true)});
 `;
 
-export function renderTemplate7RuntimeAsset(slug: string, config: PublicLandingConfig, deviceIdScript = "", transport: { apiBase?: string; assetBase?: string; engine?: "gateway" } = {}) {
+export function renderTemplate7RuntimeAsset(slug: string, config: PublicLandingConfig, deviceIdScript = "", transport: { apiBase?: string; assetBase?: string; publicAssetBase?: string; engine?: "gateway" } = {}) {
   const asset = template7RuntimeAsset(config.layout?.template === 8 ? 8 : 7, !!deviceIdScript);
   const settings = JSON.stringify(buildTemplate7RuntimeConfig(slug, config, deviceIdScript, transport))
     .replace(/[<>&\u2028\u2029]/g, value => `\\u${value.charCodeAt(0).toString(16).padStart(4, "0")}`);
   const identity = deviceIdScript
     ? `(function(){${deviceIdScript};window.__TEMPLATE7_GET_DEVICE_ID__=getOrCreateDeviceId;})();`
     : "";
-  const url = `${transport.assetBase || ""}/public-assets/template-entry/${asset.name}`;
+  const url = `${transport.publicAssetBase ?? transport.assetBase ?? ""}/public-assets/template-entry/${asset.name}`;
   return {
     preload: `<link rel="preload" as="script" href="${url}">`,
     config: `<script data-template7-runtime-config>window.__PUBLIC_LANDING_RUNTIME_CONFIG__=${settings};window.__T7_RUNTIME_ASSET_URL__=${JSON.stringify(url)};${identity}${EARLY_FORM}</script>`,
