@@ -112,5 +112,12 @@
     "Test Events acceptance and short production observation do not certify future attribution in campaigns.",
     "Nexo uses its own report which already includes registration_at; no Nexo SQL migration.",
     "No new SDK or gateway/Worker publication is necessary; their Builder/Nexo endpoints were updated."
-  ]
+  ],
+  "registrationReadOnlyControl": {
+    "start": "2026-11-01T00:00:00Z",
+    "end": "2026-11-17T00:00:00Z",
+    "uniqueConfirmedAccounts": 40,
+    "matchesSqlAggregate": true,
+    "productionWrites": 0
+  }
 }
