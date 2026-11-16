@@ -29,35 +29,27 @@ export function gatewayPreparationTheme(provider: string, override?: EntryBrandO
   };
 }
 
-// An indicative bar expresses ordered stages, never a server percentage. It
-// cannot complete by elapsed time, and adds no timers or network requests.
+// Indicative motion: a fast 70% start, then 90% while waiting. Only confirmed
+// readiness can complete it; later documents resume at 90%, never restart.
 export const ENTRY_PROGRESS_CSS = `
 .entry-progress{display:block;width:min(100%,300px);margin:26px auto 0;text-align:left}
 .entry-progress[hidden]{display:none!important}
 .entry-progress-track{display:block;height:6px;overflow:hidden;border-radius:999px;background:var(--entry-track,#f6c84b26)}
-.entry-progress-fill{display:block;height:100%;width:100%;transform-origin:left;border-radius:inherit;background:linear-gradient(90deg,var(--entry-primary,#c49a32),var(--entry-accent,#efd27b));transform:scaleX(.08)}
+.entry-progress-fill{display:block;height:100%;width:100%;transform-origin:left;border-radius:inherit;background:linear-gradient(90deg,var(--entry-primary,#c49a32),var(--entry-accent,#efd27b));transform:scaleX(.9)}
 .entry-progress-stops{display:flex;justify-content:space-between;gap:12px;margin-top:13px;color:#8e8b94;font:500 11px/1.3 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.02em}
 .entry-progress-stop{display:flex;align-items:center;gap:6px;white-space:nowrap}
 .entry-progress-stop::before{content:"";width:6px;height:6px;border:1px solid currentColor;border-radius:50%;flex:0 0 6px}
 .entry-progress:is([data-phase="creating"],[data-phase="preparing"],[data-phase="account"]) [data-stop="account"],.entry-progress:is([data-phase="login"],[data-phase="session"]) [data-stop="access"],.entry-progress[data-phase="connecting"] [data-stop="chat"]{color:#fff}
 .entry-progress:is([data-phase="login"],[data-phase="session"],[data-phase="connecting"],[data-phase="complete"]) [data-stop="account"],.entry-progress:is([data-phase="connecting"],[data-phase="complete"]) [data-stop="access"],.entry-progress[data-phase="complete"] [data-stop="chat"]{color:var(--entry-accent,#efd27b)}
 .entry-progress:is([data-phase="login"],[data-phase="session"],[data-phase="connecting"],[data-phase="complete"]) [data-stop="account"]::before,.entry-progress:is([data-phase="connecting"],[data-phase="complete"]) [data-stop="access"]::before,.entry-progress[data-phase="complete"] [data-stop="chat"]::before{background:currentColor}
-.entry-progress[data-phase="creating"] .entry-progress-fill,.entry-progress[data-phase="preparing"] .entry-progress-fill{animation:entry-progress-create 20s ease-out forwards}
-.entry-progress[data-phase="account"] .entry-progress-fill{animation:entry-progress-prepare 20s ease-out forwards}
-.entry-progress[data-phase="login"] .entry-progress-fill{animation:entry-progress-login 20s ease-out forwards}
-.entry-progress[data-phase="session"] .entry-progress-fill{animation:entry-progress-session 12s ease-out forwards}
-.entry-progress[data-phase="connecting"] .entry-progress-fill{animation:entry-progress-connect 20s ease-out forwards}
+.entry-progress[data-start="initial"]:not([data-phase="complete"]) .entry-progress-fill{animation:entry-progress-wait 1.4s ease-out forwards}
 .entry-progress[data-phase="complete"] .entry-progress-fill{animation:none;transform:scaleX(1)}
 .entry-progress[data-paused="true"] .entry-progress-fill{animation-play-state:paused}
-@keyframes entry-progress-create{from{transform:scaleX(.08)}to{transform:scaleX(.24)}}
-@keyframes entry-progress-prepare{from{transform:scaleX(.24)}to{transform:scaleX(.44)}}
-@keyframes entry-progress-login{from{transform:scaleX(.45)}to{transform:scaleX(.72)}}
-@keyframes entry-progress-session{from{transform:scaleX(.72)}to{transform:scaleX(.78)}}
-@keyframes entry-progress-connect{from{transform:scaleX(.80)}to{transform:scaleX(.94)}}
+@keyframes entry-progress-wait{from{transform:scaleX(.7)}to{transform:scaleX(.9)}}
 @media(prefers-reduced-motion:reduce){.entry-progress .entry-progress-fill{animation-duration:0s!important}}
 `;
-export function renderEntryProgress(phase: string) {
-  return `<div class="entry-progress" data-entry-progress data-phase="${phase}" role="progressbar" aria-label="Preparando tu acceso"><span class="entry-progress-track"><span class="entry-progress-fill"></span></span><span class="entry-progress-stops" aria-hidden="true"><span class="entry-progress-stop" data-stop="account">Cuenta</span><span class="entry-progress-stop" data-stop="access">Acceso</span><span class="entry-progress-stop" data-stop="chat">Chat</span></span></div>`;
+export function renderEntryProgress(phase: string, initial = phase === "creating" || phase === "preparing") {
+  return `<div class="entry-progress" data-entry-progress data-start="${initial ? "initial" : "continuation"}" data-phase="${phase}" role="progressbar" aria-label="Preparando tu acceso"><span class="entry-progress-track"><span class="entry-progress-fill"></span></span><span class="entry-progress-stops" aria-hidden="true"><span class="entry-progress-stop" data-stop="account">Cuenta</span><span class="entry-progress-stop" data-stop="access">Acceso</span><span class="entry-progress-stop" data-stop="chat">Chat</span></span></div>`;
 }
 
 function escape(value: string) { return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;"); }

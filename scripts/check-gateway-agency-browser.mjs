@@ -82,8 +82,8 @@ for (const [engineName, engine] of [["Chromium", playwright.chromium], ["WebKit"
         if(state==='active')await page.waitForURL('**/home?gateway_chat=open');
         else {await page.locator('#username').waitFor({state:'visible'});assert.ok(await page.locator('#error').textContent());}
         if(state==='network') {
-          assert.equal(await page.locator('#retry-recovery').isVisible(),true);
-          assert.deepEqual(await page.locator('#retry-recovery').evaluate(button=>({uppercase:getComputedStyle(button).textTransform,height:button.getBoundingClientRect().height>=44})),{uppercase:'uppercase',height:true});
+          assert.equal(await page.locator('#retry-recovery').count(),0);
+          assert.equal(await page.locator('#username').isVisible(),true);
         }
         assert.equal(calls.length,before+1);assert.equal(calls.at(-1).action,'resume');checks++;
       }
