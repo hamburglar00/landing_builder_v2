@@ -1699,3 +1699,11 @@ Leo solicita restaurar la recuperación de sesión en todos los gateways, inclui
 Ganamos+ adopta el login de NET, con su wordmark y paleta; la pica permanece como icono de instalación. Declarar manifest/Apple/favicon en los HTML del acceso, pintar el fondo de marca del login en áreas seguras y utilizar el fondo del casino después del ingreso (Ases #101114). Conservar chat, modales, teclado, footer, temporizadores, SDK y adaptadores de los cuatro, también con NexoBet.
 
 Sincronizar fuentes y ejecutar pruebas contra los worktrees candidatos explícitos, incluido resolveDir y sus assets, evitando validar otra copia. La barra compartida comienza al enviar el formulario. No se prometen tiempos nuevos de primera vinculación ni se omiten validaciones; las mejoras de API2 siguen pendientes del programador. Sin migraciones, cambios de datos reales ni reglas financieras. UX-029 y validación: ../../internal-chat-gateway-engine-20261114/docs/validation/agency-recovery-ui-20261116.md. Commit, candidato y publicación pública son estados separados y se registran al cierre.
+
+## Seguimiento de regresiones de teclado e ingreso — 16/11/2026
+
+Al enfocar y volver a enfocar la escritura, el chat debe permanecer entre la zona segura superior y el teclado en iPhone y Android, navegador y app instalada. El padre del iframe administra su geometría con VisualViewport; el historial se desplaza dentro del panel. No cambia la UI aprobada. Aplicación común a los cuatro gateways, Ganamos+ Worker y ambos productos de chat.
+
+La recuperación usa el acceso persistente del recorrido existente y la ruta registrada v1 de API2. No se permite cambiar de cuenta o gerencia durante una recuperación. Se retira el CTA de reintentar recuperación; ante un fallo permanece el ingreso manual.
+
+El progreso es indicativo: arranca cerca de 70 %, llega a 90 % en aproximadamente 1,4 s y sólo completa al confirmar que el chat es utilizable. Conserva logos, paleta, etapas, tracking y confirmaciones existentes. Las transiciones entre documentos continúan desde 90 %.

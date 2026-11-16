@@ -29,7 +29,16 @@ for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "mu
   // before inserting the canonical one, so repeated syncs cannot duplicate it.
   const without = client.replace(/  \/\/ BEGIN shared entry transition[\s\S]*?  \/\/ END shared entry transition\n\n?/g, "");
   if (without.split("  function initializeChat() {").length !== 2) throw Error("Gateway client changed");
-  await sync(target, without.replace("  function initializeChat() {", fragment + "\n  function initializeChat() {"));
+  // Presentation-only batches must not incidentally upgrade the independent
+  // tracking runtime embedded ahead of the transition controller.
+  let expectedFragment = fragment;
+  if (process.argv.includes('--presentation-only')) {
+    const currentPrefix = client.match(/  \/\/ BEGIN shared entry transition[\s\S]*?(?=function createGatewayEntryTransition\()/)?.[0];
+    const start = fragment.indexOf('function createGatewayEntryTransition(');
+    if (!currentPrefix || start < 0) throw Error('Missing transition controller');
+    expectedFragment = currentPrefix + fragment.slice(start);
+  }
+  await sync(target, without.replace("  function initializeChat() {", expectedFragment + "\n  function initializeChat() {"));
 }
 // Template 8 also reads the brand registry to prewarm the selected page.
 // The landing runtime already installs its funnel. Avoid embedding that factory twice.

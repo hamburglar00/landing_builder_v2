@@ -7,13 +7,14 @@ import {loadProductPaths} from './product-worktrees.mjs';
 import {execFileSync} from 'node:child_process';
 const productPath=loadProductPaths(),require=createRequire(new URL('../frontend/package.json',import.meta.url));
 const {chromium,webkit}=require('playwright');
-const baseline=process.argv.includes('--baseline');
-const source=async file=>baseline?execFileSync('git',['show','HEAD:'+file],{cwd:productPath('landing-autologuin'),encoding:'utf8'}):readFile(productPath('landing-autologuin',file),'utf8');
+const baseline=process.argv.find(arg=>arg.startsWith('--baseline='))?.slice(11);
+const rows=[];
+for(const repo of baseline?['landing-autologuin']:['landing-autologuin','ases-gateway','ganamos-gateway','multi-skin-gateway']){
+const source=async file=>baseline?execFileSync('git',['show',baseline+':'+file],{cwd:productPath(repo),encoding:'utf8'}):readFile(productPath(repo,file),'utf8');
 const js=await source('public/gateway-client.js');
 const css=await source('public/gateway-client.css');
 const viewport=js.match(/  let chatClearanceFrame = 0;[\s\S]*?(?=  function postJson\()/)?.[0];
 assert(viewport,'production viewport controller exists');
-const rows=[];
 for(const [engine,type] of [['Chromium',chromium],['WebKit',webkit]]){
  const browser=await type.launch({headless:true});
  try{for(const platform of ['ios','android'])for(const standalone of [false,true]){
@@ -46,7 +47,8 @@ for(const [engine,type] of [['Chromium',chromium],['WebKit',webkit]]){
    const restored=await shell.boundingBox();
    assert.deepEqual(restored,original,'closing keyboard restores approved panel geometry');
   }
-  rows.push({engine,platform,standalone,focusCycles:3,passed:true});await page.close();
+  rows.push({repo,engine,platform,standalone,focusCycles:3,passed:true});await page.close();
  }}finally{await browser.close();}
+}
 }
 console.log(JSON.stringify({rows,physicalKeyboardTested:false,productionRequests:0}));
