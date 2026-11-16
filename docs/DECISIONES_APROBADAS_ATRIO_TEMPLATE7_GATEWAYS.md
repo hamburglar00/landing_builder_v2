@@ -1,5 +1,13 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+## 16/11 — Graph v26 y fecha propia de altas confirmadas
+
+Leo autoriza implementar, comprobar regresiones y publicar ambos cambios. Sustituye la decisión anterior de conservar Graph v25: Pixel/CAPI convencional, comprobación de conexión, configuraciones existentes v25 y nuevos valores predeterminados pasan a v26 tras aceptación controlada. Mantener versiones explícitas diferentes y la configuración propia de WhatsApp Cloud API. No cambia SDK Pixel, nombres/IDs/fechas de eventos ni reglas de origen, recorrido y reintento.
+
+Estadísticas Builder debe incluir altas por la fecha de `conversion_account_registrations`, aunque el CTA y otros hitos de su conversión queden fuera del período. Resolver mediante propietario, landing y promo completos, preservando permisos, ocultos, visibilidad y los filtros posteriores. Nexo usa su reporte propio, que ya incluye `registration_at`; verificarlo y sincronizar sólo las fuentes compartidas revisadas. Su rediseño de recorridos sigue a cargo del lote independiente.
+
+Fuente canónica Builder; revisar Nexo y publicar ambos por separado. Clásico y cuatro gateways/Worker consumen el receptor único de Builder y no requieren cambios de frontend/SDK. API2 y Atrio conservan sus emisores. Checkpoint de 27 worktrees y registro: [validación](validation/graph26-registration-20261116.md).
+
 ## 14/11 — Endurecimiento de recibos y contexto Meta
 
 Leo autoriza el lote auditado y un checkpoint previo. Captura/CTA sigue website; Lead de API2 WhatsApp y Purchase confirmado por conversaciones WhatsApp/Atrio/Nexo usan chat según el sobre de su evento. El primer mensaje Atrio sigue exclusivamente interno. Se preservan IDs, fechas, píxel del recorrido y Estadísticas. URL de adquisición desde Contact vinculado, separada de event_source_url; chat no presenta esa landing como lugar de compra. Recibos Meta estrictos, cookies completas con tiempo original, normalización comprobada y trackSingle. Mantener SDK oficial y Graph v25; probar v26 no autoriza cambiar el default. Pruebas sintéticas autorizadas sólo al píxel 989122687083119, sin filas de negocio.

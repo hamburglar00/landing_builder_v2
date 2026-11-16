@@ -10,7 +10,7 @@ test("ID and token automatically verify CAPI with a server-generated code, witho
   }) as typeof fetch);
   assert.equal(result.mode, "test_event"); assert.equal(result.testCodeSource, "generated"); assert.match(result.message, /Conexión CAPI verificada/);
   assert.equal(calls.length, 1); assert.equal(calls[0].options.method, "POST");
-  assert.equal(calls[0].url, "https://graph.facebook.com/v25.0/123456789/events");
+  assert.equal(calls[0].url, "https://graph.facebook.com/v26.0/123456789/events");
   const body=JSON.parse(String(calls[0].options.body));
   assert.match(body.test_event_code,/^TEST\d{6}$/); assert.equal(body.data[0].event_name,"ConnectionTest");
   assert.deepEqual(Object.keys(body.data[0].user_data),["external_id"]);

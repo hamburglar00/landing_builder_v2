@@ -98,7 +98,7 @@ for (const template of [7, 8, 9]) for (const selected of ['Lead', 'CompleteRegis
     assert.equal(event.event_name, selected); assert.equal(event.event_id, state.input.contact_event_id);
     assert.equal(event.event_time, state.input.contact_event_time);
     assert.equal(event.user_data.fbc, state.input.fbc);
-    assert.equal(state.sent[0].url, `https://graph.facebook.com/v25.0/${h.pixel}/events`);
+    assert.equal(state.sent[0].url, `https://graph.facebook.com/v26.0/${h.pixel}/events`);
     const stage = selected === 'Lead' ? 'lead' : 'registration';
     assert.equal(row[`${stage}_event_id`], row.contact_event_id);
     assert.equal(row[`${stage}_status_capi`], 'enviado');

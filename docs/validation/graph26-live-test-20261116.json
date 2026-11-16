@@ -1,0 +1,76 @@
+{
+  "at": "2026-11-16T14:31:09Z",
+  "version": "v26.0",
+  "pixel_id": "989122687083119",
+  "mode": "test_event_code",
+  "synthetic_identity": true,
+  "business_rows_created": false,
+  "results": [
+    {
+      "name": "Contact",
+      "source": "website",
+      "status": 200,
+      "events_received": 1,
+      "accepted": true,
+      "event_id": "graph26-test:6880b7fc-034b-43d6-99d2-1e44e510e155",
+      "fbtrace_id": "ARSPtwWsHOdid_w0S_BjNYT",
+      "error_code": null,
+      "api_version": "v26.0"
+    },
+    {
+      "name": "Lead",
+      "source": "website",
+      "status": 200,
+      "events_received": 1,
+      "accepted": true,
+      "event_id": "graph26-test:20f62484-4a09-46a3-9719-da7c1cbbf1c0",
+      "fbtrace_id": "ASu3rF73c6y9Psm9my-97UT",
+      "error_code": null,
+      "api_version": "v26.0"
+    },
+    {
+      "name": "CompleteRegistration",
+      "source": "website",
+      "status": 200,
+      "events_received": 1,
+      "accepted": true,
+      "event_id": "graph26-test:b17c0feb-e3a1-4ec3-88b4-e77da29254da",
+      "fbtrace_id": "A40aPUIv6N0g1ZoZDG2p-Ex",
+      "error_code": null,
+      "api_version": "v26.0"
+    },
+    {
+      "name": "Lead",
+      "source": "chat",
+      "status": 200,
+      "events_received": 1,
+      "accepted": true,
+      "event_id": "graph26-test:b2758a3f-e7de-4e39-9ca7-17ef175cb38f",
+      "fbtrace_id": "AI7KDZb0ifm7lNuS5TaimLZ",
+      "error_code": null,
+      "api_version": "v26.0"
+    },
+    {
+      "name": "Purchase",
+      "source": "chat",
+      "status": 200,
+      "events_received": 1,
+      "accepted": true,
+      "event_id": "graph26-test:dc0cc14e-7457-49c3-bb49-00f4118a6835",
+      "fbtrace_id": "AjsS7QFansVuSx8C3y2EjdU",
+      "error_code": null,
+      "api_version": "v26.0"
+    },
+    {
+      "name": "ConnectionTest",
+      "source": "system_generated",
+      "status": 200,
+      "events_received": 1,
+      "accepted": true,
+      "event_id": "graph26-test:066e2b10-3ae9-4f9a-8bca-17454c9f56ce",
+      "fbtrace_id": "A5l8UEYsnNOvk6s8_FOI8tY",
+      "error_code": null,
+      "api_version": "v26.0"
+    }
+  ]
+}

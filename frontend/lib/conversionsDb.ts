@@ -628,7 +628,7 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   pixel_id: "",
   meta_access_token: "",
   meta_currency: "ARS",
-  meta_api_version: "v25.0",
+  meta_api_version: "v26.0",
   send_contact_capi: false,
   send_lead_capi: true,
   send_complete_registration_capi: false,
@@ -841,7 +841,7 @@ export async function upsertPixelConfig(input: {
     pixel_id: pixelId,
     meta_access_token: input.meta_access_token,
     meta_currency: input.meta_currency ?? "ARS",
-    meta_api_version: input.meta_api_version ?? "v25.0",
+    meta_api_version: input.meta_api_version ?? "v26.0",
     send_contact_capi: !!input.send_contact_capi,
     send_lead_capi: input.send_lead_capi !== false,
     send_complete_registration_capi: input.send_complete_registration_capi === true,
@@ -992,6 +992,18 @@ async function fetchConversionRowsInternal({
   range?: FetchDateRange;
   visibleFrom?: Date | string | null;
 }): Promise<ConversionRow[]> {
+  return fetchConversionRowsWithClient(supabase, { userId, limit, range, visibleFrom });
+}
+
+/** Separate client boundary lets reporting queries be exercised without production data. */
+export async function fetchConversionRowsWithClient(
+  client: Pick<typeof supabase, "from">,
+  { userId, limit, range, visibleFrom }: ConversionQueryScope & {
+    limit?: number;
+    range?: FetchDateRange;
+    visibleFrom?: Date | string | null;
+  },
+): Promise<ConversionRow[]> {
   const pageSize = 1000;
   const rows: ConversionRow[] = [];
   const startIso = toIsoIfValid(range?.start);
@@ -1000,7 +1012,7 @@ async function fetchConversionRowsInternal({
   let offset = 0;
 
   while (true) {
-    let query = supabase
+    let query = client
       .from("conversions")
       .select(CONVERSIONS_SELECT);
     if (userId !== undefined) query = query.eq("user_id", userId);
@@ -1023,15 +1035,63 @@ async function fetchConversionRowsInternal({
     offset += chunkSize;
   }
 
-  return attachConfirmedRegistrations(rows);
+  // An account can be confirmed after every event stored on its conversion row.
+  // Select those outcomes by their own date before restricting their journey rows.
+  if ((startIso || endIso) && limit !== 0) {
+    const outcomes: ConfirmedRegistration[] = [];
+    for (let page = 0; ; page += pageSize) {
+      let query = client.from("conversion_account_registrations")
+        .select("id,user_id,landing_id,promo_code,created_at,agency_id")
+        .order("created_at", { ascending: false }).order("id", { ascending: false });
+      if (userId !== undefined) query = query.eq("user_id", userId);
+      if (startIso) query = query.gte("created_at", startIso);
+      if (endIso) query = query.lte("created_at", endIso);
+      const { data, error } = await query.range(page, page + pageSize - 1);
+      if (error) throw error;
+      const chunk = (data ?? []) as ConfirmedRegistration[];
+      outcomes.push(...chunk);
+      if (chunk.length < pageSize) break;
+    }
+    const outcomeKeys = new Set(outcomes.map(registrationJourneyKey));
+    const promos = [...new Set(outcomes.map(outcome => outcome.promo_code).filter(Boolean))];
+    const seen = new Set(rows.map(row => row.id));
+    for (let offset = 0; offset < promos.length; offset += 100) {
+      for (let page = 0; ; page += pageSize) {
+        let query = client.from("conversions").select(CONVERSIONS_SELECT)
+          .in("promo_code", promos.slice(offset, offset + 100))
+          .order("created_at", { ascending: false }).order("id", { ascending: false });
+        if (userId !== undefined) query = query.eq("user_id", userId);
+        if (visibleIso) query = query.gte("created_at", visibleIso);
+        const { data, error } = await query.range(page, page + pageSize - 1);
+        if (error) throw error;
+        const chunk = (data ?? []) as unknown as ConversionRow[];
+        for (const row of chunk) {
+          if (row.atrio_id && outcomeKeys.has(registrationJourneyKey(row)) && !seen.has(row.id)) {
+            rows.push(row);
+            seen.add(row.id);
+          }
+        }
+        if (chunk.length < pageSize) break;
+      }
+    }
+    rows.sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at) || b.id.localeCompare(a.id));
+  }
+  return attachConfirmedRegistrations(typeof limit === "number" ? rows.slice(0, limit) : rows, client);
 }
 
-async function attachConfirmedRegistrations(rows: ConversionRow[]): Promise<ConversionRow[]> {
+type ConfirmedRegistration = {
+  id: string; user_id: string; landing_id: string; promo_code: string;
+  created_at: string; agency_id: number | null;
+};
+const registrationJourneyKey = (row: { user_id: string; landing_id?: string | null; promo_code?: string | null }) =>
+  JSON.stringify([row.user_id, row.landing_id, row.promo_code]);
+
+async function attachConfirmedRegistrations(rows: ConversionRow[], client: Pick<typeof supabase, "from">): Promise<ConversionRow[]> {
   const promos = [...new Set(rows.filter(row => row.atrio_id && row.promo_code).map(row => row.promo_code))];
   if (!promos.length) return rows;
   const outcomes = new Map<string, { id: string; created_at: string; agency_id: number | null }>();
   for (let offset = 0; offset < promos.length; offset += 200) {
-    const { data, error } = await supabase.from("conversion_account_registrations")
+    const { data, error } = await client.from("conversion_account_registrations")
       .select("id,user_id,landing_id,promo_code,created_at,agency_id").in("promo_code", promos.slice(offset, offset + 200));
     if (error) {
       console.warn("[registration-statistics] measurement unavailable");

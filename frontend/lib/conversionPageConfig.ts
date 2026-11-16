@@ -33,7 +33,7 @@ export async function saveConversionPageConfig({
     pixel_id: pixel,
     meta_access_token: token,
     meta_currency: currency,
-    meta_api_version: config.meta_api_version || "v25.0",
+    meta_api_version: config.meta_api_version || "v26.0",
     send_contact_capi: !!config.send_contact_capi,
     send_lead_capi: config.send_lead_capi !== false,
     send_complete_registration_capi:

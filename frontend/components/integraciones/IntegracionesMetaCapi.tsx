@@ -754,7 +754,7 @@ export default function IntegracionesMetaCapi() {
     setQuickErr(null);
     try {
       const hasAny = pixelConfigs.length > 0;
-      const apiVersionToSave = (config.meta_api_version || "v25.0").trim() || "v25.0";
+      const apiVersionToSave = (config.meta_api_version || "v26.0").trim() || "v26.0";
       await upsertPixelConfig({
         user_id: userId,
         pixel_id: pixel,
@@ -807,7 +807,7 @@ export default function IntegracionesMetaCapi() {
       meta_access_token: px.meta_access_token,
       comment: px.comment ?? "",
       meta_currency: px.meta_currency || "ARS",
-      meta_api_version: px.meta_api_version || "v25.0",
+      meta_api_version: px.meta_api_version || "v26.0",
       send_contact_capi: !!px.send_contact_capi,
       send_lead_capi: px.send_lead_capi !== false,
       send_complete_registration_capi: px.send_complete_registration_capi === true,
@@ -851,8 +851,8 @@ export default function IntegracionesMetaCapi() {
     try {
       const persistedCurrent = pixelConfigs.find((px) => px.id === draft.id);
       const apiVersionToSave = isAdmin
-        ? ((draft.meta_api_version || "v25.0").trim() || "v25.0")
-        : (persistedCurrent?.meta_api_version || "v25.0");
+        ? ((draft.meta_api_version || "v26.0").trim() || "v26.0")
+        : (persistedCurrent?.meta_api_version || "v26.0");
 
       await upsertPixelConfig({
         user_id: userId,
@@ -925,7 +925,7 @@ export default function IntegracionesMetaCapi() {
         meta_access_token: px.meta_access_token,
         comment: px.comment ?? "",
         meta_currency: px.meta_currency || "ARS",
-        meta_api_version: px.meta_api_version || "v25.0",
+        meta_api_version: px.meta_api_version || "v26.0",
         send_contact_capi: !!px.send_contact_capi,
         send_lead_capi: px.send_lead_capi !== false,
         send_complete_registration_capi: px.send_complete_registration_capi === true,
@@ -945,7 +945,7 @@ export default function IntegracionesMetaCapi() {
         pixel_id: px.pixel_id,
         meta_access_token: px.meta_access_token,
         meta_currency: px.meta_currency || "ARS",
-        meta_api_version: px.meta_api_version || "v25.0",
+        meta_api_version: px.meta_api_version || "v26.0",
         send_contact_capi: !!px.send_contact_capi,
         send_lead_capi: px.send_lead_capi !== false,
         send_complete_registration_capi: px.send_complete_registration_capi === true,
@@ -2088,7 +2088,7 @@ export default function IntegracionesMetaCapi() {
                       <input value={draft.meta_api_version} onChange={(e) => setDraft((p) => (p ? { ...p, meta_api_version: e.target.value } : p))} className="mt-1 h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
                     </label>
                   ) : (
-                    <div className="text-xs text-zinc-400">Versión de API <span className="ml-1 font-mono text-zinc-300">{draft.meta_api_version || "v25.0"}</span></div>
+                    <div className="text-xs text-zinc-400">Versión de API <span className="ml-1 font-mono text-zinc-300">{draft.meta_api_version || "v26.0"}</span></div>
                   )}
                 </div>
               </details>

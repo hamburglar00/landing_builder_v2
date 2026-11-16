@@ -2,7 +2,7 @@ import "server-only";
 import { createHash, randomInt, randomUUID } from "node:crypto";
 
 /** Canonical Meta connection checks, shared with NexoBet through its pinned module. */
-export const META_GRAPH_VERSION = "v25.0";
+export const META_GRAPH_VERSION = "v26.0";
 export type MetaConnectionCheck = { connected: true; mode: "test_event"; testCodeSource: "generated" | "provided"; message: string };
 export class MetaConnectionError extends Error {
   constructor(public readonly reason: string, message: string, public readonly status = 422) { super(message); }
@@ -13,7 +13,7 @@ export async function checkMetaConnection(input: { pixelId: string; token: strin
     throw new MetaConnectionError("invalid_pixel_credentials", "Ingresá el ID y el token del píxel para probar la conexión.");
   if (suppliedCode && !/^[a-zA-Z0-9_-]{4,100}$/.test(suppliedCode))
     throw new MetaConnectionError("invalid_test_code", "Copiá el código de la pestaña Probar eventos de Meta.");
-  // Meta accepted generated codes in the controlled v25.0 probe (2026-11-08).
+  // Meta accepted generated codes in the controlled v26.0 probe (2026-11-16).
   // Always test CAPI writes; metadata reads can reject valid CAPI-only tokens.
   const code = suppliedCode || `TEST${randomInt(100000, 1000000)}`;
   const path = `https://graph.facebook.com/${META_GRAPH_VERSION}/${pixelId}`;

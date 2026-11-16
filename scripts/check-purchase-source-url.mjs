@@ -14,7 +14,7 @@ class Clock extends Date { constructor(...args) { super(...(args.length ? args :
 const owner = '19000000-0000-4000-8000-000000000001';
 const landingId = '19000000-0000-4000-8000-000000000002';
 const pixel = '19000001', sourceUrl = 'https://landing.example.invalid/gast';
-const config = { user_id: owner, pixel_id: pixel, meta_access_token: 'fixture-not-a-token', meta_api_version: 'v25.0', meta_currency: 'ARS',
+const config = { user_id: owner, pixel_id: pixel, meta_access_token: 'fixture-not-a-token', meta_api_version: 'v26.0', meta_currency: 'ARS',
   send_contact_capi: false, send_lead_capi: false, send_purchase_capi: true, send_first_purchase_capi: true, send_repeat_purchase_capi: true,
   include_purchase_type_capi: true, repeat_purchase_capi_window_days: 30, meta_ads_only_capi: true, send_geo_capi: false, geo_use_ipapi: false };
 let current, nextId = 100, externalRequests = 0;
@@ -150,7 +150,7 @@ function checkEvent(row, expectedUrl, expectedFbc = current.base.fbc) {
   assert.equal(row.purchase_event_time, now - 120); assert.equal(row.pixel_id, pixel);
   assert.equal(row.fbc, expectedFbc); assert.equal(row.valor, 1000); assert.equal(row.currency, 'ARS');
   assert.equal(row.purchase_status_capi, 'enviado');
-  const sent = current.sent.at(-1); assert.equal(sent.url, `https://graph.facebook.com/v25.0/${pixel}/events`);
+  const sent = current.sent.at(-1); assert.equal(sent.url, `https://graph.facebook.com/v26.0/${pixel}/events`);
   const event = sent.payload.data[0]; assert.equal(event.action_source, "chat");
   assert.ok(!("event_source_url" in event), "Acquisition URL is internal, not the chat conversion location");
   assert.equal(event.event_id, row.purchase_event_id); assert.equal(event.event_time, now - 120);

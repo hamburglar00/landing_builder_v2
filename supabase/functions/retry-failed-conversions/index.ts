@@ -338,8 +338,8 @@ Deno.serve(async (req) => {
       const businessMessagingApiVersion = isWhatsappCloudApi
         ? normalizeText(whatsappCloudApiCfg?.meta_api_version) ||
           normalizeText(cfg.meta_api_version) ||
-          "v25.0"
-        : normalizeText(cfg.meta_api_version) || "v25.0";
+          "v26.0"
+        : normalizeText(cfg.meta_api_version) || "v26.0";
       const businessMessagingWabaId = isWhatsappCloudApi
         ? normalizeText(whatsappCloudApiCfg?.whatsapp_business_account_id)
         : normalizeText(chatraceCfg?.whatsapp_business_account_id);
@@ -575,8 +575,8 @@ Deno.serve(async (req) => {
         ? String(selected.pixel_id ?? "")
         : String(cfg.pixel_id ?? "");
       const apiVersion = selected
-        ? String(selected.meta_api_version ?? "v25.0")
-        : String(cfg.meta_api_version ?? "v25.0");
+        ? String(selected.meta_api_version ?? "v26.0")
+        : String(cfg.meta_api_version ?? "v26.0");
       let purchaseType: "first" | "repeat" | null =
         row.purchase_type === "repeat"
           ? "repeat"
@@ -2115,8 +2115,8 @@ function resolveRetryConfig(
       selected ? selected.meta_currency : cfg.meta_currency,
     ),
     meta_api_version: selected
-      ? normalizeText(selected.meta_api_version || "v25.0")
-      : normalizeText(cfg.meta_api_version || "v25.0"),
+      ? normalizeText(selected.meta_api_version || "v26.0")
+      : normalizeText(cfg.meta_api_version || "v26.0"),
     send_contact_capi: selected
       ? selected.send_contact_capi === true
       : cfg.send_contact_capi === true,

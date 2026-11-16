@@ -859,7 +859,7 @@ export function buildMetaBusinessMessagingRequest(
   };
   if (customData) eventPayload.custom_data = customData;
   const body: Record<string, unknown> = { data: [eventPayload] };
-  const apiVersion = String(config.meta_api_version || "v25.0").trim();
+  const apiVersion = String(config.meta_api_version || "v26.0").trim();
   const apiUrl =
     `https://graph.facebook.com/${apiVersion}/${config.dataset_id}/events?access_token=${
       encodeURIComponent(config.meta_access_token)

@@ -8393,7 +8393,7 @@ async function handleConversions(
       pixel_id: "",
       meta_access_token: "",
       meta_currency: "ARS",
-      meta_api_version: "v25.0",
+      meta_api_version: "v26.0",
       send_contact_capi: false,
       send_lead_capi: true,
       send_complete_registration_capi: false,
