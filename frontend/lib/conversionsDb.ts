@@ -320,6 +320,9 @@ export interface ConversionLogRow {
   result?: string | null;
   payload_meta?: string | null;
   response_meta?: string | null;
+  meta_api_version?: string | null;
+  meta_http_status?: number | null;
+  meta_attempt?: number | null;
   created_at: string;
 }
 
@@ -1422,7 +1425,7 @@ export async function fetchFunnelContactsForAdminFiltered(
 // Logs
 
 const LOGS_SELECT =
-  "id, user_id, conversion_id, conversions(internal_id), workspace_currency, function_name, level, message, detail, payload_received, result, payload_meta, response_meta, created_at";
+  "id, user_id, conversion_id, conversions(internal_id), workspace_currency, function_name, level, message, detail, payload_received, result, payload_meta, response_meta, meta_api_version, meta_http_status, meta_attempt, created_at";
 const INBOX_SELECT =
   "id, user_id, conversion_id, conversions(internal_id), workspace_currency, landing_name, action, action_event_id, coelsa_id, transaction_id, promo_code, phone, payload_raw, status, http_status, response_body, processed_at, created_at";
 

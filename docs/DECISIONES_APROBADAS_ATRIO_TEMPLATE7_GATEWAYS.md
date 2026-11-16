@@ -1,5 +1,11 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+## 16/11 — Metadatos del transporte CAPI, sólo Builder
+
+Leo autoriza implementar y publicar únicamente Builder; NexoBet se implementa en otra sesión de VS Code y queda expresamente fuera de esta entrega. Añadir a los logs nuevos versión Graph, estado HTTP real y número de llamada dentro de la ejecución. La versión usa facebook-api-version cuando sea válida y, en su ausencia, la versión solicitada en la ruta; nunca guardar la URL ni tokens en esos campos. Cada ejecución posterior de cron comienza su ordinal HTTP en 1; no inferir un total histórico de intentos.
+
+La pantalla de logs de admin y cliente muestra esos campos cuando existen. Los históricos conservan NULL, sin relleno ni reenvíos. Mantener nombres/IDs/fechas, payload, píxel, matching, políticas de origen, aceptación estricta y reintentos. Clásico y cuatro gateways/Worker consumen el receptor único; no requieren cambios de SDK/ingreso ni publicación independiente. API2/Atrio conservan emisores. Registro: [validación](validation/meta-log-metadata-20261116.md).
+
 ## 16/11 — Graph v26 y fecha propia de altas confirmadas
 
 Leo autoriza implementar, comprobar regresiones y publicar ambos cambios. Sustituye la decisión anterior de conservar Graph v25: Pixel/CAPI convencional, comprobación de conexión, configuraciones existentes v25 y nuevos valores predeterminados pasan a v26 tras aceptación controlada. Mantener versiones explícitas diferentes y la configuración propia de WhatsApp Cloud API. No cambia SDK Pixel, nombres/IDs/fechas de eventos ni reglas de origen, recorrido y reintento.

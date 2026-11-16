@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { internalConversionStage } from "@/lib/internalConversionEvents";
+import { MetaTransportDetails } from "@/components/conversiones/MetaTransportDetails";
 
 import { ActionNotice, useActionResult } from "@/components/ui/ActionNotice";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
@@ -2276,7 +2277,7 @@ export default function DashboardConversionesPage() {
                             ? "text-emerald-300 font-semibold"
                             : "text-zinc-200";
                         })()
-                      }`}>{log.message}</td>
+                      }`}>{log.message}<MetaTransportDetails log={log} /></td>
                       <td className="px-2 py-1.5 text-zinc-300 font-mono whitespace-nowrap">{log.function_name}</td>
                       <td className="px-2 py-1.5 text-zinc-500">
                         {(log.payload_received && log.payload_received.trim()) ? (
