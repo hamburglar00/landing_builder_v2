@@ -29,4 +29,6 @@ Las pruebas se ejecutaron con datos sintéticos y sin tráfico real a Meta o a l
 
 La versión productiva anterior es `conversions` v183 y Vercel `dpl_BzGbHiA4eeD39dycbrjrLLu24eeN`, commit `7cb86ad0`. Backup local de la función completa: `.vercel/journey-tracking-backup/conversions-v183.json`. La entrega sólo sustituye el entrypoint revisado y conserva las otras diecinueve dependencias publicadas, incluida su representación original. No requiere migración ni redeploy de `retry-failed-conversions`.
 
+Publicado y verificado el 16/11 a las 15:27 ART: commit `14f389dbcbb0924fa3cbe422c53a70e9858aca25` en main; `conversions` v184 ACTIVE con sus veinte archivos comprobados exactamente y autenticación interna conservada (petición sin firma: 401). Vercel `dpl_4mrZBH1BMiR9adMrnYRPUcFzWLKH` READY, ambos dominios al mismo commit y `/login` HTTP 200. Desde las 18:26:19.275 UTC se observaron un Lead y dos Purchase naturales con HTTP 200, Graph v26 y `events_received: 1`. No se enviaron eventos sintéticos. API2 sigue local. Detalle en [registro de producción](journey-tracking-production-20261116.json).
+
 Checkpoint: `../.checkpoints/journey-tracking-20261116-144211` desde el directorio común CURSOR, con snapshots del estado previo de ambos árboles de Builder y API2.

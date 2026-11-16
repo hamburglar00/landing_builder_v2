@@ -1,0 +1,72 @@
+{
+  "published": true,
+  "scope": "Builder only; API2 remains local and NexoBet belongs to another session",
+  "implementationCommit": "14f389dbcbb0924fa3cbe422c53a70e9858aca25",
+  "productionBranch": "main",
+  "edgeFunction": {
+    "name": "conversions",
+    "version": 184,
+    "status": "ACTIVE",
+    "files": 20,
+    "verify_jwt": false,
+    "updated_at": 1794853519275,
+    "verifiedFiles": 20,
+    "unchangedDependencies": 19
+  },
+  "migrationRequired": false,
+  "vercel": {
+    "deployment": "dpl_4mrZBH1BMiR9adMrnYRPUcFzWLKH",
+    "state": "READY",
+    "url": "landing-builder-v2-k259-kiuowg02u-juanclouds-projects.vercel.app",
+    "rootDirectory": "frontend",
+    "domains": [
+      {
+        "domain": "constructor.panelbotadmin.com",
+        "loginStatus": 200,
+        "verifiedDeployment": "dpl_4mrZBH1BMiR9adMrnYRPUcFzWLKH"
+      },
+      {
+        "domain": "mkt.panelbotadmin.com",
+        "loginStatus": 200,
+        "verifiedDeployment": "dpl_4mrZBH1BMiR9adMrnYRPUcFzWLKH"
+      }
+    ]
+  },
+  "securitySmoke": {
+    "unsignedInternalEventStatus": 401,
+    "businessRecordsCreated": false
+  },
+  "naturalObservation": {
+    "since": "2026-11-16T18:26:19.275Z",
+    "receipts": [
+      {
+        "observed_at": "2026-11-16 18:27:05.442928+00",
+        "event_name": "Lead",
+        "meta_api_version": "v26.0",
+        "meta_http_status": 200,
+        "receipts": 1,
+        "accepted": 1,
+        "first_at": "2026-11-16 18:26:56.803988+00",
+        "last_at": "2026-11-16 18:26:56.803988+00"
+      },
+      {
+        "observed_at": "2026-11-16 18:27:05.442928+00",
+        "event_name": "Purchase",
+        "meta_api_version": "v26.0",
+        "meta_http_status": 200,
+        "receipts": 2,
+        "accepted": 2,
+        "first_at": "2026-11-16 18:26:20.532375+00",
+        "last_at": "2026-11-16 18:26:59.343833+00"
+      }
+    ],
+    "syntheticMetaEventsSent": 0
+  },
+  "rollback": {
+    "main": "7cb86ad083d3c12d2e08823c8ae8573ed69b169b",
+    "vercelDeployment": "dpl_BzGbHiA4eeD39dycbrjrLLu24eeN",
+    "functionVersion": 183,
+    "functionBackup": ".vercel/journey-tracking-backup/conversions-v183.json"
+  },
+  "tests": "All previously recorded Builder checks passed on unchanged functional sources"
+}
