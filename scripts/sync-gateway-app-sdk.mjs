@@ -8,9 +8,9 @@ const productPath = loadProductPaths();
 // Every gateway remains independently deployable; this is the source synchronization step.
 const canonical = pathToFileURL(productPath('landing-autologuin', 'public/gateway-app-sdk.js'));
 const source = await readFile(canonical);
-// Only the keyboard controller and its two CSS rules are shared here.
+// Only the viewport/clearance controller and its two CSS rules are shared here.
 // The surrounding clients contain provider-specific branding/support adapters.
-const viewportPattern = /  function syncChatVisualViewport\(\) \{[\s\S]*?(?=  function scheduleChatVisualViewport\(\))/;
+const viewportPattern = /  let chatClearanceFrame = 0;[\s\S]*?  function scheduleChatVisualViewport\(\) \{[^}]*\}\r?\n/;
 const keyboardPattern = /html\[data-gateway-keyboard="true"\] #gateway-chat-shell\s*\{[^}]*\}/g;
 const canonicalClient = await readFile(productPath('landing-autologuin', 'public/gateway-client.js'), 'utf8');
 const viewport = canonicalClient.match(viewportPattern)?.[0];

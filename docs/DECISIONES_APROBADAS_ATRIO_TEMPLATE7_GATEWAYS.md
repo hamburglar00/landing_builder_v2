@@ -1707,3 +1707,9 @@ Al enfocar y volver a enfocar la escritura, el chat debe permanecer entre la zon
 La recuperación usa el acceso persistente del recorrido existente y la ruta registrada v1 de API2. No se permite cambiar de cuenta o gerencia durante una recuperación. Se retira el CTA de reintentar recuperación; ante un fallo permanece el ingreso manual.
 
 El progreso es indicativo: arranca cerca de 70 %, llega a 90 % en aproximadamente 1,4 s y sólo completa al confirmar que el chat es utilizable. Conserva logos, paleta, etapas, tracking y confirmaciones existentes. Las transiciones entre documentos continúan desde 90 %.
+
+## Fluidez visual del recorrido — 16/11/2026
+
+Leo confirma corregida la recuperación de Ases y pide conservarla. Autoriza: integrar los extremos del degradado de login con sus zonas seguras; mantener el color del casino desde el primer ingreso por gerencia (Ases gris #101114), incluso con chat abierto; acompañar el teclado desde el primer desplazamiento sin salto de umbral ni rebote; barra de 9 px y avance continuo desacelerado, sin demoras artificiales y completando sólo con la confirmación existente. Revisar los cuatro gateways y Worker, además de los renderizadores Builder/Clásico/Nexo. Se conservan UI restante, branding, eventos, sesiones, redirecciones y finanzas. Sustituye el arranque instantáneo de la barra en 70 %.
+
+Checkpoint limpio de nueve worktrees: ../.checkpoints/visual-smoothing-20261116-214246/manifest.json. Alcance y evidencia en ../../internal-chat-gateway-engine-20261114/docs/validation/visual-flow-20261116.md.

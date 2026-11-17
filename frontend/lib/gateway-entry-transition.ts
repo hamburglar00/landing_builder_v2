@@ -29,12 +29,13 @@ export function gatewayPreparationTheme(provider: string, override?: EntryBrandO
   };
 }
 
-// Indicative motion: a fast 70% start, then 90% while waiting. Only confirmed
-// readiness can complete it; later documents resume at 90%, never restart.
+// Indicative motion flows quickly toward 70%, then slows as it approaches 90%.
+// Preparation resumes at 90%; connecting can creep toward 98%. None of these
+// animations gates readiness or navigation, and only real readiness completes it.
 export const ENTRY_PROGRESS_CSS = `
 .entry-progress{display:block;width:min(100%,300px);margin:26px auto 0;text-align:left}
 .entry-progress[hidden]{display:none!important}
-.entry-progress-track{display:block;height:6px;overflow:hidden;border-radius:999px;background:var(--entry-track,#f6c84b26)}
+.entry-progress-track{display:block;height:9px;overflow:hidden;border-radius:999px;background:var(--entry-track,#f6c84b26)}
 .entry-progress-fill{display:block;height:100%;width:100%;transform-origin:left;border-radius:inherit;background:linear-gradient(90deg,var(--entry-primary,#c49a32),var(--entry-accent,#efd27b));transform:scaleX(.9)}
 .entry-progress-stops{display:flex;justify-content:space-between;gap:12px;margin-top:13px;color:#8e8b94;font:500 11px/1.3 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.02em}
 .entry-progress-stop{display:flex;align-items:center;gap:6px;white-space:nowrap}
@@ -42,11 +43,13 @@ export const ENTRY_PROGRESS_CSS = `
 .entry-progress:is([data-phase="creating"],[data-phase="preparing"],[data-phase="account"]) [data-stop="account"],.entry-progress:is([data-phase="login"],[data-phase="session"]) [data-stop="access"],.entry-progress[data-phase="connecting"] [data-stop="chat"]{color:#fff}
 .entry-progress:is([data-phase="login"],[data-phase="session"],[data-phase="connecting"],[data-phase="complete"]) [data-stop="account"],.entry-progress:is([data-phase="connecting"],[data-phase="complete"]) [data-stop="access"],.entry-progress[data-phase="complete"] [data-stop="chat"]{color:var(--entry-accent,#efd27b)}
 .entry-progress:is([data-phase="login"],[data-phase="session"],[data-phase="connecting"],[data-phase="complete"]) [data-stop="account"]::before,.entry-progress:is([data-phase="connecting"],[data-phase="complete"]) [data-stop="access"]::before,.entry-progress[data-phase="complete"] [data-stop="chat"]::before{background:currentColor}
-.entry-progress[data-start="initial"]:not([data-phase="complete"]) .entry-progress-fill{animation:entry-progress-wait 1.4s ease-out forwards}
+.entry-progress[data-start="initial"]:not([data-phase="complete"]) .entry-progress-fill{animation:entry-progress-wait 9s linear both}
+.entry-progress[data-start="continuation"][data-phase="connecting"] .entry-progress-fill{animation:entry-progress-connect 16s linear both}
 .entry-progress[data-phase="complete"] .entry-progress-fill{animation:none;transform:scaleX(1)}
 .entry-progress[data-paused="true"] .entry-progress-fill{animation-play-state:paused}
-@keyframes entry-progress-wait{from{transform:scaleX(.7)}to{transform:scaleX(.9)}}
-@media(prefers-reduced-motion:reduce){.entry-progress .entry-progress-fill{animation-duration:0s!important}}
+@keyframes entry-progress-wait{0%{transform:scaleX(.06)}8%{transform:scaleX(.7)}20%{transform:scaleX(.81)}38%{transform:scaleX(.86)}60%{transform:scaleX(.89)}100%{transform:scaleX(.9)}}
+@keyframes entry-progress-connect{0%{transform:scaleX(.9)}20%{transform:scaleX(.94)}45%{transform:scaleX(.96)}75%{transform:scaleX(.975)}100%{transform:scaleX(.98)}}
+@media(prefers-reduced-motion:reduce){.entry-progress .entry-progress-fill{animation:none!important}}
 `;
 export function renderEntryProgress(phase: string, initial = phase === "creating" || phase === "preparing") {
   return `<div class="entry-progress" data-entry-progress data-start="${initial ? "initial" : "continuation"}" data-phase="${phase}" role="progressbar" aria-label="Preparando tu acceso"><span class="entry-progress-track"><span class="entry-progress-fill"></span></span><span class="entry-progress-stops" aria-hidden="true"><span class="entry-progress-stop" data-stop="account">Cuenta</span><span class="entry-progress-stop" data-stop="access">Acceso</span><span class="entry-progress-stop" data-stop="chat">Chat</span></span></div>`;
@@ -71,7 +74,7 @@ export function renderGatewayEntryTransition(provider: string, options: { active
   // Deferred logos do not compete with the initial form, images, or font requests.
   const image = `<img data-entry-logo data-src="${escape(logo.replace(/\.avif$/, ".webp"))}" alt="${escape(brand.name)}" width="320" height="320">`;
   return `<style id="gateway-entry-transition-style">
-html:has(#gateway-entry-transition:not([hidden])),body:has(#gateway-entry-transition:not([hidden])){background-color:var(--gateway-entry-canvas,${brand.background})!important;color-scheme:dark}
+html:has(#gateway-entry-transition:not([hidden])),body:has(#gateway-entry-transition:not([hidden])){background-color:var(--gateway-page-background,var(--gateway-entry-canvas,${brand.background}))!important;color-scheme:dark}
 #gateway-entry-transition[data-stage="creating"],#gateway-entry-transition[data-stage="preparing"]{background:var(--entry-background,${brand.background})!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 #gateway-entry-transition{position:fixed!important;inset:0!important;z-index:2147483500!important;display:grid!important;place-items:center!important;margin:0!important;padding:max(24px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom))!important;background:var(--entry-background,${brand.background})!important;backdrop-filter:none;-webkit-backdrop-filter:none;color:#fff!important;font:16px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;text-align:center!important;overflow:auto!important;overscroll-behavior:contain}
 #gateway-entry-transition{outline:none}#gateway-entry-transition[hidden]{display:none!important}#gateway-entry-transition *{box-sizing:border-box}#gateway-entry-transition .entry-content{width:min(100%,430px);margin:auto}#gateway-entry-transition picture{display:block}#gateway-entry-transition [data-entry-logo]{display:block;width:min(78vw,320px);height:min(78vw,320px,34svh);object-fit:contain;margin:0 auto;filter:drop-shadow(0 8px 24px var(--entry-glow,${brand.glow}))}#gateway-entry-transition h2{font:700 clamp(17px,4.8vw,24px)/1.2 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:20px 0 9px;color:var(--entry-accent,#f6c84b);letter-spacing:-.02em;text-wrap:balance}#gateway-entry-transition p{font:400 clamp(12px,3.1vw,15px)/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;max-width:36ch;margin:0 auto;color:#ddd;letter-spacing:-.01em;text-wrap:balance}#gateway-entry-transition .entry-spinner{display:block;width:42px;height:42px;border:4px solid var(--entry-track,#f6c84b33);border-top-color:var(--entry-accent,#f6c84b);border-radius:50%;margin:26px auto 0;animation:gateway-entry-spin .8s linear infinite}#gateway-entry-transition .entry-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:24px}#gateway-entry-transition .entry-actions[hidden],#gateway-entry-transition .entry-spinner[hidden]{display:none!important}#gateway-entry-transition button{appearance:none;cursor:pointer;padding:11px 16px;border:1px solid var(--entry-accent,#f6c84b);border-radius:12px;background:var(--entry-accent,#f6c84b);color:var(--entry-accent-text,#171105);font:700 13px system-ui}#gateway-entry-transition button[data-entry-continue]{background:transparent;color:var(--entry-accent,#f6c84b)}#gateway-entry-transition button:focus-visible{outline:2px solid #fff;outline-offset:3px}@keyframes gateway-entry-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){#gateway-entry-transition .entry-spinner{animation-duration:1.8s}}
@@ -83,7 +86,10 @@ export const GATEWAY_ENTRY_TRANSITION_RUNTIME = String.raw`
 function createGatewayEntryTransition(root) {
   if (!root) return null;
   var frame=null,origin="",wallet=false,timer=0,retryTimer=0,automaticRetries=0,previous=null,themeSnapshot=null,addedTheme=null,canvasSnapshot=null,frameLoadHandler=null,frameBoundAt=0,entryReady=false,refreshController=null,refreshGeneration=0,attemptDeadline=0;
-  function applyPalette(){if(themeSnapshot!==null)return;if(document.documentElement&&document.documentElement.style){canvasSnapshot=document.documentElement.style.getPropertyValue("--gateway-entry-canvas");document.documentElement.style.setProperty("--gateway-entry-canvas",root.dataset.palette)}themeSnapshot=Array.from(document.querySelectorAll('meta[name="theme-color"]')).map(function(meta){var previous=meta.getAttribute("content");meta.setAttribute("content",root.dataset.palette);return [meta,previous]});if(!themeSnapshot.length){addedTheme=document.createElement("meta");addedTheme.name="theme-color";addedTheme.content=root.dataset.palette;document.head.appendChild(addedTheme)}}
+  // The casino document owns its browser chrome from first paint. A connecting
+  // overlay must not temporarily replace it with the blue/login entry palette.
+  // Landing and preparation documents lack this property and keep their brand.
+  function applyPalette(){if(themeSnapshot!==null)return;var palette=root.dataset.palette;try{var pagePalette=getComputedStyle(document.documentElement).getPropertyValue("--gateway-page-background").trim();if(/^#[0-9a-f]{6}$/i.test(pagePalette))palette=pagePalette}catch(_){}if(document.documentElement&&document.documentElement.style){canvasSnapshot=document.documentElement.style.getPropertyValue("--gateway-entry-canvas");document.documentElement.style.setProperty("--gateway-entry-canvas",palette)}themeSnapshot=Array.from(document.querySelectorAll('meta[name="theme-color"]')).map(function(meta){var previous=meta.getAttribute("content");meta.setAttribute("content",palette);return [meta,previous]});if(!themeSnapshot.length){addedTheme=document.createElement("meta");addedTheme.name="theme-color";addedTheme.content=palette;document.head.appendChild(addedTheme)}}
   function restorePalette(){if(themeSnapshot===null)return;if(canvasSnapshot!==null&&document.documentElement&&document.documentElement.style){if(canvasSnapshot)document.documentElement.style.setProperty("--gateway-entry-canvas",canvasSnapshot);else document.documentElement.style.removeProperty("--gateway-entry-canvas");canvasSnapshot=null}themeSnapshot.forEach(function(item){if(item[1]===null)item[0].removeAttribute("content");else item[0].setAttribute("content",item[1])});if(addedTheme)addedTheme.remove();themeSnapshot=null;addedTheme=null}
   var title=root.querySelector("[data-entry-title]"),description=root.querySelector("[data-entry-description]");
   var spinner=root.querySelector("[data-entry-progress]")||root.querySelector(".entry-spinner"),actions=root.querySelector(".entry-actions");
