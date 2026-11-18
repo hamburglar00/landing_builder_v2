@@ -25,8 +25,8 @@ for(const [engine,launcher] of [['chromium',playwright.chromium],['webkit',playw
    const url=new URL(route.request().url());assert.equal(url.origin,'https://gateway.test');
    if(url.pathname==='/login'||url.pathname==='/17')return route.fulfill({contentType:'text/html',body:await (url.pathname==='/login'?gatewayLoginPage(provider):gatewayAgencyPage(provider,17)).text()});
    if(url.pathname==='/api/session/recover')return route.fulfill({json:{active:false}});
-   if(url.pathname==='/api/agency-entry'&&route.request().postDataJSON().action==='resume')return route.fulfill({json:{active:false}});
-   if(['/api/session/login','/api/agency-entry'].includes(url.pathname))return route.fulfill({status:401,json:{error:'No pudimos ingresar. Revisá tu usuario y contraseña e intentá nuevamente.'}});
+   if(url.pathname==='/api/agency-entry/17'&&route.request().postDataJSON().action==='resume')return route.fulfill({json:{active:false}});
+   if(['/api/session/login','/api/agency-entry/17'].includes(url.pathname))return route.fulfill({status:401,json:{error:'No pudimos ingresar. Revisá tu usuario y contraseña e intentá nuevamente.'}});
    if(url.pathname==='/manifest.webmanifest')return route.fulfill({json:{icons:[]}});
    assert.match(url.pathname,/\.(webp|png)$/);
    return route.fulfill({contentType:'image/webp',body:await readFile(path.join(productPath(repo),'public',url.pathname))});

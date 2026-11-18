@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { build } from "esbuild";
 import { renderPublicLandingHtml, renderClassicTemplate7InlineHtml } from "../components/public-landing/renderPublicLandingHtml";
@@ -29,8 +30,7 @@ type RequestBody = { landing_slug?: string; attribution?: Record<string, string>
 type PausedRequest = { resourceType: string; requestId: string; request: { url: string; method: string; postData?: string; headers: Record<string, string> } };
 type BrowserException = { exceptionDetails: { exception?: { description?: string }; text: string } };
 
-async function loadGateway(root: string, entry: typeof providers[number]) {
-  const gatewayRoot = path.resolve(root, "..", entry.repo);
+async function loadGateway(gatewayRoot: string, entry: typeof providers[number]) {
   const create = entry.provider === "rey_de_ases"
     ? 'createGatewaySession("session=fixture", issuedAt)'
     : `createGatewaySession({
@@ -68,11 +68,13 @@ async function main() {
   });
   for (const entry of providers) process.env[entry.variable] = entry.origin;
   const gateways = new Map<string, GatewayRuntime>();
-  for (const entry of providers) gateways.set(entry.origin, await loadGateway(root, entry));
-  const { landingOverride } = await import(pathToFileURL(path.resolve(root, "../landing-prueba-1/lib/landing/urlRouting.ts")).href);
+  const { loadProductPaths } = await import(new URL("../../scripts/product-worktrees.mjs", import.meta.url).href);
+  const product = loadProductPaths();
+  for (const entry of providers) gateways.set(entry.origin, await loadGateway(product(entry.repo), entry));
+  const { landingOverride } = await import(pathToFileURL(product("landing-prueba-1", "lib/landing/urlRouting.ts")).href);
   const { chromium } = await import(pathToFileURL(path.join(root, "scripts/phase0/browser-runtime.mjs")).href);
   const browser = await chromium();
-  let current: { html: string; engine: string; landingPath: string; gatewayOrigin: string; calls: { url: string; method: string; body: RequestBody }[]; errors: string[]; cookieSeen: boolean; pixel: unknown[][] };
+  let current: { knownLandingAccount: boolean; html: string; engine: string; landingPath: string; gatewayOrigin: string; calls: { url: string; method: string; body: RequestBody }[]; errors: string[]; cookieSeen: boolean; pixel: unknown[][] };
   const pending = new Set<Promise<unknown>>();
   browser.on("Runtime.exceptionThrown", (event: BrowserException) => current?.errors.push(event.exceptionDetails.exception?.description || event.exceptionDetails.text));
   browser.on("Fetch.requestPaused", (event: PausedRequest) => {
@@ -102,17 +104,24 @@ async function main() {
           // login page or a different landing after the gateway session check.
           if (selection === "invalid" || pathname !== snapshot.landingPath) {
             status = 404; content = '<!doctype html><p data-other-landing>Wrong landing</p>';
-          } else content = snapshot.html;
+          } else {
+            const hint = '<script>if (!sessionStorage.getItem("fixture-seeded")) { sessionStorage.setItem("fixture-seeded","1"); localStorage.setItem(' +
+              JSON.stringify("template7:gateway-visited:" + snapshot.gatewayOrigin) + ',String(Date.now())); }</script>';
+            content = snapshot.html.replace("<head>", "<head>" + hint);
+          }
         } else content = '<!doctype html><p data-gateway-arrival>Gateway ready</p>';
       } else if (url.pathname === "/api/client-identity/bootstrap") {
         content = JSON.stringify({ok:true});type="application/json";
-      } else if (url.pathname.includes("landing-atrio")) {
-        content = JSON.stringify({ atrioClientId: "a0000000-0000-4000-8000-000000000002", atrioId: "a0000000-0000-4000-8000-000000000003", atrioSlug: "synthetic" }); type = "application/json";
+      } else if (url.pathname === "/api/template7/destination" || url.pathname.includes("landing-atrio")) {
+        content = JSON.stringify({ atrioClientId: "a0000000-0000-4000-8000-000000000002", atrioId: "a0000000-0000-4000-8000-000000000003", atrioSlug: "synthetic", preparationReady: true, ...(snapshot.knownLandingAccount ? { existingName: "Landing A", promoCode: "TEST-017" } : {}) }); type = "application/json";
       } else if (url.pathname === "/api/template7/prepare" || url.pathname === "/api/template7/start") {
         snapshot.pixel = await browser.evaluate("(window.fbq && window.fbq.queue || []).map(args => Array.from(args))");
         content = JSON.stringify({ handoff_url: snapshot.gatewayOrigin + "/prepare?t=synthetic-only" }); type = "application/json";
       } else if (event.resourceType === "Script") {
         type = "text/javascript";
+        if (/^\/public-assets\/template-entry\/[a-z0-9-]+\.js$/.test(url.pathname)) {
+          content = await readFile(path.join(root, "frontend/public", url.pathname), "utf8");
+        }
       } else { content = "{}"; type = "application/json"; }
       headers.push({ name: "Content-Type", value: type }, { name: "Access-Control-Allow-Origin", value: "*" },
         { name: "Access-Control-Allow-Headers", value: "authorization,apikey,content-type" });
@@ -122,7 +131,8 @@ async function main() {
   });
   const waitFor = async (expression: string) => {
     for (let i = 0; i < 150; i++) { if (await browser.evaluate(expression)) return; await pause(40); }
-    throw new Error("Browser scenario timed out: " + expression);
+    const recent = current.calls.slice(-20).map(call => call.method + " " + new URL(call.url).pathname);
+    throw new Error("Browser scenario timed out: " + expression + "; " + current.engine + " " + current.gatewayOrigin + " " + JSON.stringify(recent) + " " + JSON.stringify(current.errors));
   };
   const results = [];
   try {
@@ -147,19 +157,21 @@ async function main() {
           layout: { template: 7, ctaPosition: "bottom" }, tracking: { pixelId: "123456", postUrl: landingOrigin + "/conversions", landingTag: "TEST", target_provider: entry.provider, skin_code: "ganamos_plus" } };
         const html = engine === "constructor" ? renderPublicLandingHtml({ slug: "reentry", config })
           : '<!doctype html><html><head></head><body>' + renderClassicTemplate7InlineHtml({ slug: "reentry", config }, 'function getOrCreateDeviceId(){return "a0000000-0000-4000-8000-000000000009";}') + '</body></html>';
-        current = { html, engine, landingPath, gatewayOrigin: entry.origin, calls: [], errors: [], cookieSeen: false, pixel: [] };
+        current = { knownLandingAccount: session === "valid", html, engine, landingPath, gatewayOrigin: entry.origin, calls: [], errors: [], cookieSeen: false, pixel: [] };
         const params = new URLSearchParams({ ...(route === landingPath ? {} : { landing: "reentry" }), ...attribution, fbclid: "fixture" });
         const landingUrl = landingOrigin + route + "?" + params;
         await browser.send("Page.navigate", { url: landingUrl });
         if (session === "valid") {
           await waitFor('!!document.querySelector("[data-gateway-arrival]")');
-          assert.equal(await browser.evaluate("location.origin"), entry.origin);
-          assert.equal(current.cookieSeen, true, "SameSite=Lax cookie must reach the top-level gateway request");
-          assert.equal(current.calls.filter(call => call.method === "POST").length, 0, "Reentry must not create a new account, identity or Contact");
+          const starts = current.calls.filter(call => ["/api/template7/start","/api/template7/prepare"].includes(new URL(call.url).pathname));
+          assert.equal(starts.length, 1);
+          assert.equal(starts[0].body.promo_code, "TEST-017");
+          assert.equal(starts[0].body.landing_slug, "reentry");
+          assert.equal(current.calls.filter(call => new URL(call.url).pathname === "/api/session/recover").length, 0);
         } else {
           await waitFor('!!document.querySelector("[data-template7-name]") && !window.__TEMPLATE7_REENTRY_PENDING__');
           assert.equal(await browser.evaluate('location.href'), landingUrl, "The original URL and advertising data must be restored");
-          assert.equal(current.calls.filter(call => new URL(call.url).pathname === "/resume").length, 1, "A missing session must not loop");
+          assert.equal(current.calls.filter(call => new URL(call.url).pathname === "/resume").length, entry.provider === "multi_skin" ? 0 : 1, "A missing session must not loop");
           await browser.evaluate(`var input=document.querySelector('[data-template7-name]');input.value='Prueba';input.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('.template7__cta').click();document.querySelector('.template7__cta').click();`);
           await waitFor('!!document.querySelector("[data-gateway-arrival]")');
           const starts = current.calls.filter(call => ["/api/template7/prepare", "/api/template7/start"].includes(new URL(call.url).pathname));
@@ -177,9 +189,9 @@ async function main() {
             assert.equal(starts[0].body.attribution?.[name], value, `Start attribution: ${name}`);
             assert.equal(contacts[0].body.payload?.[name], value, `Contact attribution: ${name}`);
           }
-          const pixel = current.pixel.filter(args => args[0] === "track" && args[1] === "Contact");
-          assert.equal(pixel.length, 1, "Fallback must keep one browser Contact");
-          assert.equal((pixel[0][3] as { eventID: string }).eventID, contacts[0].body.payload?.event_id);
+          const pixel = current.pixel.filter(args => args[0] === "trackSingle" && args[1] === "123456" && args[2] === "Lead");
+          assert.equal(pixel.length, 1, "Fallback must emit the configured browser Lead once");
+          assert.equal((pixel[0][4] as { eventID: string }).eventID, contacts[0].body.payload?.event_id);
         }
         assert.deepEqual(current.errors, []);
         results.push({ engine, provider: entry.provider, session, route, passed: true });

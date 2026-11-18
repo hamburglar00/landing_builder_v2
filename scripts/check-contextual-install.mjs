@@ -4,14 +4,16 @@ import { createRequire } from "node:module";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-const workspace = fileURLToPath(new URL("../../", import.meta.url));
+import { loadProductPaths } from "./product-worktrees.mjs";
+const productPath = loadProductPaths();
+const historyAndPush = process.argv.includes("--history-and-push");
 const product = process.argv.includes("--nexobet") ? "NexoBet" : "internal-chat";
-const atrio = path.join(workspace, product);
+const atrio = productPath(product);
 const require = createRequire(new URL("../frontend/package.json", import.meta.url));
 const { build } = require("esbuild");
 const appRequire = createRequire(path.join(atrio, "package.json"));
 const { chromium, webkit } = require(path.join(process.env.APPDATA, "npm/node_modules/playwright"));
-const output = fileURLToPath(new URL(`../.vercel/validation-contextual-install-${product}/`, import.meta.url));
+const output = fileURLToPath(new URL(`../.vercel/validation-contextual-install-${product}${historyAndPush ? "-history-push" : ""}/`, import.meta.url));
 await mkdir(output, { recursive: true });
 const cssFile = path.join(atrio, "src/app/globals.css");
 let chatCss = (await appRequire("postcss")([appRequire("@tailwindcss/postcss")({ base: atrio })]).process(await readFile(cssFile, "utf8"), { from: cssFile })).css;
@@ -27,7 +29,7 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
   const browser = await type.launch({ headless: true });
   try {
     for (const [repo, fallbackSource] of (process.argv.includes("--quick") ? configs.slice(0, 1) : configs)) {
-      const root = path.join(workspace, repo);
+      const root = productPath(repo);
       const js = await readFile(path.join(root, "public/gateway-client.js"), "utf8");
       const source = js.match(/messageSource:.*?\|\| "([^"]+)"/)?.[1] || fallbackSource;
       const css = await readFile(path.join(root, "public/gateway-client.css"), "utf8");
@@ -35,24 +37,38 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
       const context = await browser.newContext({ viewport: { width: 390, height: 844 }, userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile" });
       // Keep installation/reminder HTTP fixtures independent of OS service workers.
       // The separate deferred-app checker verifies worker registration and push.
-      await context.addInitScript(() => {
-        const worker = { pushManager: { getSubscription: async () => null } };
+      await context.addInitScript(active => {
+        if (active) {
+          window.observedReminderStates = [];
+          window.addEventListener("message", event => {
+            if (event.data?.type === "gateway.widget.install-state") window.observedReminderStates.push(event.data.pushActive);
+          });
+        }
+        if (active) Object.defineProperty(window, "Notification", { configurable: true, value: { permission: "granted" } });
+        const worker = { pushManager: { getSubscription: async () => active ? { toJSON: () => ({endpoint: "https://push.test/example",keys:{}}) } : null } };
         Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: {
           register: async () => worker, ready: Promise.resolve(worker), controller: null,
           getRegistration: async () => worker, addEventListener() {}, removeEventListener() {}
         } });
-      });
+      }, historyAndPush);
       const page = await context.newPage(), errors = [];
       page.setDefaultTimeout(15000);
       page.on("pageerror", error => errors.push(error.message));
       let serial = 0;
-      let now = Date.now();
+      let now = historyAndPush ? Date.parse("2026-11-18T16:56:00Z") : Date.now();
       let profile = {};
       await page.clock.setFixedTime(now);
       const msg = (sender, content, metadata = {}) => ({ id: `fixture-message-${++serial}`, sender, type: "texto", content, metadata, created_at: new Date(now + serial).toISOString(), read_at: null });
       const wallet = msg("asesor", "Cuenta de prueba", { wallet: { accountNumber: "0000000000000000000000", alias: "fixture", holderName: "Fixture" } });
       let messages = [msg("asesor", "Bienvenida", { source: "auto_welcome" }), wallet];
-      const props = { advisorSlug: "fixture", deviceId: "fixture-device-1234", embedded: true, embeddedParentOrigin: "https://gateway.test", embeddedGatewaySource: source, embeddedHasActiveWallet: false, conversationSessionToken: "fixture-token", widgetTemplate: "whatsapp", quickStarters: [], session: { advisor_id: "fixture-advisor", advisor_name: "Asesor de prueba", advisor_avatar_url: null, advisor_status: "disponible", player_id: "fixture-player", conversation_id: "fixture-conversation", player_display_name: "Prueba", player_platform: "ios", app_installed_status: "unknown", whatsapp_url: null, telegram_url: null } };
+      if (historyAndPush) {
+        const old = { ...msg("asesor", "Comprobante de ayer"), created_at: "2026-11-17T18:38:00Z" };
+        const hello = msg("cliente", "Hola");
+        const confirmation = msg("asesor", "Carga confirmada. Tocá la *X* de arriba para volver al casino.");
+        const notification = { ...msg("asesor", "Activá las notificaciones", { source: "push_activation_invite" }), type: "instrucciones_instalacion" };
+        messages = [old, hello, confirmation, notification];
+      }
+      const props = { advisorSlug: "fixture", deviceId: "fixture-device-1234", embedded: true, embeddedParentOrigin: "https://gateway.test", embeddedGatewaySource: source, embeddedHasActiveWallet: false, conversationSessionToken: "fixture-token", widgetTemplate: "whatsapp", quickStarters: [], session: { advisor_id: "fixture-advisor", advisor_name: "Asesor de prueba", advisor_avatar_url: null, advisor_status: "disponible", player_id: "fixture-player", conversation_id: "fixture-conversation", player_display_name: "Prueba", player_platform: "ios", app_installed_status: historyAndPush ? "installed" : "unknown", whatsapp_url: null, telegram_url: null } };
       await context.route("**/*", async route => {
         const url = new URL(route.request().url());
         if (url.hostname === "gateway.test") {
@@ -66,6 +82,10 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
           if (url.pathname === "/chat.js") return route.fulfill({ contentType: "text/javascript; charset=utf-8", body: bundle.outputFiles[0].text });
           if (url.pathname === "/api/gateway/chat" && route.request().method() === "POST") {
             const body = route.request().postDataJSON();
+            if (["app_invitation", "installation_help"].includes(body.action)) {
+              const message = { ...msg("asesor", "Instrucciones de instalación", { source: body.action === "app_invitation" ? "automatic_install_invite" : "client_install_help" }), type: "instrucciones_instalacion" };
+              return route.fulfill({ json: { message } });
+            }
             if (body.action === "visible_entry") return route.fulfill({ json: { messages, walletReady: true, walletRequestCompleted: true, entryDiagnostics: [] } });
             if (body.action === "message") { const message = msg("cliente", body.content); messages.push(message); return route.fulfill({ json: { message } }); }
           }
@@ -75,6 +95,26 @@ for (const [engine, type] of (process.argv.includes("--quick") ? [["Chromium", c
       });
       await page.goto("https://gateway.test/");
       const chat = page.frameLocator("#gateway-chat-shell iframe");
+      if (historyAndPush) {
+        await chat.getByText("Ayer", { exact: true }).waitFor();
+        await chat.getByText("Hoy", { exact: true }).waitFor().catch(async error => {
+          throw new Error("Missing day divider. Visible history: " + await chat.locator("body").innerText({ timeout: 1000 }).catch(() => "widget unavailable") + "; " + errors.join(", "), { cause: error });
+        });
+        const thread = chat.locator(".chat-message-thread");
+        const lines = await thread.innerText();
+        assert.match(lines, /ayer[\s\S]*Comprobante de ayer[\s\S]*hoy[\s\S]*Hola/i);
+        assert.equal(await thread.locator("strong").filter({ hasText: /^X$/ }).count(), 1);
+        await chat.getByRole("button", { name: "Activadas", exact: true }).waitFor().catch(async error => {
+          const states = await chat.locator("body").evaluate(() => window.observedReminderStates);
+          throw new Error("Subscription result: " + JSON.stringify(states) + "; history: " + await chat.locator("body").innerText({timeout:1000}).catch(() => "widget unavailable") + "; " + errors.join(", "), { cause: error });
+        });
+        assert.equal(await chat.getByRole("button", { name: "Activadas", exact: true }).isDisabled(), true);
+        assert.equal(await page.getByRole("dialog").count(), 0);
+        assert.deepEqual(errors, []);
+        checks.push({ engine, repo, dayDividers: true, boldClose: true, alreadySubscribed: true });
+        await context.close();
+        continue;
+      }
       const offer = chat.getByRole("complementary", { name: "Guardar acceso en este teléfono" });
       await chat.getByPlaceholder("Escribi un mensaje...").waitFor();
       await page.waitForFunction(() => !!window.GatewayApp);

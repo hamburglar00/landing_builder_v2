@@ -1,5 +1,12 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+## 18/11 — Mensajes de API2 e historial del chat del gateway
+
+- Tanto por landing como por gerencia, Atrio entrega las respuestas comunes del bot en todos los flujos. Sólo el éxito de carga agrega la indicación de minimizar el chat con la **X**. El saludo y la atención pueden continuar durante una revisión financiera. Se mantienen las reservas y los controles contra repetir operaciones.
+- El chat muestra un separador por día según la hora local del cliente, al entrar y al recuperar historial. Los cuatro gateways comparten el widget de Atrio.
+- Con el teclado abierto, conservar visible el campo y respetar la zona segura. Descontar el espacio inferior del dispositivo ya cubierto por el teclado. Verificar la suscripción vigente antes de ofrecer activar notificaciones.
+- Validación local en Chromium y WebKit sobre los cuatro gateways, incluida la copia del Worker de Ganamos+. Se verificaron el historial, la X en negrita y el aviso de notificaciones con suscripción activa. El usuario confirmó que el campo y el botón siguen visibles en su iPhone al reabrir el teclado. La comprobación física del ajuste posterior al movimiento queda pendiente. Atrio y la copia compartida de NexoBet referencian el commit local `6386918` para el historial.
+
 ## 17/11 — Cuentas de Builder sin vencimiento desde PBAdmin
 
 Las cuentas de cliente que crea PBAdmin nacen sin fecha de vencimiento. La migración quita la fecha a las cuentas de Builder ya vinculadas al momento de aplicarla, incluidas las creadas originalmente en Builder. El alta manual desde Superadmin continúa con 30 días. La regla sólo afecta la fecha de la suscripción de Builder.
@@ -1723,3 +1730,9 @@ El progreso es indicativo: arranca cerca de 70 %, llega a 90 % en aproximadament
 Leo confirma corregida la recuperación de Ases y pide conservarla. Autoriza: integrar los extremos del degradado de login con sus zonas seguras; mantener el color del casino desde el primer ingreso por gerencia (Ases gris #101114), incluso con chat abierto; acompañar el teclado desde el primer desplazamiento sin salto de umbral ni rebote; barra de 9 px y avance continuo desacelerado, sin demoras artificiales y completando sólo con la confirmación existente. Revisar los cuatro gateways y Worker, además de los renderizadores Builder/Clásico/Nexo. Se conservan UI restante, branding, eventos, sesiones, redirecciones y finanzas. Sustituye el arranque instantáneo de la barra en 70 %.
 
 Checkpoint limpio de nueve worktrees: ../.checkpoints/visual-smoothing-20261116-214246/manifest.json. Alcance y evidencia en ../../internal-chat-gateway-engine-20261114/docs/validation/visual-flow-20261116.md.
+
+### Recuperación independiente por gerencia (18/11/2026)
+
+Un navegador puede mantener cuentas de varias gerencias del mismo casino. Al volver a un enlace, recuperar la cuenta de ese destino tras verificar su sesión y su vínculo vigente con la gerencia, asesor, proveedor, backend y skin. Los ingresos por template y por enlace recuerdan la misma cuenta. Con varias cuentas conocidas en un destino o sin una sesión verificable, ofrecer ingreso con credenciales y creación explícita. Conservar la compatibilidad con sesiones anteriores y el cierre de sesión. Este criterio se aplica a los cuatro gateways y al Worker de Ganamos+.
+
+Al reabrir un template, la landing comprueba su asignación y la cuenta existente de ese navegador por el circuito de recuperación propio. Un ingreso reciente en otro enlace del mismo casino no acredita la cuenta de ese template. El retorno conserva la URL autorizada de la landing y su atribución.

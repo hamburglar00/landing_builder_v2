@@ -22,7 +22,7 @@ for(const [engine,type] of [['Chromium',chromium],['WebKit',webkit]]){
  const browser=await type.launch({headless:true});
  try{for(const platform of ['ios','android'])for(const standalone of [false,true]){
   const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
-  await page.route('https://keyboard.fixture/**',route=>route.fulfill({contentType:'text/html',body:`<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>html,body{margin:0;overflow:hidden}${css}</style><div id="gateway-chat-shell" data-open="true" data-motion="open"><iframe src="https://chat.fixture/embed"></iframe></div>`}));
+  await page.route('https://keyboard.fixture/**',route=>route.fulfill({contentType:'text/html',body:`<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>html,body{margin:0;overflow:hidden}${platform==='ios'?css.replaceAll('env(safe-area-inset-bottom)','34px'):css}</style><div id="gateway-chat-shell" data-open="true" data-motion="open"><iframe src="https://chat.fixture/embed"></iframe></div>`}));
   await page.route('https://chat.fixture/**',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;height:100%;overflow:hidden}main{height:100%;display:flex;flex-direction:column}header{height:50px;flex:none}section{flex:1;overflow:auto}input{font-size:16px;height:40px;flex:none}</style><main><header>Asesor</header><section>Historial</section><input placeholder="Escribí un mensaje"></main>'}));
   await page.goto('https://keyboard.fixture/home');
   await page.evaluate(standalone=>{
@@ -62,7 +62,12 @@ for(const [engine,type] of [['Chromium',chromium],['WebKit',webkit]]){
    assert(relativeTop<=previousRelativeTop+.5,'opening header does not reverse direction: '+context);
    assert(previousRelativeTop-relativeTop<=previous.height-height+2,
     'header movement must follow viewport movement without a threshold jump: '+context);
-   if(height===842)assert(rect.y<original.y-.5,'panel follows the first small keyboard movement');
+   const occluded=Math.max(0,844-(top+height));
+   const restingGap=844-original.y-original.height;
+   const gap=top+height-rect.y-rect.height;
+   if(platform==='ios' && occluded>=120)assert(Math.abs(gap-8)<=1,'keyboard already covers the home indicator: '+context);
+   if(platform==='ios')assert(rect.y+rect.height<=844-34+.5,'panel stays above physical safe edge');
+   if(height===842 && restingGap<=8)assert(rect.y<original.y-.5,'panel follows the first small keyboard movement');
    previous={height,rect,top};
   }
   await input.evaluate(el=>el.blur());

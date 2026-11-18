@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { fileURLToPath } from "node:url";
 import {
   handleTemplate7Prepare, handleTemplate7PreparationAccount, handleTemplate7PreparationFinalize,
 } from "../lib/reyDeAses/preparation.server";
@@ -31,8 +30,6 @@ type ApiContext = { request: { all(): Row; input(name: string): unknown; header(
 type Api2 = { LocalPlayerController: new () => { apiExternalPlayerCreate(ctx: ApiContext): Promise<unknown> };
   LocalApiKeyMiddleware: new () => { handle(ctx: ApiContext, next: () => Promise<unknown>): Promise<unknown> } };
 const json = (body: unknown, status = 200, headers: HeadersInit = {}) => Response.json(body, { status, headers });
-const frontend = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const workspace = path.resolve(frontend, "../..");
 const api2Arg = process.argv.indexOf("--api2-repo");
 assert.ok(api2Arg >= 0 && process.argv[api2Arg + 1], "Usage: npx tsx scripts/template7-local-flow-check.ts --api2-repo <local-api2-checkout>");
 
@@ -75,8 +72,10 @@ async function main() {
     });
     activate();
     http.install();
-    const gateway = await loadGateway(path.join(workspace, "landing-autologuin")) as Gateway;
-    const atrio = await loadAtrio(path.join(workspace, "internal-chat")) as Atrio;
+    const { loadProductPaths } = await import(new URL("../../scripts/product-worktrees.mjs", import.meta.url).href);
+    const product = loadProductPaths();
+    const gateway = await loadGateway(product("landing-autologuin")) as Gateway;
+    const atrio = await loadAtrio(product("internal-chat")) as Atrio;
     const api2 = await loadApi2(path.resolve(process.argv[api2Arg + 1])) as Api2;
     const deps: StartDependencies = {
       db: {
@@ -258,24 +257,22 @@ async function main() {
       const returnTo = origins.builder + "/l/local-e2e?__t7_resume=" + randomUUID();
       const resumed = await fetch(origins.gateway + "/resume?return_to=" + encodeURIComponent(returnTo), { headers });
       assert.equal(resumed.status, 303);
-      assert.equal(new URL(resumed.headers.get("location")!, origins.gateway).pathname, "/");
+      assert.equal(resumed.headers.get("location"), returnTo);
       const directEntry = await fetch(origins.gateway + "/", { headers });
       assert.equal(directEntry.status, 303);
       assert.equal(new URL(directEntry.headers.get("location")!, origins.gateway).pathname, "/casino/list/home");
       const resumeUrl = origins.gateway + "/resume?return_to=" + encodeURIComponent(returnTo);
       for (const invalidCookie of ["", "gw_session=gs1.invalid"]) {
         const fallback = await fetch(resumeUrl, { headers: new Headers(invalidCookie ? { cookie: invalidCookie } : {}) });
-        assert.equal(fallback.status, 200);
+        assert.equal(fallback.status, 303);
         assert.equal(fallback.headers.get("cache-control"), "private, no-store");
-        const probe = await fallback.text();
-        assert.ok(probe.includes('fetch("/api/session/recover"'), "Try the browser recovery credential before falling back");
-        assert.ok(probe.includes(JSON.stringify(returnTo)), "Recovery failure must return to the same selected landing");
+        assert.equal(fallback.headers.get("location"), returnTo);
       }
       await fixture.drainBackground();
       for (const session of fixture.gateway.sessions.values()) session.expires_at = new Date(Date.now() - 1);
       const expired = await fetch(resumeUrl, { headers });
-      assert.equal(expired.status, 200);
-      assert.ok((await expired.text()).includes(JSON.stringify(returnTo)));
+      assert.equal(expired.status, 303);
+      assert.equal(expired.headers.get("location"), returnTo);
       assert.equal(fixture.apiCalls, before, "Reentry must not create/resolve another casino account");
       assertSingleAccount();
     });

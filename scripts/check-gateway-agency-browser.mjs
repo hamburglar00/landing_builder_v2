@@ -28,7 +28,7 @@ for (const [engineName, engine] of [["Chromium", playwright.chromium], ["WebKit"
     for (const [provider, repo] of Object.entries(providers)) for (const viewport of [{ width: 390, height: 844 }, { width: 1365, height: 768 }]) {
       const context = await browser.newContext({ viewport });
       let page = await context.newPage();const calls = [], errors = [];
-      let reject = true, recovery = "missing", confirmed = true;
+      let reject = true, recovery = "missing", confirmed = true, repair = "none";
       const html = await gatewayAgencyPage(provider, 17).text();
       page.on("pageerror", e => errors.push(e.message));
       await context.route("**/*", async route => {
@@ -39,7 +39,7 @@ for (const [engineName, engine] of [["Chromium", playwright.chromium], ["WebKit"
           const asset = path.join(productPath(repo), "public", url.pathname);
           return route.fulfill({ contentType: url.pathname.endsWith("webp") ? "image/webp" : "image/png", body: await readFile(asset) });
         }
-        if (url.pathname === "/api/agency-entry") {
+        if (url.pathname === "/api/agency-entry/17") {
           const input=route.request().postDataJSON();calls.push(input);
           if(input.action==='resume') {
             if(recovery==='network')return route.abort();
@@ -47,9 +47,14 @@ for (const [engineName, engine] of [["Chromium", playwright.chromium], ["WebKit"
               {active:true,entry_confirmation:'ge1.fixture',recovery_token:'encrypted-fixture',redirect_url:'/home?gateway_chat=open'}:
               {active:false,...(recovery==='different'?{different_account:true}:{})})});
           }
-          return route.fulfill({ status: reject ? 401 : 200, contentType: "application/json", body: JSON.stringify(reject ? { error: "Revisá tus datos." } : { recovery_token: "encrypted-fixture", redirect_url: "/home?gateway_chat=open" }) });
+          return route.fulfill({ status: reject ? 401 : 200, contentType: "application/json", body: JSON.stringify(reject ? { error: "Revisá tus datos." } : { entry_confirmation: "ge1.fixture", recovery_token: "encrypted-fixture", redirect_url: "/home?gateway_chat=open" }) });
         }
-        if (url.pathname === "/api/session/recover") return route.fulfill({ contentType: "application/json", body: JSON.stringify({active:confirmed,...(route.request().postDataJSON().entry_confirmation&&confirmed?{entry_confirmed:true}:{})}) });
+        if (url.pathname === "/api/session/recover") {
+          const proof = route.request().postDataJSON();
+          if (repair !== "none" && proof.recovery_token) return route.fulfill({ json: { active: true, entry_repaired: true } });
+          const exact = confirmed && repair !== "blocked" && proof.entry_confirmation === "ge1.fixture";
+          return route.fulfill({ json: { active: exact, entry_confirmed: exact } });
+        }
         if(url.pathname === "/manifest.webmanifest") return route.fulfill({json:{name:"Fixture",icons:[]}});
         assert.equal(url.pathname, "/home");
         return route.fulfill({ contentType: "text/html", body: "<main>Casino y chat</main>" });
@@ -80,7 +85,7 @@ for (const [engineName, engine] of [["Chromium", playwright.chromium], ["WebKit"
       for(const state of ['active','different','network']) {
         recovery=state;const before=calls.length;await page.goto('https://gateway.example/17');
         if(state==='active')await page.waitForURL('**/home?gateway_chat=open');
-        else {await page.locator('#username').waitFor({state:'visible'});assert.ok(await page.locator('#error').textContent());}
+        else {await page.locator('#username').waitFor({state:'visible'});assert.equal(Boolean(await page.locator('#error').textContent()),state==='network');}
         if(state==='network') {
           assert.equal(await page.locator('#retry-recovery').count(),0);
           assert.equal(await page.locator('#username').isVisible(),true);
@@ -90,7 +95,18 @@ for (const [engineName, engine] of [["Chromium", playwright.chromium], ["WebKit"
       recovery='active';confirmed=false;const before=calls.length;await page.goto('https://gateway.example/17');
       await page.locator('#error').filter({hasText:'No pudimos recuperar'}).waitFor();
       assert.equal(new URL(page.url()).pathname,'/17');assert.equal(calls.length,before+1);checks++;
-      confirmed=true;recovery='missing';
+      confirmed=true;
+      for (const state of ["accepted","blocked"]) {
+        repair=state;
+        await page.goto("https://gateway.example/17");
+        if (state==="accepted") await page.waitForURL("**/home?gateway_chat=open");
+        else {
+          await page.locator("#error").filter({hasText:"No pudimos recuperar"}).waitFor();
+          assert.equal(new URL(page.url()).pathname, "/17");
+        }
+        checks++;
+      }
+      repair="none";recovery="missing";
       assert.deepEqual(errors, []); checks++;
       await context.close();
     }
