@@ -114,7 +114,11 @@ export async function provision(
         );
     }
     if (!account.ready) {
-      await initializeClientDefaults(db, uid, defaultsAdminId!);
+      // PBAdmin-created workspaces start with Atrio and templates 7/8/9.
+      // The shared initializer preserves any permissions already saved.
+      await initializeClientDefaults(db, uid, defaultsAdminId!, {
+        moduleVisibility: { show_atrio: true },
+      });
       const cleanup = await db
         .from("auth_signup_approvals")
         .delete()

@@ -383,7 +383,13 @@ try {
       .select("*")
       .eq("user_id", result.uid)
       .single();
-    assert.equal(defaults.data.show_atrio, false);
+    assert.equal(defaults.data.show_atrio, true);
+    for (const key of ["show_followups", "show_whatsapp_api", "show_notifications", "show_kommo", "show_chatrace"]) {
+      assert.equal(defaults.data[key], false, `${key} keeps its existing default`);
+    }
+    const config = await db.from("conversions_config").select("*").eq("user_id", result.uid).single();
+    for (const key of ["show_logs", "show_ai_assistant", "show_promotions"]) assert.equal(config.data[key], false);
+    assert.equal(config.data.visible_columns.length, 21, "Column visibility is unchanged");
     assert.equal(
       (
         await db
@@ -396,11 +402,13 @@ try {
     );
   });
   await test("retry and second administrator keep one workspace and identify each person", async () => {
+    await db.from("client_module_permissions").update({ show_atrio: false }).eq("user_id", result.uid);
     const other = await builder.provision(
       identity(101, 102),
       "synthetic-grant",
     );
     assert.equal(other.uid, result.uid);
+    assert.equal((await db.from("client_module_permissions").select("show_atrio").eq("user_id", result.uid).single()).data.show_atrio, false, "Reopening does not reset an existing disablement");
     const rows = await db
       .from("pbadmin_sessions")
       .select("user_id")
@@ -433,9 +441,11 @@ try {
     ).data;
     assert.equal(reserved.ready, false);
     assert.ok((await db.auth.admin.getUserById(reserved.account_id)).data.user);
+    await db.from("client_module_permissions").update({ show_atrio: false }).eq("user_id", reserved.account_id);
     sql("alter table client_subscriptions drop constraint fixture_fail_plan;");
     const resumed = await builder.provision(identity(105), "synthetic-grant");
     assert.equal(resumed.uid, reserved.account_id);
+    assert.equal((await db.from("client_module_permissions").select("show_atrio").eq("user_id", resumed.uid).single()).data.show_atrio, false, "Resuming a partial signup preserves saved permissions");
     assert.equal(
       (
         await db
@@ -446,29 +456,37 @@ try {
       1,
     );
   });
-  await test("future module defaults apply automatically only to new clients", async () => {
+  await test("manual client initialization retains its own module defaults", async () => {
+    const id = await create("manual-defaults@example.test");
+    await db.from("profiles").insert({ id, role: "client", nombre: "manualdefaults" });
+    const initializer = await bundle(path.join(root, "supabase/functions/_shared/initialize-client.ts"), "client-defaults", path.join(root, "frontend"));
+    await initializer.initializeClientDefaults(db, id, defaultsId);
+    const row = await db.from("client_module_permissions").select("*").eq("user_id", id).single();
+    for (const key of ["show_atrio", "show_followups", "show_whatsapp_api", "show_notifications", "show_kommo", "show_chatrace"]) assert.equal(row.data[key], false);
+  });
+  await test("future unrelated module defaults apply automatically only to new clients", async () => {
     sql(
-      "alter table client_module_permissions alter column show_atrio set default true;",
+      "alter table client_module_permissions alter column show_notifications set default true;",
     );
     const fresh = await builder.provision(identity(106), "synthetic-grant");
     assert.equal(
       (
         await db
           .from("client_module_permissions")
-          .select("show_atrio")
+          .select("show_notifications")
           .eq("user_id", fresh.uid)
           .single()
-      ).data.show_atrio,
+      ).data.show_notifications,
       true,
     );
     assert.equal(
       (
         await db
           .from("client_module_permissions")
-          .select("show_atrio")
+          .select("show_notifications")
           .eq("user_id", result.uid)
           .single()
-      ).data.show_atrio,
+      ).data.show_notifications,
       false,
     );
   });
@@ -720,6 +738,7 @@ try {
   await test("legacy Builder credentials and existing settings survive linking", async () => {
     const id = await create("legacy@example.test");
     await db.from("profiles").insert({ id, role: "client", nombre: "legacy" });
+    await db.from("client_module_permissions").insert({ user_id: id, show_atrio: false });
     await db
       .from("client_subscriptions")
       .insert({ user_id: id, plan_code: "custom", max_landings: 99 });
@@ -760,6 +779,7 @@ try {
       "synthetic-grant",
     );
     assert.equal(linked.uid, id);
+    assert.equal((await db.from("client_module_permissions").select("show_atrio").eq("user_id", id).single()).data.show_atrio, false, "Linking an existing native account preserves its permissions");
     assert.equal(
       (
         await builder.sessionClient().auth.signInWithPassword({

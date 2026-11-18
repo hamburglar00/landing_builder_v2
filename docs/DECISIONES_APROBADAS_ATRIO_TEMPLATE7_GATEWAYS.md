@@ -1,5 +1,11 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+## 17/11 — Atrio habilitado en cuentas nuevas creadas desde PBAdmin
+
+Leo precisa expresamente que el permiso `show_atrio` debe comenzar activado para las cuentas nuevas de Builder creadas desde PBAdmin. Este permiso único habilita Atrio y las plantillas 7, 8 y 9. El provisionador de Builder pasa esa opción al inicializador canónico sólo durante el alta; conserva el comportamiento idempotente para permisos ya guardados, altas parciales y vínculos con cuentas nativas existentes. Los demás módulos opcionales, el alta manual desde Superadmin, las columnas visibles y el plan conservan sus valores actuales.
+
+Fuente y alcance: alta de cuentas en el adaptador PBAdmin de Builder. No cambia la identidad, SDK, Worker, motor de ingreso ni lógica compartida de los cuatro gateways; no requiere cambios de fuente en Atrio, NexoBet o API2. No requiere migración ni backfill: el efecto aplica al provisionar nuevas cuentas desde PBAdmin. Validación en [registro del lote](validation/pbadmin-atrio-default-20261117.md).
+
 ## 16/11 — Contexto de un único recorrido y entrega duradera en API2
 
 Leo autoriza implementar las dos correcciones auditadas de Builder y el registro previo al envío/recuperación persistente en API2; API2 exclusivamente local en `feature/atrio-integration`. Un promo completo nuevo B sin Contact coincidente no hereda publicidad de A. Una compra/recompra con promo exacto coherente toma su contexto completo de ese recorrido, tanto WhatsApp como Atrio. Conservar hitos operativos, eventos Meta, filtros, IDs, fechas y controles de pertenencia. La evidencia de origen permanece separada del código de recorrido.
