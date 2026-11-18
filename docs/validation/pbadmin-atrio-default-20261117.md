@@ -22,3 +22,9 @@ Checkpoint previo: `C:/Users/Leo/Desktop/V2/CURSOR/.checkpoints/pbadmin-atrio-de
 ## Publicación
 
 No requiere migración ni backfill de datos; el cambio sólo modifica el permiso inicial de futuras cuentas provisionadas desde PBAdmin.
+
+- Commit funcional: `57b77a088e2403b311ac95712d36c285c4e12e5f`, hijo directo de `4b67339ec28a16967014c67d840e11afe47543b4`.
+- Push fast-forward a `origin/main`, sin force push.
+- Vercel producción: deployment `dpl_9zxiv5wqrt8NuJeGdjFFp2RbnXGf`, estado `READY`, construido desde el commit funcional.
+- `constructor.panelbotadmin.com/login` y `mkt.panelbotadmin.com/login` respondieron HTTP 200 y están asignados al deployment.
+- El build completo local no pudo terminar la recolección de rutas porque este checkout no tiene `NEXT_PUBLIC_SUPABASE_URL` ni `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Vercel sí completó y publicó el build con el entorno de producción.
