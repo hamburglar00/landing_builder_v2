@@ -92,5 +92,5 @@ export async function fetchWithEntryRecovery(url: string, init: RequestInit, onR
   throw new Error("entry_recovery_exhausted");
 }
 
-// The function has no module-local dependencies; the generated classic runtime uses the same implementation.
-export const ENTRY_REQUEST_RECOVERY_SCRIPT = `var fetchWithEntryRecovery = ${fetchWithEntryRecovery.toString()};`;
+// Server bundlers may rewrite callbacks and browser globals. Embed the browser build.
+export { default as ENTRY_REQUEST_RECOVERY_SCRIPT } from "./request-recovery.browser.json";

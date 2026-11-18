@@ -1,5 +1,9 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+## 18/11 ? Ingreso y reintento desde Piliganamos
+
+El navegador recibe el programa de reintentos compilado para el cliente. La misma fuente conserva las etapas, los tiempos y la identidad del intento en los cuatro gateways, incluido el Worker de Ganamos+. La verificaci?n del HTML publicado comprueba el bot?n Retomar y la confirmaci?n de sesi?n con operaciones simuladas.
+
 ## 18/11 — Mensajes de API2 e historial del chat del gateway
 
 - Tanto por landing como por gerencia, Atrio entrega las respuestas comunes del bot en todos los flujos. Sólo el éxito de carga agrega la indicación de minimizar el chat con la **X**. El saludo y la atención pueden continuar durante una revisión financiera. Se mantienen las reservas y los controles contra repetir operaciones.

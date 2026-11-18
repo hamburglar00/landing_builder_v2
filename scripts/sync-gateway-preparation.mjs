@@ -7,7 +7,7 @@ const productPath = loadProductPaths();
 const files = [
   "src/lib/preparation-page.ts", "src/lib/preparation-page.test.ts",
   "src/lib/preparation-session.ts", "src/lib/preparation-session.test.ts",
-  "src/lib/request-recovery.ts", "src/lib/request-recovery.test.ts",
+  "src/lib/request-recovery.ts", "src/lib/request-recovery.browser.json", "src/lib/request-recovery.test.ts",
   "src/app/api/preparations/complete/early-session.test.ts",
 ];
 for (const repo of ["ases-gateway", "ganamos-gateway", "multi-skin-gateway"]) {
