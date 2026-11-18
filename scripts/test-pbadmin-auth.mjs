@@ -390,16 +390,9 @@ try {
     const config = await db.from("conversions_config").select("*").eq("user_id", result.uid).single();
     for (const key of ["show_logs", "show_ai_assistant", "show_promotions"]) assert.equal(config.data[key], false);
     assert.equal(config.data.visible_columns.length, 21, "Column visibility is unchanged");
-    assert.equal(
-      (
-        await db
-          .from("client_subscriptions")
-          .select("*")
-          .eq("user_id", result.uid)
-          .single()
-      ).data.max_landings,
-      1,
-    );
+    const subscription = await db.from("client_subscriptions")
+      .select("max_landings,expires_at").eq("user_id", result.uid).single();
+    assert.deepEqual(subscription.data, { max_landings: 1, expires_at: null });
   });
   await test("retry and second administrator keep one workspace and identify each person", async () => {
     await db.from("client_module_permissions").update({ show_atrio: false }).eq("user_id", result.uid);
@@ -461,6 +454,9 @@ try {
     await db.from("profiles").insert({ id, role: "client", nombre: "manualdefaults" });
     const initializer = await bundle(path.join(root, "supabase/functions/_shared/initialize-client.ts"), "client-defaults", path.join(root, "frontend"));
     await initializer.initializeClientDefaults(db, id, defaultsId);
+    const subscription = await db.from("client_subscriptions")
+      .select("starts_at,expires_at").eq("user_id", id).single();
+    assert.equal(Date.parse(subscription.data.expires_at) - Date.parse(subscription.data.starts_at), 30 * 86400_000);
     const row = await db.from("client_module_permissions").select("*").eq("user_id", id).single();
     for (const key of ["show_atrio", "show_followups", "show_whatsapp_api", "show_notifications", "show_kommo", "show_chatrace"]) assert.equal(row.data[key], false);
   });
@@ -799,6 +795,17 @@ try {
       ).data.max_landings,
       99,
     );
+  });
+  await test("the expiration migration covers managed and linked native clients and preserves manual subscriptions", async () => {
+    const migration = await readFile(path.join(root, "supabase/migrations/20261118015541_pbadmin_linked_clients_without_expiration.sql"), "utf8");
+    const manualExpiry = "select expires_at from client_subscriptions join profiles on profiles.id=user_id where nombre='manualdefaults'";
+    const previousManualExpiry = sql(manualExpiry);
+    assert.ok(previousManualExpiry);
+    sql("update client_subscriptions set expires_at = now(), status = 'paused' where user_id in (select account_id from pbadmin_accounts where owner_id in (101,103))");
+    assert.equal(sql(migration), "UPDATE 2");
+    assert.equal(sql(migration), "UPDATE 0");
+    assert.equal(sql("select count(*) from client_subscriptions s join pbadmin_accounts a on a.account_id=s.user_id where a.owner_id in (101,103) and s.expires_at is null and s.status='paused'"), "2");
+    assert.equal(sql(manualExpiry), previousManualExpiry);
   });
   await test("native admin cannot be linked as a client; one account cannot be claimed by two owners", async () => {
     await assert.rejects(

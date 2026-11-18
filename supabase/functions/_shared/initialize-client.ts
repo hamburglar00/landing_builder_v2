@@ -59,6 +59,7 @@ export async function initializeClientDefaults(
   userId: string,
   creatorId: string,
   options: ClientOptions = {},
+  source: "manual" | "pbadmin" = "manual",
 ) {
   const requestedVisibleColumns = Array.isArray(options.visibleColumns)
     ? options.visibleColumns.map((c) => String(c)).filter(Boolean)
@@ -137,6 +138,7 @@ export async function initializeClientDefaults(
   if (modulePermissionError) throw new Error("Module configuration pending");
 
   const defaults = getPlanDefaults("starter");
+  const startsAt = new Date();
   const { error: subError } = await supabaseAdmin
     .from("client_subscriptions")
     .upsert(
@@ -146,10 +148,10 @@ export async function initializeClientDefaults(
         max_landings: defaults.maxLandings,
         max_phones: defaults.maxPhones,
         status: "active",
-        starts_at: new Date().toISOString(),
-        expires_at: new Date(
-          Date.now() + 30 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
+        starts_at: startsAt.toISOString(),
+        expires_at: source === "pbadmin"
+          ? null
+          : new Date(startsAt.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         grace_days: 5,
       },
       { onConflict: "user_id", ignoreDuplicates: true },

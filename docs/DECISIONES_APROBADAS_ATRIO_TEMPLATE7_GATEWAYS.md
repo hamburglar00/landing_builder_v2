@@ -1,5 +1,9 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+## 17/11 — Cuentas de Builder sin vencimiento desde PBAdmin
+
+Las cuentas de cliente que crea PBAdmin nacen sin fecha de vencimiento. La migración quita la fecha a las cuentas de Builder ya vinculadas al momento de aplicarla, incluidas las creadas originalmente en Builder. El alta manual desde Superadmin continúa con 30 días. La regla sólo afecta la fecha de la suscripción de Builder.
+
 ## 17/11 — Atrio habilitado en cuentas nuevas creadas desde PBAdmin
 
 Leo precisa expresamente que el permiso `show_atrio` debe comenzar activado para las cuentas nuevas de Builder creadas desde PBAdmin. Este permiso único habilita Atrio y las plantillas 7, 8 y 9. El provisionador de Builder pasa esa opción al inicializador canónico sólo durante el alta; conserva el comportamiento idempotente para permisos ya guardados, altas parciales y vínculos con cuentas nativas existentes. Los demás módulos opcionales, el alta manual desde Superadmin, las columnas visibles y el plan conservan sus valores actuales.
