@@ -192,7 +192,7 @@ export default function DashboardLandingsPage() {
         phoneIntervalEndHour: landing.phoneIntervalEndHour,
         landingTag: "",
         comment: landing.comment,
-        config: copiedConfig,
+        config: { ...copiedConfig, gatewayEntry: copiedConfig.gatewayEntry ?? { mode: "direct", seconds: 4 } },
       });
       const assignments = await fetchLandingGerencias(landing.id);
       if (assignments.length > 0) {

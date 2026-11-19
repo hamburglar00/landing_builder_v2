@@ -1,4 +1,4 @@
-import { gatewayEntryWait, type GatewayEntryWait } from "../landing/gatewayEntry";
+import { usesAccountCreationScreen, gatewayEntryWait, type GatewayEntryWait } from "../landing/gatewayEntry";
 import { confirmTemplate8Destination } from "../atrio/template7Destination.server";
 import { template8Provider, template8SkinCode } from "../landing/template8";
 import { resolveEffectiveLandingConfig } from "../landing/effectiveLandingConfig";
@@ -44,10 +44,12 @@ export type StartDependencies = {
   resolvePlayer(input: PlayerResolveRequest): Promise<ResolvedPlayer>;
   resolveAccount(request: Api2ResolveAccountRequest): Promise<TargetAccount>;
   linkProviderAccount(advisor: AssignedAdvisor, player: ResolvedPlayer, account: TargetAccount): Promise<LinkedProviderAccount>;
-  createHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount, skinCode: MultiSkinCode | null, promoCode?: string, entryFunnel?: EntryFunnelContext, entryWait?: GatewayEntryWait): Promise<HandoffResult>;
+  createHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount, skinCode: MultiSkinCode | null, promoCode?: string, entryFunnel?: EntryFunnelContext, entryWait?: GatewayEntryWait, newAccountCredentials?: boolean, returningAccount?: true | "direct"): Promise<HandoffResult>;
 };
 
 export type Template7PreparedStart = {
+  newAccountCredentials?: boolean;
+  returningAccount?: true | "direct";
   entryWait?: GatewayEntryWait;
   entryFunnel?: EntryFunnelContext;
   diagnosticTrace?: Record<string, string>;
@@ -136,6 +138,8 @@ export async function finalizeTemplate7PreparedStart(
         prepared.promoCode,
         prepared.entryFunnel,
         prepared.entryWait,
+        prepared.newAccountCredentials,
+        prepared.returningAccount,
       ),
       ms => { timings.handoff = ms; }, prepared.diagnosticTrace,
     ),
@@ -264,8 +268,18 @@ async function handleTemplate7StartInner(
           promoCode: payload.promo_code, providerAccountId: player.player_provider_account_id, agencyId: player.agency_id });
       } catch { /* Internal statistics must not change the result of an account operation. */ }
     }
+    const configuredWait = gatewayEntryWait(effectiveConfig.gatewayEntry);
+    const creationScreen = usesAccountCreationScreen(landing.landing_config, effectiveConfig.template, configuredWait);
+    const entryWait = configuredWait && creationScreen && !account.created
+      ? { ...configuredWait, enabled: false, continueButtonEnabled: false }
+      : configuredWait;
+    const newAccountCredentials = creationScreen && account.created;
+    const returningAccount = !account.created && (effectiveConfig.template === "template7" || effectiveConfig.template === "template9")
+      ? creationScreen ? true : "direct" : undefined;
     const prepared: Template7PreparedStart = {
-      ...(gatewayEntryWait(effectiveConfig.gatewayEntry) ? { entryWait: gatewayEntryWait(effectiveConfig.gatewayEntry) } : {}),
+      ...(entryWait ? { entryWait } : {}),
+      ...(newAccountCredentials ? { newAccountCredentials } : {}),
+      ...(returningAccount ? { returningAccount } : {}),
       diagnosticTrace: trace,
       ...(payload.entry_funnel ? { entryFunnel: { ...payload.entry_funnel, account_kind: account.created ? "new" : "existing" } } : {}),
       provider,

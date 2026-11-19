@@ -167,6 +167,44 @@ test("prepare responde de inmediato con un pase opaco y complete conserva identi
   assert.deepEqual(await response.json(), { handoff_url: "https://gateway.example.com/start?t=handoff" });
 });
 
+test("only a new T7/T9 account with published credentials mode can show its password before login", async () => {
+  const token = await prepareToken();
+  for (const [template, policy, draftMode, created, expected] of [
+    [7, "credentials", "credentials", true, true], [9, "credentials", "credentials", true, true],
+    [8, "credentials", "credentials", true, false], [7, "direct", "credentials", true, false],
+    [7, "credentials", "direct", true, false], [7, undefined, "credentials", true, false],
+    [9, "credentials", "credentials", false, false],
+  ] as const) {
+    const ds = deps();
+    const originalLanding = ds.db.landing;
+    ds.db.landing = async id => {
+      const row = (await originalLanding(id))!;
+      return { ...row, config: { ...(row.config as object), template: template === 9 ? "template9" : "template7", gatewayEntry: { mode: draftMode, seconds: 4 } },
+        landing_config: { layout: { template }, ...(policy ? { gatewayEntry: { mode: policy, seconds: 4 } } : {}) } };
+    };
+    const account = ds.resolveAccount;
+    ds.resolveAccount = async input => ({ ...await account(input), created });
+    const handoff = ds.createHandoff;
+    ds.createHandoff = async (...args) => {
+      assert.equal(args[9] === true, expected);
+      assert.equal(args[10], !created && template === 9 ? true : undefined);
+      if (!created) assert.deepEqual(args[8], { enabled: false, continueButtonEnabled: false, seconds: 4 });
+      return handoff(...args);
+    };
+    const result = await handleTemplate7PreparationAccount(new Request("https://issuer.test/account", {
+      method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}` },
+      body: JSON.stringify({ token }),
+    }), env, ds, now + 1000);
+    assert.equal(result.status, 200);
+    assert.equal(result.headers.get("cache-control"), "no-store");
+    const body = await result.json();
+    assert.equal(body.account_created, created);
+    assert.equal(body.username, "player");
+    assert.equal(body.password, expected ? "secret" : undefined);
+    assert.ok(!body.handoff_url.includes("secret"));
+  }
+});
+
 test("account finaliza en el mismo viaje y finalize compatible no duplica la vinculación", async () => {
   const token = await prepareToken();
   const trace = { links: 0, handoffs: 0 };

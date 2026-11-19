@@ -1360,6 +1360,7 @@ export function LandingEditorForm({
             value={config.gatewayEntry?.mode ?? "legacy"}
             onChange={(mode) => {
               if (mode === "direct" || mode === "credentials") updateConfig(setConfig, {
+                gatewayEntryFollowsTemplate: false,
                 gatewayEntry: { mode, seconds: config.gatewayEntry?.seconds ?? 4 },
               });
             }}
@@ -1374,7 +1375,7 @@ export function LandingEditorForm({
           <div className="mt-2 flex items-center gap-2">
             <input id={fieldId("gateway-entry-seconds")} type="number" min={1} max={60} step={1}
               value={config.gatewayEntry.seconds}
-              onChange={(event) => updateConfig(setConfig, { gatewayEntry: {
+              onChange={(event) => updateConfig(setConfig, { gatewayEntryFollowsTemplate: false, gatewayEntry: {
                 mode: "credentials", seconds: Math.min(60, Math.max(1, Math.trunc(Number(event.target.value) || 1))),
               } })}
               className="w-20 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100" />

@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { normalizeCurrency, type ReportingCurrency } from "@/lib/currency";
 import type { Landing, LandingThemeConfig, PhoneKind, PublishTarget } from "./types";
 import { supportsGatewayPublication, supportsGatewayLandingName } from "./gatewayPublication";
+import { defaultGatewayEntry } from "./gatewayEntry";
 import { DEFAULT_CONFIG } from "./mocks";
 import type { LandingConfigPayload } from "./buildLandingConfig";
 
@@ -223,7 +224,9 @@ export async function createLanding(
       post_url: postUrl,
       landing_tag: payload.landingTag ?? "",
       comment: payload.comment,
-      config: { ...payload.config, gatewayEntry: payload.config.gatewayEntry ?? { mode: "direct", seconds: 4 } } as unknown as Record<string, unknown>,
+      config: { ...payload.config, ...(!payload.config.gatewayEntry ? {
+        gatewayEntry: defaultGatewayEntry(payload.config.template), gatewayEntryFollowsTemplate: true,
+      } : {}) } as unknown as Record<string, unknown>,
     })
     .select("id")
     .single();

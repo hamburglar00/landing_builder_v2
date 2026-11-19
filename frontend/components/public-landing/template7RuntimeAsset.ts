@@ -1,3 +1,4 @@
+import { ENTRY_FORM_BUSY_SCRIPT } from "../../lib/landing/entryFormBusy";
 import { buildTemplate7RuntimeConfig } from "./template7FastRuntime";
 import type { PublicLandingConfig } from "./types";
 import generated from "./template7RuntimeNames.generated.json";
@@ -22,9 +23,14 @@ function t7AssetStatus(message){
   var status=document.querySelector(grid&&!grid.hidden?'[data-template8-status]':'[data-template7-error]');
   if(status){status.textContent=message;status.hidden=!message;}
 }
+${ENTRY_FORM_BUSY_SCRIPT}
+window.__T7_SET_FORM_BUSY__=function(action,busy){
+  return t7Cfg.template===7 && !t7Cfg.template8 && t7Cfg.ctaDestination==='atrio' && !!t7Cfg.targetProvider && setEntryFormBusy(action,busy);
+};
 function t7EarlyBusy(action,busy){
   if(!action)return;
   action.setAttribute('aria-busy',String(busy));
+  if(window.__T7_SET_FORM_BUSY__(action,busy))return;
   var label=action.querySelector('[data-public-landing-cta-label]');
   if(label)label.textContent=busy?'Preparando...':action.getAttribute('data-public-landing-rest-label')||'Continuar';
 }
@@ -115,7 +121,7 @@ function t7Early(event){
   if(event.type==='submit'&&form)action=form.querySelector('[data-public-landing-cta]');
   if((event.type==='click'||event.type==='submit')&&action){
     event.preventDefault();event.stopImmediatePropagation();
-    if(!action.disabled){
+    if(!action.disabled && (t7AssetFailed || window.__T7_EARLY_ACTION__!==action)){
       if(action.matches('[data-public-landing-cta]')){t7EarlyStage('cta_clicked');window.__T7_EARLY_CTA_RECORDED__=true;}
       if(window.__T7_EARLY_ACTION__!==action)t7EarlyBusy(window.__T7_EARLY_ACTION__,false);
       window.__T7_EARLY_ACTION__=action;t7EarlyBusy(action,true);

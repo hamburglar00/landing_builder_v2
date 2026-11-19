@@ -1,9 +1,34 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { Script } from "node:vm";
-import { buildTemplate7FastRuntime } from "../components/public-landing/template7FastRuntime";
+import { buildTemplate7FastRuntime, buildTemplate7RuntimeConfig } from "../components/public-landing/template7FastRuntime";
 import { buildTemplate7HandoffRuntimeScript } from "../components/public-landing/template7HandoffScript";
 import { buildTemplate7BoundedRequestScript } from '../components/public-landing/template7BoundedRequest';
+
+test("only explicit T7/T9 credential submissions carry the cosmetic creation fragment", () => {
+  for (const classic of [false, true]) for (const template of [7, 8, 9]) {
+    for (const mode of ["direct", "credentials"] as const) {
+      const page = { id: "landing", layout: { template }, gatewayEntry: { mode, seconds: 4 } };
+      const identity = classic ? "function getOrCreateDeviceId(){return 'device';}" : "";
+      const cfg = buildTemplate7RuntimeConfig("fixture", page as never, identity);
+      const source = buildTemplate7FastRuntime("fixture", page as never, identity);
+      const begin = source.indexOf("function template7CheckedHandoff(raw)");
+      const end = source.indexOf("function showTemplate7HandoffFallback(raw)", begin);
+      assert.ok(begin >= 0 && end > begin);
+      const code = source.slice(begin, end) + "\nnavigateTemplate7Handoff(destination, submitted);";
+      for (const [path, submitted] of [["/prepare?t=p1.token", true], ["/prepare?t=p1.token", false],
+        ["/start?t=p1.token", true], ["/prepare?t=handoff", true]] as const) {
+        const destination = "https://casino.test" + path;
+        let actual = "";
+        const window = { location: { assign: (value: string) => { actual = value; } } };
+        new Script(code).runInNewContext({ cfg, window, URL, destination, submitted });
+        const showsProgress = template !== 8 && mode === "credentials" && submitted && path === "/prepare?t=p1.token";
+        assert.equal(actual, destination + (showsProgress ? "#creando-cuenta" : ""));
+        assert.throws(() => new Script(code).runInNewContext({ cfg, window, URL, destination: destination + "#foreign", submitted }), /invalid handoff/);
+      }
+    }
+  }
+});
 
 const advisor = { atrioClientId: "client", atrioId: "advisor", atrioSlug: "gera" };
 async function runWarm(value: object, classic = false, warmResult: object = {ready: true}, supersede = false) {

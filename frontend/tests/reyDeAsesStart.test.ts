@@ -594,6 +594,7 @@ test("adaptadores usan contrato servidor-servidor y no exponen credenciales", as
       assert.equal(String(input), "https://gateway.example.com/api/handoffs");
       assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer test-gateway-key");
       assert.deepEqual(JSON.parse(String(init?.body)), {
+        agency_id: player.agency_id,
         advisor_id: advisorId, advisor_slug: "gera", device_id: deviceId,
         external_user_id: playerId, player_provider_account_id: providerAccountId,
         target_provider: "rey_de_ases", platform: "rey_de_ases",

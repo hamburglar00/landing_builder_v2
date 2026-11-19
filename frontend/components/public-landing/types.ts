@@ -1,6 +1,7 @@
 import type { LandingTemplate8CoverConfig } from "../../lib/landing/types";
 export type PublicLandingConfig = {
   schemaVersion: number;
+  gatewayEntry?: import("../../lib/landing/gatewayEntry").GatewayEntry;
   updatedAt: string;
   id: string;
   name: string;

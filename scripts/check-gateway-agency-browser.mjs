@@ -3,24 +3,22 @@ import { createRequire } from "node:module";
 import { readFile, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import {loadSource} from "./gateway-browser-fixtures.mjs";
 import {loadProductPaths} from "./product-worktrees.mjs";
 
 const require = createRequire(new URL("../frontend/package.json", import.meta.url));
-const { build } = require("esbuild");
 let playwright;
 try { playwright = require(path.join(process.env.APPDATA, "npm/node_modules/playwright")); }
 catch { playwright = require("playwright"); }
 const productPath = loadProductPaths();
-const source = productPath("landing-autologuin");
-const compiled = await build({ absWorkingDir: source, entryPoints: ["src/lib/gateway-agency-page.ts"], bundle: true,
-  write: false, platform: "node", format: "esm", target: "es2022", plugins: [{ name: "response-only", setup(build) {
-    build.onResolve({ filter: /^next\/server$/ }, () => ({ path: "response-only", namespace: "fixture" }));
-    build.onLoad({ filter: /.*/, namespace: "fixture" }, () => ({ contents: "export const NextResponse = Response", loader: "js" }));
-  } }] });
-const { gatewayAgencyPage } = await import("data:text/javascript;base64," + Buffer.from(compiled.outputFiles[0].text).toString("base64"));
 const output = fileURLToPath(new URL("../.local/gateway-agency-resume-20261112", import.meta.url));
 await mkdir(output, { recursive: true });
 const providers = { rey_de_ases: "landing-autologuin", ases_del_norte: "ases-gateway", ganamos_net: "ganamos-gateway", multi_skin: "multi-skin-gateway" };
+const pages = new Map();
+for (const [provider,repo] of Object.entries(providers)) {
+  const {gatewayAgencyPage} = await loadSource(productPath(repo),"export {gatewayAgencyPage} from './src/lib/gateway-agency-page';");
+  pages.set(provider,await gatewayAgencyPage(provider,17).text());
+}
 let checks = 0;
 for (const [engineName, engine] of [["Chromium", playwright.chromium], ["WebKit", playwright.webkit]]) {
   const browser = await engine.launch({ headless: true });
@@ -29,7 +27,7 @@ for (const [engineName, engine] of [["Chromium", playwright.chromium], ["WebKit"
       const context = await browser.newContext({ viewport });
       let page = await context.newPage();const calls = [], errors = [];
       let reject = true, recovery = "missing", confirmed = true, repair = "none";
-      const html = await gatewayAgencyPage(provider, 17).text();
+      const html = pages.get(provider);
       page.on("pageerror", e => errors.push(e.message));
       await context.route("**/*", async route => {
         const url = new URL(route.request().url());
@@ -44,10 +42,10 @@ for (const [engineName, engine] of [["Chromium", playwright.chromium], ["WebKit"
           if(input.action==='resume') {
             if(recovery==='network')return route.abort();
             return route.fulfill({contentType:'application/json',body:JSON.stringify(recovery==='active'?
-              {active:true,entry_confirmation:'ge1.fixture',recovery_token:'encrypted-fixture',redirect_url:'/home?gateway_chat=open'}:
+              {active:true,username:'cliente',entry_confirmation:'ge1.fixture',recovery_token:'encrypted-fixture',redirect_url:'/home?gateway_chat=open'}:
               {active:false,...(recovery==='different'?{different_account:true}:{})})});
           }
-          return route.fulfill({ status: reject ? 401 : 200, contentType: "application/json", body: JSON.stringify(reject ? { error: "Revisá tus datos." } : { entry_confirmation: "ge1.fixture", recovery_token: "encrypted-fixture", redirect_url: "/home?gateway_chat=open" }) });
+          return route.fulfill({ status: reject ? 401 : 200, contentType: "application/json", body: JSON.stringify(reject ? { error: "Revisá tus datos." } : { username:"cliente",entry_confirmation: "ge1.fixture", recovery_token: "encrypted-fixture", redirect_url: "/home?gateway_chat=open" }) });
         }
         if (url.pathname === "/api/session/recover") {
           const proof = route.request().postDataJSON();
@@ -78,13 +76,13 @@ for (const [engineName, engine] of [["Chromium", playwright.chromium], ["WebKit"
       reject = false; await page.locator("#submit").click(); await page.waitForURL("**/home?gateway_chat=open");
       assert.deepEqual(calls.at(-1), { agency_id: 17, action: "login", username: "cliente", password: "fixture-password" });
       assert.equal(await page.evaluate(() => JSON.stringify(localStorage).includes("fixture-password")), false); checks++;
-      recovery="active";await page.close();page=await context.newPage();page.on("pageerror",e=>errors.push(e.message));await page.goto("https://gateway.example/17");await page.waitForURL("**/home?gateway_chat=open");assert.equal(calls.at(-1).action,"resume");checks++;recovery="missing";
+      recovery="active";await page.close();page=await context.newPage();page.on("pageerror",e=>errors.push(e.message));await page.goto("https://gateway.example/17");await page.locator('#agency-continue').click();await page.waitForURL("**/home?gateway_chat=open");assert.equal(calls.at(-1).action,"resume");checks++;recovery="missing";
       await page.goto("https://gateway.example/17"); await page.locator('#username').waitFor({state:'visible'});await page.locator("#toggle").click();await page.locator("#name").waitFor({state:"visible"});
-      await page.locator("#name").fill("Nombre Cliente"); await page.locator("#submit").click(); await page.waitForURL("**/home?gateway_chat=open");
-      assert.deepEqual(calls.at(-1), { agency_id: 17, action: "register", name: "Nombre Cliente" });
+      await page.locator("#name").fill("Nombre Cliente"); await page.locator("#submit").click(); await page.locator("#agency-continue").click(); await page.waitForURL("**/home?gateway_chat=open");
+      assert.deepEqual(calls.at(-1), { agency_id: 17, action: "register", name: "Nombre Cliente", present_account:true });
       for(const state of ['active','different','network']) {
         recovery=state;const before=calls.length;await page.goto('https://gateway.example/17');
-        if(state==='active')await page.waitForURL('**/home?gateway_chat=open');
+        if(state==='active'){await page.locator('#agency-continue').click();await page.waitForURL('**/home?gateway_chat=open');}
         else {await page.locator('#username').waitFor({state:'visible'});assert.equal(Boolean(await page.locator('#error').textContent()),state==='network');}
         if(state==='network') {
           assert.equal(await page.locator('#retry-recovery').count(),0);
@@ -93,15 +91,15 @@ for (const [engineName, engine] of [["Chromium", playwright.chromium], ["WebKit"
         assert.equal(calls.length,before+1);assert.equal(calls.at(-1).action,'resume');checks++;
       }
       recovery='active';confirmed=false;const before=calls.length;await page.goto('https://gateway.example/17');
-      await page.locator('#error').filter({hasText:'No pudimos recuperar'}).waitFor();
+      await page.locator('#agency-feedback').filter({hasText:'No pudimos confirmar'}).waitFor();
       assert.equal(new URL(page.url()).pathname,'/17');assert.equal(calls.length,before+1);checks++;
       confirmed=true;
       for (const state of ["accepted","blocked"]) {
         repair=state;
         await page.goto("https://gateway.example/17");
-        if (state==="accepted") await page.waitForURL("**/home?gateway_chat=open");
+        if (state==="accepted"){await page.locator("#agency-continue").click();await page.waitForURL("**/home?gateway_chat=open");}
         else {
-          await page.locator("#error").filter({hasText:"No pudimos recuperar"}).waitFor();
+          await page.locator("#agency-feedback").filter({hasText:"No pudimos confirmar"}).waitFor();
           assert.equal(new URL(page.url()).pathname, "/17");
         }
         checks++;

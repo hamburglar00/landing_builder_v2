@@ -2,6 +2,7 @@ import { buildPublicLandingRuntimeSource, buildRuntimeConfig } from "./PublicLan
 import type { PublicLandingConfig } from "./types";
 import { GATEWAY_ENTRY_TRANSITION_RUNTIME, resolveGatewayEntryBrand } from "../../lib/gateway-entry-transition";
 import { gatewayOriginFor } from "../../lib/reyDeAses/gatewayOrigins";
+import { normalizeGatewayEntry } from "../../lib/landing/gatewayEntry";
 import { adaptTemplate8Runtime } from "./template8Runtime";
 import { getMultiSkinBrand } from "../../lib/skin-branding";
 import { MULTI_SKIN_CODES } from "../../lib/multi-skin-catalog";
@@ -20,6 +21,7 @@ export function buildTemplate7RuntimeConfig(
 ) {
   const isTemplate8 = config.layout?.template === 8;
   return { ...buildRuntimeConfig({ slug, config, ...transport }), socialProofItems: [], automaticLandingSelection: !!classicDeviceIdScript,
+    ...((config.layout?.template === 7 || config.layout?.template === 9) && normalizeGatewayEntry(config.gatewayEntry)?.mode === "credentials" ? { creationScreen: true } : {}),
     ...(config.layout?.template === 9 ? { template: 7, entryTemplate: 9, ctaDestination: "atrio" } : {}),
     ...(isTemplate8 ? { template: 7, entryTemplate: 8, template8: true, ctaDestination: "atrio", targetProvider: "", cardIndex: null,
       template8Cards: (config.content?.template8?.cards || []).map((card, i) => {
@@ -61,21 +63,26 @@ export function buildTemplate7FastRuntime(
       }
       function failTemplate7(button, attempt) {
         if (attempt !== undefined && attempt !== template7EntryGeneration) return;
+        if (window.__T7_SET_FORM_BUSY__) window.__T7_SET_FORM_BUSY__(button,false);
         if (template7Transition) template7Transition.finish();`);
   source = replaceOnce(source, "      function startTemplate7Gateway(name, phone, promoCode, atrioData, tracking, params) {", `      function startTemplate7Gateway(name, phone, promoCode, atrioData, tracking, params) {
         if (atrioData && atrioData.preparationReady && atrioData.existingName && atrioData.promoCode) {
           name = atrioData.existingName; promoCode = atrioData.promoCode;
         }`);
+  // A fragment carries presentation across navigation. Only the validated server response can release credentials.
+  source = replaceOnce(source, "function navigateTemplate7Handoff(raw) {", "function navigateTemplate7Handoff(raw, newNameSubmit) {");
+  source = replaceOnce(source, "try { window.location.assign(url.href); return; }", `var creating = newNameSubmit && cfg.creationScreen && url.pathname === "/prepare" && url.searchParams.get("t").startsWith("p1.");
+      try { window.location.assign(url.href + (creating ? "#creando-cuenta" : "")); return; }`);
   source = replaceOnce(source, "      function processCtaClick(button, leadCaptureValues) {", `      function processCtaClick(button, leadCaptureValues) {
         var entryAttempt = template7EntryGeneration;`);
   source = replaceOnce(source, "        window.requestAnimationFrame(function () {\n          var context = consumeContactContext();", "        window.requestAnimationFrame(function () {\n          if (entryAttempt !== template7EntryGeneration) return;\n          var context = consumeContactContext();");
   source = replaceOnce(source, "              var atrioMode = isAtrioDestination();", "              if (entryAttempt !== template7EntryGeneration) return;\n              var atrioMode = isAtrioDestination();");
-  source = replaceOnce(source, "                  .then(function (handoffUrl) { navigateTemplate7Handoff(handoffUrl); })\n                  .catch(function () { failTemplate7(button); });", "                  .then(function (handoffUrl) { if (entryAttempt === template7EntryGeneration) navigateTemplate7Handoff(handoffUrl); })\n                  .catch(function () { failTemplate7(button, entryAttempt); });");
+  source = replaceOnce(source, "                  .then(function (handoffUrl) { navigateTemplate7Handoff(handoffUrl); })\n                  .catch(function () { failTemplate7(button); });", "                  .then(function (handoffUrl) { if (entryAttempt === template7EntryGeneration) navigateTemplate7Handoff(handoffUrl, !(atrioData && atrioData.preparationReady)); })\n                  .catch(function () { failTemplate7(button, entryAttempt); });");
   source = replaceOnce(source, "              if (cfg.template === 7) failTemplate7(button);", "              if (cfg.template === 7) failTemplate7(button, entryAttempt);");
-  source = replaceOnce(source, '        if (cfg.template === 7) setTemplate7Error("");', '        if (cfg.template === 7) { setTemplate7Error(""); if (template7Transition) template7Transition.start("creating"); }');
+  source = replaceOnce(source, '        if (cfg.template === 7) setTemplate7Error("");', '        if (cfg.template === 7) { setTemplate7Error(""); if (!(window.__T7_SET_FORM_BUSY__ && window.__T7_SET_FORM_BUSY__(button,true)) && template7Transition) template7Transition.start("creating"); }');
   source = replaceOnce(source, "        setButtonText(button, getLoadingButtonText(button));", "        if (cfg.template !== 7) setButtonText(button, getLoadingButtonText(button));");
   source = replaceOnce(source, "           return data.handoff_url;".trimStart(), "return template7TransitionUrl(data.handoff_url);");
-  source = replaceOnce(source, '      var panel = document.querySelector("[data-template7-handoff-panel]");', '      if (template7Transition) template7Transition.finish();\n      var panel = document.querySelector("[data-template7-handoff-panel]");');
+  source = replaceOnce(source, '      var panel = document.querySelector("[data-template7-handoff-panel]");', '      if (template7Transition) template7Transition.finish();\n      if(window.__T7_SET_FORM_BUSY__)window.__T7_SET_FORM_BUSY__(document.querySelector(\'[data-template7-form] [data-public-landing-cta]\'),false);\n      var panel = document.querySelector("[data-template7-handoff-panel]");');
   const selectionStart = source.indexOf("      function ensureAtrioPromise() {");
   const selectionEnd = source.indexOf("      function clearPrewarmedAtrioPromise() {", selectionStart);
   if (selectionStart < 0 || selectionEnd < 0) throw new Error("Template 7 destination selection changed");
@@ -234,6 +241,7 @@ export function buildTemplate7FastRuntime(
           window.__T7_ENTRY_STARTED__=false;clickLocked=false;
           if(typeof template7PendingIdentityClick!=='undefined')template7PendingIdentityClick=null;
           if(template7Transition)template7Transition.finish();
+          if(window.__T7_SET_FORM_BUSY__)window.__T7_SET_FORM_BUSY__(document.querySelector('[data-template7-form] [data-public-landing-cta]'),false);
           var state=window.__T7_DESTINATION_STATES__&&window.__T7_DESTINATION_STATES__[cfg.slug];
           if(state&&!state.settled)cancelTemplate7Destination();
           var name=document.querySelector('[data-template7-name]');
@@ -267,7 +275,7 @@ export function buildTemplate7FastRuntime(
           template7PendingIdentityClick = null;
           pending.disabled = false;
           if (template7IdentityReady) handleCtaClick(pending);
-          else { window.__T7_ENTRY_STARTED__ = false; clickLocked = false; if (template7Transition) template7Transition.finish(); setTemplate7Error("No pudimos recuperar tu acceso. Intentá nuevamente."); }
+          else { window.__T7_ENTRY_STARTED__ = false; clickLocked = false; if(window.__T7_SET_FORM_BUSY__)window.__T7_SET_FORM_BUSY__(pending,false); if (template7Transition) template7Transition.finish(); setTemplate7Error("No pudimos recuperar tu acceso. Intentá nuevamente."); }
         }
       }
       if (!template7IdentityReady) window.__LB_IDENTITY_READY__.then(releaseTemplate7Identity, function () { releaseTemplate7Identity(false); });
@@ -275,7 +283,7 @@ export function buildTemplate7FastRuntime(
     source = replaceOnce(source, "      function handleCtaClick(button) {", `      function handleCtaClick(button) {
         window.__T7_ENTRY_STARTED__ = true;
         if (!template7IdentityReady) {
-          if (!template7PendingIdentityClick) { template7PendingIdentityClick = button; button.disabled = true; if (template7Transition) template7Transition.start("preparing"); }
+          if (!template7PendingIdentityClick) { template7PendingIdentityClick = button; button.disabled = true; if (!(window.__T7_SET_FORM_BUSY__ && window.__T7_SET_FORM_BUSY__(button,true)) && template7Transition) template7Transition.start("preparing"); }
           if (!template7IdentityWaiting && window.__LB_BOOTSTRAP_IDENTITY__) {
             template7IdentityWaiting = true;
             window.__LB_BOOTSTRAP_IDENTITY__().then(releaseTemplate7Identity, function () { releaseTemplate7Identity(false); });

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { gatewayEntryWait, normalizeGatewayEntry } from "../lib/landing/gatewayEntry";
+import { defaultGatewayEntry, gatewayEntryWait, normalizeGatewayEntry } from "../lib/landing/gatewayEntry";
 import { buildLandingConfig } from "../lib/landing/buildLandingConfig";
 import { switchLandingTemplate } from "../lib/landing/templateVariants";
 import { resolveEffectiveLandingConfig } from "../lib/landing/effectiveLandingConfig";
@@ -15,6 +15,18 @@ test("saved entry modes are bounded and legacy absence stays absent", () => {
   assert.deepEqual(gatewayEntryWait({ mode: "direct", seconds: 4 }), { enabled: false, seconds: 4, continueButtonEnabled: false });
   assert.deepEqual(gatewayEntryWait({ mode: "credentials", seconds: 60 }), { enabled: true, seconds: 60, continueButtonEnabled: true });
   assert.equal(DEFAULT_CONFIG.gatewayEntry, undefined, "loading an old row must never silently change its entry behavior");
+});
+
+test("only new drafts follow the default for T7 and T9; explicit and older policies survive switches", () => {
+  const draft = { ...DEFAULT_CONFIG, gatewayEntry: defaultGatewayEntry(DEFAULT_CONFIG.template), gatewayEntryFollowsTemplate: true };
+  for (const template of ["template7", "template9"] as const) {
+    const selected = switchLandingTemplate(draft, template);
+    assert.deepEqual(selected.gatewayEntry, { mode: "credentials", seconds: 4 });
+    assert.equal(switchLandingTemplate(selected, "template8").gatewayEntry?.mode, "direct");
+    const chosen = { ...draft, gatewayEntryFollowsTemplate: false, gatewayEntry: { mode: "direct" as const, seconds: 17 } };
+    assert.deepEqual(switchLandingTemplate(chosen, template).gatewayEntry, chosen.gatewayEntry);
+    assert.equal(switchLandingTemplate(DEFAULT_CONFIG, template).gatewayEntry, undefined);
+  }
 });
 
 test("per-landing policy survives template changes and publication without affecting tracking", () => {

@@ -1,4 +1,5 @@
 import { TEMPLATE9_DEFAULTS } from "./template9";
+import { defaultGatewayEntry } from "./gatewayEntry";
 import { DEFAULT_CONFIG } from "./mocks";
 import type {
   LandingLeadCaptureConfig,
@@ -149,6 +150,7 @@ export function switchLandingTemplate(
     ...(savedNextVariant ?? {}),
     ...globalConfig(config),
     template: nextTemplate,
+    ...(config.gatewayEntryFollowsTemplate ? { gatewayEntry: defaultGatewayEntry(nextTemplate) } : {}),
     ...(nextTemplate === "template9" && !savedNextVariant ? { ...TEMPLATE9_DEFAULTS, template7WhatsappEnabled: false } : {}),
     ...((config.template === "template7" || config.template === "template8" || config.template === "template9") && (nextTemplate !== "template7" && nextTemplate !== "template8" && nextTemplate !== "template9") ? {
       ctaDestination: savedNextVariant?.ctaDestination ?? DEFAULT_CONFIG.ctaDestination,

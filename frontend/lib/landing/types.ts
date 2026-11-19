@@ -200,6 +200,8 @@ export interface LandingThemeConfig {
   template7WhatsappEnabled: boolean;
   /** Optional: legacy rows inherit the product setting until explicitly configured. */
   gatewayEntry?: import("./gatewayEntry").GatewayEntry;
+  /** Only new drafts follow their template until the editor explicitly selects a policy. */
+  gatewayEntryFollowsTemplate?: boolean;
   /** Sitio visual del proveedor Multi Skin. La cuenta subyacente es compartida. */
   multiSkinCode: MultiSkinCode;
   atrioRedirectUrl: string;

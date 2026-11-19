@@ -1740,3 +1740,19 @@ Checkpoint limpio de nueve worktrees: ../.checkpoints/visual-smoothing-20261116-
 Un navegador puede mantener cuentas de varias gerencias del mismo casino. Al volver a un enlace, recuperar la cuenta de ese destino tras verificar su sesión y su vínculo vigente con la gerencia, asesor, proveedor, backend y skin. Los ingresos por template y por enlace recuerdan la misma cuenta. Con varias cuentas conocidas en un destino o sin una sesión verificable, ofrecer ingreso con credenciales y creación explícita. Conservar la compatibilidad con sesiones anteriores y el cierre de sesión. Este criterio se aplica a los cuatro gateways y al Worker de Ganamos+.
 
 Al reabrir un template, la landing comprueba su asignación y la cuenta existente de ese navegador por el circuito de recuperación propio. Un ingreso reciente en otro enlace del mismo casino no acredita la cuenta de ese template. El retorno conserva la URL autorizada de la landing y su atribución.
+
+### Alta desde Template 7 y Template 9 (18/11/2026)
+
+Las landings nuevas de estos dos templates se crean con «Mostrar credenciales» activo. La elección sigue siendo editable. Cada landing existente conserva su configuración publicada, incluido el ingreso directo.
+
+Al enviar el nombre se bloquea el formulario y aparece «Creando tu cuenta…» con progreso animado. En el modo de credenciales, el alta confirmada permite completar esa barra y mostrar «¡Cuenta creada!», usuario, clave y «Continuar a mi cuenta» juntos. El gateway prepara en paralelo la sesión de esa misma cuenta. Un clic temprano espera el resultado y continúa automáticamente cuando la sesión está confirmada. Un clic posterior entra enseguida. Se respeta el plazo de ingreso automático configurado.
+
+Esta presentación corresponde al alta por landing. La recuperación verifica la cuenta y el asesor del destino y conserva su ingreso directo. Medimos desde el envío del nombre hasta las credenciales y desde «Continuar» hasta que el chat permite escribir y enviar. Los datos bancarios se pueden completar después.
+
+### Credenciales y regreso por landing y gerencia (19/11/2026)
+
+En un enlace de gerencia, «No tengo usuario. Crear cuenta» presenta el usuario y la clave juntos en cuanto el alta queda confirmada. «Continuar a mi cuenta» puede tocarse mientras se prepara la sesión. El primer clic espera la confirmación y abre el casino con el chat del asesor correspondiente.
+
+Al reconocer una cuenta de ese destino, el ingreso por gerencia y los templates 7 y 9 con credenciales muestran «¡Hola de nuevo, {usuario}!» y «Acceder a mi cuenta». La preparación empieza en paralelo y se espera el clic. Se respeta el modo directo de las landings configuradas así. Se conserva la elección manual en caso de ambigüedad y el cierre explícito de sesión. Una cuenta de otra gerencia sigue teniendo su propio acceso.
+
+Este criterio actualiza el regreso directo descrito el 18/11. Abarca Rey de Ases, Ases del Norte, Ganamos NET y Ganamos+, incluido su Worker, tanto para los recorridos de Atrio como para los disponibles en NexoBet.

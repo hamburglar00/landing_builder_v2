@@ -201,6 +201,8 @@ export async function handleTemplate7PreparationAccount(
         const continuationToken = encryptContinuation({ ...prepared, completedHandoff: handoff }, env, now);
         const response = json({
           username: prepared.account.username,
+          account_created: prepared.account.created,
+          ...(prepared.newAccountCredentials ? { password: prepared.account.password } : {}),
           ...(prepared.entryFunnel ? { entry_funnel: prepared.entryFunnel } : {}),
           continuation_token: continuationToken,
           handoff_url: handoff.handoff_url,
