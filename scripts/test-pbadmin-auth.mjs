@@ -197,12 +197,13 @@ try {
   await wait(restUrl);
   const registrations = [],
     validity = new Map();
-  let directory = null, directoryRequest;
+  let directory = null, directoryRequest, reviewTraffic;
   server = createServer(async (req, res) => {
     try {
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
       const body = Buffer.concat(chunks);
+      reviewTraffic?.push([req.method, new URL(req.url, "http://fixture.local").pathname]);
       if (req.url === "/api/gateway/bot-directory") {
         directoryRequest = JSON.parse(body.toString());
         res.setHeader("Content-Type", "application/json");
@@ -567,6 +568,44 @@ try {
     assert.deepEqual(unconfirmed.reviewIssues, []);
     await db.from("atrio_clients").delete().eq("atrio_id", validId);
     directory.agencies = []; directory.advisors = [];
+  });
+  await test("scheduled review verifies the workspace and detects an Atrio-only change without writing or reconciling sessions", async () => {
+    const route = await bundle(path.join(root, "frontend/app/api/pbadmin/review/route.ts"), "builder-review", path.join(root, "frontend"));
+    const call = (ownerId = 101, accountId = result.uid, authorized = true) => route.POST(new Request("http://localhost/api/pbadmin/review", {
+      method: "POST", headers: { "x-extension-secret": authorized ? process.env.PBADMIN_EXTENSIONS_SECRET : "" },
+      body: JSON.stringify({ ownerId, accountId }),
+    }));
+    const advisorId = randomUUID();
+    directory = { scope: { kind: "owner", id: 101 }, unassigned: [], agencies: [{ agency_id: 318,
+      name: "318", platform: 7, bots: [{ ...bot, manager_id: 1079, agency_id: 318, active: true,
+        channel: "atrio", advisor_id: advisorId }] }], advisors: [{ id: advisorId, slug: "pili", name: "Pili" }] };
+    try {
+      reviewTraffic = [];
+      assert.equal((await call(101, result.uid, false)).status, 401);
+      assert.equal((await call(0)).status, 400);
+      assert.deepEqual(reviewTraffic, []);
+      assert.equal((await call(102)).status, 403);
+      assert.deepEqual(reviewTraffic, [["GET", "/rest/v1/pbadmin_accounts"]]);
+      reviewTraffic.length = 0;
+      const check = async () => {
+        const res = await call();
+        assert.equal(res.status, 200);
+        assert.equal(res.headers.get("Cache-Control"), "no-store");
+        assert.deepEqual(reviewTraffic.splice(0), [["GET", "/rest/v1/pbadmin_accounts"], ["POST", "/api/gateway/bot-directory"]]);
+        assert.deepEqual(directoryRequest, { kind: "owner", id: 101, refresh: false, includeRetirements: true });
+        return res.json();
+      };
+      assert.deepEqual(await check(), { complete: true, reviewIssues: [], otherReview: false });
+      directory.advisors = [];
+      assert.deepEqual(await check(), { complete: false, reviewIssues: [{ code: "atrio_advisor_missing", managerId: 1079, agencyId: 318 }], otherReview: false });
+      directory.agencies = [];
+      assert.equal((await call()).status, 503);
+      directory.scope.id = 102;
+      assert.equal((await call()).status, 503);
+    } finally {
+      reviewTraffic = undefined;
+      directory = { scope: { kind: "owner", id: 101 }, advisors: [], unassigned: [], agencies: [] };
+    }
   });
   await test("link and owner sync retain bots from other administrations, including a shared advisor", async () => {
     const advisorId = randomUUID(), absentAdvisor = randomUUID();

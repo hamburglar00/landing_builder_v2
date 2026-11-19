@@ -10,7 +10,11 @@ const excluded = new Set([
   "19817f1f-a0a4-4cd9-a8a9-d9c6733dda41",
   "00b8615f-a42a-4fa1-bb2e-ad6022dc6db5",
 ]);
-export async function syncBuilder(ownerId: number, accountId: string) {
+async function verifiedWorkspace(ownerId: number, accountId: string) {
+  if (!Number.isSafeInteger(ownerId) || ownerId < 1 || typeof accountId !== "string" ||
+      !/^[a-f\d]{8}-(?:[a-f\d]{4}-){3}[a-f\d]{12}$/i.test(accountId)) {
+    throw new AccessError("Vínculo no válido.", 400);
+  }
   const db = adminDb();
   const binding = await db
     .from("pbadmin_accounts")
@@ -18,9 +22,13 @@ export async function syncBuilder(ownerId: number, accountId: string) {
     .eq("owner_id", ownerId)
     .eq("account_id", accountId)
     .eq("ready", true)
-    .single();
-  if (binding.error) throw new AccessError("Vínculo no disponible.", 403);
-  await reconcileSessions(db, "builder", ownerId);
+    .maybeSingle();
+  if (binding.error) throw new AccessError("No se pudo verificar el vínculo.", 503);
+  if (!binding.data) throw new AccessError("Vínculo no disponible.", 403);
+  return db;
+}
+
+async function readInventory(ownerId: number) {
   const key = process.env.INTERNAL_CHAT_PLAYER_RESOLVE_KEY;
   if (!key)
     throw new AccessError("Sincronización pendiente de configuración.", 503);
@@ -56,17 +64,6 @@ export async function syncBuilder(ownerId: number, accountId: string) {
   data.unassigned = data.unassigned.filter(
     (b) => !b.advisor_id || !excluded.has(b.advisor_id),
   );
-  // Existing PYG rows stay in their workspace; automatic ARS imports never move them.
-  const existing = await db
-    .from("gerencias")
-    .select("id,gerencia_id,source_type,workspace_currency,pbadmin_bots")
-    .eq("user_id", accountId);
-  const advisors = await db
-    .from("atrio_clients")
-    .select("atrio_id,workspace_currency,pbadmin_bots")
-    .eq("user_id", accountId);
-  if (existing.error || advisors.error)
-    throw new AccessError("No se pudo verificar el inventario existente.", 503);
   const warnings: string[] = [];
   const allBots = [
     ...data.agencies.flatMap((g) =>
@@ -87,6 +84,40 @@ export async function syncBuilder(ownerId: number, accountId: string) {
     warnings.push(
       "Hay bots de WhatsApp sin gerencia que no se pudieron incorporar.",
     );
+  const otherReview = omitted || warnings.length > 0 || missing.length !== reviewIssues.length;
+  if (missing.length) warnings.push("Hay bots de Atrio sin un asesor válido para importar.");
+  const review = { complete: !otherReview && reviewIssues.length === 0, reviewIssues, otherReview };
+  return { data, allBots, warnings, review };
+}
+
+// API2 uses this for unchanged inventories after a successful import. A read of
+// Atrio still detects a deleted advisor even when no bot in PBAdmin changed.
+export async function reviewBuilder(ownerId: number, accountId: string) {
+  await verifiedWorkspace(ownerId, accountId);
+  const { review, allBots } = await readInventory(ownerId);
+  // The caller observed an active Atrio bot. A concurrent inventory change can
+  // make that snapshot unverifiable until API2 rechecks its own inventory.
+  if (review.complete && !allBots.some(b => b.active && b.channel === "atrio" && b.owner_id === ownerId))
+    throw new AccessError("No se pudo verificar el inventario de bots activos.", 503);
+  return review;
+}
+
+export async function syncBuilder(ownerId: number, accountId: string) {
+  const db = await verifiedWorkspace(ownerId, accountId);
+  await reconcileSessions(db, "builder", ownerId);
+  const { data, allBots, warnings, review } = await readInventory(ownerId);
+  // Existing PYG rows stay in their workspace; automatic ARS imports never move them.
+  const existing = await db
+    .from("gerencias")
+    .select("id,gerencia_id,source_type,workspace_currency,pbadmin_bots")
+    .eq("user_id", accountId);
+  const advisors = await db
+    .from("atrio_clients")
+    .select("atrio_id,workspace_currency,pbadmin_bots")
+    .eq("user_id", accountId);
+  if (existing.error || advisors.error)
+    throw new AccessError("No se pudo verificar el inventario existente.", 503);
+  const importWarnings: string[] = [];
   for (const currency of ["ARS", "PYG"] as const) {
     const groupIds = new Set(
       existing.data
@@ -128,7 +159,7 @@ export async function syncBuilder(ownerId: number, accountId: string) {
         },
         true,
       );
-      warnings.push(...result.warnings);
+      importWarnings.push(...result.warnings);
     }
     for (let offset = 0; offset < batch.advisors.length; offset += 200) {
       const selected = batch.advisors.slice(offset, offset + 200);
@@ -151,7 +182,7 @@ export async function syncBuilder(ownerId: number, accountId: string) {
         },
         true,
       );
-      warnings.push(...result.warnings);
+      importWarnings.push(...result.warnings);
     }
   }
   // Only remove stale PBAdmin metadata. Keep the linked record and its landing settings.
@@ -207,12 +238,10 @@ export async function syncBuilder(ownerId: number, accountId: string) {
     if (error)
       throw new AccessError("Hay cambios pendientes en el inventario.", 503);
   }
-  const otherReview = omitted || warnings.length > 0 || missing.length !== reviewIssues.length;
-  if (missing.length) warnings.push("Hay bots de Atrio sin un asesor válido para importar.");
   return {
-    complete: !otherReview && reviewIssues.length === 0,
-    warnings: [...new Set(warnings)],
-    reviewIssues,
-    otherReview,
+    complete: review.complete && !importWarnings.length,
+    warnings: [...new Set([...warnings, ...importWarnings])],
+    reviewIssues: review.reviewIssues,
+    otherReview: review.otherReview || importWarnings.length > 0,
   };
 }
