@@ -1756,3 +1756,15 @@ En un enlace de gerencia, «No tengo usuario. Crear cuenta» presenta el usuario
 Al reconocer una cuenta de ese destino, el ingreso por gerencia y los templates 7 y 9 con credenciales muestran «¡Hola de nuevo, {usuario}!» y «Acceder a mi cuenta». La preparación empieza en paralelo y se espera el clic. Se respeta el modo directo de las landings configuradas así. Se conserva la elección manual en caso de ambigüedad y el cierre explícito de sesión. Una cuenta de otra gerencia sigue teniendo su propio acceso.
 
 Este criterio actualiza el regreso directo descrito el 18/11. Abarca Rey de Ases, Ases del Norte, Ganamos NET y Ganamos+, incluido su Worker, tanto para los recorridos de Atrio como para los disponibles en NexoBet.
+
+### Espera del alta y saludo al volver (19/11/2026)
+
+En el modo de credenciales de los templates 7 y 9 y en el alta de gerencia, desde el envío del nombre hasta la confirmación del alta se muestra «Creando tu cuenta…» con una barra simple. Al cruzar al dominio del casino continúa ese mismo mensaje. Las etapas «Cuenta · Acceso · Chat» quedan fuera de esa espera.
+
+Al volver, se ve el logo mientras se comprueba la cuenta de ese destino. Si la verificación supera 300 ms puede aparecer «Verificando tu cuenta…». En cuanto se confirma el usuario del casino se muestra «¡Hola de nuevo, {usuario}!» con el saludo y los signos blancos y el usuario en el color de la marca. «Acceder a mi cuenta» deja avanzar en cuanto esté preparada la sesión. El ingreso directo conserva el recorrido configurado.
+
+### Feedback al ingresar y abrir el chat (19/11/2026)
+
+Al tocar «Continuar a mi cuenta», «Acceder a mi cuenta» o «Ingresar» con usuario y contraseña en la gerencia, el mismo botón muestra «Ingresando a tu cuenta…» y un indicador mientras se confirma la sesión. Un clic basta. Si la confirmación falla, el cliente ve la explicación y puede volver a intentar.
+
+Al abrir el casino con el chat, el gateway muestra su logo y «Conectando con tu asesor…» hasta que el chat esté listo para mostrarse. La barra simple sigue acompañando la creación del usuario hasta que se muestran las credenciales. Las etapas «Cuenta · Acceso · Chat» se retiran del tramo posterior al clic.

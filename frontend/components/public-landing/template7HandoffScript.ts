@@ -1,7 +1,10 @@
 import { MULTI_SKIN_CODES } from "../../lib/multi-skin-catalog";
 
 /** Helpers públicos: reciben solo el handoff temporal, nunca lb_cid. */
-export function buildTemplate7HandoffRuntimeScript(): string {
+export function buildTemplate7HandoffRuntimeScript(accountPresentation = false): string {
+  // Only local presentation hints are appended, after validating the original signed destination.
+  const fragment = accountPresentation ? ' + (presentation || "")' : '';
+  const presentationArg = accountPresentation ? ', presentation' : '';
   return `
     function template7WebviewKind(ua) {
       var text = String(ua || "");
@@ -34,26 +37,31 @@ export function buildTemplate7HandoffRuntimeScript(): string {
       return url;
     }
 
-    function template7HandoffIntent(raw) {
+    function template7HandoffIntent(raw${presentationArg}) {
       var url = template7CheckedHandoff(raw);
-      return "intent://" + url.host + url.pathname + url.search +
+      return "intent://" + url.host + url.pathname + url.search${fragment} +
         "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" +
-        encodeURIComponent(url.href) + ";end";
+        encodeURIComponent(url.href${fragment}) + ";end";
     }
 
-    function navigateTemplate7Handoff(raw) {
-      var url = template7CheckedHandoff(raw);
+    function navigateTemplate7Handoff(raw${accountPresentation ? ", newNameSubmit" : ""}) {
+      var url = template7CheckedHandoff(raw);${accountPresentation ? `
+      var presentation = "";
+      if (cfg.creationScreen && url.pathname === "/prepare" && url.searchParams.get("t").startsWith("p1.")) {
+        presentation = newNameSubmit ? "#creando-cuenta" : "#verificando-cuenta";
+        if(window.__T7_REMEMBER_RETURN_VIEW__)window.__T7_REMEMBER_RETURN_VIEW__();
+      }` : ""}
       try { window.localStorage.setItem("template7:gateway-visited:" + url.origin, String(Date.now())); } catch(e) {}
       // Some embedded browsers omit pagehide on a fast handoff. Queue diagnostics
       // before leaving without waiting for their delivery or delaying navigation.
       try { if (window.__entryFunnel) window.__entryFunnel.flush(true); } catch(e) {}
       // A Meta in-app browser can complete this same first-party navigation.
       // User-agent detection alone is not evidence of a failed entry.
-      try { window.location.assign(url.href); return; }
-      catch (error) { showTemplate7HandoffFallback(url.href); }
+      try { window.location.assign(url.href${fragment}); return; }
+      catch (error) { showTemplate7HandoffFallback(url.href${presentationArg}); }
     }
 
-    function showTemplate7HandoffFallback(raw) {
+    function showTemplate7HandoffFallback(raw${presentationArg}) {
       var url = template7CheckedHandoff(raw);
       var kind = template7WebviewKind(navigator.userAgent);
       var panel = document.querySelector("[data-template7-handoff-panel]");
@@ -75,17 +83,17 @@ export function buildTemplate7HandoffRuntimeScript(): string {
       if (kind === "android") {
         help.textContent = "No se pudo abrir tu acceso en este navegador. Podés continuar en Chrome con la misma cuenta.";
         open.textContent = "Abrir en Chrome";
-        open.href = template7HandoffIntent(url.href);
+        open.href = template7HandoffIntent(url.href${presentationArg});
       } else {
         help.textContent = "No se pudo abrir tu acceso. Intentá abrir el enlace o copialo para continuar en otro navegador con la misma cuenta.";
         open.textContent = "Abrir enlace";
-        open.href = url.href;
+        open.href = url.href${fragment};
         open.target = "_blank";
         open.rel = "noopener noreferrer";
       }
       copy.onclick = function () {
         if (!navigator.clipboard || !navigator.clipboard.writeText) return;
-        navigator.clipboard.writeText(url.href).then(function () {
+        navigator.clipboard.writeText(url.href${fragment}).then(function () {
           copy.textContent = "Enlace copiado";
         }).catch(function () { copy.textContent = "No se pudo copiar"; });
       };

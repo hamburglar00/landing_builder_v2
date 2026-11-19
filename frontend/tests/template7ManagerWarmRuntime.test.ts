@@ -4,8 +4,71 @@ import { Script } from "node:vm";
 import { buildTemplate7FastRuntime, buildTemplate7RuntimeConfig } from "../components/public-landing/template7FastRuntime";
 import { buildTemplate7HandoffRuntimeScript } from "../components/public-landing/template7HandoffScript";
 import { buildTemplate7BoundedRequestScript } from '../components/public-landing/template7BoundedRequest';
+import { TEMPLATE7_RETURN_HINT_SCRIPT } from "../components/public-landing/template7ReturnHint";
 
-test("only explicit T7/T9 credential submissions carry the cosmetic creation fragment", () => {
+test("a previous preparation only hides its own form, releases on lookup failure and tolerates a missing asset", async () => {
+  const storage = new Map<string, string>();
+  const localStorage = { getItem: (key: string) => storage.get(key), setItem: (key: string, value: string) => storage.set(key, value), removeItem: (key: string) => storage.delete(key) };
+  const cfg = { creationScreen: true, landingId: "diana-id", slug: "diana", targetProvider: "multi_skin", skinCode: "ganamos_plus", atrioClientId: "client", atrioId: "advisor" };
+  function visit(settings = cfg) {
+    const flags = new Set<string>(), timers = new Map<number, () => void>();
+    const title = { textContent: "Creando tu cuenta" }, description = { textContent: "Estamos preparando tu acceso." }, progress = { hidden: false };
+    const overlay = { dataset: {}, hidden: true, querySelectorAll: () => [], querySelector: (s: string) => s === "[data-entry-title]" ? title : s === "[data-entry-description]" ? description : progress };
+    const document = { documentElement: { setAttribute: (s: string) => flags.add(s), removeAttribute: (s: string) => flags.delete(s) }, getElementById: () => overlay };
+    const window = { __PUBLIC_LANDING_RUNTIME_CONFIG__: settings, addEventListener(){},
+      __T7_REMEMBER_RETURN_VIEW__(){ throw Error("Missing handoff marker"); },
+      __T7_RETURN_CHECK__: null as null | { paint(): void; claim(): void; dismiss(): void },
+    };
+    new Script(TEMPLATE7_RETURN_HINT_SCRIPT).runInNewContext({ window, document, localStorage,
+      setTimeout(fn: () => void, ms: number){ timers.set(ms, fn); return ms; }, clearTimeout: (ms: number) => timers.delete(ms) });
+    return { flags, timers, title, description, progress, overlay, window };
+  }
+  const first = visit();
+  assert.equal(first.flags.size, 0);
+  assert.equal(storage.size, 0);
+  first.window.__T7_REMEMBER_RETURN_VIEW__();
+  for (const different of [{ slug: "otra", landingId: "otro-id" }, { skinCode: "otro" }, { atrioId: "otro" }, { creationScreen: false }]) {
+    assert.equal(visit({ ...cfg, ...different }).flags.size, 0);
+  }
+  const returning = visit();
+  assert.deepEqual([...returning.flags], ["data-t7-return-check"]);
+  returning.window.__T7_RETURN_CHECK__!.paint();
+  assert.equal(returning.overlay.hidden, false);
+  assert.equal(returning.progress.hidden, true);
+  assert.equal(returning.title.textContent, "");
+  assert.equal(returning.description.textContent, "");
+  returning.timers.get(300)!();
+  assert.equal(returning.description.textContent, "Verificando tu cuenta…");
+  returning.window.__T7_RETURN_CHECK__!.claim();
+  assert.equal(returning.timers.has(4000), false);
+  const warm = buildTemplate7FastRuntime("diana", { id: "diana-id", layout: { template: 7 } } as never);
+  const begin = warm.indexOf("      function template7RecoveryAttribution()");
+  const end = warm.indexOf("      function init() {", begin);
+  for (const failed of [undefined, { ...advisor, preparationReady: true, existingName: "Diana", promoCode: "ORIGINAL" }]) {
+    returning.window.__T7_REMEMBER_RETURN_VIEW__();
+    const failedPage = visit();
+    failedPage.window.__T7_RETURN_CHECK__!.paint();
+    new Script(warm.slice(begin, end) + "\nwarmTemplate7Entry();").runInNewContext({
+      window: failedPage.window, cfg, template7EntryGeneration: 0, template7DestinationKey: () => cfg.slug,
+      ensureAtrioPromise: async () => failed, fetchWithEntryRecovery: async () => { throw Error("offline"); },
+      collectMetaTrackingParams: () => ({}), queryParams: () => new URLSearchParams(), landingResolution: "",
+      template7Transition: null, document: { querySelector: () => null }, setTemplate7Error() {},
+    });
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(failedPage.flags.size, 0);
+    assert.equal(failedPage.overlay.hidden, true);
+    assert.equal(failedPage.timers.size, 0);
+  }
+  returning.window.__T7_REMEMBER_RETURN_VIEW__();
+  const stuck = visit();
+  stuck.window.__T7_RETURN_CHECK__!.paint();
+  stuck.timers.get(4000)!();
+  assert.equal(stuck.flags.size, 0);
+  assert.equal(stuck.overlay.hidden, true);
+  assert.equal(visit().flags.size, 0);
+});
+
+test("only signed T7/T9 preparations in credentials mode carry the correct visual hint", () => {
   for (const classic of [false, true]) for (const template of [7, 8, 9]) {
     for (const mode of ["direct", "credentials"] as const) {
       const page = { id: "landing", layout: { template }, gatewayEntry: { mode, seconds: 4 } };
@@ -13,17 +76,32 @@ test("only explicit T7/T9 credential submissions carry the cosmetic creation fra
       const cfg = buildTemplate7RuntimeConfig("fixture", page as never, identity);
       const source = buildTemplate7FastRuntime("fixture", page as never, identity);
       const begin = source.indexOf("function template7CheckedHandoff(raw)");
-      const end = source.indexOf("function showTemplate7HandoffFallback(raw)", begin);
+      const end = source.indexOf("function showTemplate7HandoffFallback(", begin);
       assert.ok(begin >= 0 && end > begin);
       const code = source.slice(begin, end) + "\nnavigateTemplate7Handoff(destination, submitted);";
+      if (template !== 8 && mode === "credentials") {
+        const hasSavedName = source.slice(source.indexOf("function template7HasSavedName("), source.indexOf("function warmTemplate7Entry()"));
+        const submit = source.match(/\.then\((function \(handoffUrl\) \{ if \(entryAttempt === template7EntryGeneration\) navigateTemplate7Handoff\(handoffUrl,[^;]+; \})\)/);
+        assert.ok(submit);
+        const destination = "https://casino.test/prepare?t=p1.reserved";
+        for (const [atrioData, fragment] of [[{ preparationReady: true }, "#creando-cuenta"],
+          [{ preparationReady: true, existingName: "Diana", promoCode: "PROMO" }, "#verificando-cuenta"]] as const) {
+          let next = "";
+          const window = { location: { assign: (url: string) => { next = url; } } };
+          new Script(source.slice(begin, end) + hasSavedName + "\n(" + submit[1] + ")(destination);")
+            .runInNewContext({ window, cfg, URL, destination, atrioData, entryAttempt: 1, template7EntryGeneration: 1 });
+          assert.equal(next, destination + fragment);
+        }
+      }
       for (const [path, submitted] of [["/prepare?t=p1.token", true], ["/prepare?t=p1.token", false],
         ["/start?t=p1.token", true], ["/prepare?t=handoff", true]] as const) {
         const destination = "https://casino.test" + path;
         let actual = "";
         const window = { location: { assign: (value: string) => { actual = value; } } };
         new Script(code).runInNewContext({ cfg, window, URL, destination, submitted });
-        const showsProgress = template !== 8 && mode === "credentials" && submitted && path === "/prepare?t=p1.token";
-        assert.equal(actual, destination + (showsProgress ? "#creando-cuenta" : ""));
+        const hasPresentation = template !== 8 && mode === "credentials" && path === "/prepare?t=p1.token";
+        const expectedFragment = hasPresentation ? (submitted ? "#creando-cuenta" : "#verificando-cuenta") : "";
+        assert.equal(actual, destination + expectedFragment);
         assert.throws(() => new Script(code).runInNewContext({ cfg, window, URL, destination: destination + "#foreign", submitted }), /invalid handoff/);
       }
     }

@@ -140,7 +140,7 @@ export function buildRuntimeConfig({ slug, config, engine = 'constructor', apiBa
   return runtimeConfig;
 }
 
-export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
+export function buildPublicLandingRuntimeSource(includeEntryFunnel = false, accountPresentation = false) {
   const script = `
     (function () {
       var cfg = window.__PUBLIC_LANDING_RUNTIME_CONFIG__ || {};
@@ -187,7 +187,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false) {
 
       ${buildPhoneNormalizerScript("normalizePhone")}
       ${buildArgentinaWhatsappNormalizerScript("normalizeArgentinaWhatsapp")}
-      ${buildTemplate7HandoffRuntimeScript()}
+      ${buildTemplate7HandoffRuntimeScript(accountPresentation)}
       ${ENTRY_REQUEST_RECOVERY_SCRIPT}
       function setTemplate7Error(message) {
         var error = document.querySelector("[data-template7-error]");

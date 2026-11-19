@@ -2,6 +2,7 @@ import { ENTRY_FORM_BUSY_SCRIPT } from "../../lib/landing/entryFormBusy";
 import { buildTemplate7RuntimeConfig } from "./template7FastRuntime";
 import type { PublicLandingConfig } from "./types";
 import generated from "./template7RuntimeNames.generated.json";
+import { TEMPLATE7_RETURN_HINT_SCRIPT, TEMPLATE7_RETURN_HINT_STYLE } from "./template7ReturnHint";
 
 
 /** Only four config-free programs are cacheable. No tenant, pixel, session,
@@ -134,7 +135,8 @@ function t7Early(event){
 
 export function renderTemplate7RuntimeAsset(slug: string, config: PublicLandingConfig, deviceIdScript = "", transport: { apiBase?: string; assetBase?: string; publicAssetBase?: string; engine?: "gateway" } = {}) {
   const asset = template7RuntimeAsset(config.layout?.template === 8 ? 8 : 7, !!deviceIdScript);
-  const settings = JSON.stringify(buildTemplate7RuntimeConfig(slug, config, deviceIdScript, transport))
+  const runtimeConfig = buildTemplate7RuntimeConfig(slug, config, deviceIdScript, transport);
+  const settings = JSON.stringify(runtimeConfig)
     .replace(/[<>&\u2028\u2029]/g, value => `\\u${value.charCodeAt(0).toString(16).padStart(4, "0")}`);
   const identity = deviceIdScript
     ? `(function(){${deviceIdScript};window.__TEMPLATE7_GET_DEVICE_ID__=getOrCreateDeviceId;})();`
@@ -142,7 +144,7 @@ export function renderTemplate7RuntimeAsset(slug: string, config: PublicLandingC
   const url = `${transport.publicAssetBase ?? transport.assetBase ?? ""}/public-assets/template-entry/${asset.name}`;
   return {
     preload: `<link rel="preload" as="script" href="${url}">`,
-    config: `<script data-template7-runtime-config>window.__PUBLIC_LANDING_RUNTIME_CONFIG__=${settings};window.__T7_RUNTIME_ASSET_URL__=${JSON.stringify(url)};${identity}${EARLY_FORM}</script>`,
-    script: `<script src="${url}" data-template7-runtime defer onerror="window.__T7_ASSET_FAILED__()"></script>`,
+    config: `${runtimeConfig.creationScreen ? TEMPLATE7_RETURN_HINT_STYLE : ""}<script data-template7-runtime-config>window.__PUBLIC_LANDING_RUNTIME_CONFIG__=${settings};window.__T7_RUNTIME_ASSET_URL__=${JSON.stringify(url)};${identity}${runtimeConfig.creationScreen ? TEMPLATE7_RETURN_HINT_SCRIPT : ""}${EARLY_FORM}</script>`,
+    script: `${runtimeConfig.creationScreen ? "<script>if(window.__T7_RETURN_CHECK__)window.__T7_RETURN_CHECK__.paint();</script>" : ""}<script src="${url}" data-template7-runtime defer onerror="window.__T7_ASSET_FAILED__()"></script>`,
   };
 }

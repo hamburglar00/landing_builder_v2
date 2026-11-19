@@ -27,6 +27,35 @@ for (const [engineName, engine] of [["Chromium", playwright.chromium], ["WebKit"
       const context = await browser.newContext({ viewport });
       let page = await context.newPage();const calls = [], errors = [];
       let reject = true, recovery = "missing", confirmed = true, repair = "none";
+      let heldRequest;
+      function holdNext(action) {
+        const started = Promise.withResolvers(), release = Promise.withResolvers();
+        heldRequest = { action, started, release };
+        return { started: started.promise, release: release.resolve };
+      }
+      async function waitIfHeld(action) {
+        if (heldRequest?.action !== action) return;
+        const gate = heldRequest;
+        heldRequest = undefined;
+        gate.started.resolve();
+        await gate.release.promise;
+      }
+      async function assertEntering(selector) {
+        const button = page.locator(selector);
+        assert.equal(await button.textContent(), "Ingresando a tu cuenta…");
+        assert.equal(await button.innerText(), "Ingresando a tu cuenta…");
+        assert.equal(await button.getAttribute("aria-busy"), "true");
+        assert.equal(await button.isDisabled(), true);
+        assert.equal(await page.getByRole("button", { name: /^ingresando a tu cuenta…$/i }).count(), 1);
+        assert.equal(await page.getByRole("progressbar").count(), 0);
+        assert.equal(await page.locator("#agency-feedback").textContent(), "");
+        assert.equal(await button.evaluate(el => getComputedStyle(el, "::before").animationName), "spin");
+        await page.emulateMedia({ reducedMotion: "reduce" });
+        assert.equal(await button.evaluate(el => getComputedStyle(el, "::before").animationName), "none");
+        await page.emulateMedia({ reducedMotion: "no-preference" });
+      }
+      const returningName = "cliente<prueba>";
+      const session = { entry_confirmation: "ge1.fixture", recovery_token: "encrypted-fixture", redirect_url: "/home?gateway_chat=open" };
       const html = pages.get(provider);
       page.on("pageerror", e => errors.push(e.message));
       await context.route("**/*", async route => {
@@ -39,15 +68,19 @@ for (const [engineName, engine] of [["Chromium", playwright.chromium], ["WebKit"
         }
         if (url.pathname === "/api/agency-entry/17") {
           const input=route.request().postDataJSON();calls.push(input);
+          await waitIfHeld(input.action);
           if(input.action==='resume') {
             if(recovery==='network')return route.abort();
             return route.fulfill({contentType:'application/json',body:JSON.stringify(recovery==='active'?
-              {active:true,username:'cliente',entry_confirmation:'ge1.fixture',recovery_token:'encrypted-fixture',redirect_url:'/home?gateway_chat=open'}:
+              {active:true,username:returningName,...session}:
               {active:false,...(recovery==='different'?{different_account:true}:{})})});
           }
+          if (input.action === "register" && !reject) return route.fulfill({ json: { account_created: true, username: "cliente", password: "fixture-password", continuation: "fixture-continuation" } });
+          if (input.action === "prepare_created") return route.fulfill({ json: { username: "cliente", ...session } });
           return route.fulfill({ status: reject ? 401 : 200, contentType: "application/json", body: JSON.stringify(reject ? { error: "Revisá tus datos." } : { username:"cliente",entry_confirmation: "ge1.fixture", recovery_token: "encrypted-fixture", redirect_url: "/home?gateway_chat=open" }) });
         }
         if (url.pathname === "/api/session/recover") {
+          await waitIfHeld("confirm");
           const proof = route.request().postDataJSON();
           if (repair !== "none" && proof.recovery_token) return route.fulfill({ json: { active: true, entry_repaired: true } });
           const exact = confirmed && repair !== "blocked" && proof.entry_confirmation === "ge1.fixture";
@@ -71,15 +104,47 @@ for (const [engineName, engine] of [["Chromium", playwright.chromium], ["WebKit"
       if (engineName === "Chromium" && (viewport.width === 390 || provider === "ganamos_net")) await page.screenshot({ path: path.join(output, `${provider}-${viewport.width}.png`), fullPage: true });
       await page.locator("#username").fill("cliente"); await page.locator("#password").fill("fixture-password");
       await page.locator("#show-password").click(); assert.equal(await page.locator("#password").getAttribute("type"), "text");
-      await page.locator("#submit").click(); await page.locator("#error").filter({ hasText: "Revisá tus datos." }).waitFor();
+      const manualLogin = holdNext("login");
+      await page.locator("#submit").click(); await manualLogin.started;
+      await assertEntering("#submit"); manualLogin.release();
+      await page.locator("#error").filter({ hasText: "Revisá tus datos." }).waitFor();
+      assert.equal(await page.locator("#submit").textContent(), "Ingresar");
+      assert.equal(await page.locator("#submit").getAttribute("aria-busy"), "false");
       assert.equal(await page.locator("#submit").isEnabled(), true); checks++;
-      reject = false; await page.locator("#submit").click(); await page.waitForURL("**/home?gateway_chat=open");
+      reject = false;
+      const manualConfirmation = holdNext("confirm");
+      await page.locator("#submit").click(); await manualConfirmation.started;
+      await assertEntering("#submit"); manualConfirmation.release();
+      await page.waitForURL("**/home?gateway_chat=open");
       assert.deepEqual(calls.at(-1), { agency_id: 17, action: "login", username: "cliente", password: "fixture-password" });
       assert.equal(await page.evaluate(() => JSON.stringify(localStorage).includes("fixture-password")), false); checks++;
-      recovery="active";await page.close();page=await context.newPage();page.on("pageerror",e=>errors.push(e.message));await page.goto("https://gateway.example/17");await page.locator('#agency-continue').click();await page.waitForURL("**/home?gateway_chat=open");assert.equal(calls.at(-1).action,"resume");checks++;recovery="missing";
+      recovery="active";await page.close();page=await context.newPage();page.on("pageerror",e=>errors.push(e.message));
+      const returningConfirmation = holdNext("confirm");
+      await page.goto("https://gateway.example/17"); await returningConfirmation.started;
+      assert.equal(await page.locator("#agency-continue").textContent(), "Acceder a mi cuenta");
+      await page.locator("#agency-continue").click(); await assertEntering("#agency-continue");
+      returningConfirmation.release(); await page.waitForURL("**/home?gateway_chat=open");
+      assert.equal(calls.at(-1).action,"resume");checks++;recovery="missing";
       await page.goto("https://gateway.example/17"); await page.locator('#username').waitFor({state:'visible'});await page.locator("#toggle").click();await page.locator("#name").waitFor({state:"visible"});
-      await page.locator("#name").fill("Nombre Cliente"); await page.locator("#submit").click(); await page.locator("#agency-continue").click(); await page.waitForURL("**/home?gateway_chat=open");
+      const creating = holdNext("register");
+      await page.locator("#name").fill("Nombre Cliente"); await page.locator("#submit").click(); await creating.started;
+      assert.equal(await page.getByRole("progressbar", { name: "Creando tu cuenta" }).count(), 1);
+      assert.equal(await page.locator("#agency-creating").innerText(), "Creando tu cuenta…");
+      assert.equal(await page.locator(".entry-progress-stops").isVisible(), false);
+      assert.equal(await page.locator("#submit").isVisible(), false);
+      assert.equal(await page.locator("#name").isEditable(), false);
       assert.deepEqual(calls.at(-1), { agency_id: 17, action: "register", name: "Nombre Cliente", present_account:true });
+      const preparingCreated = holdNext("prepare_created");
+      creating.release(); await preparingCreated.started;
+      await page.locator("#agency-created-title").waitFor(); assert.equal(await page.locator("#agency-account-password").innerText(), "fixture-password");
+      assert.equal(await page.locator("#agency-continue").textContent(), "Continuar a mi cuenta");
+      await page.locator("#agency-continue").click(); await assertEntering("#agency-continue");
+      confirmed=false; preparingCreated.release();
+      await page.locator("#agency-feedback").filter({hasText:"No pudimos confirmar"}).waitFor();
+      assert.equal(await page.locator("#agency-continue").textContent(), "Continuar a mi cuenta");
+      assert.equal(await page.locator("#agency-continue").getAttribute("aria-busy"), "false");
+      confirmed=true; await page.locator("#agency-continue").click(); await page.waitForURL("**/home?gateway_chat=open");
+      assert.equal(calls.at(-1).action, "prepare_created"); checks++;
       for(const state of ['active','different','network']) {
         recovery=state;const before=calls.length;await page.goto('https://gateway.example/17');
         if(state==='active'){await page.locator('#agency-continue').click();await page.waitForURL('**/home?gateway_chat=open');}
@@ -104,7 +169,35 @@ for (const [engineName, engine] of [["Chromium", playwright.chromium], ["WebKit"
         }
         checks++;
       }
-      repair="none";recovery="missing";
+      repair="none";recovery="active";
+      const start = new Date("2026-11-19T12:00:00Z");
+      await page.clock.install({ time: start });
+      await page.clock.pauseAt(new Date(start.getTime() + 1000));
+      await page.goto("https://gateway.example/17");
+      await page.locator("#agency-returning-title").waitFor();
+      assert.equal(await page.locator("#agency-recovering").textContent(), "");
+      assert.equal(await page.locator("#agency-account-title").innerText(), "¡Hola de nuevo, " + returningName + "!");
+      assert.equal(await page.locator("#agency-returning-name > *").count(), 0);
+      const colors = await page.evaluate(() => ({
+        greeting: getComputedStyle(document.getElementById("agency-returning-title")).color,
+        username: getComputedStyle(document.getElementById("agency-returning-name")).color,
+        accent: getComputedStyle(document.documentElement).getPropertyValue("--accent").trim(),
+      }));
+      assert.equal(colors.greeting, "rgb(255, 255, 255)");
+      const accentRgb = colors.accent.slice(1).match(/../g).map(pair => parseInt(pair, 16)).join(", ");
+      assert.equal(colors.username, "rgb(" + accentRgb + ")");
+      assert.equal(await page.getByRole("progressbar").count(), 0);
+      const slowReturn = holdNext("resume");
+      await page.goto("https://gateway.example/17"); await slowReturn.started;
+      const logo = page.locator(".brand img"), initialLogo = await logo.boundingBox();
+      await page.clock.runFor(299);
+      assert.equal(await page.locator("#agency-recovering").innerText(), "");
+      await page.clock.runFor(1);
+      assert.equal(await page.locator("#agency-recovering").innerText(), "Verificando tu cuenta…");
+      assert.deepEqual(await logo.boundingBox(), initialLogo);
+      assert.equal(await page.getByRole("progressbar").count(), 0);
+      slowReturn.release(); await page.locator("#agency-returning-title").waitFor(); await page.clock.resume();
+      checks+=2;
       assert.deepEqual(errors, []); checks++;
       await context.close();
     }

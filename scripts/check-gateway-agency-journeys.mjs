@@ -201,6 +201,7 @@ async function run(browser, target) {
   });
   page.on("pageerror", (e) => errors.push(e.message));
   let lastResponse, lastProof;
+  const returningDestination = deferred();
   await context.route("**/*", async (route) => {
     const request = route.request(),
       url = new URL(request.url()),
@@ -211,7 +212,8 @@ async function run(browser, target) {
         if (request.isNavigationRequest()) return route.fulfill(html(form));
         if (p.startsWith("/public-assets/template-entry/"))
           return route.fulfill({ contentType: "text/javascript", body: await readFile(path.join(frontend, "public", p)) });
-        if (p === "/api/template7/destination")
+        if (p === "/api/template7/destination") {
+          if (landingIssued) await returningDestination.promise;
           return route.fulfill({
             json: {
               atrioClientId: uuid(2),
@@ -221,6 +223,7 @@ async function run(browser, target) {
               ...(landingIssued ? { existingName: "Prueba landing", promoCode: "FIXTURE" } : {}),
             },
           });
+        }
         if (p === "/api/template7/warm") return route.fulfill({ json: { gateway_origin: origin } });
         if (p === "/api/template7/prepare" || p === "/api/template7/start")
           return route.fulfill({ json: { handoff_url: origin + "/prepare?t=p1.cross" } });
@@ -448,10 +451,14 @@ async function run(browser, target) {
           el.click();
           el.click();
         });
+        assert.equal(await next.innerText(), "Ingresando a tu cuenta…");
+        assert.equal(await next.getAttribute("aria-busy"), "true");
+        assert.equal(await page.getByRole("progressbar").count(), 0);
         assert.equal(new URL(page.url()).pathname, "/17");
         login.resolve();
         await page.locator("#agency-account-login").waitFor();
         assert.equal(await next.isEnabled(), true);
+        assert.equal(await next.textContent(), "Continuar a mi cuenta");
         await next.click();
       } else {
         const done = page.waitForResponse((r) => new URL(r.url()).pathname === "/api/session/recover");
@@ -475,6 +482,9 @@ async function run(browser, target) {
       assert.equal(await next.textContent(), "Acceder a mi cuenta");
       if (agency === 17) {
         await next.click();
+        assert.equal(await next.innerText(), "Ingresando a tu cuenta…");
+        assert.equal(await next.getAttribute("aria-busy"), "true");
+        assert.equal(await page.getByRole("progressbar").count(), 0);
         assert.equal(new URL(page.url()).pathname, "/17");
         recovery.resolve();
       } else {
@@ -513,6 +523,12 @@ async function run(browser, target) {
       await send(agency);
     }
     await page.goto(landingOrigin + "/l/cruce", { waitUntil: "commit" });
+    // Hold the real return in the same browser after an earlier confirmed signup.
+    const returningScreen = page.locator("#gateway-entry-transition");
+    await returningScreen.getByText("Verificando tu cuenta…", { exact: true }).waitFor();
+    assert.equal(await returningScreen.locator("[data-entry-progress]").isVisible(), false);
+    assert.equal(await page.locator("[data-template7-name]").isVisible(), false);
+    returningDestination.resolve();
     await page.locator("#continue").waitFor();
     assert.equal(await page.locator("#account-title").innerText(), "¡Hola de nuevo, cliente31!");
     await page.locator("#continue").click();
@@ -533,6 +549,7 @@ async function run(browser, target) {
       { cause: error },
     );
   } finally {
+    returningDestination.resolve();
     login.resolve();
     recovery.resolve();
     globalThis.fetch = originalFetch;

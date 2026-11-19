@@ -99,6 +99,7 @@ const bank = message(11, "asesor", "Datos de prueba", {
   wallet: { accountNumber: "0000000000000000000000", alias: "fixture.local", holderName: "Fixture" },
 });
 const durations = { account_ms: 150, login_ms: 350 };
+const checkWaitingScreens = process.argv.includes("--matrix");
 const frontendAsset = (root, pathname) => readFile(path.join(root, "public", pathname), "utf8");
 
 async function run(browser, template, engine, target, scenario = "new") {
@@ -109,7 +110,11 @@ async function run(browser, template, engine, target, scenario = "new") {
   const presentation = returning || direct ? { enabled: false, seconds: policy.seconds, continueButtonEnabled: false } : policy;
   const prepareHtml = host.renderPreparationPage("p1.fixture", host.gatewayPreparationTheme(providerCode));
   const entryHtml = casinoHtml(chatOrigin + "/embed/fixture?token=fixture");
-  const context = await browser.newContext({ viewport: { width: 1365, height: 900 }, serviceWorkers: "block" });
+  const context = await browser.newContext({
+    viewport: { width: 1365, height: 900 },
+    serviceWorkers: "block",
+    reducedMotion: late ? "reduce" : "no-preference",
+  });
   const page = await context.newPage();
   page.setDefaultTimeout(8000);
   const errors = [],
@@ -132,6 +137,9 @@ async function run(browser, template, engine, target, scenario = "new") {
   const bankGate = new Promise((resolve) => {
     releaseBank = resolve;
   });
+  // In the regression matrix, inspect each waiting screen before its real next stage completes.
+  const confirmationGate = Promise.withResolvers();
+  const widgetGate = Promise.withResolvers();
   const config = landing.buildLandingConfig({
     id: id(1),
     name: slug,
@@ -177,6 +185,17 @@ async function run(browser, template, engine, target, scenario = "new") {
     const record = (n) => window.benchmarkMark(n, Math.round(performance.timeOrigin + performance.now()));
     let observedForm = false,
       observedStage = false;
+    // Inspect rendered frames on both sides of the navigation, including the one before hydration.
+    function observeEntryFrame() {
+      if (location.pathname === "/start" || location.origin === "https://chat.fixture.invalid") return;
+      if (document.querySelector("[data-stop]:not([hidden])") &&
+          Array.from(document.querySelectorAll("[data-stop]")).some(el => el.checkVisibility({visibilityProperty:true, opacityProperty:true}))) {
+        record("visible_legacy_steps");
+        return;
+      }
+      requestAnimationFrame(observeEntryFrame);
+    }
+    requestAnimationFrame(observeEntryFrame);
     const credentials = new MutationObserver(() => {
       const formStatus = document.querySelector("[data-template7-creating]");
       if (!observedForm && formStatus?.getClientRects().length && formStatus.textContent.includes("Creando tu cuenta")) {
@@ -241,7 +260,7 @@ async function run(browser, template, engine, target, scenario = "new") {
         return route.fulfill({
           json: returning
             ? { ...advisor, preparationReady: true, existingName: "Nombre visible", promoCode: "FIXTURE" }
-            : advisor,
+            : { ...advisor, preparationReady: template === 9 }, // A reserved advisor may still be receiving a first-time visitor.
         });
       if (p === "/api/template7/warm") return route.fulfill({ json: { gateway_origin: gatewayOrigin } });
       if (p === "/api/template7/prepare" || p === "/api/template7/start") {
@@ -363,6 +382,7 @@ async function run(browser, template, engine, target, scenario = "new") {
         }
         assert.equal(req.postDataJSON().entry_confirmation, "ge1.confirmed");
         confirms++;
+        if (checkWaitingScreens && !direct) await confirmationGate.promise;
         return route.fulfill({ json: { active: true, entry_confirmed: true, entry_id: "entry-fixture" } });
       }
       if (p === "/entry") {
@@ -380,7 +400,10 @@ async function run(browser, template, engine, target, scenario = "new") {
     }
     if (url.origin === chatOrigin) {
       if (p === "/embed/fixture") return route.fulfill(widgetHtml);
-      if (p === "/fixture-widget.js") return route.fulfill({ contentType: "text/javascript", body: widget.js });
+      if (p === "/fixture-widget.js") {
+        if (checkWaitingScreens) await widgetGate.promise;
+        return route.fulfill({ contentType: "text/javascript", body: widget.js });
+      }
       if (p === "/api/gateway/chat") {
         assert.equal(req.headers().authorization, "Bearer fixture-session");
         const body = req.method() === "POST" ? req.postDataJSON() : {};
@@ -420,11 +443,25 @@ async function run(browser, template, engine, target, scenario = "new") {
       if (returning) {
         assert.equal(await page.locator("#account-title").innerText(), "¡Hola de nuevo, " + account.username + "!");
         assert.equal(await next.innerText(), "Acceder a mi cuenta");
+        const heading = page.locator("#account-title");
+        assert.equal(await heading.locator(".returning-username").innerText(), account.username);
+        const palette = await heading.evaluate(el => {
+          const name = el.querySelector(".returning-username");
+          const canonicalAccent = document.createElement("span");
+          canonicalAccent.style.color = "var(--entry-accent)";
+          el.append(canonicalAccent);
+          const colors = [getComputedStyle(el).color, getComputedStyle(name).color, getComputedStyle(canonicalAccent).color];
+          canonicalAccent.remove();
+          return colors;
+        });
+        assert.equal(palette[0], "rgb(255, 255, 255)");
+        assert.equal(palette[1], palette[2]);
         assert.equal(await page.getByText(account.password, { exact: true }).count(), 0);
       } else {
         assert.equal(await page.locator("#username").innerText(), account.username);
         assert.equal(await page.locator("#password").innerText(), account.password);
       }
+      assert.equal(marks.has("visible_legacy_steps"), false, "credentials mode never paints the old progress steps before the CTA");
       if (late) {
         const started = page.waitForResponse((r) => new URL(r.url()).pathname === "/start");
         releaseLogin();
@@ -432,7 +469,27 @@ async function run(browser, template, engine, target, scenario = "new") {
       }
       await next.click();
       if (!late) assert.equal(marks.has("login_ready"), false, "the CTA works before login completes");
+      if (checkWaitingScreens) {
+        assert.equal(await next.innerText(), "Ingresando a tu cuenta…");
+        assert.equal(await next.isDisabled(), true);
+        assert.equal(await next.getAttribute("aria-busy"), "true");
+        const indicator = await next.evaluate(el => {
+          const style = getComputedStyle(el, "::before");
+          return { width: parseFloat(style.width), animation: style.animationName };
+        });
+        assert.ok(indicator.width > 0, "button shows its loading indicator");
+        if (late) assert.equal(indicator.animation, "none", "reduced motion keeps the indicator still");
+        assert.equal(await page.getByRole("progressbar").count(), 0);
+      }
       releaseLogin();
+      confirmationGate.resolve();
+    }
+    if (checkWaitingScreens) {
+      const connection = page.locator("#gateway-entry-transition[data-stage='connecting']");
+      await connection.getByRole("heading", {name: "Conectando con tu asesor…", exact: true}).waitFor();
+      assert.equal((await connection.innerText()).trim(), "Conectando con tu asesor…");
+      assert.equal(await connection.getByRole("progressbar").count(), 0);
+      widgetGate.resolve();
     }
     const frame = page.frameLocator("#gateway-chat-shell iframe");
     const composer = frame.getByPlaceholder("Escribi un mensaje...");
@@ -491,6 +548,8 @@ async function run(browser, template, engine, target, scenario = "new") {
   } finally {
     releaseLogin();
     releaseBank();
+    confirmationGate.resolve();
+    widgetGate.resolve();
     await context.close();
   }
 }
