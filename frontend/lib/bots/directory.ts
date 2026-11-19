@@ -12,6 +12,7 @@ export type DirectoryBot = {
   phone: string | null;
   whatsapp_usage?: "acquisition" | "follow_up";
   advisor_id: string | null;
+  advisor_deleted?: true;
   advisor_slug: string | null;
 };
 export type DirectoryAgency = {

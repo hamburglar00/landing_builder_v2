@@ -32,7 +32,7 @@ export async function syncBuilder(ownerId: number, accountId: string) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${key}`,
       },
-      body: JSON.stringify({ kind: "owner", id: ownerId, refresh: false }),
+      body: JSON.stringify({ kind: "owner", id: ownerId, refresh: false, includeRetirements: true }),
       cache: "no-store",
       redirect: "error",
       signal: AbortSignal.timeout(15000),
@@ -75,14 +75,14 @@ export async function syncBuilder(ownerId: number, accountId: string) {
     ...data.unassigned,
   ];
   const knownAdvisors = new Set(data.advisors.map((a) => a.id));
-  if (
-    allBots.some(
-      (b) =>
-        b.channel === "atrio" &&
-        (!b.advisor_id || !knownAdvisors.has(b.advisor_id)),
-    )
-  )
-    warnings.push("Hay bots de Atrio sin un asesor válido para importar.");
+  const missing = allBots.filter(b =>
+    b.channel === "atrio" && (!b.advisor_id || !knownAdvisors.has(b.advisor_id)) &&
+    !(b.active === false && b.advisor_id && b.advisor_deleted === true)
+  );
+  const reviewIssues = missing
+    .filter(b => b.active && b.owner_id === ownerId &&
+      (b.agency_id === null || (Number.isSafeInteger(b.agency_id) && b.agency_id > 0)))
+    .map(b => ({ code: "atrio_advisor_missing" as const, managerId: b.manager_id, agencyId: b.agency_id }));
   if (data.unassigned.some((b) => b.channel === "whatsapp"))
     warnings.push(
       "Hay bots de WhatsApp sin gerencia que no se pudieron incorporar.",
@@ -207,8 +207,12 @@ export async function syncBuilder(ownerId: number, accountId: string) {
     if (error)
       throw new AccessError("Hay cambios pendientes en el inventario.", 503);
   }
+  const otherReview = omitted || warnings.length > 0 || missing.length !== reviewIssues.length;
+  if (missing.length) warnings.push("Hay bots de Atrio sin un asesor válido para importar.");
   return {
-    complete: !omitted && warnings.length === 0,
+    complete: !otherReview && reviewIssues.length === 0,
     warnings: [...new Set(warnings)],
+    reviewIssues,
+    otherReview,
   };
 }

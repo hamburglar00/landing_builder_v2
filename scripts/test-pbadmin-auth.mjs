@@ -197,13 +197,14 @@ try {
   await wait(restUrl);
   const registrations = [],
     validity = new Map();
-  let directory = null;
+  let directory = null, directoryRequest;
   server = createServer(async (req, res) => {
     try {
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
       const body = Buffer.concat(chunks);
       if (req.url === "/api/gateway/bot-directory") {
+        directoryRequest = JSON.parse(body.toString());
         res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify(directory));
         return;
@@ -533,6 +534,39 @@ try {
       .data;
     assert.equal(row.nombre, "Custom display");
     assert.deepEqual(row.pbadmin_bots, []);
+  });
+  await test("retired inactive 313 does not warn or interfere with active 318, but active/unconfirmed links still require review", async () => {
+    const validId = randomUUID();
+    const inactive = { ...bot, channel: "atrio", phone: null, manager_id: 1075, agency_id: 313,
+      active: false, advisor_id: randomUUID(), advisor_deleted: true };
+    const active = { ...inactive, manager_id: 1079, agency_id: 318, active: true, advisor_id: validId, advisor_deleted: undefined };
+    directory = { scope: { kind: "owner", id: 101 }, unassigned: [],
+      advisors: [{ id: validId, slug: "multiskin-fixture", name: "Multi Skin" }],
+      agencies: [{ agency_id: 313, name: "313", platform: 1, bots: [inactive] },
+        { agency_id: 318, name: "318", platform: 7, bots: [active] }] };
+    const syncOnce = () => sync.syncBuilder(101, result.uid);
+    const clean = await syncOnce();
+    assert.deepEqual(directoryRequest, { kind: "owner", id: 101, refresh: false, includeRetirements: true });
+    assert.deepEqual(clean, { complete: true, warnings: [], reviewIssues: [], otherReview: false });
+    const linked = await db.from("atrio_clients").select("pbadmin_bots").eq("atrio_id", validId).single();
+    assert.deepEqual(linked.data.pbadmin_bots.map(b => b.manager_id), [1079]);
+
+    inactive.active = true;
+    const activeReview = await syncOnce();
+    assert.equal(activeReview.complete, false);
+    assert.deepEqual(activeReview.reviewIssues, [{ code: "atrio_advisor_missing", managerId: 1075, agencyId: 313 }]);
+    assert.equal(activeReview.otherReview, false);
+    directory.unassigned.push({ ...bot, manager_id: 1099, agency_id: null });
+    assert.equal((await syncOnce()).otherReview, true);
+    directory.unassigned = [];
+    inactive.active = false;
+    delete inactive.advisor_deleted;
+    const unconfirmed = await syncOnce();
+    assert.equal(unconfirmed.complete, false);
+    assert.equal(unconfirmed.otherReview, true);
+    assert.deepEqual(unconfirmed.reviewIssues, []);
+    await db.from("atrio_clients").delete().eq("atrio_id", validId);
+    directory.agencies = []; directory.advisors = [];
   });
   await test("link and owner sync retain bots from other administrations, including a shared advisor", async () => {
     const advisorId = randomUUID(), absentAdvisor = randomUUID();
