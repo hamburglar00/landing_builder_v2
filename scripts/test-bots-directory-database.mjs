@@ -107,5 +107,16 @@ try{
  assert.equal((await db.query('select usage_count from gerencia_phones where id=1')).rows[0].usage_count,6);checks++;
  await db.query('select ack_bot_daily_resets($1)',[JSON.stringify([{advisor_id:advisor,reset_date:(await db.query('select reset_date::text d from app_private.bot_daily_resets')).rows[0].d}])]);
  assert.equal((await db.query('select * from read_bot_daily_resets()')).rows.length,0);checks++;
+ await db.exec("alter table public.atrio_clients add column directory_retired_at timestamptz");
+ await db.exec(await readFile(new URL('../supabase/migrations/20261119194334_exclude_retired_advisors_from_redirection.sql',import.meta.url),'utf8'));
+ await db.query("insert into atrio_clients(id,user_id,atrio_id,slug,display_name,workspace_currency,directory_retired_at) values($1::uuid,$2,$1::uuid::text,'pikman','Pikman','ARS',now()),($3::uuid,$2,$3::uuid::text,'pending','Pending advisor','ARS',null)",
+  ['92000000-0000-4000-8000-000000000313',owner,'92000000-0000-4000-8000-000000000318']);
+ await db.exec('set role authenticated');
+ assert.equal((await page(1,'Pikman','atrio')).total,0,'retired advisors do not produce phantom groups');
+ assert.equal((await page(1,'Pending advisor','atrio')).total,1,'an advisor without linked bots remains visible while still live');
+ const livePage=await page(1,'','atrio');
+ assert.equal(livePage.counts.atrio,2,'chip count matches the visible directory');
+ assert.equal(livePage.projectionPending,1,'only a live advisor can be pending');
+ assert.equal((await page(1,'Foreign secret')).total,0,'retirements preserve tenant isolation');checks+=5;
  console.log(`Bots PostgreSQL: ${checks} assertions passed (50 per demand page, filters, RLS, global scope, daily resets, retry and history).`);
 }finally{await db.close();}

@@ -23,7 +23,7 @@ function backend(): DestinationBackend {
     },
     async clients(token, ids) {
       if (!actor || !ids.length) return [];
-      let query = scoped(token).from("atrio_clients").select("id,user_id,workspace_currency,atrio_id,bot_directory").in("id", ids);
+      let query = scoped(token).from("atrio_clients").select("id,user_id,workspace_currency,atrio_id,bot_directory,directory_retired_at").in("id", ids);
       if (actor.role !== "admin") query = query.eq("user_id", actor.id);
       const result = await query;
       if (result.error) throw result.error;
@@ -32,16 +32,32 @@ function backend(): DestinationBackend {
     async cacheDirectory(token,clients,result){
       const rows=(result as {advisors?:{id:string;connections:Record<string,unknown>[]}[]})?.advisors;
       if(!Array.isArray(rows))throw Error("Invalid directory");
+      const deleted = (result as { deleted_advisor_ids?: string[] }).deleted_advisor_ids ?? [];
+      const requestedIds = new Set(clients.map(client => client.atrio_id.toLowerCase()));
+      const liveIds = new Set(rows.map(row => row.id.toLowerCase()));
+      if (!Array.isArray(deleted) || deleted.some(id => typeof id !== "string" || !requestedIds.has(id.toLowerCase()) || liveIds.has(id.toLowerCase()))) {
+        throw Error("Invalid directory deletion");
+      }
+      const deletedIds = new Set(deleted.map(id => id.toLowerCase()));
       const fields=["connection_id","advisor_id","advisor_slug","advisor_name","manager_id","agency_id","agency_name","target_provider","manager_type","active","verified_at"];
       const metadata=(values:Record<string,unknown>[])=>values.map(row=>Object.fromEntries(fields.map(key=>[key,row[key]??null])))
         .sort((a,b)=>String(a.connection_id).localeCompare(String(b.connection_id)));
       let changed=false;
       for(const client of clients){
-        const advisor=rows.find(row=>row.id===client.atrio_id);
+        if (deletedIds.has(client.atrio_id.toLowerCase())) {
+          const update = await scoped(token).from("atrio_clients")
+            .update({ directory_retired_at: new Date().toISOString(), bot_directory: [], pbadmin_bots: [] })
+            .eq("id", client.id).eq("atrio_id", client.atrio_id).is("directory_retired_at", null);
+          if (update.error) throw update.error;
+          changed = true;
+          continue;
+        }
+        const advisor=rows.find(row=>row.id.toLowerCase()===client.atrio_id.toLowerCase());
         if(!advisor)continue;
         const next=metadata(advisor.connections),previous=Array.isArray(client.bot_directory)?metadata(client.bot_directory):null;
         if(JSON.stringify(next)===JSON.stringify(previous))continue;
-        const update=await scoped(token).from("atrio_clients").update({bot_directory:next}).eq("id",client.id);
+        const update=await scoped(token).from("atrio_clients").update({bot_directory:next})
+          .eq("id",client.id).eq("atrio_id",client.atrio_id).is("directory_retired_at",null);
         if(update.error)throw update.error;
         changed=true;
       }
@@ -59,8 +75,8 @@ function backend(): DestinationBackend {
     },
     async workspaceClients(token, owner, workspace) {
       if (!actor || (actor.role !== "admin" && actor.id !== owner)) return [];
-      const result = await scoped(token).from("atrio_clients").select("id,user_id,workspace_currency,atrio_id")
-        .eq("user_id", owner).eq("workspace_currency", workspace).is("directory_retired_at", null);
+      const result = await scoped(token).from("atrio_clients").select("id,user_id,workspace_currency,atrio_id,directory_retired_at")
+        .eq("user_id", owner).eq("workspace_currency", workspace).order("directory_retired_at", { nullsFirst: true });
       if (result.error) throw result.error;
       return result.data || [];
     },

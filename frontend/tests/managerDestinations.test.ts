@@ -37,6 +37,27 @@ test("directory denies IDs filtered out by actor ownership", async () => {
   assert.equal(response.status, 403); assert.equal(contacted, false);
 });
 
+test("stale directory pages refresh after a confirmed retirement without widening a read or resetting another advisor", async () => {
+  const retired = {...client, id: ids.otherAdvisor, atrio_id: ids.device, directory_retired_at: new Date().toISOString()};
+  const idsOnPage = [client.id, retired.id];
+  const forwarded: object[] = [];
+  const deps = backend({
+    clients: async () => [retired, client],
+    call: async (_action, input) => { forwarded.push(input); return { advisors: [{ id: client.atrio_id }] }; },
+  });
+  const response = await handleManagerDestinations(request({ action: "directory", clientIds: idsOnPage }), deps);
+  assert.deepEqual(await response.json(), { advisors: [{ id: client.atrio_id }], directoryChanged: true });
+  assert.deepEqual(forwarded, [{ advisor_ids: [client.atrio_id] }]);
+  assert.equal((await handleManagerDestinations(request({ action: "reset", metric: "usage_count", clientIds: idsOnPage }), deps)).status, 409);
+  const onlyRetired = { ...deps, clients: async () => [retired], workspaceClients: async () => [retired] };
+  assert.deepEqual(await (await handleManagerDestinations(request({ action: "directory", clientIds: [retired.id] }), onlyRetired)).json(),
+    { advisors: [], directoryChanged: true });
+  assert.equal((await handleManagerDestinations(request({ action: "directory", clientIds: idsOnPage }), onlyRetired)).status, 403);
+  assert.deepEqual(await (await handleManagerDestinations(request({ action: "configurations", landingId: ids.landing, targetProviders: ["multi_skin"] }), onlyRetired)).json(),
+    { configurations: { multi_skin: null }, directory: { advisors: [] } });
+  assert.equal(forwarded.length, 1);
+});
+
 test("directory projection refresh is restricted to the clients validated by ownership",async()=>{
   const cached:unknown[]=[];
   const deps=backend({call:async()=>({advisors:[]}),cacheDirectory:async(token,clients,result)=>{cached.push({token,clients,result});return true;}});
@@ -45,6 +66,29 @@ test("directory projection refresh is restricted to the clients validated by own
   assert.deepEqual(cached,[{token:"test",clients:[client],result:{advisors:[]}}]);
   const denied=await handleManagerDestinations(request({action:"directory",clientIds:[ids.client]}),{...deps,clients:async()=>[]});
   assert.equal(denied.status,403);assert.equal(cached.length,1);
+});
+
+test("opening the editor retires a confirmed deletion before saving a healthy destination", async () => {
+  const stale = { ...client, id: ids.otherAdvisor, atrio_id: ids.device };
+  let retired = false;
+  const saved: object[] = [];
+  const deps = backend({
+    workspaceClients: async () => [client, { ...stale, directory_retired_at: retired ? "2026-11-19" : null }],
+    call: async (action, input) => {
+      if (action === "directory") return { advisors: [{ id: client.atrio_id }], deleted_advisor_ids: [stale.atrio_id] };
+      if (action === "configure") saved.push(input);
+      return { configuration: null };
+    },
+    cacheDirectory: async (_token, clients) => {
+      assert.deepEqual(clients.map(row => row.id), [stale.id]);
+      retired = true;
+      return true;
+    },
+  });
+  const read = await handleManagerDestinations(request({ ...configure, action: "configuration" }), deps);
+  assert.equal(read.status, 200);
+  assert.equal((await handleManagerDestinations(request(configure), deps)).status, 200);
+  assert.deepEqual((saved[0] as { allowed_advisor_ids: string[] }).allowed_advisor_ids, [client.atrio_id]);
 });
 
 test("metric resets derive advisor scope from owned clients and cannot reset another actor", async () => {

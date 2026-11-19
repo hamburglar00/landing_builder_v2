@@ -1,5 +1,5 @@
 import { isSameOriginRequest } from "@/lib/http/sameOrigin";
-export type DestinationClient = { id: string; user_id: string; workspace_currency: string; atrio_id: string; bot_directory?: unknown };
+export type DestinationClient = { id: string; user_id: string; workspace_currency: string; atrio_id: string; bot_directory?: unknown; directory_retired_at?: string | null };
 export type DestinationLanding = { id: string; user_id: string; workspace_currency: string; config: unknown };
 export type DestinationBackend = {
   authenticate(token: string): Promise<boolean>;
@@ -31,9 +31,13 @@ export async function handleManagerDestinations(request: Request, backend: Desti
       const ids = [...new Set<string>(input.clientIds)];
       const clients = await backend.clients(token, ids);
       if (clients.length !== ids.length || clients.some(client => !uuid.test(client.atrio_id))) return json({ error: "No tenés acceso a estos asesores." }, 403);
-      const result=await backend.call(input.action, { advisor_ids: [...new Set(clients.map(client => client.atrio_id))], ...(input.action === "reset" ? { metric: input.metric } : {}) }) as object;
-      const directoryChanged=input.action==="directory"&&backend.cacheDirectory?await backend.cacheDirectory(token,clients,result):false;
-      return json(input.action==="directory"?{...result,directoryChanged}:result);
+      const current = clients.filter(client => !client.directory_retired_at);
+      const stalePage = current.length !== clients.length;
+      if (input.action === "reset" && stalePage) return json({ error: "La lista de asesores cambió. Actualizá la página antes de reiniciar la métrica." }, 409);
+      if (!current.length) return json({ advisors: [], directoryChanged: true });
+      const result=await backend.call(input.action, { advisor_ids: [...new Set(current.map(client => client.atrio_id))], ...(input.action === "reset" ? { metric: input.metric } : {}) }) as object;
+      const directoryChanged=input.action==="directory"&&backend.cacheDirectory?await backend.cacheDirectory(token,current,result):false;
+      return json(input.action==="directory"?{...result,directoryChanged:stalePage || directoryChanged}:result);
     }
     if (!["configuration", "configurations", "configure"].includes(input.action) || !uuid.test(input.landingId)) return json({ error: "Destino no válido." }, 400);
     const requestedProviders: string[] = input.action === "configurations" ? input.targetProviders : [input.targetProvider];
@@ -51,21 +55,38 @@ export async function handleManagerDestinations(request: Request, backend: Desti
       if (!["template7", "template8", "template9"].includes(String(config.template)) || config.ctaDestination !== "atrio") return json({ error: "Guardá la landing con destino Atrio antes de configurar los bots." }, 409);
       if (["template7", "template9"].includes(String(config.template)) && (config.targetProvider || "rey_de_ases") !== input.targetProvider) return json({ error: "El casino elegido no coincide con el guardado en la landing." }, 409);
     }
-    const clients = await backend.workspaceClients(token, landing.user_id, landing.workspace_currency);
+    const workspace = await backend.workspaceClients(token, landing.user_id, landing.workspace_currency);
+    const clients = workspace.filter(client => !client.directory_retired_at);
+    if (workspace.length && !clients.length && input.action !== "configure") {
+      const directory = { advisors: [] };
+      return input.action === "configuration"
+        ? json({ configuration: null, directory })
+        : json({ configurations: Object.fromEntries(requestedProviders.map(provider => [provider, null])), directory });
+    }
     if (!clients.length || clients.some(client => !uuid.test(client.atrio_id))) return json({ error: "No hay asesores válidos en este workspace." }, 409);
     const scope = { landing_id: landing.id, target_provider: input.targetProvider, allowed_advisor_ids: clients.map(client => client.atrio_id) };
+    const readDirectory = async () => {
+      const result = await backend.call("directory", { advisor_ids: scope.allowed_advisor_ids });
+      const deleted = (result as { deleted_advisor_ids?: string[] } | null)?.deleted_advisor_ids;
+      if (deleted?.length && backend.cacheDirectory) {
+        const deletedIds = new Set(deleted.map(id => id.toLowerCase()));
+        const affected = clients.filter(client => deletedIds.has(client.atrio_id.toLowerCase()));
+        await backend.cacheDirectory(token, affected, result);
+      }
+      return result;
+    };
     if (input.action === "configurations") {
       const [configurations, directory] = await Promise.all([
         Promise.all(requestedProviders.map(async provider => {
           const result = await backend.call("configuration", { ...scope, target_provider: provider });
           return [provider, (result as { configuration?: unknown })?.configuration === null ? null : result];
         })),
-        backend.call("directory", { advisor_ids: scope.allowed_advisor_ids }),
+        readDirectory(),
       ]);
       return json({ configurations: Object.fromEntries(configurations), directory });
     }
     if (input.action === "configuration") {
-      const [configuration, directory] = await Promise.all([backend.call("configuration", scope), backend.call("directory", { advisor_ids: scope.allowed_advisor_ids })]);
+      const [configuration, directory] = await Promise.all([backend.call("configuration", scope), readDirectory()]);
       return json({ configuration: (configuration as { configuration?: unknown })?.configuration === null ? null : configuration, directory });
     }
     if (!["fixed", "weighted_random", "fair"].includes(input.mode) || !["usage_count", "messages_received"].includes(input.criterion) ||
