@@ -158,6 +158,18 @@ function resolutionBackend(overrides: Partial<DestinationResolutionBackend> = {}
   };
 }
 const selection = { landing_id: ids.landing, landing_slug: "test" };
+test("a retired route cannot fall through to a new advisor, including during directory reconciliation", async () => {
+  const fallback = async () => { throw new Error("unexpected fallback"); };
+  for (const backend of [
+    resolutionBackend({resolve: async () => ({entry_unavailable:true}), fallback}),
+    resolutionBackend({context: async () => ({allowed:true, landing, blocked:false, advisors:[], retired_only:true}), fallback}),
+    resolutionBackend({resolve: async () => ({configuration:null, allowed_advisor_ids:[ids.otherAdvisor]})}),
+  ]) {
+    const response = await handleTemplate7Destination(request(selection), ids.device, backend);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {entryUnavailable:true});
+  }
+});
 test("public selection returns correct advisor before Contact and never exposes device identity", async () => {
   const response = await handleTemplate7Destination(request(selection), ids.device, resolutionBackend());
   assert.equal(response.status, 200);

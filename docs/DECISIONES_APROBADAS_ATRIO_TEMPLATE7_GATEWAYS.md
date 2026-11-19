@@ -1768,3 +1768,11 @@ Al volver, se ve el logo mientras se comprueba la cuenta de ese destino. Si la v
 Al tocar «Continuar a mi cuenta», «Acceder a mi cuenta» o «Ingresar» con usuario y contraseña en la gerencia, el mismo botón muestra «Ingresando a tu cuenta…» y un indicador mientras se confirma la sesión. Un clic basta. Si la confirmación falla, el cliente ve la explicación y puede volver a intentar.
 
 Al abrir el casino con el chat, el gateway muestra su logo y «Conectando con tu asesor…» hasta que el chat esté listo para mostrarse. La barra simple sigue acompañando la creación del usuario hasta que se muestran las credenciales. Las etapas «Cuenta · Acceso · Chat» se retiran del tramo posterior al clic.
+
+### Regreso por landing tras la baja de un asesor (19/11/2026)
+
+La baja de un asesor en Atrio se refleja en el directorio de Builder mediante el aviso inmediato y la reconciliación periódica. La cuenta de un cliente cuyo asesor sigue vigente debe recuperar la misma gerencia y conversación aunque otro asesor de su administración haya sido eliminado. Si se dio de baja su propio asesor y se reconoce ese acceso, se muestra «Tu acceso está temporalmente fuera de servicio.». No se crea una cuenta ni se reasigna el chat a otro asesor. El mismo criterio rige para el motor clásico y el constructor.
+
+En Panel3, **Extensiones → Mis Apps** permite archivar una tarjeta pausada y recuperarla desde «Ver archivadas». Archivar solo afecta el listado. Si después se restablece una vinculación operativa entre la gerencia, su bot y un asesor válido, la misma tarjeta vuelve automáticamente con su URL original.
+
+En **Usuarios y Roles**, un administrador puede consultar sus usuarios directos y los de las administraciones hijas que gestiona. El listado identifica la administración de cada usuario. La visibilidad del listado conserva las reglas vigentes para editar usuarios y permisos.

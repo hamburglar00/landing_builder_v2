@@ -123,6 +123,8 @@ async function run(browser, target) {
   let landingIssued = false,
     landingCreations = 0,
     landingReturning = false;
+  let landingAdvisorAvailable = true;
+  let unavailableLookup;
   let login = deferred(),
     recovery = deferred(),
     holdConfirmation = false,
@@ -144,6 +146,7 @@ async function run(browser, target) {
     assert.equal(body.origin, origin);
     if (target.code === "multi_skin") assert.equal(body.skin_code, "ganamos_plus");
     calls.push({ agency: body.agency_id, action: body.action });
+    if (body.agency_id === 313) return Response.json({ error: "destination_unavailable" }, { status: 404 });
     if (body.action === "destination" || body.action === "attempt") return Response.json({ available: true });
     const agency = body.agency_id,
       existing = accounts.get(agency);
@@ -214,6 +217,10 @@ async function run(browser, target) {
           return route.fulfill({ contentType: "text/javascript", body: await readFile(path.join(frontend, "public", p)) });
         if (p === "/api/template7/destination") {
           if (landingIssued) await returningDestination.promise;
+          if (!landingAdvisorAvailable) {
+            if (unavailableLookup) await unavailableLookup.promise;
+            return route.fulfill({ json: { entryUnavailable: true } });
+          }
           return route.fulfill({
             json: {
               atrioClientId: uuid(2),
@@ -285,7 +292,7 @@ async function run(browser, target) {
             context,
           );
         }
-        if (/^\/(17|23|31)$/.test(p)) return await serveNext(route, await handlers.GET(req), context);
+        if (/^\/(17|23|31|313)$/.test(p)) return await serveNext(route, await handlers.GET(req), context);
         if (/^\/api\/agency-entry\/(17|23|31)$/.test(p)) {
           const response = await handlers.POST(req);
           const data = await response.clone().json();
@@ -522,6 +529,10 @@ async function run(browser, target) {
       await page.locator("#agency-continue").click();
       await send(agency);
     }
+    // A paused agency link must not disturb the account and chat saved by the landing.
+    const paused = await page.goto(origin + "/313");
+    assert.equal(paused.status(), 404);
+    assert.equal(await page.locator("#username").isVisible(), false);
     await page.goto(landingOrigin + "/l/cruce", { waitUntil: "commit" });
     // Hold the real return in the same browser after an earlier confirmed signup.
     const returningScreen = page.locator("#gateway-entry-transition");
@@ -535,6 +546,26 @@ async function run(browser, target) {
     await send(31);
     assert.deepEqual(chats.slice(-4), ["cliente31", "cliente31", "cliente17", "cliente31"]);
     assert.deepEqual(sent, chats);
+    // If this device's own advisor disappears, never fall through to a new
+    // signup, the casino's last session, or another advisor.
+    landingAdvisorAvailable = false;
+    const beforeUnavailable = traces.length;
+    await page.goto(landingOrigin + "/l/cruce");
+    await page.getByText(/Tu acceso está temporalmente fuera de servicio/i).first().waitFor();
+    assert.equal(await page.locator("[data-template7-name]").isVisible(), false);
+    assert.equal(await page.locator("[data-public-landing-cta]").isVisible(), false);
+    assert.equal(new URL(page.url()).origin, landingOrigin);
+    assert.ok(!traces.slice(beforeUnavailable).some((p) => ["/api/template7/start", "/api/template7/prepare"].includes(p)));
+    // A legacy browser can still have its binding with no recent presentation
+    // hint. Even submitting before the lookup finishes must respect the result.
+    unavailableLookup = deferred();
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator("[data-template7-name]").fill("Prueba landing");
+    await page.locator("[data-public-landing-cta]").click();
+    unavailableLookup.resolve();
+    await page.getByText(/Tu acceso está temporalmente fuera de servicio/i).first().waitFor();
+    assert.equal(await page.locator("[data-public-landing-cta]").isVisible(), false);
+    assert.ok(!traces.slice(beforeUnavailable).some((p) => ["/api/template7/start", "/api/template7/prepare"].includes(p)));
     assert.equal(landingCreations, 1);
     assert.equal(calls.filter((x) => x.action === "register").length, 2);
     assert.deepEqual(errors, []);
@@ -549,6 +580,7 @@ async function run(browser, target) {
       { cause: error },
     );
   } finally {
+    unavailableLookup?.resolve();
     returningDestination.resolve();
     login.resolve();
     recovery.resolve();

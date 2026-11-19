@@ -29,6 +29,7 @@ export function adaptTemplate8Runtime(source: string, classic: boolean): string 
           if (!card) return;
           var selectionVersion = ++template8SelectionVersion;
           template7EntryGeneration++;
+          clearTemplate7Unavailable();
           cancelTemplate7Destination();
           setTemplate7Error(''); if(status)status.textContent='';
           notifyTemplate6CardClick(button);
@@ -74,7 +75,8 @@ export function adaptTemplate8Runtime(source: string, classic: boolean): string 
           selected.then(function(advisor) {
             if (selectionVersion !== template8SelectionVersion) return;
             if(!advisor && !window.__T7_ENTRY_STARTED__)setTemplate7Error('No pudimos preparar el acceso. Tocá Crear usuario para volver a intentar.');
-            if (advisor && advisor.preparationReady) warmTemplate7Entry();
+            if (advisor && advisor.entryUnavailable === true) showTemplate7Unavailable();
+            else if (advisor && advisor.preparationReady) warmTemplate7Entry();
           });
         }, true);
       }

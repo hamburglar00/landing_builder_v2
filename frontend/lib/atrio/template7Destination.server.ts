@@ -5,11 +5,11 @@ import { template7WarmRateLimitKeys } from "../reyDeAses/rateLimit.server";
 
 type Landing = { id: string; name: string; user_id: string; workspace_currency: string; config: unknown };
 type Advisor = { id: string; atrio_id: string; slug: string; user_id: string; workspace_currency: string };
-export type DestinationContext = { allowed: boolean; landing: Landing | null; blocked: boolean; advisors: Advisor[] };
+export type DestinationContext = { allowed: boolean; landing: Landing | null; blocked: boolean; advisors: Advisor[]; retired_only?: boolean };
 export type DestinationResolutionBackend = {
   context(landingId: string, landingSlug: string, deviceId: string, request: Request, classic: boolean, cardIndex?: number): Promise<DestinationContext>;
   resolve(input: object, operation?: "resolve" | "verify"): Promise<Record<string, unknown>>;
-  fallback(slug: string): Promise<Record<string, unknown> | null>;
+  fallback(slug: string, allowedIds?: string[]): Promise<Record<string, unknown> | null>;
 };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const json = (body: object, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
@@ -61,11 +61,18 @@ export async function handleTemplate7Destination(
     if (!["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_skin"].includes(String(provider))) return respond({ error: "integration_pending" }, 503);
     if (context.blocked !== false) return respond({ error: "landing_unavailable" }, 403);
     const advisors = context.advisors;
+    if (!advisors.length && context.retired_only === true) return respond({ entryUnavailable: true });
     if (!advisors.length || advisors.some(a => a.user_id !== landing.user_id || a.workspace_currency !== landing.workspace_currency || !uuid.test(a.atrio_id))) return respond({ error: "advisor_not_assigned" }, 403);
     const resolution = await timed("resolve", () => backend.resolve({ landing_id: landing.id, target_provider: provider, device_id: deviceId, allowed_advisor_ids: advisors.map(advisor => advisor.atrio_id), ...(isTemplate8 ? { reserve_only: input.commit !== true } : {}) }));
+    if (resolution.entry_unavailable === true) return respond({ entryUnavailable: true });
     if (resolution.configuration === null) {
       if (isTemplate8) return respond({ error: "page_not_configured" }, 409);
-      const fallback = await timed("fallback", () => backend.fallback(landing.name));
+      const verifiedIds = Array.isArray(resolution.allowed_advisor_ids)
+        ? advisors.map(advisor => advisor.atrio_id).filter(id => (resolution.allowed_advisor_ids as unknown[]).includes(id))
+        : undefined;
+      if (verifiedIds?.length === 0) return respond({ entryUnavailable: true });
+      const fallback = await timed("fallback", () => backend.fallback(landing.name, verifiedIds));
+      if (verifiedIds && (!fallback || !verifiedIds.includes(String(fallback.atrioId)))) return respond({ entryUnavailable: true });
       if (!fallback || (fallback._status && fallback._status !== "ok") ||
           !advisors.some(advisor => advisor.id === fallback.atrioClientId && advisor.atrio_id === fallback.atrioId && advisor.slug === fallback.atrioSlug)) return respond({ error: "advisor_not_assigned" }, 403);
       return respond(fallback);
@@ -115,8 +122,9 @@ export function productionDestinationBackend(): DestinationResolutionBackend {
       if (!response.ok) throw new Error("unavailable");
       return response.json();
     },
-    async fallback(slug) {
-      const result = await db.rpc("resolve_landing_atrio_context", { p_landing_name: slug });
+    async fallback(slug, allowedIds) {
+      const result = await db.rpc("resolve_landing_atrio_context", { p_landing_name: slug,
+        ...(allowedIds ? { p_allowed_ids: allowedIds } : {}) });
       if (result.error) throw result.error;
       return result.data;
     },

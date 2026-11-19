@@ -70,7 +70,10 @@ export function buildTemplate7FastRuntime(
           name = atrioData.existingName; promoCode = atrioData.promoCode;
         }`);
   source = replaceOnce(source, "      function processCtaClick(button, leadCaptureValues) {", `      function processCtaClick(button, leadCaptureValues) {
+        if (template7UnavailableKey === template7DestinationKey()) return;
         var entryAttempt = template7EntryGeneration;`);
+  source = replaceOnce(source, "                if (targetData && (cfg.template === 7", "                if (targetData && targetData.entryUnavailable === true) return targetData;\n                if (targetData && (cfg.template === 7");
+  source = replaceOnce(source, "              var gatewayMode = cfg.template === 7;", "              if (targetData && targetData.entryUnavailable === true) { showTemplate7Unavailable(); return; }\n              var gatewayMode = cfg.template === 7;");
   source = replaceOnce(source, "        window.requestAnimationFrame(function () {\n          var context = consumeContactContext();", "        window.requestAnimationFrame(function () {\n          if (entryAttempt !== template7EntryGeneration) return;\n          var context = consumeContactContext();");
   source = replaceOnce(source, "              var atrioMode = isAtrioDestination();", "              if (entryAttempt !== template7EntryGeneration) return;\n              var atrioMode = isAtrioDestination();");
   source = replaceOnce(source, "                  .then(function (handoffUrl) { navigateTemplate7Handoff(handoffUrl); })\n                  .catch(function () { failTemplate7(button); });", "                  .then(function (handoffUrl) { if (entryAttempt === template7EntryGeneration) navigateTemplate7Handoff(handoffUrl, !template7HasSavedName(atrioData)); })\n                  .catch(function () { failTemplate7(button, entryAttempt); });");
@@ -144,7 +147,7 @@ export function buildTemplate7FastRuntime(
         var existing = window.__PUBLIC_LANDING_ATRIO_PROMISES && window.__PUBLIC_LANDING_ATRIO_PROMISES[cfg.slug];
         if(existing)observeTemplate7Destination(existing);
         var state = window.__T7_DESTINATION_STATES__ && window.__T7_DESTINATION_STATES__[cfg.slug];
-        if (state && (!state.settled || (state.value && (state.value.atrioClientId || state.value.atrio_client_id) &&
+        if (state && (!state.settled || (state.value && state.value.entryUnavailable === true) || (state.value && (state.value.atrioClientId || state.value.atrio_client_id) &&
             (state.value.atrioId || state.value.atrio_id) && (state.value.atrioSlug || state.value.atrio_slug)))) return;`);
   // One bounded destination attempt replaces the old four-second soft timeout.
   source = replaceOnce(source, '? waitWithTimeout(ensureAtrioPromise(), 1500)', '? ensureAtrioPromise()');
@@ -163,6 +166,32 @@ export function buildTemplate7FastRuntime(
       function template7HasSavedName(advisor) {
         // A new visitor can already have an advisor reserved by a manager pool.
         return !!(advisor && advisor.preparationReady && advisor.existingName && advisor.promoCode);
+      }
+      var template7UnavailableKey = null;
+      function clearTemplate7Unavailable() {
+        template7UnavailableKey = null;
+        var form = document.querySelector('[data-template7-form]');
+        if (!form || !form.hasAttribute('data-entry-unavailable')) return;
+        form.removeAttribute('data-entry-unavailable');
+        form.style.removeProperty('display');
+        var notice = document.querySelector('[data-retired-entry-notice]');
+        if (notice) notice.remove();
+      }
+      function showTemplate7Unavailable() {
+        template7UnavailableKey = template7DestinationKey();
+        window.__T7_ENTRY_STARTED__ = false;
+        clickLocked = false;
+        if (window.__T7_RETURN_CHECK__) window.__T7_RETURN_CHECK__.dismiss();
+        if (template7Transition) template7Transition.finish();
+        var form = document.querySelector('[data-template7-form]');
+        if (!form || form.hasAttribute('data-entry-unavailable')) return;
+        form.setAttribute('data-entry-unavailable','');
+        form.style.display = 'none';
+        var notice = document.createElement('p');
+        notice.setAttribute('data-retired-entry-notice','');
+        notice.setAttribute('role','status');
+        notice.textContent = 'Tu acceso está temporalmente fuera de servicio.';
+        form.after(notice);
       }
       function warmTemplate7Entry() {
         var destinationKey = template7DestinationKey();
@@ -199,6 +228,7 @@ export function buildTemplate7FastRuntime(
         }
         Promise.all([window.__LB_IDENTITY_READY__ || Promise.resolve(), ensureAtrioPromise()]).then(function (values) {
           var advisor = values[1];
+          if (isCurrent() && advisor && advisor.entryUnavailable === true) { showTemplate7Unavailable(); return; }
           if (!isCurrent() || !advisor || window.__T7_ENTRY_STARTED__ || (window.__LB_IDENTITY_READY__ && values[0] !== true)) return;
           if (advisor.preparationReady) {
             if (!template7HasSavedName(advisor) || window.__T7_ENTRY_STARTED__) return;

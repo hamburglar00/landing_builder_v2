@@ -39,6 +39,7 @@ export function buildClientIdentityBootstrapScript(destination?: Destination, tr
       if (destination) {
         window.__PUBLIC_LANDING_ATRIO_PROMISES = window.__PUBLIC_LANDING_ATRIO_PROMISES || {};
         window.__PUBLIC_LANDING_ATRIO_PROMISES[destination.slug] = request.then(function (data) {
+          if (data && data.entryUnavailable === true) return data;
           return data && (data.atrioClientId || data.atrio_client_id) &&
             (data.atrioId || data.atrio_id) && (data.atrioSlug || data.atrio_slug) ? data : null;
         });

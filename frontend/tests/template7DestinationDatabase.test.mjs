@@ -167,6 +167,29 @@ test("destination context: real Postgres tenant/workspace checks, subscription g
   }
   assert.equal(sql("select prosecdef::text||':'||provolatile::text from pg_proc where oid='public.resolve_template7_limited_destination_context(uuid,text,text,text,boolean)'::regprocedure;"), "false:v");
 
+  sql(`alter table public.atrio_clients add column pbadmin_bots jsonb, add column bot_directory jsonb;
+    alter table public.landings add column atrio_selection_mode text, add column atrio_fair_criterion text;
+    create table public.landings_atrio_clients(landing_id uuid,atrio_client_id uuid,user_id uuid,weight integer);
+    grant update on public.atrio_clients to service_role;`);
+  const legacy = await readFile(new URL("../../supabase/migrations/20260822162110_landing_atrio_redirect_assignments.sql", import.meta.url), "utf8");
+  const legacyGuard = await readFile(new URL("../../supabase/migrations/20261013001059_sync_atrio_advisor_directory_and_resolve_landing.sql", import.meta.url), "utf8");
+  sql(legacy.slice(legacy.indexOf("create or replace function public.get_atrio_for_landing("),legacy.indexOf("comment on function public.get_atrio_for_landing(")));
+  sql(legacyGuard.slice(legacyGuard.indexOf("create or replace function public.resolve_landing_atrio_context("),legacyGuard.indexOf("comment on function public.resolve_landing_atrio_context(")));
+  sql(await readFile(new URL("../../supabase/migrations/20261119185908_retire_deleted_atrio_directory_entries.sql", import.meta.url), "utf8"));
+  const removed = id(61);
+  sql(`insert into public.atrio_clients(id,atrio_id,slug,user_id,workspace_currency,bot_directory)
+    values ('${id(62)}','${removed}','old','${owner}','ARS','[{"agency_id":313}]');
+    insert into public.landings_atrio_clients values('${landing}','${advisor}','${owner}',1),('${landing}','${id(62)}','${owner}',100);`);
+  const verified = JSON.parse(sql(`set role service_role; select public.resolve_landing_atrio_context('example',array['${id(21)}']); reset role;`));
+  assert.equal(verified.atrioClientId,advisor,"a stale advisor cannot affect legacy fallback before sync");
+  sql(`set role service_role; select public.retire_atrio_directory_advisors(array['${removed}']); reset role;`);
+  assert.deepEqual(context().advisors.map(row => row.id), [advisor]);
+  sql(`update public.atrio_clients set bot_directory='[{"agency_id":313}]' where atrio_id='${removed}'`);
+  assert.equal(sql(`select directory_retired_at is not null and bot_directory='[]'::jsonb from public.atrio_clients where atrio_id='${removed}'`), "t");
+  sql(`set role service_role; select public.retire_atrio_directory_advisors(array['${id(21)}']); reset role`);
+  assert.equal(context().retired_only, true);
+  assert.deepEqual(context(secondLanding,"other").advisors.map(row => row.id), [foreignAdvisor]);
+
   // A future NULL result from the existing subscription guard must fail closed.
   sql("create or replace function public.is_client_access_blocked(p_user_id uuid) returns boolean language sql stable as $$select null::boolean$$;");
   assert.equal(context().blocked, true);

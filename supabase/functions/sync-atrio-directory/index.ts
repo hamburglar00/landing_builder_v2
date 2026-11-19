@@ -86,10 +86,18 @@ Deno.serve(async (request) => {
       signal: AbortSignal.timeout(8000),
     });
     if (!upstream.ok) return json({ error: "atrio_directory_unavailable" }, 503);
-    const payload = await upstream.json().catch(() => null) as { advisors?: unknown[] } | null;
-    const advisors = (payload?.advisors ?? []).filter(validAdvisor);
-    if (advisors.length !== (payload?.advisors ?? []).length) {
+    const payload = await upstream.json().catch(() => null) as { advisors?: unknown[]; deleted_advisor_ids?: unknown } | null;
+    if (!Array.isArray(payload?.advisors)) return json({ error: "invalid_atrio_directory_response" }, 503);
+    const advisors = payload.advisors.filter(validAdvisor);
+    const liveIds = new Set(advisors.map(advisor => advisor.id));
+    const deletedIds = payload.deleted_advisor_ids ?? [];
+    if (advisors.length !== payload.advisors.length || advisors.some(advisor => !batch.includes(advisor.id)) ||
+        !Array.isArray(deletedIds) || deletedIds.some(id => typeof id !== "string" || !batch.includes(id) || liveIds.has(id))) {
       return json({ error: "invalid_atrio_directory_response" }, 503);
+    }
+    if (deletedIds.length) {
+      const retired = await supabase.rpc("retire_atrio_directory_advisors", { p_ids: deletedIds });
+      if (retired.error) return json({ error: "directory_sync_unavailable" }, 503);
     }
     const { data: applied, error: applyError } = await supabase.rpc(
       "apply_atrio_advisor_directory_snapshot",

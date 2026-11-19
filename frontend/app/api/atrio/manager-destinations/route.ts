@@ -59,7 +59,8 @@ function backend(): DestinationBackend {
     },
     async workspaceClients(token, owner, workspace) {
       if (!actor || (actor.role !== "admin" && actor.id !== owner)) return [];
-      const result = await scoped(token).from("atrio_clients").select("id,user_id,workspace_currency,atrio_id").eq("user_id", owner).eq("workspace_currency", workspace);
+      const result = await scoped(token).from("atrio_clients").select("id,user_id,workspace_currency,atrio_id")
+        .eq("user_id", owner).eq("workspace_currency", workspace).is("directory_retired_at", null);
       if (result.error) throw result.error;
       return result.data || [];
     },
