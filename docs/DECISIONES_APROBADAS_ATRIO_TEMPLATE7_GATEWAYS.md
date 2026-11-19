@@ -1776,3 +1776,9 @@ La baja de un asesor en Atrio se refleja en el directorio de Builder mediante el
 En Panel3, **Extensiones → Mis Apps** permite archivar una tarjeta pausada y recuperarla desde «Ver archivadas». Archivar solo afecta el listado. Si después se restablece una vinculación operativa entre la gerencia, su bot y un asesor válido, la misma tarjeta vuelve automáticamente con su URL original.
 
 En **Usuarios y Roles**, un administrador puede consultar sus usuarios directos y los de las administraciones hijas que gestiona. El listado identifica la administración de cada usuario. La visibilidad del listado conserva las reglas vigentes para editar usuarios y permisos.
+
+### Directorio de Redirección y advertencias de PBAdmin (19/11/2026)
+
+Redirección y el editor excluyen las bajas confirmadas de Atrio, incluso si la pestaña estaba abierta al eliminar al asesor. Los asesores vigentes que aún esperan un bot siguen visibles. Una consulta fallida conserva los vínculos para reintentar.
+
+La tarjeta de LandingBuilder en Panel3 omite el aviso por un bot inactivo cuando Atrio confirma la baja de su asesor. Un bot activo sin asesor válido requiere revisión e identifica su bot y gerencia dentro de la administración. La revisión de los vínculos se actualiza en la auditoría de 15 minutos, incluso si el inventario de PBAdmin sigue igual. Una falla de conexión conserva el último estado confirmado.
