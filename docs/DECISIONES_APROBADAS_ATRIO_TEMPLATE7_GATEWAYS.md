@@ -1745,6 +1745,8 @@ Un navegador puede mantener cuentas de varias gerencias del mismo casino. Al vol
 
 Al reabrir un template, la landing comprueba su asignación y la cuenta existente de ese navegador por el circuito de recuperación propio. Un ingreso reciente en otro enlace del mismo casino no acredita la cuenta de ese template. El retorno conserva la URL autorizada de la landing y su atribución.
 
+Si dos landings del mismo casino comparten navegador, cada una comprueba en qué landing se dio de alta la cuenta y qué gerencias siguen habilitadas para ese enlace. Un registro de visita por sí solo no prueba un alta. Una landing nueva para ese cliente muestra el formulario. Al volver a la landing de origen, recupera su cuenta y conversación si el vínculo sigue vigente.
+
 ### Alta desde Template 7 y Template 9 (18/11/2026)
 
 Las landings nuevas de estos dos templates se crean con «Mostrar credenciales» activo. La elección sigue siendo editable. Cada landing existente conserva su configuración publicada, incluido el ingreso directo.
@@ -1772,6 +1774,8 @@ Al volver, se ve el logo mientras se comprueba la cuenta de ese destino. Si la v
 Al tocar «Continuar a mi cuenta», «Acceder a mi cuenta» o «Ingresar» con usuario y contraseña en la gerencia, el mismo botón muestra «Ingresando a tu cuenta…» y un indicador mientras se confirma la sesión. Un clic basta. Si la confirmación falla, el cliente ve la explicación y puede volver a intentar.
 
 Al abrir el casino con el chat, el gateway muestra su logo y «Conectando con tu asesor…» hasta que el chat esté listo para mostrarse. La barra simple sigue acompañando la creación del usuario hasta que se muestran las credenciales. Las etapas «Cuenta · Acceso · Chat» se retiran del tramo posterior al clic.
+
+Los pases desde una landing al gateway conservan el modo de ingreso firmado al navegar o reintentar. La pantalla genérica de ingreso y la espera para verificar una cuenta también usan el texto de su etapa, sin las etiquetas «Cuenta · Acceso · Chat». El modo directo sigue entrando automáticamente.
 
 ### Regreso por landing tras la baja de un asesor (19/11/2026)
 

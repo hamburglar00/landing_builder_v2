@@ -123,6 +123,10 @@ async function run(browser, target) {
     },
   });
   const form = landing.renderPublicLandingHtml({ slug: "cruce", config });
+  const otherLanding = landing.renderPublicLandingHtml({
+    slug: "segunda",
+    config: { ...config, id: uuid(32), name: "segunda" },
+  });
   const identityFor = (agency, device) => ({
     target_provider: target.code,
     device_id: device,
@@ -228,10 +232,17 @@ async function run(browser, target) {
     traces.push(url.pathname);
     try {
       if (url.origin === landingOrigin) {
-        if (request.isNavigationRequest()) return route.fulfill(html(form));
+        if (request.isNavigationRequest()) return route.fulfill(html(p === "/l/segunda" ? otherLanding : form));
         if (p.startsWith("/public-assets/template-entry/"))
           return route.fulfill({ contentType: "text/javascript", body: await readFile(path.join(frontend, "public", p)) });
         if (p === "/api/template7/destination") {
+          const { landing_id, landing_slug } = request.postDataJSON();
+          if (landing_slug === "segunda") {
+            assert.equal(landing_id, uuid(32));
+            return route.fulfill({
+              json: { atrioClientId: uuid(2), atrioId: uuid(132), atrioSlug: "asesor-32", preparationReady: false },
+            });
+          }
           if (landingIssued) await returningDestination.promise;
           if (!landingAdvisorAvailable) {
             if (unavailableLookup) await unavailableLookup.promise;
@@ -550,6 +561,21 @@ async function run(browser, target) {
     const paused = await page.goto(origin + "/313");
     assert.equal(paused.status(), 404);
     assert.equal(await page.locator("#username").isVisible(), false);
+    // A different landing on the same host can have the same casino and device
+    // but no existing account. Its visitor must be able to fill in their name.
+    const otherDestination = page.waitForResponse((response) =>
+      new URL(response.url()).pathname === "/api/template7/destination"
+      && response.request().postDataJSON()?.landing_slug === "segunda",
+    );
+    await page.goto(landingOrigin + "/l/segunda");
+    await otherDestination;
+    const otherName = page.locator("[data-template7-name]");
+    await otherName.fill("Prueba segunda landing");
+    assert.equal(await otherName.isVisible(), true);
+    assert.equal(await page.locator("[data-public-landing-cta]").isEnabled(), true);
+    assert.equal(await page.getByText(/¡Hola de nuevo/).isVisible(), false);
+    assert.equal(new URL(page.url()).pathname, "/l/segunda");
+    assert.equal(landingCreations, 1);
     await page.goto(landingOrigin + "/l/cruce", { waitUntil: "commit" });
     // Hold the real return in the same browser after an earlier confirmed signup.
     const returningScreen = page.locator("#gateway-entry-transition");
