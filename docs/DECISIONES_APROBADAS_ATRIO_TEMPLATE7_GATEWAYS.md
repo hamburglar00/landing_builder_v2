@@ -1,5 +1,9 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+## 20/11 — Tema de chat de los asesores nuevos de Atrio
+
+Cada asesor nuevo de Atrio, creado desde el panel o automáticamente desde PBAdmin, inicia con el tema WhatsApp. Puede elegir después Atrio, WhatsApp o Página. Los asesores existentes conservan su tema, incluso al volver a vincularlos desde PBAdmin. Los cuatro gateways muestran el tema guardado para ese asesor en el chat del jugador y en sus invitaciones.
+
 ## 19/11 — Correo y plan de las cuentas nuevas de Builder creadas desde PBAdmin
 
 Al elegir «Crear cuenta» en Extensiones, Builder usa el correo del administrador autenticado que entrega PBAdmin y asigna el plan Scale activo, con 999 landings, 999 teléfonos y sin vencimiento. Si el correo ya tiene una cuenta, «Ya tengo cuenta» exige sus credenciales para vincularla. Las cuentas existentes conservan su correo y su suscripción, incluidas las altas históricas con correo técnico. El alta manual desde Superadmin mantiene Starter por 30 días. La decisión se implementa y comprueba en local.
