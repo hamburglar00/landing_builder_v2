@@ -16,7 +16,7 @@ export function buildEntryFunnelMetadataScript(engine: NonNullable<EntryFunnelPr
   return `window.__ENTRY_FUNNEL_METADATA__=${JSON.stringify(publicEntryFunnelMetadata(engine))};`;
 }
 
-/** T1–T6 only: the complete observer/collector lives in the shared static runtime.
+/** The complete observer/collector lives in the shared static runtime.
  * Keep this small program independent of that asset, including when its download
  * fails. The existing factory adopts this context and replays the same event IDs;
  * the collector deduplicates an earlier beacon against that later replay.
@@ -44,10 +44,12 @@ if(c.telemetryPath)f.telemetry_path=c.telemetryPath;
 if(old&&uuid.test(String(old.attempt_id))&&Number.isInteger(old.attempt_number)&&old.attempt_number>=1&&old.attempt_number<=1000){f.attempt_id=old.attempt_id;f.attempt_number=old.attempt_number;if(['new','existing'].includes(old.account_kind))f.account_kind=old.account_kind;}
 var nav=w.__ENTRY_FUNNEL_NAVIGATION__={id:id(),started_at:start};f.navigation_id=nav.id;
 var e=w.__ENTRY_FUNNEL_EARLY__={started_at:f.started_at,context:Object.assign({},f),events:[]};
+var names=['page_visible','form_visible','name_focus','name_started','name_valid','cta_clicked','entry_error','visibility_hidden'].concat(c.whatsappStages||[]);
+var limit=names.length;
 try{sessionStorage.setItem(key,JSON.stringify(f))}catch(_){}
 function active(){return w.__ENTRY_FUNNEL_EARLY__===e&&!w.__entryFunnel;}
 function stage(name,error){
-  if(!active()||e.events.length>=8||e.events.some(function(v){return v.name===name}))return;
+  if(!active()||e.events.length>=limit||!names.includes(name)||e.events.some(function(v){return v.name===name}))return;
   var v={id:id(),name:name,at:Date.now(),navigation_id:nav.id,navigation_started_at:nav.started_at};if(error)v.error_code=error;e.events.push(v);
 }
 function beginAttempt(){
@@ -55,7 +57,7 @@ function beginAttempt(){
   f.attempt_id=id();f.attempt_number=Math.min(1000,(Number(f.attempt_number)||0)+1);delete f.account_kind;delete f.entry_strategy;
   e.context=Object.assign({},f);try{sessionStorage.setItem(key,JSON.stringify(f))}catch(_){}
   var cta=e.events.slice().reverse().find(function(v){return v.name==='cta_clicked'&&!v.attempt_id});
-  if(!cta){cta={id:id(),name:'cta_clicked',at:Date.now(),navigation_id:nav.id,navigation_started_at:nav.started_at};if(e.events.length>=8)e.events.shift();e.events.push(cta);}
+  if(!cta){cta={id:id(),name:'cta_clicked',at:Date.now(),navigation_id:nav.id,navigation_started_at:nav.started_at};if(e.events.length>=limit)e.events.shift();e.events.push(cta);}
   cta.attempt_id=f.attempt_id;cta.attempt_number=f.attempt_number;
   return Object.assign({},f);
 }
@@ -67,7 +69,7 @@ function visible(){
 function flush(){
   if(!active()||!e.events.length)return;
   try{
-    var events=e.events.slice(0,8).filter(function(v){return typeof v.id==='string'&&uuid.test(v.id)&&['page_visible','form_visible','name_focus','name_started','name_valid','cta_clicked','entry_error','visibility_hidden'].includes(v.name)&&Number.isSafeInteger(v.at)&&uuid.test(String(v.navigation_id))&&Number.isSafeInteger(v.navigation_started_at)}).map(function(v){
+    var events=e.events.slice(0,limit).filter(function(v){return typeof v.id==='string'&&uuid.test(v.id)&&names.includes(v.name)&&Number.isSafeInteger(v.at)&&uuid.test(String(v.navigation_id))&&Number.isSafeInteger(v.navigation_started_at)}).map(function(v){
       var row=Object.assign({},m,{id:v.id,name:v.name,elapsed_ms:Math.max(0,Math.min(86400000,v.at-f.started_at)),navigation_id:v.navigation_id,navigation_elapsed_ms:Math.max(0,Math.min(86400000,v.at-v.navigation_started_at)),component:'landing'});if(m.release)row.component_release=m.release;
       if(v.name==='cta_clicked'&&uuid.test(String(v.attempt_id))&&Number.isInteger(v.attempt_number)&&v.attempt_number>=1&&v.attempt_number<=1000){row.attempt_id=v.attempt_id;row.attempt_number=v.attempt_number;}
       if(v.name==='entry_error'){row.error_code=['network_error','request_timeout'].includes(v.error_code)?v.error_code:'unknown';row.error_stage='runtime';}return row;
@@ -81,7 +83,7 @@ function flush(){
 e.record=stage;e.flush=flush;e.beginAttempt=beginAttempt;
 function hidden(){if(active()){stage('visibility_hidden');flush();}}
 w.addEventListener('pagehide',hidden);
-w.addEventListener('pageshow',function(event){if(active()&&event.persisted){nav=w.__ENTRY_FUNNEL_NAVIGATION__={id:id(),started_at:Date.now()};f.navigation_id=nav.id;e.context.navigation_id=nav.id;visible();}});
+w.addEventListener('pageshow',function(event){if(active()&&event.persisted){nav=w.__ENTRY_FUNNEL_NAVIGATION__={id:id(),started_at:Date.now()};f.navigation_id=nav.id;e.context.navigation_id=nav.id;e.events=[];visible();}});
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')hidden();else visible();});
 w.addEventListener('error',function(event){if(active()&&event.target&&event.target.matches&&event.target.matches('script[data-public-landing-runtime]')){stage('entry_error','network_error');flush();}},true);
 document.addEventListener('focusin',function(event){if(active()&&event.target&&event.target.matches&&event.target.matches('[data-entry-funnel-name], [data-template7-name]')){visible();stage('name_focus');}});
@@ -90,18 +92,56 @@ document.addEventListener('click',function(event){if(!active())return;var t=even
 requestAnimationFrame(visible);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',visible,{once:true});
 setTimeout(function(){if(active()){stage('entry_error','request_timeout');flush();}},10000);
-})`;
+})`.replace(/^ +/gm, "");
+
+/** The optional field is usable before the shared runtime downloads. Keep one
+ * listener through that transition and let the active collector own delivery. */
+const WHATSAPP_FORM_OBSERVER = `(function(){
+  var w=window, selector='[data-template7-form] [data-template7-whatsapp]';
+  if(w.__T7_WHATSAPP_FORM_SUBMITTED__||!w.__ENTRY_FUNNEL_EARLY__)return;
+  function record(name){
+    if(w.__entryFunnel)w.__entryFunnel.emit(name);
+    else if(w.__ENTRY_FUNNEL_EARLY__)w.__ENTRY_FUNNEL_EARLY__.record(name);
+  }
+  function visible(){
+    var field=document.querySelector(selector);
+    if(!field||field.disabled||document.visibilityState==='hidden'||w.__T7_ENTRY_STARTED__||!field.getClientRects().length||getComputedStyle(field).visibility!=='visible')return;
+    var rect=field.getBoundingClientRect();
+    if(rect.bottom>0&&rect.top<innerHeight&&rect.right>0&&rect.left<innerWidth)record('whatsapp_field_visible');
+  }
+  function observe(){
+    var field=document.querySelector(selector);
+    if(!field)return;
+    visible();
+    if(typeof IntersectionObserver!=='undefined')new IntersectionObserver(visible).observe(field);
+    if(typeof MutationObserver!=='undefined')new MutationObserver(visible).observe(document.documentElement,{attributes:true,attributeFilter:['data-t7-return-check']});
+  }
+  document.addEventListener('focusin',function(event){
+    if(event.target.matches&&event.target.matches(selector)){visible();record('whatsapp_field_focus');}
+  });
+  document.addEventListener('input',function(event){
+    if(event.target.matches&&event.target.matches(selector)&&event.target.value)record('whatsapp_field_started');
+  });
+  w.__T7_WHATSAPP_FORM_SUBMITTED__=function(){try{if(document.querySelector(selector))record('whatsapp_form_submitted');}catch(_){}};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observe,{once:true});else observe();
+  requestAnimationFrame(visible);
+  document.addEventListener('visibilitychange',visible);
+  w.addEventListener('pageshow',function(){requestAnimationFrame(visible);});
+})()`;
 
 /** Small inline bootstrap; no request, account or marketing side effect on load. */
 export function buildLandingEntryFunnelScript(config: {
   landingId: string; template: EntryFunnelTemplate; engine: NonNullable<EntryFunnelProvenance["engine"]>;
-  apiBase?: string;
+  apiBase?: string; captureWhatsapp?: boolean;
 }): string {
   const telemetryPath = config.apiBase ? config.apiBase + "/entry-funnel" : undefined;
   if (config.engine === "gateway" ? !telemetryPath || !ENTRY_FUNNEL_GATEWAY_PATH.test(telemetryPath) : telemetryPath !== undefined)
     throw new Error("Invalid gateway telemetry route");
+  const watchWhatsapp = config.captureWhatsapp === true && (config.template === 7 || config.template === 9) &&
+    (config.engine === "constructor" || config.engine === "classic");
   const settings = JSON.stringify({ landingId: config.landingId, template: config.template,
+    ...(watchWhatsapp ? { whatsappStages: ["whatsapp_field_visible", "whatsapp_field_focus", "whatsapp_field_started", "whatsapp_form_submitted"] } : {}),
     ...(telemetryPath ? { telemetryPath } : {}),
     telemetry: publicEntryFunnelMetadata(config.engine) }).replace(/</g, "\\u003c");
-  return `try{${EARLY_PUBLIC_TELEMETRY}(${settings});}catch(_){};`;
+  return `try{${EARLY_PUBLIC_TELEMETRY}(${settings});${watchWhatsapp ? WHATSAPP_FORM_OBSERVER : ""}}catch(_){};`;
 }

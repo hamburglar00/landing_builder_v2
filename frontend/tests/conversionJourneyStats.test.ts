@@ -4,7 +4,7 @@ import type { ConversionJourneyStartRow, ConversionRow } from "../lib/conversion
 import { STATISTICS_ORIGINS, computeChannelFunnel, createStatisticsChannelResolver, dedupeStatisticsEvents,
   scopeStatisticsChannel, scopeStatisticsStages, stageDate, statisticsEventRangeFilter, statisticsOrigin,
   statisticsRate, statisticsTemporalRows, countStatisticsVisitConversions, computeStatisticsPurchasePlayers } from "../lib/conversionJourneyStats";
-import { statisticsMessageCoverage, filterConversionsByActivityRange } from "../lib/conversionJourneyStats";
+import { gatewayEntryCohort, statisticsMessageCoverage, filterConversionsByActivityRange } from "../lib/conversionJourneyStats";
 import { projectInternalConversion } from "../lib/internalConversionEvents";
 
 const time = Math.floor(Date.parse("2026-11-04T15:00:00Z") / 1000);
@@ -16,6 +16,17 @@ const row = (id: string, extra: Partial<ConversionRow> = {}): ConversionRow => (
 const contact = (id: string, channel: "whatsapp" | "atrio", extra: Partial<ConversionRow> = {}) => row(id, {
   contact_event_id: `c-${id}`, contact_event_time: time,
   contact_payload_raw: JSON.stringify({ cta_destination: channel, landing_cta_meta_event: "CompleteRegistration", source_platform: "landing" }), ...extra,
+});
+
+test("gateway counts distinct scoped CTA arrivals including later visits and distinguishes missing measurements", () => {
+  const entered = contact("arrived", "atrio", { gateway_entry_event_id: "greeting", gateway_entry_event_time: time + 86400 });
+  const stayed = contact("form-only", "atrio", { gateway_entry_measured: true });
+  const unknown = contact("lookup-failed", "atrio");
+  const whatsapp = contact("wa", "whatsapp", { gateway_entry_event_id: "external", gateway_entry_event_time: time + 1 });
+  const otherDay = contact("earlier", "atrio", { contact_event_time: time - 86400, gateway_entry_event_id: "greeting-b", gateway_entry_event_time: time });
+  const rows = scopeStatisticsStages([entered, { ...entered }, stayed, unknown, whatsapp, otherDay], range);
+  assert.deepEqual(gatewayEntryCohort(rows), { total: 3, measured: 2, entered: 1 });
+  assert.equal(computeChannelFunnel(rows, "atrio").messages, 0);
 });
 
 test("table and funnel date filtering retains late operational activity without rewriting public Meta identity", async () => {

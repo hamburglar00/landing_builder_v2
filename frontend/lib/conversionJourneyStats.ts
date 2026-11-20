@@ -254,6 +254,25 @@ export function statisticsRate(numerator: number | null, denominator: number | n
   return numerator === null || denominator === null || denominator <= 0 ? "—" : `${(100 * numerator / denominator).toFixed(1)}%`;
 }
 
+/** Cohort by CTA date. The linked chat may have opened on a later day. */
+export function gatewayEntryCohort(rows: ConversionRow[]) {
+  const clicks = new Map<string, { measured: boolean; entered: boolean }>();
+  for (const original of rows) {
+    const row = projectInternalConversion(original);
+    if (!text(row.contact_event_id) || capturedChannel(row) !== "atrio") continue;
+    const key = `${scope(row)}::${row.contact_event_id}`;
+    const click = clicks.get(key) ?? { measured: false, entered: false };
+    const entry = Number(row.gateway_entry_event_time);
+    if (text(row.gateway_entry_event_id) && entry > 0 && entry * 1000 >= (stageDate(row, "contact")?.getTime() ?? Infinity)) {
+      click.entered = true;
+    }
+    click.measured ||= row.gateway_entry_measured === true || click.entered;
+    clicks.set(key, click);
+  }
+  const cohort = [...clicks.values()];
+  return { total: cohort.length, measured: cohort.filter(click => click.measured).length, entered: cohort.filter(click => click.entered).length };
+}
+
 /** Missing historical instrumentation is not evidence that nobody wrote. */
 export function statisticsMessageCoverage(rows: ConversionRow[], channel: StatisticsChannel) {
   const internal = rows.map(projectInternalConversion);

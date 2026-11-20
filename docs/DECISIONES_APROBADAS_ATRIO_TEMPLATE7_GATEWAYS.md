@@ -1,5 +1,21 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+## 20/11 — Ingreso al gateway, tracking de asesores y saldo en supervisión
+
+Builder muestra «Ingresó al gateway» en ámbar cuando Atrio conserva el saludo automático del jugador asociado al CTA de esa landing. El primer mensaje humano y la carga mantienen sus propias etapas. La métrica usa los clics del período y admite ingresos posteriores. El ingreso es una medición interna.
+
+Al crear un asesor desde PBAdmin, se inicializan Mensajería PBAdmin y, si la administración tiene un destino efectivo de tracking, LandingBuilder. Se respetan las decisiones explícitas de permisos, el destino propio de Atrio y la independencia de la URL POST de PBAdmin. Para un alta sin Builder ni URL de Atrio, la URL POST configurada en PBAdmin puede servir de destino.
+
+El administrador de Atrio puede consultar el saldo del casino al supervisar la conversación de un asesor de su propia administración. El total histórico cargado se muestra por separado.
+
+## 20/11 — Ayuda de instalación en el chat según el dispositivo del jugador
+
+Al cerrar la guía de instalación del gateway sin confirmar la instalación, Atrio guarda la plataforma del jugador en el aviso del chat. El jugador y el asesor ven las mismas indicaciones de Android, iOS o computadora. Cuando se desconoce el dispositivo, incluso en mensajes históricos sin ese dato, se ofrece volver a abrir la guía. La invitación a instalar la app y las confirmaciones de instalación y permiso de notificaciones conservan su funcionamiento.
+
+## 20/11 — Interacción con el WhatsApp opcional en la landing
+
+En T7 y T9, tanto en el motor clásico como en el constructor, queremos saber cuántas visitas ven el campo WhatsApp opcional, lo enfocan, empiezan a completarlo y envían el formulario. Los conteos son internos y se agrupan por landing. La medición registra hitos sin incluir el teléfono ni lo que se escribe y sin enviar eventos a Meta. El informe considera pendiente una visita durante 24 horas desde la última señal del campo o del envío. Si la persona interactuó y pasó ese plazo, figura como «sin envío observado». Si después se recibe el envío para esa misma visita, se actualiza el conteo.
+
 ## 20/11 — Copiar el CBU desde el chat del gateway
 
 Los cuatro gateways, incluido el Worker de Ganamos+, deben permitir que el chat copie el CBU cuando el jugador toca «Copiar CBU». La validación comprueba que se puedan pegar los 22 dígitos, incluidos los ceros iniciales. Interesan especialmente los navegadores internos de Instagram y Facebook en Android, por donde entran los jugadores de las campañas.

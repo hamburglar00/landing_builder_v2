@@ -9,7 +9,7 @@ import {
 import { adJourneyKey, computeCoreStats, computeJourneyStartStats, computeStatsTruthMetrics } from "@/lib/conversionStats";
 import { projectInternalConversion } from "@/lib/internalConversionEvents";
 import { buildFunnelContactsFromConversions } from "@/lib/conversionsDb";
-import { computeChannelFunnel, computeStatisticsPurchasePlayers, countStatisticsVisitConversions, scopeStatisticsChannel, scopeStatisticsStages, stageDate, statisticsTemporalRows, statisticsRate, statisticsMessageCoverage, statisticsPlayerKey, type StatisticsChannel } from "@/lib/conversionJourneyStats";
+import { computeChannelFunnel, computeStatisticsPurchasePlayers, countStatisticsVisitConversions, gatewayEntryCohort, scopeStatisticsChannel, scopeStatisticsStages, stageDate, statisticsTemporalRows, statisticsRate, statisticsMessageCoverage, statisticsPlayerKey, type StatisticsChannel } from "@/lib/conversionJourneyStats";
 import { formatCompactCurrency, formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
 import ArgentinaMap from "./ArgentinaMap";
 import { supabase } from "@/lib/supabaseClient";
@@ -519,6 +519,7 @@ function ChannelStatsPanel({
   const [assistantMessages, setAssistantMessages] = useState<AssistantMsg[]>([]);
 
   const temporalConversions = useMemo(() => statisticsTemporalRows(conversions, channel), [conversions, channel]);
+  const gateway = useMemo(() => channel === "atrio" ? gatewayEntryCohort(conversions) : null, [channel, conversions]);
 
   const stats = useMemo(() => {
     const truth = computeStatsTruthMetrics({
@@ -1189,6 +1190,7 @@ function ChannelStatsPanel({
       tipo_actividad: activityLabel,
       actividad_del_canal: messageCoverage.measured ? funnel.messages : null,
       ...(channel === "atrio" ? { crearon_usuario: funnel.registrations } : {}),
+      ...(gateway ? { ingresos_gateway_confirmados: gateway.entered, cta_con_medicion_de_ingreso: gateway.measured } : {}),
       recorridos_cargaron: stats.firstLoadPurchasersLinkedToLead,
       recorridos_recargaron: stats.reachedRepeat,
       recorridos_first_y_repeat_periodo: stats.repeatFromFirstInRange,
@@ -1314,6 +1316,15 @@ function ChannelStatsPanel({
             value={funnel.contacts}
             tooltip={contactSummaryTooltip}
           />
+          {gateway && <KpiCard
+            label="Ingresaron al gateway"
+            value={gateway.measured > 0 || gateway.total === 0 ? gateway.entered : "Sin medición"}
+            sub={gateway.measured < gateway.total
+              ? `${gateway.measured} de ${gateway.total} clics con medición`
+              : gateway.total > 0 ? `${statisticsRate(gateway.entered, gateway.total)} de los clics en el CTA` : undefined}
+            color="text-amber-300"
+            tooltip="De quienes enviaron el formulario en el período, cuántos abrieron el chat. Se cuenta una vez por CTA cuando Atrio registra el saludo automático del jugador, incluso si entra otro día."
+          />}
           <KpiCard
             label="Mensajes recibidos" value={messageCoverage.measured ? conversions.filter(row => row.lead_event_id).length : "Sin medición"} color="text-amber-300"
             tooltip="Primeros mensajes humanos de cada recorrido recibidos en el período, aunque el CTA haya ocurrido antes. Son hitos internos, independientes del evento enviado a Meta. No se infieren mensajes por una carga."

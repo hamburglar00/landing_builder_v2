@@ -28,6 +28,7 @@ import {
   type ConversionInboxRow,
 } from "@/lib/conversionsDb";
 import { dashboardConversionPageDataSource } from "@/lib/conversionPageDataSource";
+import { useGatewayEntryRows, type GatewayConversionRead } from "@/lib/atrio/useGatewayEntryRows";
 import { fetchMetaAudienceBuyers } from "@/lib/metaAudienceDb";
 import { saveConversionPageConfig } from "@/lib/conversionPageConfig";
 import ClearConversionsViewModal, {
@@ -61,6 +62,7 @@ import {
   truncateText,
   type ConversionColumnKey as ColKey,
   type ConversionTableView,
+  conversionRowColor,
 } from "@/components/conversiones/conversionPageShared";
 import EditableConversionEmailCell from "@/components/conversiones/EditableConversionEmailCell";
 import ConversionFiltersModal from "@/components/conversiones/ConversionFiltersModal";
@@ -437,6 +439,7 @@ export default function DashboardConversionesPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [config, setConfig] = useState<ConversionsConfig | null>(null);
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
+  const [gatewayRead, setGatewayRead] = useState<GatewayConversionRead | null>(null);
   const [journeyStarts, setJourneyStarts] = useState<ConversionJourneyStartRow[]>([]);
   const [logs, setLogs] = useState<ConversionLogRow[]>([]);
   const [inboxRows, setInboxRows] = useState<ConversionInboxRow[]>([]);
@@ -619,10 +622,12 @@ export default function DashboardConversionesPage() {
 
   const [pixelConfigs, setPixelConfigs] = useState<PixelConfig[]>([]);
 
-  const scopedConversions = useMemo(
+  const currencyConversions = useMemo(
     () => filterConversionsByCurrency(conversions, currencyScope),
     [conversions, currencyScope],
   );
+  const { rows: scopedConversions, pending: gatewayEntriesPending } = useGatewayEntryRows(currencyConversions, gatewayRead, userId, dateRange,
+    currencyScope, tab === "tabla" || tab === "estadisticas");
   const scopedJourneyStarts = useMemo(
     () => currencyScope === CURRENCY_ALL
       ? journeyStarts
@@ -1286,12 +1291,13 @@ export default function DashboardConversionesPage() {
       userIdRef.current = user.id;
       setUserId(user.id);
       const requestSeq = ++dataRequestSeqRef.current;
+      const range = initialDateRangeRef.current;
       try {
         const [cfg, rows, starts, pixels] = await Promise.all([
           fetchConversionsConfig(user.id),
           dashboardConversionPageDataSource.fetchVisibleConversions({
             viewerId: user.id,
-            range: initialDateRangeRef.current,
+            range,
           }),
           dashboardConversionPageDataSource.fetchJourneyStarts({
             viewerId: user.id,
@@ -1302,6 +1308,7 @@ export default function DashboardConversionesPage() {
         setConfig(cfg);
         if (requestSeq === dataRequestSeqRef.current) {
           setConversions(rows);
+          setGatewayRead({ viewerId: user.id, range, rows });
           setJourneyStarts(starts);
         }
         setPixelConfigs(pixels);
@@ -1536,6 +1543,7 @@ export default function DashboardConversionesPage() {
         ]);
         if (requestSeq !== dataRequestSeqRef.current) return;
         setConversions(rows);
+        setGatewayRead({ viewerId: currentUserId, range, rows });
         setJourneyStarts(starts);
       }
     } catch (e) { console.error(e); }
@@ -1863,7 +1871,7 @@ export default function DashboardConversionesPage() {
                 columns={pdfTableColumns}
                 filters={pdfTableFilters}
                 workspaceName={clientName}
-                disabled={filteredConversions.length === 0 || displayedColsWithoutTimestamp.length === 0}
+                disabled={gatewayEntriesPending || filteredConversions.length === 0 || displayedColsWithoutTimestamp.length === 0}
               />
               <ConversionTableViewToggle
                 view={tableView}
@@ -1891,15 +1899,7 @@ export default function DashboardConversionesPage() {
                     </td>
                   </tr>
                 ) : pagedConversions.map((c, idx) => {
-                  const isRepeat = internalConversionStage(c) === "purchase" && c.observaciones?.includes("REPEAT");
-                  const rowColor =
-                    internalConversionStage(c) === "lead"
-                      ? "bg-amber-950/18"
-                      : internalConversionStage(c) === "purchase" && isRepeat
-                        ? "bg-violet-950/20"
-                        : internalConversionStage(c) === "purchase"
-                          ? "bg-rose-950/18"
-                          : "bg-zinc-950/40";
+                  const rowColor = conversionRowColor(c);
                   return (
                     <tr
                       key={c.id}

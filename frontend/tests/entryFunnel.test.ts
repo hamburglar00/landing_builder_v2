@@ -26,6 +26,17 @@ test("strict field bounds and finite skin catalog", () => {
   assert.ok(validateEntryFunnelBatch({ ...batch, events: [{ ...event, skin: "fortu_bet", provider: "multi_skin" }] }));
   assert.equal(validateEntryFunnelBatch({ ...batch, template: "7" }), null);
 });
+test("optional WhatsApp form diagnostics accept only milestones and reject field contents", () => {
+  for (const name of ["whatsapp_field_visible", "whatsapp_field_focus", "whatsapp_field_started", "whatsapp_form_submitted"]) {
+    const milestone = { ...event, name, navigation_id: flow };
+    for (const template of [7, 9]) {
+      assert.deepEqual(validateEntryFunnelBatch({ ...batch, template, events: [milestone] })?.events, [milestone]);
+    }
+    for (const key of ["phone", "whatsapp", "value", "length", "digits"]) {
+      assert.equal(validateEntryFunnelBatch({ ...batch, events: [{ ...milestone, [key]: "123" }] }), null);
+    }
+  }
+});
 test("stage diagnostics accept bounded timings and closed errors without free-form properties", () => {
   const details = { ...event, name: "entry_error", error_stage: "wallet", error_code: "request_timeout", status: 504, duration_ms: 3000 };
   assert.deepEqual(validateEntryFunnelBatch({ ...batch, events: [details] })?.events, [details]);

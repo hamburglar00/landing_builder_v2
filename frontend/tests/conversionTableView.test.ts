@@ -8,6 +8,7 @@ import {
   FRIENDLY_HIDDEN_COLUMNS,
   displayConversionStage,
   displayInternalConversionStage,
+  conversionRowColor,
   displayMetaOriginEvidence,
   type ConversionColumnKey,
 } from "../components/conversiones/conversionPageShared";
@@ -38,6 +39,25 @@ test("an internal conversation without a public event does not invent a Meta Lea
   const registered = { ...row, conversation_started_event_id: "", confirmed_registration_event_id: "created-account" };
   assert.equal(displayInternalConversionStage(registered), "Alta confirmada");
   assert.equal(displayConversionStage(registered), "Sin evento Meta");
+});
+
+test("visible gateway greeting uses Lead amber without inventing a message or overriding a purchase", () => {
+  const cta = { internal_events_version: 1, cta_clicked_event_id: "cta-a", lead_event_id: "cta-a", estado: "lead" };
+  const account = { ...cta, confirmed_registration_event_id: "account-a" };
+  const entry = { ...account, gateway_entry_event_id: "greeting-a", gateway_entry_event_time: 100 };
+  const message = { ...entry, conversation_started_event_id: "human-a" };
+  assert.equal(conversionRowColor(cta), "bg-zinc-950/40");
+  assert.equal(conversionRowColor(account), conversionRowColor(cta));
+  assert.equal(displayInternalConversionStage(entry), "Ingresó al gateway");
+  assert.equal(displayInternalConversionStage(entry, true), "gateway_visible_entry");
+  assert.equal(conversionRowColor(entry), "bg-amber-950/18");
+  assert.equal(displayInternalConversionStage(message), "Mensaje recibido");
+  assert.equal(conversionRowColor(message), conversionRowColor(entry));
+  assert.equal(displayConversionStage(entry), displayConversionStage(cta));
+  const paid = { ...message, purchase_confirmed_event_id: "purchase-a" };
+  assert.equal(displayInternalConversionStage(paid), "Compra confirmada");
+  assert.equal(conversionRowColor(paid), "bg-rose-950/18");
+  assert.equal(conversionRowColor({ ...paid, purchase_type: "repeat" }), "bg-violet-950/20");
 });
 
 const EXPECTED_HIDDEN_COLUMNS: ConversionColumnKey[] = [

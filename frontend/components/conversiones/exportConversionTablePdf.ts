@@ -166,6 +166,7 @@ export async function exportConversionTablePdf(options: ExportConversionTablePdf
   const leads = rows.filter((row) => internalConversionStage(row) === "lead");
   const registrations = rows.filter((row) => internalConversionStage(row) === "registration");
   const contacts = rows.filter((row) => internalConversionStage(row) === "contact");
+  const gatewayEntries = rows.filter((row) => internalConversionStage(row) === "gateway_entry");
   const selectedEvents = new Set((selectedEventTypes ?? []).map((event) => event.toLowerCase()));
   const shouldShowEventCard = (event: string) =>
     selectedEvents.size === 0 || selectedEvents.has(event);
@@ -242,6 +243,7 @@ export async function exportConversionTablePdf(options: ExportConversionTablePdf
     const cards = [
       { label: "Registros", value: formatIntegerWithThousands(rows.length) },
       ...(shouldShowEventCard("contact") ? [{ label: "Contactos", value: formatIntegerWithThousands(contacts.length) }] : []),
+      ...(shouldShowEventCard("gateway_entry") && gatewayEntries.length ? [{ label: "Ingresó al gateway", value: formatIntegerWithThousands(gatewayEntries.length) }] : []),
       ...(shouldShowEventCard("lead") ? [{ label: "Leads", value: formatIntegerWithThousands(leads.length) }] : []),
       ...(shouldShowEventCard("registration") ? [{ label: "CompleteRegistration", value: formatIntegerWithThousands(registrations.length) }] : []),
       ...(shouldShowEventCard("purchase") ? [{ label: "Purchases", value: formatIntegerWithThousands(purchases.length) }] : []),

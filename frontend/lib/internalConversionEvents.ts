@@ -3,6 +3,9 @@ export type InternalEventFields = {
   internal_events_version?: number | null;
   cta_clicked_event_id?: string | null;
   cta_clicked_event_time?: number | null;
+  gateway_entry_event_id?: string | null;
+  gateway_entry_event_time?: number | null;
+  gateway_entry_measured?: boolean;
   conversation_started_event_id?: string | null;
   conversation_started_event_time?: number | null;
   purchase_confirmed_event_id?: string | null;
@@ -71,14 +74,16 @@ export function projectInternalConversion<T extends EventRow>(row: T): T {
   return result;
 }
 
-export function internalConversionStage(row: EventRow): string {
+export function internalConversionStage(row: EventRow) {
   const value = projectInternalConversion(row);
   return text(value.purchase_event_id) ? "purchase" : text(value.lead_event_id) ? "lead"
+    : text(value.gateway_entry_event_id) ? "gateway_entry"
     : text(value.registration_event_id) ? "registration" : text(value.contact_event_id) ? "contact" : "";
 }
 
 export function internalEventName(row: EventRow): string {
   const stage = internalConversionStage(row);
   return stage === "contact" ? "cta_clicked" : stage === "lead" ? "conversation_started"
+    : stage === "gateway_entry" ? "gateway_visible_entry"
     : stage === "purchase" ? "purchase_confirmed" : stage === "registration" ? "account_registered" : "";
 }

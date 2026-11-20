@@ -247,7 +247,7 @@ export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> =
   fbc: "Parametro fbc de Meta enviado por la fuente.",
   from_meta_ads: "Origen publicitario identificado con evidencia registrada. Un utm_campaign por sí solo no acredita Meta Ads.",
   meta_origin_evidence: "Método, parámetros y valores que justificaron la clasificación del origen. No significa que Meta haya atribuido el evento a una campaña.",
-  internal_event: "Hito operativo independiente de Meta: cta_clicked, conversation_started o purchase_confirmed. Una compra no prueba un mensaje y el Lead del CTA no lo reemplaza.",
+  internal_event: "Última etapa interna del recorrido. En Atrio, el saludo automático confirma el ingreso al gateway y el primer mensaje escrito se cuenta por separado.",
   cta_clicked_event_id: "Identidad del CTA interno, conservada aunque Meta reciba Lead o CompleteRegistration.",
   cta_clicked_event_time: "Fecha original del CTA interno en segundos Unix.",
   conversation_started_event_id: "Identidad del primer mensaje humano de este recorrido. No es el Lead publicitario del CTA.",
@@ -491,10 +491,21 @@ export function displayConversionStage(row: {
   return estado === "registration" ? "CompleteRegistration" : estado;
 }
 
+export function conversionRowColor(row: Parameters<typeof internalEventName>[0] & { observaciones?: string | null; purchase_type?: string | null }): string {
+  const stage = internalConversionStage(row);
+  if (stage === "lead" || stage === "gateway_entry") return "bg-amber-950/18";
+  if (stage === "purchase") {
+    const repeat = row.purchase_type === "repeat" || row.observaciones?.includes("REPEAT");
+    return repeat ? "bg-violet-950/20" : "bg-rose-950/18";
+  }
+  return "bg-zinc-950/40";
+}
+
 export function displayInternalConversionStage(row: Parameters<typeof internalEventName>[0], technical = false): string {
   if (technical) return internalEventName(row) || "Sin medición";
   const stage = internalConversionStage(row);
   return stage === "contact" ? "Contact · CTA" : stage === "lead" ? "Mensaje recibido"
+    : stage === "gateway_entry" ? "Ingresó al gateway"
     : stage === "purchase" ? "Compra confirmada" : stage === "registration" ? "Alta confirmada" : "Sin medición";
 }
 

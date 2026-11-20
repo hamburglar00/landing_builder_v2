@@ -33,7 +33,7 @@ export function installEntryFunnel(config: {
     metadata.source = navigator.webdriver === true ? "synthetic" : metadata.source || "unknown";
   }
   const gatewayPath = /^\/l\/(?:nexobet\/)?[A-Za-z0-9][A-Za-z0-9_-]{0,79}\/_api\/entry-funnel$/;
-  const configuredPath = config.apiBase ? config.apiBase + "/entry-funnel" : undefined;
+  const configuredPath = config.apiBase && config.apiBase !== "/api" ? config.apiBase + "/entry-funnel" : undefined;
   const telemetryPath = suppliedContext?.telemetry_path || configuredPath || browser.__ENTRY_FUNNEL_EARLY__?.context?.telemetry_path;
   if (metadata.engine === "gateway" && (!telemetryPath || !gatewayPath.test(telemetryPath)) ||
       metadata.engine !== "gateway" && telemetryPath !== undefined) return;
@@ -41,6 +41,8 @@ export function installEntryFunnel(config: {
   // authenticated proxy endpoint. Only the landing itself selects this local path.
   if (!suppliedContext && telemetryPath) endpoint = telemetryPath;
   const allowed = ["navigation_started", "phone_at_click", "phone_wait_completed", "wallet_result", "welcome_visible", "wallet_visible", "telemetry_loss", "page_visible", "form_visible", "name_focus", "name_started", "name_valid", "skin_selected", "cta_clicked", "destination_ready", "account_ready", "login_confirmed", "gateway_loaded", "iframe_loaded", "chat_bootstrap_ready", "welcome_ready", "wallet_ready", "chat_usable", "chat_ready", "entry_error", "visibility_hidden", "resumed", "stage_timing", "casino_account_ready", "entry_retry", "attempt_started", "cta_available", "outbound_requested"];
+  const whatsappStages = ["whatsapp_field_visible", "whatsapp_field_focus", "whatsapp_field_started", "whatsapp_form_submitted"];
+  if (!suppliedContext && [7, 9].includes(Number(template)) && (metadata.engine === "constructor" || metadata.engine === "classic")) allowed.push(...whatsappStages);
   const phases = ["phone_owner", "phone_plan", "phone_cache", "phone_select", "phone_total", "landing_dns", "landing_connect", "landing_tls", "landing_ttfb", "landing_download", "landing_navigation",
     "gateway_dns", "gateway_connect", "gateway_tls", "gateway_ttfb", "gateway_download", "gateway_navigation",
     "casino_ttfb", "casino_download", "casino_navigation",
@@ -215,7 +217,7 @@ export function installEntryFunnel(config: {
     const provider = details.provider || config.targetProvider;
     const skin = details.skin || config.skinCode;
     const once = !["cta_clicked", "entry_retry", "entry_error", "visibility_hidden", "resumed", "telemetry_loss"].includes(name);
-    const attemptScoped = details.flow_scoped !== true && !(name === 'stage_timing' && String(details.phase).startsWith('landing_')) && !["navigation_started", "telemetry_loss", "page_visible", "form_visible", "cta_available", "name_focus", "name_started", "name_valid", "skin_selected"].includes(name);
+    const attemptScoped = details.flow_scoped !== true && !whatsappStages.includes(name) && !(name === 'stage_timing' && String(details.phase).startsWith('landing_')) && !["navigation_started", "telemetry_loss", "page_visible", "form_visible", "cta_available", "name_focus", "name_started", "name_valid", "skin_selected"].includes(name);
     const navId = uuid.test(String(details.navigation_id)) ? String(details.navigation_id) : navigation.id;
     const component = ["landing", "gateway", "chat"].includes(String(details.component)) ? String(details.component) : suppliedContext ? "gateway" : "landing";
     const occurred = Number.isSafeInteger(details.occurred_at_ms) && Number(details.occurred_at_ms) <= Date.now() ? Number(details.occurred_at_ms) : Date.now();
@@ -326,8 +328,8 @@ export function installEntryFunnel(config: {
   browser.__entryFunnel = api;
   emit("navigation_started", { flow_scoped: true });
   if (!suppliedContext) {
-    if (Array.isArray(early?.events)) early.events.slice(0, 8).forEach(event => {
-      if (["page_visible", "form_visible", "name_focus", "name_started", "name_valid", "cta_clicked", "entry_error"].includes(event.name) &&
+    if (Array.isArray(early?.events)) early.events.slice(0, 12).forEach(event => {
+      if (["page_visible", "form_visible", "name_focus", "name_started", "name_valid", "cta_clicked", "entry_error", ...whatsappStages].includes(event.name) &&
         Number.isSafeInteger(event.at) && event.at >= flow.started_at && event.at <= Date.now()) emit(event.name, { occurred_at_ms: event.at, replay_attempt_id: event.attempt_id, replay_attempt_number: event.attempt_number, navigation_id: event.navigation_id, navigation_elapsed_ms: Number.isSafeInteger(event.navigation_started_at) ? Math.max(0, event.at - Number(event.navigation_started_at)) : undefined, elapsed_ms: event.at - flow.started_at, event_id: event.id, error_code: event.error_code });
     });
     early?.timings?.slice(0, 8).forEach(header => timings(header));

@@ -364,6 +364,7 @@ export function buildTemplate7FastRuntime(
         if (clickLocked || button.disabled) return;
         var entryName = document.querySelector("[data-template7-name]");
         if (!entryName || !String(entryName.value || "").trim()) return;
+        if (window.__T7_WHATSAPP_FORM_SUBMITTED__) window.__T7_WHATSAPP_FORM_SUBMITTED__();
         template7EntryGeneration++;
         window.__T7_ENTRY_STARTED__ = true;`);
   if (isTemplate8) source = adaptTemplate8Runtime(source, !!classicDeviceIdScript);

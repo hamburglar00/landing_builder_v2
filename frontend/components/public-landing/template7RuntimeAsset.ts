@@ -123,7 +123,10 @@ function t7Early(event){
   if((event.type==='click'||event.type==='submit')&&action){
     event.preventDefault();event.stopImmediatePropagation();
     if(!action.disabled && (t7AssetFailed || window.__T7_EARLY_ACTION__!==action)){
-      if(action.matches('[data-public-landing-cta]')){t7EarlyStage('cta_clicked');window.__T7_EARLY_CTA_RECORDED__=true;}
+      if(action.matches('[data-public-landing-cta]')){
+        t7EarlyStage('cta_clicked');window.__T7_EARLY_CTA_RECORDED__=true;
+        if(form&&input&&input.value.trim()&&window.__T7_WHATSAPP_FORM_SUBMITTED__)window.__T7_WHATSAPP_FORM_SUBMITTED__();
+      }
       if(window.__T7_EARLY_ACTION__!==action)t7EarlyBusy(window.__T7_EARLY_ACTION__,false);
       window.__T7_EARLY_ACTION__=action;t7EarlyBusy(action,true);
       if(t7AssetFailed){t7AssetFailed=false;t7AssetRetries=0;t7AssetStatus('');t7AssetRetry();}

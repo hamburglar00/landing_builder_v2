@@ -9,9 +9,9 @@ let checks = 0;
 try {
   await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
     grant usage on schema public to anon,authenticated,service_role;
-    create table public.landings(id uuid primary key,user_id uuid not null,config jsonb not null);
+    create table public.landings(id uuid primary key,user_id uuid not null,config jsonb not null,name text default 'Test landing');
     grant select on public.landings to service_role;`);
-  for (const migration of ["20261030234129_entry_funnel_observability", "20261031132341_entry_funnel_chat_diagnostics", "20261031170412_entry_funnel_chat_usable", "20261104003407_entry_attempt_timings", "20261105193317_entry_render_timings", "20261110025708_entry_funnel_all_templates_provenance", "20261110163119_entry_funnel_navigation_delivery_observability"]) {
+  for (const migration of ["20261030234129_entry_funnel_observability", "20261031132341_entry_funnel_chat_diagnostics", "20261031170412_entry_funnel_chat_usable", "20261104003407_entry_attempt_timings", "20261105193317_entry_render_timings", "20261110025708_entry_funnel_all_templates_provenance", "20261110163119_entry_funnel_navigation_delivery_observability", "20261115013453_gateway_entry_funnel_engine", "20261120162200_optional_whatsapp_field_funnel"]) {
     await db.exec(await readFile(new URL(`../supabase/migrations/${migration}.sql`, import.meta.url), "utf8"));
   }
   await db.query("insert into landings values($1,$2,$3)", [id(1),id(2),{template:"template7"}]);
@@ -33,6 +33,33 @@ try {
   }
   const rejection = {...event(99),name:"telemetry_loss",loss_reason:"collector_rejected",loss_count:1}; delete rejection.phase;
   assert.equal(await record([rejection]),true); checks++;
+  // Two navigations can share a flow. Count observed visits separately, including
+  // a visitor who submits without touching the optional field.
+  const reportSql = await readFile(new URL("./optional-whatsapp-field-report.sql", import.meta.url), "utf8");
+  const fieldVisit = (n, names, more = {}) => names.map((name, index) => ({
+    id: id(n * 10 + index), navigation_id: id(n), elapsed_ms: index, name,
+    component: "landing", environment: "production", source: "unknown", ...more,
+  }));
+  const visible = "whatsapp_field_visible", focus = "whatsapp_field_focus";
+  const started = "whatsapp_field_started", submit = "whatsapp_form_submitted";
+  const abandoned = fieldVisit(501, [visible, focus, started]);
+  assert.equal(await record(abandoned), true); checks++;
+  assert.equal(await record(abandoned), true); checks++;
+  assert.equal(await record([{ ...abandoned[0], phone: "fake" }]), false); checks++;
+  await db.query("update entry_funnel_events set received_at = now() - interval '25 hours' where navigation_id = $1", [id(501)]);
+  assert.equal(await record(fieldVisit(502, [visible, submit])), true); checks++;
+  assert.equal(await record(fieldVisit(503, [visible, focus])), true); checks++;
+  assert.equal(await record(fieldVisit(504, [visible, focus], {source: "synthetic"})), true); checks++;
+  assert.equal(await record(fieldVisit(505, [visible, submit], {environment: "preview"})), true); checks++;
+  const expected = {
+    landing_id: id(1), landing_name: "Test landing", template: 7,
+    visits_shown: 3, visits_interacted: 2, visits_started_input: 1, visits_submitted: 1,
+    interacted_then_submitted: 0, interacted_without_submit_24h: 1, interacted_still_pending: 1,
+  };
+  assert.deepEqual((await db.query(reportSql)).rows, [expected]); checks++;
+  const lateSubmit = { ...abandoned[2], id: id(9998), name: submit };
+  assert.equal(await record([lateSubmit]), true); checks++;
+  assert.deepEqual((await db.query(reportSql)).rows, [{...expected, visits_submitted: 2, interacted_then_submitted: 1, interacted_without_submit_24h: 0}]); checks++;
   // Fresh fixtures reach each exact cap; direct insert represents already accepted distinct events.
   const seed = async (flow, count, nav) => db.query(`insert into entry_funnel_events(event_id,landing_id,owner_id,flow_id,template,event_name,elapsed_ms,navigation_id)
     select gen_random_uuid(),$1,$2,$3,7,'page_visible',0,$4 from generate_series(1,$5::integer)`,[id(1),id(2),flow,nav,count]);

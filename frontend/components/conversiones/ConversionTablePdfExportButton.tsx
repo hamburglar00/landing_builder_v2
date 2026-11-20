@@ -6,10 +6,11 @@ import { internalConversionStage } from "@/lib/internalConversionEvents";
 import type { ConversionColumnKey } from "@/components/conversiones/conversionPageShared";
 import { exportConversionTablePdf } from "@/components/conversiones/exportConversionTablePdf";
 
-type EventKey = "contact" | "lead" | "registration" | "purchase";
+type EventKey = Exclude<ReturnType<typeof internalConversionStage>, "">;
 
 const EVENT_OPTIONS: { key: EventKey; label: string }[] = [
   { key: "contact", label: "Contact · CTA" },
+  { key: "gateway_entry", label: "Ingresó al gateway" },
   { key: "lead", label: "Mensaje recibido" },
   { key: "registration", label: "Alta confirmada" },
   { key: "purchase", label: "Compra confirmada" },
@@ -33,6 +34,7 @@ export default function ConversionTablePdfExportButton({
   const [open, setOpen] = useState(false);
   const [selectedEvents, setSelectedEvents] = useState<Record<EventKey, boolean>>({
     contact: false,
+    gateway_entry: true,
     lead: true,
     registration: true,
     purchase: true,
@@ -42,28 +44,24 @@ export default function ConversionTablePdfExportButton({
     return rows.reduce<Record<EventKey, number>>(
       (acc, row) => {
         const status = internalConversionStage(row);
-        if (status === "contact" || status === "lead" || status === "registration" || status === "purchase") {
+        if (status) {
           acc[status] += 1;
         }
         return acc;
       },
-      { contact: 0, lead: 0, registration: 0, purchase: 0 },
+      { contact: 0, gateway_entry: 0, lead: 0, registration: 0, purchase: 0 },
     );
   }, [rows]);
 
   const selectedRows = useMemo(() => {
     return rows.filter((row) => {
       const status = internalConversionStage(row);
-      return (
-        (status === "contact" && selectedEvents.contact) ||
-        (status === "lead" && selectedEvents.lead) ||
-        (status === "registration" && selectedEvents.registration) ||
-        (status === "purchase" && selectedEvents.purchase)
-      );
+      return status && selectedEvents[status];
     });
   }, [rows, selectedEvents]);
 
   const canExport = !disabled && selectedRows.length > 0 && Object.values(selectedEvents).some(Boolean);
+  const eventOptions = EVENT_OPTIONS.filter(option => option.key !== "gateway_entry" || counts.gateway_entry > 0);
 
   const toggleEvent = (key: EventKey) => {
     setSelectedEvents((current) => ({ ...current, [key]: !current[key] }));
@@ -77,10 +75,10 @@ export default function ConversionTablePdfExportButton({
       columns,
       filters: [
         ...filters,
-        `Etapas internas: ${EVENT_OPTIONS.filter((option) => selectedEvents[option.key]).map((option) => option.label).join(", ")}`,
+        `Etapas internas: ${eventOptions.filter((option) => selectedEvents[option.key]).map((option) => option.label).join(", ")}`,
       ],
       workspaceName,
-      selectedEventTypes: EVENT_OPTIONS.filter((option) => selectedEvents[option.key]).map((option) => option.key),
+      selectedEventTypes: eventOptions.filter((option) => selectedEvents[option.key]).map((option) => option.key),
     });
     setOpen(false);
   };
@@ -101,7 +99,7 @@ export default function ConversionTablePdfExportButton({
             Etapa interna
           </p>
           <div className="space-y-2">
-            {EVENT_OPTIONS.map((option) => (
+            {eventOptions.map((option) => (
               <label
                 key={option.key}
                 className="flex cursor-pointer items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-200"
