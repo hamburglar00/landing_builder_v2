@@ -2,18 +2,17 @@
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
-import {fileURLToPath} from 'node:url';
+import {pathToFileURL} from 'node:url';
 import path from 'node:path';
 import {loadProductPaths} from "./product-worktrees.mjs";
 const productPath=loadProductPaths();
-import {withTestBrowser} from '../../internal-chat/tests/helpers/browser-session.mjs';
-const root=fileURLToPath(new URL('../../',import.meta.url));
+const {withTestBrowser}=await import(pathToFileURL(productPath('internal-chat','tests/helpers/browser-session.mjs')).href);
 const require=createRequire(new URL('../frontend/package.json',import.meta.url));
 const {build}=require('esbuild');
 let playwright;try{playwright=require(path.join(process.env.APPDATA,'npm/node_modules/playwright'));}catch{playwright=require('playwright');}
 const compiled=await build({absWorkingDir:productPath('landing-autologuin'),stdin:{contents:'export {gatewayLoginPage} from "./src/lib/gateway-login-page";export {gatewayAgencyPage} from "./src/lib/gateway-agency-page";',resolveDir:productPath('landing-autologuin'),loader:'ts'},bundle:true,write:false,platform:'node',format:'esm',target:'es2022',plugins:[{name:'response-only',setup(b){b.onResolve({filter:/^next\/server$/},()=>({path:'fixture',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:'export const NextResponse=Response;',loader:'js'}));}}]});
 const {gatewayLoginPage,gatewayAgencyPage}=await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].text).toString('base64'));
-const output=path.join(root,'landing-builder/.vercel/gateway-auth-fit-20261105');await mkdir(output,{recursive:true});
+const output=productPath('landing-builder','.vercel/gateway-auth-fit');await mkdir(output,{recursive:true});
 const providers={rey_de_ases:'landing-autologuin',ases_del_norte:'ases-gateway',ganamos_net:'ganamos-gateway',multi_skin:'multi-skin-gateway'};
 const viewports=process.argv.includes('--smoke')?[[320,480],[390,664],[1365,768]]:[[320,480],[320,568],[390,664],[430,932],[568,320],[667,375],[844,390],[1024,600],[1365,635],[1920,1080]];
 const report=[];
@@ -46,7 +45,7 @@ for(const [engine,launcher] of [['chromium',playwright.chromium],['webkit',playw
     await page.goto('https://gateway.test/'+mode);
     if(mode==='17'){await page.locator('#username').waitFor({state:'visible'});await fit('login default');}
     await page.locator('#username').waitFor({state:'visible'});
-    assert.equal(await page.locator('.intro').textContent(),'Tu plataforma y tu asesor, en el mismo lugar.');
+    assert.equal(await page.locator('.intro:visible').textContent(),'Tu plataforma y tu asesor, en el mismo lugar.');
     await fit(mode);
     if(mode==='login'&&engine==='chromium'&&((width===390&&height===664)||(width===1365&&height===635)||(provider==='ganamos_net'&&width===568)))await page.screenshot({path:path.join(output,`${provider}-${width}x${height}.png`)});
     await page.locator('#username').fill('cliente');await page.locator('#password').fill('synthetic-password');
