@@ -1747,6 +1747,8 @@ Al reabrir un template, la landing comprueba su asignación y la cuenta existent
 
 Si dos landings del mismo casino comparten navegador, cada una comprueba en qué landing se dio de alta la cuenta y qué gerencias siguen habilitadas para ese enlace. Un registro de visita por sí solo no prueba un alta. Una landing nueva para ese cliente muestra el formulario. Al volver a la landing de origen, recupera su cuenta y conversación si el vínculo sigue vigente.
 
+Para verificar este recorrido en futuras entregas de ingreso, ejecutar `npm run test:gateway-journeys` desde `frontend`. La prueba usa el mismo navegador para crear una cuenta en A, abrir por primera vez B y volver a A. La suite de PostgreSQL de Atrio (`tests/builder-manager-database.test.mjs`) verifica también la elección de gerencia cuando ya existe una visita incorrecta en B.
+
 ### Alta desde Template 7 y Template 9 (18/11/2026)
 
 Las landings nuevas de estos dos templates se crean con «Mostrar credenciales» activo. La elección sigue siendo editable. Cada landing existente conserva su configuración publicada, incluido el ingreso directo.

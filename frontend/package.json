@@ -11,6 +11,7 @@
     "lint": "eslint",
     "test": "tsx --import ./tests/revalidation-server-loader.mjs --test tests/**/*.test.ts",
     "test:entry-integration": "tsc --project tsconfig.entry-integration.json --noEmit && tsx --import ./tests/revalidation-server-loader.mjs --test tests/effectiveSkinEntry.test.ts",
+    "test:gateway-journeys": "node ../scripts/check-gateway-agency-journeys.mjs",
     "sync:meta-sdk": "node scripts/sync-meta-param-builder.mjs",
     "postinstall": "npm run sync:meta-sdk",
     "check:encoding": "node ../scripts/check-encoding.js",
