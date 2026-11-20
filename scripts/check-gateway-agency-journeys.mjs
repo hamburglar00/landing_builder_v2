@@ -44,6 +44,21 @@ const landing = await loadSource(
 const widget = await compileWidget(product("internal-chat"));
 const deferred = () => Promise.withResolvers();
 
+async function statusTypography(label) {
+  await label.waitFor({ state: "visible" });
+  return label.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      color: style.color,
+      family: style.fontFamily,
+      size: style.fontSize,
+      weight: style.fontWeight,
+      lineHeight: style.lineHeight,
+      letterSpacing: style.letterSpacing,
+    };
+  });
+}
+
 async function serveNext(route, response, context) {
   // Feed every cookie into the actual browser cookie jar, preserving its
   // scope. Playwright's fulfill headers map cannot express repeated names.
@@ -205,6 +220,7 @@ async function run(browser, target) {
   page.on("pageerror", (e) => errors.push(e.message));
   let lastResponse, lastProof;
   const returningDestination = deferred();
+  const returningPreparation = deferred();
   await context.route("**/*", async (route) => {
     const request = route.request(),
       url = new URL(request.url()),
@@ -253,6 +269,7 @@ async function run(browser, target) {
           return route.fulfill(html(host.renderPreparationPage("p1.cross", host.gatewayPreparationTheme(target.code))));
         if (p === "/api/preparations/complete") {
           landingReturning = landingIssued;
+          if (landingReturning) await returningPreparation.promise;
           if (!landingIssued) {
             accounts.set(31, identityFor(31, uuid(31)));
             landingIssued = true;
@@ -424,7 +441,7 @@ async function run(browser, target) {
       }
       return route.fulfill({ status: 204 });
     } catch (error) {
-      errors.push(url.pathname + ": " + error.message);
+      errors.push(url.pathname + ": " + (error.stack || error.message));
       return route.abort();
     }
   });
@@ -536,10 +553,15 @@ async function run(browser, target) {
     await page.goto(landingOrigin + "/l/cruce", { waitUntil: "commit" });
     // Hold the real return in the same browser after an earlier confirmed signup.
     const returningScreen = page.locator("#gateway-entry-transition");
-    await returningScreen.getByText("Verificando tu cuenta…", { exact: true }).waitFor();
+    const verificationText = "Verificando tu cuenta…";
+    const landingStyle = await statusTypography(returningScreen.getByText(verificationText, { exact: true }));
     assert.equal(await returningScreen.locator("[data-entry-progress]").isVisible(), false);
     assert.equal(await page.locator("[data-template7-name]").isVisible(), false);
     returningDestination.resolve();
+    const gatewayStyle = await statusTypography(page.locator("#entry-stage").filter({ hasText: verificationText }));
+    assert.deepEqual(gatewayStyle, landingStyle, target.code + ": verification style across domains");
+    assert.equal(gatewayStyle.color, "rgb(255, 255, 255)");
+    returningPreparation.resolve();
     await page.locator("#continue").waitFor();
     assert.equal(await page.locator("#account-title").innerText(), "¡Hola de nuevo, cliente31!");
     await page.locator("#continue").click();
@@ -582,6 +604,7 @@ async function run(browser, target) {
   } finally {
     unavailableLookup?.resolve();
     returningDestination.resolve();
+    returningPreparation.resolve();
     login.resolve();
     recovery.resolve();
     globalThis.fetch = originalFetch;

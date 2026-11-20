@@ -4,19 +4,16 @@ import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
-import {fileURLToPath} from 'node:url';
-const root=fileURLToPath(new URL('../',import.meta.url));
+import { loadProductPaths } from './product-worktrees.mjs';
+import { loadSource as load } from './gateway-browser-fixtures.mjs';
+const product = loadProductPaths();
+const root = product('landing-builder');
 Object.assign(process.env,{REY_GATEWAY_ORIGIN:'https://rey.fixture',ASES_DEL_NORTE_GATEWAY_ORIGIN:'https://ases.fixture',GANAMOS_NET_GATEWAY_ORIGIN:'https://net.fixture',MULTI_SKIN_GATEWAY_ORIGIN:'https://plus.fixture',GANAMOS_PLUS_GATEWAY_ORIGIN:'https://plus.fixture',MULTI_SKIN_GATEWAY_BASE_DOMAIN:'skins.fixture'});
 const require=createRequire(path.join(root,'frontend/package.json'));
-const {build}=require('esbuild'),{chromium}=require('playwright');
-async function load(cwd,contents){
- const result=await build({absWorkingDir:cwd,stdin:{contents,loader:'ts',resolveDir:cwd},bundle:true,write:false,platform:'node',format:'cjs',external:['react','react/jsx-runtime','next/*']});
- const module={exports:{}};new Function('module','exports','require',result.outputFiles[0].text)(module,module.exports,createRequire(path.join(cwd,'package.json')));return module.exports;
-}
+const {chromium}=require('playwright');
 const builder=await load(path.join(root,'frontend'),`export {renderPublicLandingHtml} from './components/public-landing/renderPublicLandingHtml';export {buildLandingConfig} from './lib/landing/buildLandingConfig';export {DEFAULT_CONFIG} from './lib/landing/mocks';export {buildTemplate7RuntimeConfig} from './components/public-landing/template7FastRuntime';export {adaptTemplate8Runtime} from './components/public-landing/template8Runtime';export {getMultiSkinBrand} from './lib/skin-branding';`);
-const gateway=await load(path.join(root,'../landing-autologuin'),`export * from './src/lib/gateway-entry-transition';export {renderPreparationPage} from './src/lib/preparation-page';`);
-const nexo=await load(path.join(root,'../NexoBet'),`export {nexoLandingEntryPresentation} from './src/lib/nexobet/landing-entry-presentation';export {renderTemplate9View} from './src/vendor/builder/components/public-landing/template9View';export {TEMPLATE9_CSS} from './src/vendor/builder/components/public-landing/template9Css';export {renderTemplate8View} from './src/vendor/builder-workspace/components/public-landing/template8View';export {TEMPLATE8_CRITICAL_CSS} from './src/vendor/builder-workspace/components/public-landing/publicLandingCss';`);
-const classic=createRequire(path.join(root,'../landing-prueba-1/package.json'))('./lib/template7/shared.cjs');
+const nexo=await load(product('NexoBet'),`export {nexoLandingEntryPresentation} from './src/lib/nexobet/landing-entry-presentation';export {renderTemplate9View} from './src/vendor/builder/components/public-landing/template9View';export {TEMPLATE9_CSS} from './src/vendor/builder/components/public-landing/template9Css';export {renderTemplate8View} from './src/vendor/builder-workspace/components/public-landing/template8View';export {TEMPLATE8_CRITICAL_CSS} from './src/vendor/builder-workspace/components/public-landing/publicLandingCss';`);
+const classic=createRequire(product('landing-prueba-1','package.json'))('./lib/template7/shared.cjs');
 const noScripts=html=>html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'');
 const browser=await chromium.launch({headless:true});
 const page=await browser.newPage();
@@ -25,7 +22,7 @@ await page.route('**/*',async route=>{
  const pathname=new URL(route.request().url()).pathname;
  // Only serve entry logos from disk. Everything else is intentionally isolated.
  if(/\.(avif|webp)$/.test(pathname)&&!pathname.includes('..')){
-  try{return await route.fulfill({body:await readFile(path.join(root,'..',currentRepo,'public',pathname)),contentType:pathname.endsWith('.avif')?'image/avif':'image/webp'});}catch{}
+  try{return await route.fulfill({body:await readFile(product(currentRepo,'public',pathname.slice(1))),contentType:pathname.endsWith('.avif')?'image/avif':'image/webp'});}catch{}
  }
  return route.abort();
 });
@@ -40,12 +37,25 @@ function same(actual,expected,label){
  for(const key of ['color','font','spacing','background','gradient'])assert.equal(actual[key],expected[key],`${label} ${key}`);
  assert.equal(actual.overflow,false,label+' no horizontal overflow');
 }
+function sameStatusAppearance(actual, expected, label) {
+ for (const key of ['font', 'spacing', 'background']) assert.equal(actual[key],expected[key],label+' '+key);
+ assert.equal(actual.color,'rgb(255, 255, 255)',label+' white status text');
+ for (const key of ['x', 'width', 'height']) assert.ok(Math.abs(actual.logo[key]-expected.logo[key])<1,label+' logo '+key);
+ assert.equal(actual.overflow,false,label+' no horizontal overflow');
+}
 const rows=[];
 try{
  for(const [provider,skin,repo] of [['rey_de_ases',null,'landing-autologuin'],['ases_del_norte',null,'ases-gateway'],['ganamos_net',null,'ganamos-gateway'],['multi_skin','ganamos_plus','multi-skin-gateway'],['multi_skin','casino_zeus','multi-skin-gateway']]){
   currentRepo=repo;
+  const gateway=await load(product(repo),`export * from './src/lib/gateway-entry-transition';export {renderPreparationPage} from './src/lib/preparation-page';`);
   const override=skin?builder.getMultiSkinBrand(skin):undefined;
   const theme=gateway.gatewayPreparationTheme(provider,override);
+  const expectedLandingLogo = skin === 'ganamos_plus' ? '/ganamos-wordmark.webp' : theme.logo.replace(/\.avif$/,'.webp');
+  if (skin === 'ganamos_plus') {
+   const plus = await readFile(product(repo,'public',expectedLandingLogo.slice(1)));
+   const net = await readFile(product('ganamos-gateway','public','ganamos-net-transition-logo.webp'));
+   assert.ok(plus.equals(net),'Ganamos+ uses the Ganamos NET wordmark on the landing');
+  }
   for(const viewport of [{width:320,height:568},{width:390,height:844},{width:1365,height:768}]){
    await page.setViewportSize(viewport);
    await page.setContent(noScripts(gateway.renderPreparationPage('p1.fixture',theme)));
@@ -64,19 +74,23 @@ try{
     }else if(template===8){
      const cfg=builder.buildTemplate7RuntimeConfig(config.name,config);
      // Run the actual selection adapter with inert identity/analytics dependencies.
-     await page.addScriptTag({content:`var cfg=${JSON.stringify(cfg)},clickLocked=false,template7EntryGeneration=0;window.__T7_ENTRY_STARTED__=false;function cancelTemplate7Destination(){}function setTemplate7Error(){}function notifyTemplate6CardClick(){}function template7RequestDestination(){return Promise.resolve(null)}function observeTemplate7Destination(){}function warmTemplate7Entry(){}${builder.adaptTemplate8Runtime('      function init() {}',false)}init();`});
+     await page.addScriptTag({content:`var cfg=${JSON.stringify(cfg)},clickLocked=false,template7EntryGeneration=0;window.__T7_ENTRY_STARTED__=false;function clearTemplate7Unavailable(){}function cancelTemplate7Destination(){}function setTemplate7Error(){}function notifyTemplate6CardClick(){}function template7RequestDestination(){return Promise.resolve(null)}function observeTemplate7Destination(){}function warmTemplate7Entry(){}${builder.adaptTemplate8Runtime('      function init() {}',false)}init();`});
      await page.locator('[data-template8-card-index="1"]').click();
     }
     if(engine!=='nexo')await page.addScriptTag({content:gateway.GATEWAY_ENTRY_TRANSITION_RUNTIME+';createGatewayEntryTransition(document.getElementById("gateway-entry-transition")).start("creating");'});
     const transition=await measure(),label=`${provider}/${skin||''} ${engine} T${template} ${viewport.width}`;
     same(transition,preparation,label);
     const logo=await page.locator('[data-entry-logo]').getAttribute('data-src');
-    assert.equal(new URL(logo,'https://fixture.local').pathname,theme.logo.replace(/\.avif$/,'.webp'),label+' exact same logo');
+    const expectedLogo = template === 8 ? theme.logo.replace(/\.avif$/,'.webp') : expectedLandingLogo;
+    assert.equal(new URL(logo,'https://fixture.local').pathname,expectedLogo,label+' landing logo');
     if(process.env.ENTRY_VISUAL_SCREENSHOT&&template===9&&engine==='builder'&&provider==='ganamos_net'&&viewport.width===390){await page.locator('[data-entry-logo]').evaluate(image=>image.decode());await page.screenshot({path:process.env.ENTRY_VISUAL_SCREENSHOT});}
     rows.push(label);
    }
    await page.setContent(gateway.renderGatewayEntryTransition(provider,{active:true,brand:override}));
-   same(await measure(),preparation,provider+' connecting '+viewport.width);
+   const connecting = await measure();
+   sameStatusAppearance(connecting, preparation, provider+' connecting '+viewport.width);
+   assert.equal(await page.locator('[data-entry-title]').innerText(),'Conectando con tu asesor…');
+   assert.equal(await page.locator('[data-entry-progress]').isVisible(),false);
    await page.emulateMedia({reducedMotion:'reduce'});
    assert.equal(await page.locator('.entry-progress-fill').evaluate(el=>getComputedStyle(el).animationDuration),'0s');
    await page.emulateMedia({reducedMotion:'no-preference'});

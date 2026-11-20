@@ -1786,3 +1786,9 @@ En **Usuarios y Roles**, un administrador puede consultar sus usuarios directos 
 Redirección y el editor excluyen las bajas confirmadas de Atrio, incluso si la pestaña estaba abierta al eliminar al asesor. Los asesores vigentes que aún esperan un bot siguen visibles. Una consulta fallida conserva los vínculos para reintentar.
 
 La tarjeta de LandingBuilder en Panel3 omite el aviso por un bot inactivo cuando Atrio confirma la baja de su asesor. Un bot activo sin asesor válido requiere revisión e identifica su bot y gerencia dentro de la administración. La revisión de los vínculos se actualiza en la auditoría de 15 minutos, incluso si el inventario de PBAdmin sigue igual. Una falla de conexión conserva el último estado confirmado.
+
+### Textos de etapa y logo de la landing Ganamos+ (19/11/2026)
+
+En las pantallas oscuras de Rey de Ases, Ases del Norte, Ganamos NET y Ganamos+, los textos de etapa se leen en blanco. «Creando tu cuenta…», «Verificando tu cuenta…» y los mensajes de ingreso y conexión mantienen la misma tipografía al pasar de la landing al gateway y al abrir el chat. El saludo «¡Hola de nuevo, {usuario}!» mantiene el nombre de usuario en el color del casino. El logo de Ases del Norte se integra sobre el fondo con transparencia.
+
+Las landings T7 y T9 de Ganamos+ usan el mismo logo de GANAMOS que Ganamos NET donde la landing muestra la marca automática. En T7 se respeta el logo que haya cargado el cliente en el formulario. La identidad del casino y sus íconos de aplicación siguen asociados a la skin elegida.
