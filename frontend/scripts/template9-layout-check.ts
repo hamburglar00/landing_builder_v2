@@ -4,6 +4,9 @@ import {createRequire} from 'node:module';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import * as localPlaywright from 'playwright';
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {LandingPreview} from '../components/landing/LandingPreview';
 import {renderTemplate9View,TEMPLATE9_UI_SCRIPT} from '../components/public-landing/template9View';
 import {TEMPLATE9_CSS} from '../components/public-landing/template9Css';
 import {renderTemplate9LegalHtml,TEMPLATE9_LEGAL_PAGES} from '../components/public-landing/template9Legal';
@@ -34,6 +37,16 @@ for(const [name,engine]of [['Chromium',playwright.chromium],['WebKit',playwright
         if(/^\/public-assets\/template9\/[a-z_0-9]+\.webp$/.test(u.pathname))return route.fulfill({contentType:'image/webp',body:await readFile(path.resolve('public','.'+u.pathname))});
         return route.fulfill({contentType:'text/html',body:html});
       });
+      const editorConfig={...switchLandingTemplate(DEFAULT_CONFIG,'template9'),targetProvider:'multi_skin' as const,multiSkinCode:'ganamos_plus' as const};
+      for(const gallery of [false,true]){
+        html=renderToStaticMarkup(createElement(LandingPreview,{config:editorConfig,gallery}));
+        await page.goto('https://layout.invalid/editor');
+        const logo=page.frameLocator('iframe').locator('.template9__logo');
+        await logo.evaluate((element:HTMLImageElement)=>element.decode());
+        assert.equal(await logo.getAttribute('src'),'/public-assets/template9/ganamos_net_logo.webp');
+        assert.equal(await logo.getAttribute('alt'),'Ganamos+');
+        checks.push({browser:name,preview:gallery?'gallery':'editor',provider:'multi_skin',skin:'ganamos_plus'});
+      }
       if(!process.env.TEMPLATE9_LEGAL_ONLY)for(const provider of ['rey_de_ases','ases_del_norte','ganamos_net','multi_skin'] as TargetProvider[])for(const whatsapp of [false,true])for(const viewport of sizes){
         if(whatsapp&&viewport.width>1000)continue;
         const label=`${name} ${provider} ${viewport.width}x${viewport.height} whatsapp=${whatsapp}`;
