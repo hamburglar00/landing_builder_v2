@@ -1,5 +1,9 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+## 20/11 — Copiar el CBU desde el chat del gateway
+
+Los cuatro gateways, incluido el Worker de Ganamos+, deben permitir que el chat copie el CBU cuando el jugador toca «Copiar CBU». La validación comprueba que se puedan pegar los 22 dígitos, incluidos los ceros iniciales. Interesan especialmente los navegadores internos de Instagram y Facebook en Android, por donde entran los jugadores de las campañas.
+
 ## 20/11 — Tema de chat de los asesores nuevos de Atrio
 
 Cada asesor nuevo de Atrio, creado desde el panel o automáticamente desde PBAdmin, inicia con el tema WhatsApp. Puede elegir después Atrio, WhatsApp o Página. Los asesores existentes conservan su tema, incluso al volver a vincularlos desde PBAdmin. Los cuatro gateways muestran el tema guardado para ese asesor en el chat del jugador y en sus invitaciones.
