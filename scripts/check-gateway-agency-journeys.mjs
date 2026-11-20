@@ -59,7 +59,7 @@ async function statusTypography(label) {
   });
 }
 
-async function serveNext(route, response, context) {
+async function serveNext(route, response, context, body) {
   // Feed every cookie into the actual browser cookie jar, preserving its
   // scope. Playwright's fulfill headers map cannot express repeated names.
   const headers = Object.fromEntries(response.headers);
@@ -88,7 +88,7 @@ async function serveNext(route, response, context) {
       },
     ]);
   }
-  return route.fulfill({ status: response.status, headers, body: await response.text() });
+  return route.fulfill({ status: response.status, headers, body: body ?? await response.text() });
 }
 
 async function run(browser, target) {
@@ -323,14 +323,15 @@ async function run(browser, target) {
         if (/^\/(17|23|31|313)$/.test(p)) return await serveNext(route, await handlers.GET(req), context);
         if (/^\/api\/agency-entry\/(17|23|31)$/.test(p)) {
           const response = await handlers.POST(req);
-          const data = await response.clone().json();
+          const body = await response.text();
+          const data = JSON.parse(body);
           lastResponse = {
             action: request.postDataJSON().action,
             status: response.status,
             fields: Object.keys(data),
             error: data.error,
           };
-          return await serveNext(route, response, context);
+          return await serveNext(route, response, context, body);
         }
         const token = req.cookies.get(sessionCookie)?.value;
         if (p === "/api/session/recover") {
