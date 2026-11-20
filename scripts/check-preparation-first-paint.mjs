@@ -12,14 +12,15 @@ const builderRoot = product("landing-builder", "frontend");
 const require = createRequire(path.join(builderRoot, "package.json"));
 const { chromium } = require("playwright");
 const checkedTargets = process.argv.includes("--multi-skin-only") ? targets.filter(target => target.code === "multi_skin") : targets;
+const templates = process.argv.includes("--template7-only") ? [7] : [7, 9];
 const { buildTemplate7FastRuntime, buildTemplate7RuntimeConfig } = await loadSource(builderRoot,
   'export * from "./components/public-landing/template7FastRuntime";');
 const key = "local-feedback-fixture-signing-key-20261119";
 const origin = "https://casino.fixture";
 Object.assign(process.env, { SESSION_ENCRYPTION_KEY: key, GATEWAY_PUBLIC_ORIGIN: origin });
 
-function landingDestination(engine, provider, mode, submitted, href) {
-  const page = { layout: { template: 9 }, gatewayEntry: { mode, seconds: 4 } };
+function landingDestination(engine, template, provider, mode, submitted, href) {
+  const page = { layout: { template }, gatewayEntry: { mode, seconds: 4 } };
   const identity = engine === "classic" ? "function getOrCreateDeviceId(){return 'fixture';}" : "";
   const cfg = { ...buildTemplate7RuntimeConfig("fixture", page, identity), targetProvider: provider, skinCode: "ganamos_plus" };
   const runtime = buildTemplate7FastRuntime("fixture", page, identity);
@@ -55,7 +56,7 @@ try {
     const root = product(repo);
     const { GET, addGatewayEntryWaitToHandoff, readGatewayEntryPresentation, NextRequest } = await loadSource(root,
       'export { GET } from "./src/app/prepare/route"; export * from "./src/lib/gateway-entry-settings"; export {NextRequest} from "next/server";');
-    for (const engine of ["builder", "classic"]) for (const token of ["p1.fixture", "opaque-fixture"]) {
+    for (const template of templates) for (const engine of ["builder", "classic"]) for (const token of ["p1.fixture", "opaque-fixture"]) {
       for (const mode of ["credentials", "direct"]) for (const submitted of [true, false]) {
         const isCredentials = mode === "credentials", opaque = token === "opaque-fixture";
         const isNew = isCredentials && submitted, verifying = !submitted;
@@ -65,8 +66,8 @@ try {
           addGatewayEntryWaitToHandoff(source, { enabled, seconds: 4, continueButtonEnabled: enabled }, key, 120, undefined,
             isNew, submitted ? undefined : isCredentials ? true : "direct");
         }
-        const destination = landingDestination(engine, code, mode, submitted, source.href);
-        const label = [repo, engine, token, mode, submitted ? "new" : "return"].join("/");
+        const destination = landingDestination(engine, template, code, mode, submitted, source.href);
+        const label = [repo, template, engine, token, mode, submitted ? "new" : "return"].join("/");
         if (opaque) {
           assert.equal(destination.searchParams.get("ew"), source.searchParams.get("ew"), label + " proof preserved");
           const policy = readGatewayEntryPresentation(destination, key);
