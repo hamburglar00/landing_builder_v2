@@ -51,6 +51,7 @@ export function adaptTemplate8Runtime(source: string, classic: boolean): string 
             transitionRoot.style.setProperty('--entry-primary',brand.primary || brand.accent);
             transitionRoot.style.setProperty('--entry-track',(brand.accent || '#f6c84b') + '26');
             transitionRoot.style.setProperty('--entry-accent-text',brand.accentText || '#171105');
+            transitionRoot.style.setProperty('--entry-button-fill',brand.buttonFill || brand.accent);
             transitionRoot.style.setProperty('--entry-glow',brand.glow);
             transitionRoot.querySelectorAll('[data-entry-source]').forEach(function(source) {
               source.removeAttribute('srcset'); source.dataset.srcset = card.transitionLogoAvif || '';

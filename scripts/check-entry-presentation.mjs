@@ -19,7 +19,7 @@ function App(){const[draft,setDraft]=useState({displayName:"Prueba",whatsapp:"",
  b.onResolve({filter:/^@\/lib\/client-gateway-credentials$/},()=>({path:"credentials",namespace:"fixture"}));
  b.onLoad({filter:/.*/,namespace:"fixture"},()=>({contents:'export async function requestClientGatewayCredentials(){return{username:"fixtureplayer",password:"fixture-password"}}'}));
 }}]});
-const configs=[["landing-autologuin","rey_de_ases","#141414"],["ases-gateway","ases_del_norte","#071b2c"],["ganamos-gateway","ganamos_net","#11001f"],["multi-skin-gateway","multi_skin","#121212"]];
+const configs=[["landing-autologuin","rey_de_ases","#141414"],["ases-gateway","ases_del_norte","#101114"],["ganamos-gateway","ganamos_net","#11001f"],["multi-skin-gateway","multi_skin","#121212"]];
 const rgb=hex=>"rgb("+[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)).join(", ")+")";
 const assets=await Promise.all(configs.map(async([repo,provider,palette])=>{
  const cwd=path.join(workspace,repo), result=await build({absWorkingDir:cwd,stdin:{resolveDir:cwd,loader:"ts",contents:'export{renderPreparationPage}from"./src/lib/preparation-page";export{renderGatewayEntryTransition,GATEWAY_ENTRY_TRANSITION_RUNTIME}from"./src/lib/gateway-entry-transition";'+(repo==='multi-skin-gateway'?'export{skinPreparationTheme}from"./src/lib/skin-presentation";':'')},bundle:true,write:false,platform:"node",format:"cjs"});

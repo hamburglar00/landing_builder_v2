@@ -1792,3 +1792,9 @@ La tarjeta de LandingBuilder en Panel3 omite el aviso por un bot inactivo cuando
 En las pantallas oscuras de Rey de Ases, Ases del Norte, Ganamos NET y Ganamos+, los textos de etapa se leen en blanco. «Creando tu cuenta…», «Verificando tu cuenta…» y los mensajes de ingreso y conexión mantienen la misma tipografía al pasar de la landing al gateway y al abrir el chat. El saludo «¡Hola de nuevo, {usuario}!» mantiene el nombre de usuario en el color del casino. El logo de Ases del Norte se integra sobre el fondo con transparencia.
 
 Las landings T7 y T9 de Ganamos+ usan el mismo logo de GANAMOS que Ganamos NET donde la landing muestra la marca automática. En T7 se respeta el logo que haya cargado el cliente en el formulario. La identidad del casino y sus íconos de aplicación siguen asociados a la skin elegida.
+
+### Ases del Norte en gris oscuro y blanco (19/11/2026)
+
+Leo elige una base gris oscuro y blanco para Template 9 y el gateway de Ases del Norte. El texto de los botones y los estados de ingreso se leen en blanco. El fondo del botón es gris también al pasar el puntero. La página, las zonas seguras y la barra del navegador parten del gris del casino `#101114`. La barra de progreso usa un degradado gris y blanco. El saludo conserva el formato «¡Hola de nuevo, {usuario}!». Se conserva el logo transparente y su proporción.
+
+Esta decisión sustituye la paleta azul del 5 de noviembre. Se aplica al constructor, al motor clásico, al renderer y editor de NexoBet y a las pantallas propias del gateway, incluido el ingreso de gerencia. El casino conserva su diseño y el chat respeta la plantilla elegida por el asesor. Las demás marcas mantienen sus colores.

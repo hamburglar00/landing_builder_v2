@@ -1,7 +1,7 @@
 import { renderTemplate8View as renderTemplate8, renderTemplate7View as renderTemplate7, renderTemplate6View as renderTemplate6 } from "./template8View";
 import { renderTemplate9View, TEMPLATE9_UI_SCRIPT } from "./template9View";
 import { TEMPLATE9_CSS } from "./template9Css";
-import { getTemplate9Brand, TEMPLATE9_DEFAULTS } from "../../lib/landing/template9";
+import { getTemplate9Brand, template9CanvasAttribute, TEMPLATE9_DEFAULTS } from "../../lib/landing/template9";
 import { buildTemplate7ResourceWarmup } from "./template7ResourceWarmup";
 import PhonePrewarmScript from "./PhonePrewarmScript";
 import PublicLandingRuntimeScript from "./PublicLandingRuntimeScript";
@@ -709,8 +709,9 @@ export function renderPublicLandingHtml(params: RenderParams) {
   const isTemplate7 = config.layout?.template === 7 || isTemplate8 || config.layout?.template === 9;
   const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
   const metadata = publicMetadata(config, slug);
-  const template4Background = config.layout?.template === 4 ? ' style="background-color:#102326"' : "";
-  const themeColor = config.layout?.template === 4 ? "#102326" : config.layout?.template === 9 ? getTemplate9Brand(config.tracking?.target_provider || "rey_de_ases", config.tracking?.skin_code).deep : "#000000";
+  const t9Brand = config.layout?.template === 9 ? getTemplate9Brand(config.tracking?.target_provider || "rey_de_ases", config.tracking?.skin_code) : null;
+  const canvasAttribute = t9Brand ? template9CanvasAttribute(t9Brand) : config.layout?.template === 4 ? ' style="background-color:#102326"' : "";
+  const themeColor = config.layout?.template === 4 ? "#102326" : t9Brand?.deep ?? "#000000";
   const supabaseOrigin = (() => {
     const raw = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
     try {
@@ -732,7 +733,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     ? `<script>(()=>{const input=document.querySelector('[data-template7-name]');if(!input)return;const names=${JSON.stringify(TEMPLATE7_EXAMPLE_NAMES)};input.placeholder='Ej.: '+names[Math.floor(Math.random()*names.length)];})();</script>`
     : "";
 
-  const html = `<!doctype html><html lang="es"${template4Background}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><script>${buildLandingEntryFunnelScript({ landingId: config.id || '', template: (config.layout?.template || 1) as EntryFunnelTemplate, engine, apiBase: params.apiBase })}</script><title>${escapeHtml(
+  const html = `<!doctype html><html lang="es"${canvasAttribute}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><script>${buildLandingEntryFunnelScript({ landingId: config.id || '', template: (config.layout?.template || 1) as EntryFunnelTemplate, engine, apiBase: params.apiBase })}</script><title>${escapeHtml(
     metadata.title,
   )}</title>${buildPublicMetadataTags(
     config,
@@ -756,7 +757,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     config.tracking?.phoneCountryCode || "54",
     config.layout?.template || 0,
     engine === 'classic' && !isTemplate7,
-  )}</head><body${template4Background}>${buildPixelNoscript(pixelId)}${renderTemplate(params)}${template7PlaceholderScript}${renderPrivacyFooter(
+  )}</head><body${canvasAttribute}>${buildPixelNoscript(pixelId)}${renderTemplate(params)}${template7PlaceholderScript}${renderPrivacyFooter(
     config,
   )}${runtimeScript}${isTemplate7 ? resourceWarmup(config) : ""}</body></html>`;
   if (!isTemplate7 || isTemplate8 || engine === "gateway") return html;
@@ -780,9 +781,10 @@ export function renderClassicTemplate7InlineHtml(params: RenderParams, deviceIdS
 /** Complete classic document without React hydration, layout CSS or Next chunks. */
 export function renderClassicTemplate7Html(params: RenderParams, deviceIdScript: string) {
   const metadata = publicMetadata(params.config, params.slug);
+  const brand = params.config.layout?.template === 9 ? getTemplate9Brand(params.config.tracking?.target_provider || "rey_de_ases", params.config.tracking?.skin_code) : null;
   const origins = [process.env.NEXT_PUBLIC_SUPABASE_URL, template7GatewayOrigin(params.config), ...(params.config.tracking?.pixelId ? ['https://www.facebook.com', 'https://connect.facebook.net'] : [])];
   const connections = [...new Set(origins.flatMap(origin => { try { return origin ? [new URL(origin).origin] : []; } catch { return []; } }))].map(origin => `<link rel="preconnect" href="${escapeHtml(origin)}" crossorigin>`).join('');
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">${PUBLIC_LANDING_FAVICON_LINK}<meta name="theme-color" content="${params.config.layout?.template === 9 ? getTemplate9Brand(params.config.tracking?.target_provider || "rey_de_ases", params.config.tracking?.skin_code).deep : "#000000"}"><title>${escapeHtml(metadata.title)}</title>${buildPublicMetadataTags(params.config, params.slug, params.canonicalUrl)}${connections}<script>${buildLandingEntryFunnelScript({ landingId: params.config.id || '', template: (params.config.layout?.template || 7) as EntryFunnelTemplate, engine: 'classic' })}</script></head><body>${renderClassicTemplate7InlineHtml(params, deviceIdScript, false)}</body></html>`;
+  return `<!doctype html><html lang="es"${brand ? template9CanvasAttribute(brand) : ""}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">${PUBLIC_LANDING_FAVICON_LINK}<meta name="theme-color" content="${brand?.deep ?? "#000000"}"><title>${escapeHtml(metadata.title)}</title>${buildPublicMetadataTags(params.config, params.slug, params.canonicalUrl)}${connections}<script>${buildLandingEntryFunnelScript({ landingId: params.config.id || '', template: (params.config.layout?.template || 7) as EntryFunnelTemplate, engine: 'classic' })}</script></head><body>${renderClassicTemplate7InlineHtml(params, deviceIdScript, false)}</body></html>`;
 }
 
 /** All templates share delivery/assets; classic retains its identity and API adapter. */

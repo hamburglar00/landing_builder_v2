@@ -18,12 +18,13 @@ export const TEMPLATE9_CSS = `
 .template9 input::placeholder{color:var(--t9-placeholder,#7a6e94)}
 .template9 input:focus{border-color:var(--t9-secondary);box-shadow:0 0 0 4px color-mix(in srgb,var(--t9-secondary) 18%,transparent)}
 .template9__phone-label{display:block;font-size:12px;text-align:left;margin:12px 0 6px}
-.template9 .template9__cta{width:100%;margin-top:16px;min-height:60px;font-size:18px;font-weight:800;letter-spacing:.3px;line-height:normal;color:var(--t9-cta-foreground,#fff);border:0;border-radius:14px;padding:17px;background:linear-gradient(135deg,var(--t9-primary),var(--t9-secondary));box-shadow:0 10px 30px color-mix(in srgb,var(--t9-primary) 50%,transparent),0 0 20px color-mix(in srgb,var(--t9-secondary) 35%,transparent);transition:transform .12s,box-shadow .2s;animation:t9-glow 2.4s ease-in-out infinite}
+.template9 .template9__cta{width:100%;margin-top:16px;min-height:60px;font-size:18px;font-weight:800;letter-spacing:.3px;line-height:normal;color:var(--t9-cta-foreground,#fff);border:0;border-radius:14px;padding:17px;background:linear-gradient(135deg,var(--t9-primary),var(--t9-cta-end,var(--t9-secondary)));box-shadow:0 10px 30px color-mix(in srgb,var(--t9-primary) 50%,transparent),0 0 20px color-mix(in srgb,var(--t9-secondary) 35%,transparent);transition:transform .12s,box-shadow .2s;animation:t9-glow 2.4s ease-in-out infinite}
+@media(hover:hover){.template9__cta:hover:not(:disabled),.template9__cookies button[data-template9-cookie-dismiss]:hover{--t9-cta-end:var(--t9-cta-hover,var(--t9-secondary))}}
 .template9__cta:active{transform:scale(.97)}
 .template9__cta[disabled]{cursor:default;animation:none}
 .template9__cta[aria-busy=true]{opacity:.75}
 .template9__trust{margin:calc(18px - 16px * (var(--t9-logo-scale,1) - 1)) 0 0;font-size:12.5px;color:var(--t9-muted,#9d90ba);letter-spacing:.2px}
-.template9__error{margin:14px 0 0;font-size:13.5px;color:#ffc2c2;background:#ff40401a;border:1px solid #ff5a5a57;border-radius:12px;padding:10px 13px;line-height:1.35;text-align:left}
+.template9__error{margin:14px 0 0;font-size:13.5px;color:var(--t9-error-text,#ffc2c2);background:var(--t9-error-fill,#ff40401a);border:1px solid var(--t9-error-border,#ff5a5a57);border-radius:12px;padding:10px 13px;line-height:1.35;text-align:left}
 .template9__sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .template9__footer{flex-shrink:0;width:100%;max-width:460px;margin:calc(22px - 20px * (var(--t9-logo-scale,1) - 1)) auto 0;padding:0 8px;text-align:center}
 .template9__footer nav{display:flex;flex-wrap:wrap;gap:0 8px;justify-content:center;margin-bottom:6px}
@@ -33,7 +34,7 @@ export const TEMPLATE9_CSS = `
 .template9__cookies{position:relative;flex-shrink:0;margin:0 max(12px,env(safe-area-inset-right)) 12px max(12px,env(safe-area-inset-left));z-index:3;display:flex;gap:10px;align-items:center;justify-content:center;background:var(--t9-surface,color-mix(in srgb,var(--t9-primary) 8%,#120a22));border:1px solid color-mix(in srgb,var(--t9-secondary) 45%,transparent);border-radius:14px;padding:11px 14px;font-size:13px;line-height:1.4;color:#f4ecff;box-shadow:0 12px 34px #0009}
 .template9__cookies span{flex:0 1 auto;min-width:0}
 .template9__cookies a{color:var(--t9-highlight);font-size:inherit;font-weight:700;text-decoration:underline;background:none;border:0;padding:0}
-.template9__cookies button[data-template9-cookie-dismiss]{flex:none;min-height:44px;font-size:13px;font-weight:800;color:var(--t9-cta-foreground,#fff);border:0;border-radius:10px;padding:9px 18px;background:linear-gradient(135deg,var(--t9-primary),var(--t9-secondary))}
+.template9__cookies button[data-template9-cookie-dismiss]{flex:none;min-height:44px;font-size:13px;font-weight:800;color:var(--t9-cta-foreground,#fff);border:0;border-radius:10px;padding:9px 18px;background:linear-gradient(135deg,var(--t9-primary),var(--t9-cta-end,var(--t9-secondary)))}
 .template9 button:focus-visible,.template9 a:focus-visible{outline:2px solid var(--t9-highlight);outline-offset:3px}
 .template9--preview{position:relative;width:100%;height:100dvh;min-height:0}
 .template9--preview .template9__card,.template9--preview .template9__cta{animation:none}

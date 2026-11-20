@@ -64,7 +64,7 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
         const page = await browser.newPage({ viewport, hasTouch: viewport.width <= 844 });
         const errors = []; page.on("pageerror", error => errors.push(String(error)));
         let frameNavigations = 0, sdkRequests = 0;
-        const palette = { "landing-autologuin": "#141414", "ases-gateway": "#071b2c", "ganamos-gateway": "#11001f", "multi-skin-gateway": "#121212" }[asset.repo];
+        const palette = { "landing-autologuin": "#141414", "ases-gateway": "#101114", "ganamos-gateway": "#11001f", "multi-skin-gateway": "#121212" }[asset.repo];
         const paletteRgb = "rgb(" + [1,3,5].map(index => parseInt(palette.slice(index,index+2),16)).join(", ") + ")";
         const html = asset.applyGatewayBrowserAppearance(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>${asset.css}</style></head><body><button id="provider" style="position:fixed;inset:0;background:${palette};color:white" onclick="window.providerClicks=(window.providerClicks||0)+1">Casino de prueba</button><script src="/gateway-client.js" data-chat-url="https://chat.test/embed"></script></body></html>`, palette);
         await page.route("https://fixture.test/**", route => {
