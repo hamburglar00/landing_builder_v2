@@ -1804,3 +1804,7 @@ Las landings T7 y T9 de Ganamos+ usan el mismo logo de GANAMOS que Ganamos NET d
 Leo elige una base gris oscuro y blanco para Template 9 y el gateway de Ases del Norte. El texto de los botones y los estados de ingreso se leen en blanco. El fondo del botón es gris también al pasar el puntero. La página, las zonas seguras y la barra del navegador parten del gris del casino `#101114`. La barra de progreso usa un degradado gris y blanco. El saludo conserva el formato «¡Hola de nuevo, {usuario}!». Se conserva el logo transparente y su proporción.
 
 Esta decisión sustituye la paleta azul del 5 de noviembre. Se aplica al constructor, al motor clásico, al renderer y editor de NexoBet y a las pantallas propias del gateway, incluido el ingreso de gerencia. El casino conserva su diseño y el chat respeta la plantilla elegida por el asesor. Las demás marcas mantienen sus colores.
+
+### Interacciones del chat de gateway
+
+Las estadísticas deben permitir ver, para una landing en circulación, cuántos clientes tocan los chips, «Copiar CBU» o el botón para subir un comprobante. Abrir el selector de archivos cuenta como interacción aunque el cliente lo cierre. La entrega del comprobante se distingue del clic inicial. Las métricas usan la atribución comprobada de la entrada y categorías de acción. Los datos bancarios, nombres de archivos y contenido del chat quedan fuera de estos eventos.
