@@ -8,7 +8,7 @@ function setEntryFormBusy(action,busy) {
     status=document.createElement('div');
     status.setAttribute('data-template7-creating','');
     status.setAttribute('role','status');
-    status.style.cssText='text-align:center;padding:12px 0;font-weight:600';
+    status.style.cssText='text-align:center;padding:12px 0';
     status.innerHTML='Creando tu cuenta…<div class="entry-progress" data-start="initial" data-phase="creating" role="progressbar" aria-label="Creando tu cuenta" style="margin:10px auto 0;--entry-primary:var(--t9-primary,currentColor);--entry-accent:var(--t9-secondary,currentColor);--entry-track:rgba(128,128,128,.25)"><span class="entry-progress-track"><span class="entry-progress-fill"></span></span></div>';
     action.after(status);
   }

@@ -19,8 +19,8 @@ export const TEMPLATE7_RETURN_HINT_SCRIPT = `
     overlay=document.getElementById("gateway-entry-transition");
     if(!overlay)return;
     overlay.dataset.stage="verifying";
-    overlay.querySelector("[data-entry-title]").textContent="";
-    overlay.querySelector("[data-entry-description]").textContent=delayed?"Verificando tu cuenta…":"";
+    overlay.querySelector("[data-entry-title]").textContent=delayed?"Verificando tu cuenta…":"";
+    overlay.querySelector("[data-entry-description]").textContent="";
     overlay.querySelector("[data-entry-progress]").hidden=true;
     overlay.querySelectorAll("[data-entry-source]").forEach(function(el){el.srcset=el.dataset.srcset});
     overlay.querySelectorAll("[data-entry-logo]").forEach(function(el){el.src=el.dataset.src});
@@ -32,7 +32,7 @@ export const TEMPLATE7_RETURN_HINT_SCRIPT = `
     page.removeAttribute("data-t7-return-check");
     window.__T7_RETURN_CHECK__=null;
   }
-  var messageTimer=setTimeout(function(){delayed=true;if(overlay)overlay.querySelector("[data-entry-description]").textContent="Verificando tu cuenta…"},300);
+  var messageTimer=setTimeout(function(){delayed=true;if(overlay)overlay.querySelector("[data-entry-title]").textContent="Verificando tu cuenta…"},300);
   // Release the form even if the versioned runtime or its request never arrives.
   var expiry=setTimeout(dismiss,4000);
   window.__T7_RETURN_CHECK__={paint:paint,dismiss:dismiss,claim:function(){clearTimeout(expiry)}};

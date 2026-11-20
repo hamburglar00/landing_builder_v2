@@ -38,7 +38,10 @@ test("a previous preparation only hides its own form, releases on lookup failure
   assert.equal(returning.title.textContent, "");
   assert.equal(returning.description.textContent, "");
   returning.timers.get(300)!();
-  assert.equal(returning.description.textContent, "Verificando tu cuenta…");
+  assert.equal(returning.title.textContent, "Verificando tu cuenta…");
+  assert.equal(returning.description.textContent, "");
+  returning.window.__T7_RETURN_CHECK__!.paint();
+  assert.equal(returning.title.textContent, "Verificando tu cuenta…");
   returning.window.__T7_RETURN_CHECK__!.claim();
   assert.equal(returning.timers.has(4000), false);
   const warm = buildTemplate7FastRuntime("diana", { id: "diana-id", layout: { template: 7 } } as never);

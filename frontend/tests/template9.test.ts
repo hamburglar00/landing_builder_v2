@@ -81,9 +81,12 @@ test("NET and Plus match the reference palette; every Multi Skin uses its saved 
   const net = getTemplate9Brand("ganamos_net"), plus = getTemplate9Brand("multi_skin", "ganamos_plus");
   assert.equal(net.primary, plus.primary);
   assert.equal(net.secondary, plus.secondary);
+  assert.equal(plus.logo, net.logo);
+  assert.equal(plus.name, "Ganamos+");
   for (const skin of MULTI_SKIN_CODES) {
     const html = renderPublicLandingHtml({ slug: "fixture", config: publicConfig("multi_skin", skin) });
     assert.ok(html.includes(getTemplate9Brand("multi_skin", skin).logo));
+    if (skin === "ganamos_plus") assert.match(html, /data-entry-logo data-src="[^"]*\/ganamos-wordmark\.webp"/);
     assert.ok(html.includes(`"skinCode":"${skin}"`));
   }
 });

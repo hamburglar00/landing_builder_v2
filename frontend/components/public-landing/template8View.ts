@@ -2,8 +2,7 @@
 import { optimizeTemplate7Images, template8Image, publicImageOriginalUrl } from "../../lib/landing/template7Images";
 import { gatewayOriginFor } from "../../lib/reyDeAses/gatewayOrigins";
 import { renderGatewayEntryTransition } from "../../lib/gateway-entry-transition";
-import { isMultiSkinCode } from "../../lib/multi-skin-catalog";
-import { getMultiSkinBrand } from "../../lib/skin-branding";
+import { landingEntryBrand } from "../../lib/landing/entryBrand";
 import type { PublicLandingConfig, PublicLandingPhoneResponse } from "./types";
 import { WHATSAPP_GREEN_PATH, WHATSAPP_WHITE_PATH } from "./whatsAppBrandIcon";
 
@@ -142,8 +141,7 @@ function renderFrameBackgroundTemplate7(config: PublicLandingConfig) {
 
 function renderTemplate7({ config }: RenderParams) {
   const code = config.tracking?.skin_code;
-  const skinBrand = config.tracking?.target_provider === 'multi_skin' && isMultiSkinCode(code)
-    ? getMultiSkinBrand(code) : undefined;
+  const skinBrand = landingEntryBrand(config.tracking?.target_provider, code, config.layout?.template);
   const hasLogo = Boolean(config.content?.logoUrl);
   const titleLines = (config.content?.title || []).map((line) => line.trim()).filter(Boolean);
   const subtitleLines = (config.content?.subtitle || []).map((line) => line.trim()).filter(Boolean);

@@ -9,11 +9,12 @@ export const TEMPLATE9_DEFAULTS = {
 
 export type Template9Brand = { name: string; logo: string; primary: string; secondary: string; highlight: string; deep: string; neutralSurface?: boolean; logoScale?: number };
 const violet = { primary: "#7c34e8", secondary: "#b02cf0", highlight: "#e6a3ff", deep: "#0d0618" };
+const ganamosWordmark = "/public-assets/template9/ganamos_net_logo.webp";
 const providers: Record<string, Template9Brand> = {
   rey_de_ases: { name: "Rey de Ases", logo: "/public-assets/template9/rey_de_ases_logo.webp", primary: "#c49a32", secondary: "#efd27b", highlight: "#fff0b8", deep: "#080808", neutralSurface: true, logoScale: 1.5 },
   ases_del_norte: { name: "Ases del Norte", logo: "/public-assets/template9/ases_del_norte_logo.webp", primary: "#36a8eb", secondary: "#36a8eb", highlight: "#cbeaff", deep: "#071b2c" },
-  ganamos_net: { name: "Ganamos NET", logo: "/public-assets/template9/ganamos_net_logo.webp", ...violet },
-  multi_skin: { name: "Ganamos+", logo: "/public-assets/template9/ganamos_plus_logo.webp", ...violet },
+  ganamos_net: { name: "Ganamos NET", logo: ganamosWordmark, ...violet },
+  multi_skin: { name: "Ganamos+", logo: ganamosWordmark, ...violet },
 };
 
 /** Presentation only. The saved provider/skin remains the authority for entry. */

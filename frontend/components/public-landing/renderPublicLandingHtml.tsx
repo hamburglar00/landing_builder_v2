@@ -16,8 +16,7 @@ import { buildTemplate7ReentryScript, guardTemplate7ReentryScripts } from "./tem
 import { optimizeTemplate7Images, template8Image, publicImageOriginalUrl } from "../../lib/landing/template7Images";
 import { gatewayOriginFor } from "../../lib/reyDeAses/gatewayOrigins";
 import { renderGatewayEntryTransition } from "../../lib/gateway-entry-transition";
-import { isMultiSkinCode } from "../../lib/multi-skin-catalog";
-import { getMultiSkinBrand } from "../../lib/skin-branding";
+import { landingEntryBrand } from "../../lib/landing/entryBrand";
 import {
   buildPixelInitScript,
   buildPixelNoscript,
@@ -690,7 +689,7 @@ function resourceWarmup(config: PublicLandingConfig) {
 function renderTemplate(params: RenderParams) {
   if (params.config.layout?.template === 9) {
     const code = params.config.tracking?.skin_code;
-    const brand = params.config.tracking?.target_provider === "multi_skin" && isMultiSkinCode(code) ? getMultiSkinBrand(code) : undefined;
+    const brand = landingEntryBrand(params.config.tracking?.target_provider, code, 9);
     return renderTemplate9View(params.config, false, params.legalBasePath || `/l/${encodeURIComponent(params.slug)}`, params.publicAssetBase ?? params.assetBase) + renderGatewayEntryTransition(params.config.tracking?.target_provider || "rey_de_ases", { stage: "creating", gatewayOrigin: template7GatewayOrigin(params.config), brand }) + TEMPLATE9_UI_SCRIPT;
   }
   if (params.config.layout?.template === 8) return renderTemplate8(params);
