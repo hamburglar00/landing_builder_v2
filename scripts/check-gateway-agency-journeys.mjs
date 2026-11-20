@@ -97,6 +97,12 @@ async function run(browser, target) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block" });
   const page = await context.newPage();
   page.setDefaultTimeout(15000);
+  const accountNumber = String(123450000 + target.platform).padStart(22, "0");
+  const walletMessage = {
+    id: uuid(9901), sender: "asesor", type: "texto", content: "Datos para transferir",
+    created_at: new Date().toISOString(), read_at: null,
+    metadata: { wallet: { accountNumber, holderName: "Titular de prueba" } },
+  };
   const traces = [];
   const errors = [],
     calls = [],
@@ -410,7 +416,7 @@ async function run(browser, target) {
             embeddedHasActiveWallet: true,
             conversationSessionToken: "local-" + identity.username,
             widgetTemplate: "atrio",
-            initialMessages: [],
+            initialMessages: [walletMessage],
             session,
             quickStarters: [],
           };
@@ -460,9 +466,32 @@ async function run(browser, target) {
   async function send(agency) {
     const frame = page.frameLocator("#gateway-chat-shell iframe"),
       composer = frame.getByPlaceholder("Escribi un mensaje...");
+    const clipboard = await composer.evaluate(() => ({
+      write: document.featurePolicy.allowsFeature("clipboard-write"),
+      read: document.featurePolicy.allowsFeature("clipboard-read"),
+    }));
+    assert.deepEqual(clipboard, { write: true, read: false }, "Atrio can copy the CBU in the embedded chat");
     await composer.fill("Hola cliente" + agency);
     await composer.press("Enter");
     await frame.locator('[data-chat-message-id="' + messageId + '"]').waitFor();
+    if (sent.length === 1) {
+      // Headless shell cannot display a permission prompt. This grant does
+      // not override the cross-origin iframe's Permissions Policy.
+      await context.grantPermissions(["clipboard-write"]);
+      await frame.getByRole("button", { name: "Copiar CBU", exact: true }).click();
+      await frame.getByRole("button", { name: "CBU copiado", exact: true }).waitFor();
+      // Headless shell uses its own in-memory clipboard. Paste into a separate
+      // document using a user gesture; the chat never needs clipboard-read.
+      const transfer = await context.newPage();
+      try {
+        await transfer.setContent('<label>CBU para la transferencia<input></label>');
+        const destination = transfer.getByLabel("CBU para la transferencia");
+        await destination.press("ControlOrMeta+v");
+        assert.equal(await destination.inputValue(), accountNumber);
+      } finally {
+        await transfer.close();
+      }
+    }
   }
   try {
     for (const agency of [17, 23]) {
@@ -620,7 +649,7 @@ async function run(browser, target) {
     assert.deepEqual(errors, []);
     console.log(
       target.code +
-        " PASS: three creations, eight exact chats and messages, early/late CTA, retry, agency and template both ways",
+        " PASS: three creations, eight exact chats and messages, CBU copied and pasted, early/late CTA, retry, agency and template both ways",
     );
   } catch (error) {
     console.error(error.message, JSON.stringify({ url: page.url(), traces: traces.slice(-50), errors }));

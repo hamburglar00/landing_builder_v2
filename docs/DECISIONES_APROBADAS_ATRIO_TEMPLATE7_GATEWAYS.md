@@ -1,5 +1,9 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+## 20/11 — Copiar el CBU desde el chat del gateway
+
+Los cuatro gateways, incluido el Worker de Ganamos+, deben permitir que el chat copie el CBU cuando el jugador toca «Copiar CBU». La validación comprueba que se puedan pegar los 22 dígitos, incluidos los ceros iniciales. Interesan especialmente los navegadores internos de Instagram y Facebook en Android, por donde entran los jugadores de las campañas.
+
 ## 19/11 — Correo y plan de las cuentas nuevas de Builder creadas desde PBAdmin
 
 Al elegir «Crear cuenta» en Extensiones, Builder usa el correo del administrador autenticado que entrega PBAdmin y asigna el plan Scale activo, con 999 landings, 999 teléfonos y sin vencimiento. Si el correo ya tiene una cuenta, «Ya tengo cuenta» exige sus credenciales para vincularla. Las cuentas existentes conservan su correo y su suscripción, incluidas las altas históricas con correo técnico. El alta manual desde Superadmin mantiene Starter por 30 días. La decisión se implementa y comprueba en local.
