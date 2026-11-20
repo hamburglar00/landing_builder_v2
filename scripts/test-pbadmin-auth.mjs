@@ -358,9 +358,9 @@ try {
     accountEmail: null,
   });
   let result;
-  await test("new Builder creates a client with normal defaults and an audited native Auth session", async () => {
+  await test("new Builder uses the PBAdmin owner email, active Scale limits and an audited session", async () => {
     try {
-      result = await builder.provision(identity(101), "synthetic-grant");
+      result = await builder.provision({ ...identity(101), email: "  Owner101@Example.Test  " }, "synthetic-grant");
     } catch (error) {
       const check = await db.from("profiles").select("role,nombre");
       console.error("Local profile diagnostic", {
@@ -380,6 +380,7 @@ try {
       .eq("id", result.uid)
       .single();
     assert.equal(profile.data.role, "client");
+    assert.equal((await db.auth.admin.getUserById(result.uid)).data.user.email, "owner101@example.test");
     const defaults = await db
       .from("client_module_permissions")
       .select("*")
@@ -393,8 +394,8 @@ try {
     for (const key of ["show_logs", "show_ai_assistant", "show_promotions"]) assert.equal(config.data[key], false);
     assert.equal(config.data.visible_columns.length, 21, "Column visibility is unchanged");
     const subscription = await db.from("client_subscriptions")
-      .select("max_landings,expires_at").eq("user_id", result.uid).single();
-    assert.deepEqual(subscription.data, { max_landings: 1, expires_at: null });
+      .select("plan_code,max_landings,max_phones,status,expires_at").eq("user_id", result.uid).single();
+    assert.deepEqual(subscription.data, { plan_code: "scale", max_landings: 999, max_phones: 999, status: "active", expires_at: null });
   });
   await test("retry and second administrator keep one workspace and identify each person", async () => {
     await db.from("client_module_permissions").update({ show_atrio: false }).eq("user_id", result.uid);
@@ -403,6 +404,7 @@ try {
       "synthetic-grant",
     );
     assert.equal(other.uid, result.uid);
+    assert.equal((await db.auth.admin.getUserById(other.uid)).data.user.email, "owner101@example.test");
     assert.equal((await db.from("client_module_permissions").select("show_atrio").eq("user_id", result.uid).single()).data.show_atrio, false, "Reopening does not reset an existing disablement");
     const rows = await db
       .from("pbadmin_sessions")
@@ -424,7 +426,7 @@ try {
   });
   await test("a partial signup resumes the same reserved Auth UUID", async () => {
     sql(
-      "alter table client_subscriptions add constraint fixture_fail_plan check (max_landings<>1) not valid;",
+      "alter table client_subscriptions add constraint fixture_fail_plan check (max_landings<>999) not valid;",
     );
     await assert.rejects(builder.provision(identity(105), "synthetic-grant"));
     const reserved = (
@@ -438,8 +440,9 @@ try {
     assert.ok((await db.auth.admin.getUserById(reserved.account_id)).data.user);
     await db.from("client_module_permissions").update({ show_atrio: false }).eq("user_id", reserved.account_id);
     sql("alter table client_subscriptions drop constraint fixture_fail_plan;");
-    const resumed = await builder.provision(identity(105), "synthetic-grant");
+    const resumed = await builder.provision(identity(105, 1105), "synthetic-grant");
     assert.equal(resumed.uid, reserved.account_id);
+    assert.equal((await db.auth.admin.getUserById(resumed.uid)).data.user.email, "user105@example.test");
     assert.equal((await db.from("client_module_permissions").select("show_atrio").eq("user_id", resumed.uid).single()).data.show_atrio, false, "Resuming a partial signup preserves saved permissions");
     assert.equal(
       (
@@ -457,10 +460,47 @@ try {
     const initializer = await bundle(path.join(root, "supabase/functions/_shared/initialize-client.ts"), "client-defaults", path.join(root, "frontend"));
     await initializer.initializeClientDefaults(db, id, defaultsId);
     const subscription = await db.from("client_subscriptions")
-      .select("starts_at,expires_at").eq("user_id", id).single();
+      .select("plan_code,max_landings,max_phones,starts_at,expires_at").eq("user_id", id).single();
+    assert.equal(subscription.data.plan_code, "starter");
+    assert.equal(subscription.data.max_landings, 1);
+    assert.equal(subscription.data.max_phones, 2);
     assert.equal(Date.parse(subscription.data.expires_at) - Date.parse(subscription.data.starts_at), 30 * 86400_000);
     const row = await db.from("client_module_permissions").select("*").eq("user_id", id).single();
     for (const key of ["show_atrio", "show_followups", "show_whatsapp_api", "show_notifications", "show_kommo", "show_chatrace"]) assert.equal(row.data[key], false);
+  });
+  await test("invalid PBAdmin email produces no Auth user or account reservation", async () => {
+    for (const email of [null, "", "not-an-email", "owner@accounts.pbadmin.invalid"]) {
+      await assert.rejects(builder.connect({ ...identity(108), email }, "synthetic-grant", {}), { status: 422 });
+    }
+    assert.equal(sql("select count(*) from pbadmin_accounts where owner_id=108"), "0");
+  });
+  await test("foreign signup approvals stay with their original request", async () => {
+    const email = "signup-in-progress@example.test", foreign = randomUUID();
+    assert.ifError((await db.from("auth_signup_approvals").insert({ email, user_id: foreign, requested_by: defaultsId })).error);
+    await assert.rejects(builder.connect({ ...identity(109), email }, "synthetic-grant", {}), { status: 503 });
+    assert.equal(sql("select user_id from auth_signup_approvals where email='signup-in-progress@example.test'"), foreign);
+    assert.equal(sql("select count(*) from auth.users where email='signup-in-progress@example.test'"), "0");
+  });
+  await test("two owners creating the same email cannot share a Builder account", async () => {
+    const email = "shared-new-address@example.test";
+    const attempts = await Promise.allSettled([110, 111].map(owner =>
+      builder.connect({ ...identity(owner), email }, "synthetic-grant", {})));
+    assert.equal(attempts.filter(item => item.status === "fulfilled").length, 1);
+    const rejected = attempts.findIndex(item => item.status === "rejected");
+    const loser = [110, 111][rejected];
+    await assert.rejects(builder.connect({ ...identity(loser), email }, "synthetic-grant", {}), { status: 409 });
+    assert.equal(sql("select count(*) from auth.users where email='shared-new-address@example.test'"), "1");
+    assert.equal(sql("select count(*) from pbadmin_accounts where owner_id in (110,111) and ready"), "1");
+    assert.equal(sql("select count(*) from pbadmin_accounts where owner_id in (110,111) and not ready"), "0");
+  });
+  await test("an expired pre-release signup approval can finish using the current PBAdmin email", async () => {
+    const reservation = await db.rpc("reserve_pbadmin_account", { p_owner: 112, p_existing: null });
+    assert.ifError(reservation.error);
+    const id = reservation.data.account_id;
+    assert.ifError((await db.from("auth_signup_approvals").insert({ email: "pbadmin-owner-112@accounts.pbadmin.invalid",
+      user_id: id, requested_by: defaultsId, expires_at: "2000-01-01T00:00:00Z" })).error);
+    await builder.connect(identity(112), "synthetic-grant", { email: "untrusted-form@example.test" });
+    assert.equal((await db.auth.admin.getUserById(id)).data.user.email, identity(112).email);
   });
   await test("future unrelated module defaults apply automatically only to new clients", async () => {
     sql(
@@ -812,6 +852,14 @@ try {
       .from("client_subscriptions")
       .insert({ user_id: id, plan_code: "custom", max_landings: 99 });
     const linkIdentity = { ...identity(103), intent: "link" };
+    const previousRegistrations = registrations.length;
+    await assert.rejects(
+      builder.connect({ ...identity(103), email: " Legacy@example.Test " }, "synthetic-grant", {}),
+      error => error.status === 409 && error.message.includes("Ya tengo cuenta"),
+    );
+    assert.equal(registrations.length, previousRegistrations);
+    assert.equal(sql("select count(*) from auth_signup_approvals where email='legacy@example.test'"), "0");
+    assert.equal(sql("select count(*) from auth.users where email='legacy@example.test'"), "1");
     await assert.rejects(
       builder.connect(linkIdentity, "synthetic-grant", {
         email: "legacy@example.test",
@@ -879,6 +927,23 @@ try {
     assert.equal(sql(migration), "UPDATE 0");
     assert.equal(sql("select count(*) from client_subscriptions s join pbadmin_accounts a on a.account_id=s.user_id where a.owner_id in (101,103) and s.expires_at is null and s.status='paused'"), "2");
     assert.equal(sql(manualExpiry), previousManualExpiry);
+  });
+  await test("managed accounts created with a technical address retain their email and saved plan", async () => {
+    const uid = randomUUID();
+    const email = "pbadmin-owner-107@accounts.pbadmin.invalid";
+    const user = await db.auth.admin.createUser({ id: uid, email, email_confirm: true,
+      app_metadata: { pbadmin_managed: true, pbadmin_owner_id: 107, pbadmin_kind: "builder" } });
+    assert.ifError(user.error);
+    assert.ifError((await db.from("profiles").insert({ id: uid, role: "client", nombre: "pbadmin107" })).error);
+    assert.ifError((await db.from("pbadmin_accounts").insert({ owner_id: 107, account_id: uid, ready: true })).error);
+    const subscription = { user_id: uid, plan_code: "starter", max_landings: 3, max_phones: 7, expires_at: "2027-01-01T00:00:00+00:00" };
+    assert.ifError((await db.from("client_subscriptions").insert(subscription)).error);
+    await builder.provision({ ...identity(107, 1107), intent: "open", accountId: uid }, "synthetic-grant");
+    assert.ifError((await db.from("pbadmin_accounts").update({ ready: false }).eq("owner_id", 107)).error);
+    await builder.connect(identity(107), "synthetic-grant", {});
+    assert.equal((await db.auth.admin.getUserById(uid)).data.user.email, email);
+    const stored = await db.from("client_subscriptions").select("user_id,plan_code,max_landings,max_phones,expires_at").eq("user_id", uid).single();
+    assert.deepEqual(stored.data, subscription);
   });
   await test("native admin cannot be linked as a client; one account cannot be claimed by two owners", async () => {
     await assert.rejects(

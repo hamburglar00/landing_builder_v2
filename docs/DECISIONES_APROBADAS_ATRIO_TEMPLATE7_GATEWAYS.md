@@ -1,5 +1,9 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+## 19/11 — Correo y plan de las cuentas nuevas de Builder creadas desde PBAdmin
+
+Al elegir «Crear cuenta» en Extensiones, Builder usa el correo del administrador autenticado que entrega PBAdmin y asigna el plan Scale activo, con 999 landings, 999 teléfonos y sin vencimiento. Si el correo ya tiene una cuenta, «Ya tengo cuenta» exige sus credenciales para vincularla. Las cuentas existentes conservan su correo y su suscripción, incluidas las altas históricas con correo técnico. El alta manual desde Superadmin mantiene Starter por 30 días. La decisión se implementa y comprueba en local.
+
 ## 18/11 ? Ingreso y reintento desde Piliganamos
 
 El navegador recibe el programa de reintentos compilado para el cliente. La misma fuente conserva las etapas, los tiempos y la identidad del intento en los cuatro gateways, incluido el Worker de Ganamos+. La verificaci?n del HTML publicado comprueba el bot?n Retomar y la confirmaci?n de sesi?n con operaciones simuladas.

@@ -59,7 +59,6 @@ export async function provision(
       );
   } else {
     let defaultsAdminId: string | null = null;
-    const email = `pbadmin-owner-${identity.ownerId}@accounts.pbadmin.invalid`;
     if (!account.ready) {
       const configured = process.env.PBADMIN_DEFAULTS_ADMIN_ID;
       let query = db.from("profiles").select("id").eq("role", "admin");
@@ -71,26 +70,8 @@ export async function provision(
           503,
         );
       defaultsAdminId = defaultsAdmin.data[0].id;
-      // Match create-client: the Auth insert trigger sees an approval before
-      // GoTrue finishes applying app_metadata. Retry preserves the reserved UUID.
-      const approval = await db.from("auth_signup_approvals").upsert(
-        {
-          email,
-          user_id: uid,
-          requested_by: defaultsAdminId,
-          role: "client",
-          created_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 300_000).toISOString(),
-        },
-        { onConflict: "email" },
-      );
-      if (approval.error)
-        throw new AccessError(
-          "No se pudo preparar el alta del constructor.",
-          503,
-        );
     }
-    await ensureManagedAuth(db, uid, email, identity.ownerId, "builder");
+    await ensureManagedAuth(db, uid, identity, defaultsAdminId);
     const profile = await db
       .from("profiles")
       .select("role,nombre")
@@ -123,13 +104,6 @@ export async function provision(
         { moduleVisibility: { show_atrio: true } },
         "pbadmin",
       );
-      const cleanup = await db
-        .from("auth_signup_approvals")
-        .delete()
-        .eq("email", email)
-        .eq("user_id", uid);
-      if (cleanup.error)
-        throw new AccessError("El alta quedó pendiente de finalizar.", 503);
     }
   }
   const profile = await db

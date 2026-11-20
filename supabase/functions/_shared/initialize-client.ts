@@ -137,14 +137,15 @@ export async function initializeClientDefaults(
     );
   if (modulePermissionError) throw new Error("Module configuration pending");
 
-  const defaults = getPlanDefaults("starter");
+  const planCode = source === "pbadmin" ? "scale" : "starter";
+  const defaults = getPlanDefaults(planCode);
   const startsAt = new Date();
   const { error: subError } = await supabaseAdmin
     .from("client_subscriptions")
     .upsert(
       {
         user_id: userId,
-        plan_code: "starter",
+        plan_code: planCode,
         max_landings: defaults.maxLandings,
         max_phones: defaults.maxPhones,
         status: "active",

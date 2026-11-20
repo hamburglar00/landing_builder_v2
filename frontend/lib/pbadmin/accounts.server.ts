@@ -44,6 +44,16 @@ export async function verifyNativeAccount(
   }
 }
 
+function ownerEmail(identity: Identity) {
+  const email = typeof identity.email === "string" ? identity.email.trim().toLowerCase() : "";
+  if (
+    identity.role !== 0 || email.length > 254 || email.endsWith(".invalid") ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  )
+    throw new AccessError("Revisá el correo del administrador en PBAdmin antes de crear la cuenta.", 422);
+  return email;
+}
+
 export async function reserveAccount(db: SupabaseClient, identity: Identity) {
   if (identity.intent === "open") {
     const current = await db.from("pbadmin_accounts").select("owner_id,account_id,legacy,ready,disconnected_at")
@@ -53,6 +63,7 @@ export async function reserveAccount(db: SupabaseClient, identity: Identity) {
       throw new AccessError("La cuenta vinculada ya no está disponible. Volvé a vincular Builder desde Extensiones.");
     return current.data as { owner_id: number; account_id: string; legacy: boolean; ready: boolean };
   }
+  if (identity.intent === "create" && !identity.accountId) ownerEmail(identity);
   const result = await db.rpc("reserve_pbadmin_account", {
     p_owner: identity.ownerId,
     p_existing: identity.accountId,
@@ -89,13 +100,42 @@ export async function assertLinkedProfile(
     throw new AccessError("La cuenta vinculada ya no está disponible. Volvé a vincularla desde Extensiones.");
 }
 
-export async function ensureManagedAuth(
+// The Auth trigger needs the approval before GoTrue applies app_metadata.
+// Another signup can hold the same email, so only reuse this reservation's approval.
+async function approveManagedSignup(
   db: SupabaseClient,
   id: string,
   email: string,
+  requestedBy: string,
   ownerId: number,
-  kind: string,
 ) {
+  const now = new Date().toISOString();
+  const [previousEmail, previousAttempt] = await Promise.all([
+    db.from("auth_signup_approvals").delete().eq("email", email).lte("expires_at", now),
+    db.from("auth_signup_approvals").delete().eq("user_id", id).lte("expires_at", now),
+  ]);
+  if (previousEmail.error || previousAttempt.error)
+    throw new AccessError("No se pudo preparar el alta del constructor.", 503);
+  const approval = await db.from("auth_signup_approvals").upsert(
+    { email, user_id: id, requested_by: requestedBy, role: "client" },
+    { onConflict: "email", ignoreDuplicates: true },
+  );
+  if (approval.error) throw new AccessError("Hay un alta pendiente. Volvé a intentar.", 503);
+  const [claim, reservation] = await Promise.all([
+    db.from("auth_signup_approvals").select("user_id").eq("email", email).maybeSingle(),
+    db.from("pbadmin_accounts").select("account_id").eq("owner_id", ownerId).is("disconnected_at", null).maybeSingle(),
+  ]);
+  if (claim.error || reservation.error) throw new AccessError("No se pudo verificar el alta.", 503);
+  return claim.data?.user_id === id && reservation.data?.account_id === id;
+}
+
+export async function ensureManagedAuth(
+  db: SupabaseClient,
+  id: string,
+  identity: Identity,
+  defaultsAdminId: string | null,
+) {
+  const ownerId = identity.ownerId;
   const lookup = await db.auth.admin.getUserById(id);
   let user = lookup.data.user;
   if (!user) {
@@ -104,7 +144,11 @@ export async function ensureManagedAuth(
         "No se pudo verificar el alta. Volvé a intentar.",
         503,
       );
-    const created = await db.auth.admin.createUser({
+    if (!defaultsAdminId || identity.intent !== "create" || identity.accountId)
+      throw new AccessError("La cuenta vinculada ya no está disponible. Volvé a vincularla desde Extensiones.");
+    const email = ownerEmail(identity);
+    const approved = await approveManagedSignup(db, id, email, defaultsAdminId, ownerId);
+    const created = approved ? await db.auth.admin.createUser({
       id,
       email,
       email_confirm: true,
@@ -112,20 +156,34 @@ export async function ensureManagedAuth(
       app_metadata: {
         pbadmin_managed: true,
         pbadmin_owner_id: ownerId,
-        pbadmin_kind: kind,
+        pbadmin_kind: "builder",
         panelbot_admin_created: true,
         panelbot_role: "client",
       },
-    });
-    user = created.data.user;
-    if (!user) user = (await db.auth.admin.getUserById(id)).data.user;
+    }) : null;
+    user = created?.data.user ?? null;
+    if (!user) {
+      const retry = await db.auth.admin.getUserById(id);
+      user = retry.data.user;
+      if (!user && retry.error?.status === 404 && ["email_exists", "user_already_exists"].includes(created?.error?.code ?? "")) {
+        // Only discard the unfulfilled create reservation. A subsequent native
+        // link must still verify credentials, role and ownership independently.
+        const release = await db.from("pbadmin_accounts").delete().eq("owner_id", ownerId)
+          .eq("account_id", id).eq("ready", false).eq("legacy", false).is("disconnected_at", null);
+        if (release.error) throw new AccessError("No se pudo finalizar el intento de alta.", 503);
+        const cleanup = await db.from("auth_signup_approvals").delete().eq("email", email).eq("user_id", id);
+        if (cleanup.error) throw new AccessError("No se pudo finalizar el intento de alta.", 503);
+        throw new AccessError("Ese correo ya tiene cuenta en Builder. Si es tu cuenta anterior, elegí «Ya tengo cuenta» e ingresá sus credenciales.");
+      }
+      if (!user) throw new AccessError("Hay un alta pendiente. Volvé a intentar.", 503);
+    }
   }
   if (
-    !user ||
     user.id !== id ||
-    user.email !== email ||
+    !user.email ||
+    user.app_metadata.pbadmin_managed !== true ||
     user.app_metadata.pbadmin_owner_id !== ownerId ||
-    user.app_metadata.pbadmin_kind !== kind
+    user.app_metadata.pbadmin_kind !== "builder"
   )
     throw new AccessError(
       "El alta encontró una cuenta incompatible. Se conserva sin cambios.",
