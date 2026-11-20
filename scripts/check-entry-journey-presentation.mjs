@@ -30,10 +30,10 @@ async function measure(){return page.evaluate(()=>{
  const box=selector=>{const r=document.querySelector(selector).getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height};};
  const overlay=document.querySelector('#gateway-entry-transition');
  const style=getComputedStyle(overlay||document.body),heading=getComputedStyle(document.querySelector(overlay?'[data-entry-title]':'h1'));
- return{logo:box(overlay?'[data-entry-logo]':'.logo'),bar:box('.entry-progress-track'),stops:box('.entry-progress-stops'),heading:box(overlay?'[data-entry-title]':'h1'),color:heading.color,font:heading.font,spacing:heading.letterSpacing,background:style.backgroundColor,gradient:getComputedStyle(document.querySelector('.entry-progress-fill')).backgroundImage,overflow:document.documentElement.scrollWidth>innerWidth};
+ return{logo:box(overlay?'[data-entry-logo]':'.logo'),bar:box('.entry-progress-track'),heading:box(overlay?'[data-entry-title]':'h1'),color:heading.color,font:heading.font,spacing:heading.letterSpacing,background:style.backgroundColor,gradient:getComputedStyle(document.querySelector('.entry-progress-fill')).backgroundImage,overflow:document.documentElement.scrollWidth>innerWidth};
 });}
 function same(actual,expected,label){
- for(const element of ['logo','bar','stops','heading'])for(const key of ['x','y','width','height'])assert(Math.abs(actual[element][key]-expected[element][key])<1,`${label} ${element}.${key}: ${actual[element][key]} != ${expected[element][key]}`);
+ for(const element of ['logo','bar','heading'])for(const key of ['x','y','width','height'])assert(Math.abs(actual[element][key]-expected[element][key])<1,`${label} ${element}.${key}: ${actual[element][key]} != ${expected[element][key]}`);
  for(const key of ['color','font','spacing','background','gradient'])assert.equal(actual[key],expected[key],`${label} ${key}`);
  assert.equal(actual.overflow,false,label+' no horizontal overflow');
 }
@@ -58,9 +58,10 @@ try{
   }
   for(const viewport of [{width:320,height:568},{width:390,height:844},{width:1365,height:768}]){
    await page.setViewportSize(viewport);
-   await page.setContent(noScripts(gateway.renderPreparationPage('p1.fixture',theme)));
+   await page.setContent(noScripts(gateway.renderPreparationPage('opaque-fixture',theme,'',{newAccount:true})));
    const preparation=await measure();
    assert.equal(preparation.overflow,false);
+   assert.equal(await page.locator('[data-stop]').count(),0);
    for(const engine of ['builder','classic','nexo'])for(const template of engine==='nexo'?[8,9]:[7,8,9]){
     const source={...builder.DEFAULT_CONFIG,template:'template'+template,ctaDestination:'atrio',targetProvider:provider,multiSkinCode:skin,skinCode:skin,titleLine1:'Fixture',template8Cover:{cardCount:1,headerText:'Fixture',footerText:'',backgroundImageUrl:'',cards:[{imageUrl:'/fixture.webp',text:theme.title,targetProvider:provider,multiSkinCode:skin,ctaText:''}]}};
     const config=builder.buildLandingConfig({id:'11111111-1111-4111-8111-111111111111',name:'presentation-fixture',comment:'',pixelId:'',postUrl:'',landingTag:'TEST',config:source});
@@ -80,6 +81,7 @@ try{
     if(engine!=='nexo')await page.addScriptTag({content:gateway.GATEWAY_ENTRY_TRANSITION_RUNTIME+';createGatewayEntryTransition(document.getElementById("gateway-entry-transition")).start("creating");'});
     const transition=await measure(),label=`${provider}/${skin||''} ${engine} T${template} ${viewport.width}`;
     same(transition,preparation,label);
+    assert.equal(await page.locator('[data-stop]').count(),0,label+' has no obsolete steps');
     const logo=await page.locator('[data-entry-logo]').getAttribute('data-src');
     const expectedLogo = template === 8 ? theme.logo.replace(/\.avif$/,'.webp') : expectedLandingLogo;
     assert.equal(new URL(logo,'https://fixture.local').pathname,expectedLogo,label+' landing logo');

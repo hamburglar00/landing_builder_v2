@@ -35,7 +35,7 @@ try{
   await page.setContent(noScripts(html));
   if(template===8)await page.evaluate(()=>{document.querySelector('[data-template8-entry]').hidden=false;document.querySelector('[data-template8-grid]').hidden=true;});
   assert.equal(await page.locator('#gateway-entry-transition').getAttribute('data-stage'),'creating',`${engine} T${template} starts in creating`);
-  await page.addScriptTag({content:gateway.GATEWAY_ENTRY_TRANSITION_RUNTIME+';window.fixtureTransition=createGatewayEntryTransition(document.getElementById("gateway-entry-transition"));window.fixtureTransition.start("preparing");'});
+  await page.addScriptTag({content:gateway.GATEWAY_ENTRY_TRANSITION_RUNTIME+';window.fixtureTransition=createGatewayEntryTransition(document.getElementById("gateway-entry-transition"));window.fixtureTransition.start("creating");'});
   assert.equal(await page.locator('.entry-progress-track').evaluate(el=>el.getBoundingClientRect().height),9,'bar remains clearly visible');
   const initialMotion=await inspectMotion(9000);
   assert(initialMotion.first<.1,'begin visibly before seventy percent');
@@ -45,16 +45,14 @@ try{
   await page.evaluate(()=>window.fixtureTransition.start('creating'));const creating=await scale();
   assert(creating>=pending-.001,'identity preparation must not regress when account creation starts');
   const preparationTheme={title:'Fixture',logo:'/fixture.webp',logoAlt:'Fixture',background:'#11001f',accent:'#f7c62f',accentText:'#11001f',text:'#fff',muted:'#f3e8f8',panel:'#270538',panelBorder:'#8d2db8',spinnerTrack:'#8d2db8',shadow:'0 10px 30px #08000dbb'};
-  await page.setContent(noScripts(gateway.renderPreparationPage(engine==='classic'?'classic-fixture':'p1.fixture',preparationTheme)));
+  await page.setContent(noScripts(gateway.renderPreparationPage('classic-fixture',preparationTheme,'',{newAccount:true})));
   const preparation=await scale();assert(preparation>=creating-.001,'navigation to preparation must not regress');await settleBar();const prepared=await scale();
   await page.setContent(gateway.renderGatewayEntryTransition('ganamos_net',{active:true}));
-  const connecting=await scale();assert(connecting>=prepared-.001,'confirmed session to chat connection must not regress');
+  assert.equal(await page.locator('[data-entry-progress]').isVisible(),false,'chat connection only shows its own message');
   await page.addScriptTag({content:gateway.GATEWAY_ENTRY_TRANSITION_RUNTIME+`;window.fixtureTransition=createGatewayEntryTransition(document.getElementById('gateway-entry-transition'));window.fixtureTransition.start('connecting');window.fixtureFrame={contentWindow:{},src:'https://chat.fixture/embed/fixture?token=fixture'};window.fixtureTransition.bind(window.fixtureFrame,'https://chat.fixture',true);window.fixtureSignal=function(type,origin='https://chat.fixture'){window.dispatchEvent(new MessageEvent('message',{origin,source:null,data:{source:'atrio-widget',type,visibleEntry:true}}))};`});
   // MessageEvent source is read-only; use a real iframe's WindowProxy.
   await page.evaluate(()=>{const frame=document.createElement('iframe');document.body.appendChild(frame);window.fixtureTransition.bind(frame,'https://chat.fixture',true);window.fixtureSignal=(type,origin='https://chat.fixture')=>window.dispatchEvent(new MessageEvent('message',{origin,source:frame.contentWindow,data:{source:'atrio-widget',type,visibleEntry:true}}));});
-  const finalMotion=await inspectMotion(16000);
-  assert(finalMotion.monotonic&&finalMotion.maxFrame<.002&&finalMotion.distinct>300,'final motion keeps progressing gradually');
-  await settleBar();assert((await scale())<1,'elapsed animation cannot complete entry');
+  assert.equal(await page.locator('[data-stop]').count(),0,'no three-stage tracker on chat entry');
   await page.evaluate(()=>window.fixtureSignal('atrio.widget.usable','https://other.fixture'));
   assert.notEqual(await page.locator('[data-entry-progress]').getAttribute('data-phase'),'complete');
   await page.evaluate(()=>window.fixtureSignal('atrio.widget.ready'));
@@ -62,7 +60,7 @@ try{
   assert.notEqual(await page.locator('[data-entry-progress]').getAttribute('data-phase'),'complete');
   await page.evaluate(()=>window.fixtureSignal('atrio.widget.usable'));
   assert.equal(await page.locator('[data-entry-progress]').getAttribute('data-phase'),'complete');
-  rows.push({engine,template,pending,creating,preparation,connecting,initialMotion,finalMotion,completedOnlyAfterUsable:true});
+  rows.push({engine,template,pending,creating,preparation,initialMotion,completedOnlyAfterUsable:true});
  }
  await page.emulateMedia({reducedMotion:'reduce'});
  await page.setContent(gateway.renderGatewayEntryTransition('ganamos_net',{active:true,stage:'creating'}));

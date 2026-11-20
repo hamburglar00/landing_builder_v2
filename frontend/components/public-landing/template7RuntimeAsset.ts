@@ -26,7 +26,7 @@ function t7AssetStatus(message){
 }
 ${ENTRY_FORM_BUSY_SCRIPT}
 window.__T7_SET_FORM_BUSY__=function(action,busy){
-  return t7Cfg.template===7 && !t7Cfg.template8 && t7Cfg.ctaDestination==='atrio' && !!t7Cfg.targetProvider && setEntryFormBusy(action,busy);
+  return t7Cfg.template===7 && !t7Cfg.template8 && t7Cfg.ctaDestination==='atrio' && !!t7Cfg.targetProvider && setEntryFormBusy(action,busy,t7Cfg.creationScreen);
 };
 function t7EarlyBusy(action,busy){
   if(!action)return;

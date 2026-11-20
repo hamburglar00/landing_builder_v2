@@ -1,7 +1,7 @@
 // Canonical presentation for Template 7 and the four gateways. No auth or provider work.
 const brands = {
   rey_de_ases: { name: "Rey de Ases", logo: "/rey-de-ases-logo-transparent.optimized.avif", background: "#080808", glow: "#c49a3255", primary: "#c49a32", accent: "#efd27b", accentText: "#171105" },
-  ases_del_norte: { name: "Ases del Norte", logo: "/ases-del-norte-transition-logo.optimized.webp", background: "#071b2c", glow: "#36a8eb33", primary: "#2186c5", accent: "#36a8eb", accentText: "#071b2c" },
+  ases_del_norte: { name: "Ases del Norte", logo: "/ases-del-norte-transition-logo.optimized.webp", background: "#101114", glow: "#ffffff12", primary: "#888888", accent: "#ffffff", accentText: "#ffffff", buttonFill: "#555555" },
   ganamos_net: { name: "Ganamos NET", logo: "/ganamos-net-transition-logo.webp", background: "#0d0618", glow: "#7c34e855", primary: "#7c34e8", accent: "#b02cf0", accentText: "#ffffff" },
   multi_skin: { name: "Ganamos+", logo: "/ganamos-plus-logo-transparent.optimized.avif", background: "#0d0618", glow: "#7c34e855", primary: "#7c34e8", accent: "#b02cf0", accentText: "#ffffff" },
 } as const;
@@ -12,11 +12,11 @@ export const ENTRY_FONT = 'system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI"
 export const ENTRY_TITLE_STYLE = `font:700 clamp(17px,4.8vw,24px)/1.2 ${ENTRY_FONT};letter-spacing:-.02em;color:#fff;text-transform:none`;
 export const ENTRY_DETAIL_STYLE = `font:400 clamp(12px,3.1vw,15px)/1.45 ${ENTRY_FONT};color:#ddd;letter-spacing:-.01em`;
 
-// Paint the blue glow separately from the transparent Ases wordmark so its
+// Paint the glow separately from the transparent Ases wordmark so its
 // image surface never acquires a filtered rectangular compositing layer.
 export const ENTRY_LOGO_HALO_CSS = `
 .entry-logo-halo:has(img[src$="${brands.ases_del_norte.logo}"]){position:relative;isolation:isolate}
-.entry-logo-halo:has(img[src$="${brands.ases_del_norte.logo}"])::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse closest-side,var(--entry-glow,#36a8eb33),transparent)}
+.entry-logo-halo:has(img[src$="${brands.ases_del_norte.logo}"])::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse closest-side,var(--entry-glow,${brands.ases_del_norte.glow}),transparent)}
 .entry-logo-halo img[src$="${brands.ases_del_norte.logo}"],#gateway-entry-transition .entry-logo-halo img[src$="${brands.ases_del_norte.logo}"]{filter:none;background:transparent;border:0;box-shadow:none}
 `;
 
@@ -26,8 +26,9 @@ export function resolveGatewayEntryBrand(provider: string, override?: EntryBrand
   if (!base) return null;
   // Ganamos+ has one entry palette even when passed its broader casino catalog.
   // Other skins retain their own catalog colors and assets.
-  if (provider === "multi_skin" && override?.logo === base.logo) return { ...base, muted: "#ddd" };
-  return { ...base, ...override, muted: "#ddd" };
+  const skin = provider === "multi_skin" && override?.logo === base.logo ? undefined : override;
+  const buttonFill = "buttonFill" in base ? base.buttonFill : skin?.accent ?? base.accent;
+  return { ...base, ...skin, buttonFill, muted: "#ddd" };
 }
 
 export function gatewayPreparationTheme(provider: string, override?: EntryBrandOverride) {
@@ -35,7 +36,7 @@ export function gatewayPreparationTheme(provider: string, override?: EntryBrandO
   if (!brand) throw new Error("Unknown entry brand");
   return {
     title: brand.name, canvasColor: brand.background, logo: brand.logo, logoAlt: brand.name,
-    background: brand.background, accent: brand.accent, accentText: brand.accentText,
+    background: brand.background, accent: brand.accent, accentText: brand.accentText, buttonFill: brand.buttonFill,
     primary: brand.primary, text: "#fff", muted: brand.muted,
     panel: brand.background, panelBorder: brand.accent + "66",
     spinnerTrack: brand.accent + "26", shadow: "0 8px 24px " + brand.glow,
@@ -50,12 +51,6 @@ export const ENTRY_PROGRESS_CSS = `
 .entry-progress[hidden]{display:none!important}
 .entry-progress-track{display:block;height:9px;overflow:hidden;border-radius:999px;background:var(--entry-track,#f6c84b26)}
 .entry-progress-fill{display:block;height:100%;width:100%;transform-origin:left;border-radius:inherit;background:linear-gradient(90deg,var(--entry-primary,#c49a32),var(--entry-accent,#efd27b));transform:scaleX(.9)}
-.entry-progress-stops{display:flex;justify-content:space-between;gap:12px;margin-top:13px;color:#fff;font:500 11px/1.3 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.02em}
-.entry-progress-stop{display:flex;align-items:center;gap:6px;white-space:nowrap}
-.entry-progress-stop::before{content:"";width:6px;height:6px;color:#8e8b94;border:1px solid currentColor;border-radius:50%;flex:0 0 6px}
-.entry-progress:is([data-phase="creating"],[data-phase="preparing"],[data-phase="account"]) [data-stop="account"],.entry-progress:is([data-phase="login"],[data-phase="session"]) [data-stop="access"],.entry-progress[data-phase="connecting"] [data-stop="chat"]{font-weight:700}
-.entry-progress:is([data-phase="login"],[data-phase="session"],[data-phase="connecting"],[data-phase="complete"]) [data-stop="account"]::before,.entry-progress:is([data-phase="connecting"],[data-phase="complete"]) [data-stop="access"]::before,.entry-progress[data-phase="complete"] [data-stop="chat"]::before{color:var(--entry-accent,#efd27b)}
-.entry-progress:is([data-phase="login"],[data-phase="session"],[data-phase="connecting"],[data-phase="complete"]) [data-stop="account"]::before,.entry-progress:is([data-phase="connecting"],[data-phase="complete"]) [data-stop="access"]::before,.entry-progress[data-phase="complete"] [data-stop="chat"]::before{background:currentColor}
 .entry-progress[data-start="initial"]:not([data-phase="complete"]) .entry-progress-fill{animation:entry-progress-wait 9s linear both}
 .entry-progress[data-start="continuation"][data-phase="connecting"] .entry-progress-fill{animation:entry-progress-connect 16s linear both}
 .entry-progress[data-phase="complete"] .entry-progress-fill{animation:none;transform:scaleX(1)}
@@ -64,8 +59,8 @@ export const ENTRY_PROGRESS_CSS = `
 @keyframes entry-progress-connect{0%{transform:scaleX(.9)}20%{transform:scaleX(.94)}45%{transform:scaleX(.96)}75%{transform:scaleX(.975)}100%{transform:scaleX(.98)}}
 @media(prefers-reduced-motion:reduce){.entry-progress .entry-progress-fill{animation:none!important}}
 `;
-export function renderEntryProgress(phase: string, initial = phase === "creating" || phase === "preparing") {
-  return `<div class="entry-progress" data-entry-progress${phase === "verifying" || phase === "connecting" ? " hidden" : ""} data-start="${initial ? "initial" : "continuation"}" data-phase="${phase}" role="progressbar" aria-label="Preparando tu acceso"><span class="entry-progress-track"><span class="entry-progress-fill"></span></span><span class="entry-progress-stops" aria-hidden="true"><span class="entry-progress-stop" data-stop="account">Cuenta</span><span class="entry-progress-stop" data-stop="access">Acceso</span><span class="entry-progress-stop" data-stop="chat">Chat</span></span></div>`;
+export function renderEntryProgress(phase: string, initial = phase === "creating") {
+  return `<div class="entry-progress" data-entry-progress${phase === "creating" ? "" : " hidden"} data-start="${initial ? "initial" : "continuation"}" data-phase="${phase}" role="progressbar" aria-label="Creando tu cuenta"><span class="entry-progress-track"><span class="entry-progress-fill"></span></span></div>`;
 }
 
 function escape(value: string) { return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;"); }
@@ -88,14 +83,13 @@ export function renderGatewayEntryTransition(provider: string, options: { active
   const showLogoImmediately = options.active && (stage === "verifying" || stage === "connecting");
   const fallbackLogo = escape(logo.replace(/\.avif$/, ".webp"));
   const image = `<img data-entry-logo data-src="${fallbackLogo}"${showLogoImmediately ? ` src="${fallbackLogo}"` : ""} alt="${escape(brand.name)}" width="320" height="320">`;
-  const title = stage === "verifying" ? "" : stage === "creating" ? "Creando tu cuenta" : "Conectando con tu asesor…";
-  const description = stage === "creating" ? "Estamos preparando tu acceso." : "";
+  const title = stage === "verifying" ? "" : stage === "creating" ? "Creando tu cuenta…" : "Conectando con tu asesor…";
   return `<style id="gateway-entry-transition-style">
 html:has(#gateway-entry-transition:not([hidden])),body:has(#gateway-entry-transition:not([hidden])){background-color:var(--gateway-page-background,var(--gateway-entry-canvas,${brand.background}))!important;color-scheme:dark}
 #gateway-entry-transition[data-stage="creating"],#gateway-entry-transition[data-stage="preparing"]{background:var(--entry-background,${brand.background})!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 #gateway-entry-transition{position:fixed!important;inset:0!important;z-index:2147483500!important;display:grid!important;place-items:center!important;margin:0!important;padding:max(24px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom))!important;background:var(--entry-background,${brand.background})!important;backdrop-filter:none;-webkit-backdrop-filter:none;color:#fff!important;font:16px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;text-align:center!important;overflow:auto!important;overscroll-behavior:contain}
-#gateway-entry-transition{outline:none}#gateway-entry-transition[hidden]{display:none!important}#gateway-entry-transition *{box-sizing:border-box}#gateway-entry-transition .entry-content{width:min(100%,430px);margin:auto}#gateway-entry-transition picture{display:block}#gateway-entry-transition [data-entry-logo]{display:block;width:min(78vw,320px);height:min(78vw,320px,34svh);object-fit:contain;margin:0 auto;filter:drop-shadow(0 8px 24px var(--entry-glow,${brand.glow}))}#gateway-entry-transition h2,form [data-template7-creating]{${ENTRY_TITLE_STYLE}}#gateway-entry-transition h2{margin:20px 0 9px;min-block-size:1.2em;text-wrap:balance}#gateway-entry-transition p{${ENTRY_DETAIL_STYLE};max-width:36ch;margin:0 auto;text-wrap:balance}#gateway-entry-transition:is([data-stage="creating"],[data-stage="preparing"]) p{color:#fff}#gateway-entry-transition .entry-spinner{display:block;width:42px;height:42px;border:4px solid var(--entry-track,#f6c84b33);border-top-color:var(--entry-accent,#f6c84b);border-radius:50%;margin:26px auto 0;animation:gateway-entry-spin .8s linear infinite}#gateway-entry-transition .entry-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:24px}#gateway-entry-transition .entry-actions[hidden],#gateway-entry-transition .entry-spinner[hidden]{display:none!important}#gateway-entry-transition button{appearance:none;cursor:pointer;padding:11px 16px;border:1px solid var(--entry-accent,#f6c84b);border-radius:12px;background:var(--entry-accent,#f6c84b);color:var(--entry-accent-text,#171105);font:700 13px ${ENTRY_FONT}}#gateway-entry-transition button[data-entry-continue]{background:transparent;color:var(--entry-accent,#f6c84b)}#gateway-entry-transition button:focus-visible{outline:2px solid #fff;outline-offset:3px}@keyframes gateway-entry-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){#gateway-entry-transition .entry-spinner{animation-duration:1.8s}}
-${ENTRY_LOGO_HALO_CSS}${ENTRY_PROGRESS_CSS}</style><div id="gateway-entry-transition" role="status" aria-live="polite" tabindex="-1" data-stage="${stage}" data-palette="${brand.background}" style="--entry-background:${brand.background};--entry-accent:${accent};--entry-primary:${brand.primary};--entry-track:${accent}26;--entry-accent-text:${accentText};--entry-glow:${brand.glow}"${options.active ? "" : " hidden"}><div class="entry-content"><div class="entry-logo-halo">${brand.logo.endsWith(".avif") ? `<picture><source data-entry-source data-srcset="${escape(logo)}"${showLogoImmediately ? ` srcset="${escape(logo)}"` : ""} type="image/avif">${image}</picture>` : image}</div><h2 data-entry-title>${title}</h2><p data-entry-description>${description}</p>${renderEntryProgress(stage)}<div class="entry-actions" hidden><button data-entry-retry type="button">Reintentar conexión</button><button data-entry-continue type="button">Continuar al chat</button></div></div></div>`;
+#gateway-entry-transition{outline:none}#gateway-entry-transition[hidden]{display:none!important}#gateway-entry-transition *{box-sizing:border-box}#gateway-entry-transition .entry-content{width:min(100%,430px);margin:auto}#gateway-entry-transition picture{display:block}#gateway-entry-transition [data-entry-logo]{display:block;width:min(78vw,320px);height:min(78vw,320px,34svh);object-fit:contain;margin:0 auto;filter:drop-shadow(0 8px 24px var(--entry-glow,${brand.glow}))}#gateway-entry-transition h2,form [data-template7-creating]{${ENTRY_TITLE_STYLE}}#gateway-entry-transition h2{margin:20px 0 9px;min-block-size:1.2em;text-wrap:balance}#gateway-entry-transition p{${ENTRY_DETAIL_STYLE};max-width:36ch;margin:0 auto;text-wrap:balance}#gateway-entry-transition:is([data-stage="creating"],[data-stage="preparing"]) p{color:#fff}#gateway-entry-transition .entry-spinner{display:block;width:42px;height:42px;border:4px solid var(--entry-track,#f6c84b33);border-top-color:var(--entry-accent,#f6c84b);border-radius:50%;margin:26px auto 0;animation:gateway-entry-spin .8s linear infinite}#gateway-entry-transition .entry-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:24px}#gateway-entry-transition .entry-actions[hidden],#gateway-entry-transition .entry-spinner[hidden]{display:none!important}#gateway-entry-transition button{appearance:none;cursor:pointer;padding:11px 16px;border:1px solid var(--entry-accent,#f6c84b);border-radius:12px;background:var(--entry-button-fill,var(--entry-accent,#f6c84b));color:var(--entry-accent-text,#171105);font:700 13px ${ENTRY_FONT}}#gateway-entry-transition button[data-entry-continue]{background:transparent;color:var(--entry-accent,#f6c84b)}#gateway-entry-transition button:focus-visible{outline:2px solid #fff;outline-offset:3px}@keyframes gateway-entry-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){#gateway-entry-transition .entry-spinner{animation-duration:1.8s}}
+${ENTRY_LOGO_HALO_CSS}${ENTRY_PROGRESS_CSS}</style><div id="gateway-entry-transition" role="status" aria-live="polite" tabindex="-1" data-stage="${stage}" data-palette="${brand.background}" style="--entry-background:${brand.background};--entry-accent:${accent};--entry-primary:${brand.primary};--entry-track:${accent}26;--entry-accent-text:${accentText};--entry-button-fill:${brand.buttonFill};--entry-glow:${brand.glow}"${options.active ? "" : " hidden"}><div class="entry-content"><div class="entry-logo-halo">${brand.logo.endsWith(".avif") ? `<picture><source data-entry-source data-srcset="${escape(logo)}"${showLogoImmediately ? ` srcset="${escape(logo)}"` : ""} type="image/avif">${image}</picture>` : image}</div><h2 data-entry-title>${title}</h2><p data-entry-description></p>${renderEntryProgress(stage)}<div class="entry-actions" hidden><button data-entry-retry type="button">Reintentar conexión</button><button data-entry-continue type="button">Continuar al chat</button></div></div></div>`;
 }
 
 // Included inside the existing critical runtime: no extra script request or SDK dependency.
@@ -146,13 +140,13 @@ function createGatewayEntryTransition(root) {
     clearTimeout(timer);clearTimeout(retryTimer);retryTimer=0;
     if(!recovering){automaticRetries=0;attemptDeadline=Date.now()+45000;cancelRefresh()}
     previous=document.activeElement;root.dataset.stage=stage;root.hidden=false;applyPalette();
-    spinner.hidden=stage==="verifying"||stage==="connecting";spinner.dataset.phase=stage;actions.hidden=true;
+    spinner.hidden=stage!=="creating";spinner.dataset.phase=stage;actions.hidden=true;
     if(stage==="verifying"){
       title.textContent="";description.textContent="";
       timer=setTimeout(function(){title.textContent="Verificando tu cuenta…"},300);
     }else{
-      title.textContent=stage==="preparing"?"Preparando tu acceso":stage==="creating"?"Creando tu cuenta":"Conectando con tu asesor…";
-      description.textContent=stage==="connecting"?"":"Estamos preparando tu acceso.";
+      title.textContent=stage==="creating"?"Creando tu cuenta…":stage==="connecting"?"Conectando con tu asesor…":"Ingresando a tu cuenta…";
+      description.textContent="";
     }
     root.querySelectorAll("[data-entry-source]").forEach(function(el){el.srcset=el.dataset.srcset});
     root.querySelectorAll("[data-entry-logo]").forEach(function(el){el.src=el.dataset.src});

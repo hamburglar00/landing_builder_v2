@@ -71,7 +71,7 @@ test("a previous preparation only hides its own form, releases on lookup failure
   assert.equal(visit().flags.size, 0);
 });
 
-test("only signed T7/T9 preparations in credentials mode carry the correct visual hint", () => {
+test("T7/T9 preparations carry only the authorized flow’s visual hint", () => {
   for (const classic of [false, true]) for (const template of [7, 8, 9]) {
     for (const mode of ["direct", "credentials"] as const) {
       const page = { id: "landing", layout: { template }, gatewayEntry: { mode, seconds: 4 } };
@@ -103,7 +103,8 @@ test("only signed T7/T9 preparations in credentials mode carry the correct visua
         const window = { location: { assign: (value: string) => { actual = value; } } };
         new Script(code).runInNewContext({ cfg, window, URL, destination, submitted });
         const hasPresentation = template !== 8 && mode === "credentials" && path === "/prepare?t=p1.token";
-        const expectedFragment = hasPresentation ? (submitted ? "#creando-cuenta" : "#verificando-cuenta") : "";
+        const verifyingDirect = template !== 8 && mode === "direct" && !submitted && path === "/prepare?t=p1.token";
+        const expectedFragment = hasPresentation ? (submitted ? "#creando-cuenta" : "#verificando-cuenta") : verifyingDirect ? "#verificando-cuenta" : "";
         assert.equal(actual, destination + expectedFragment);
         assert.throws(() => new Script(code).runInNewContext({ cfg, window, URL, destination: destination + "#foreign", submitted }), /invalid handoff/);
       }

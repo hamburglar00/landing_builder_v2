@@ -23,9 +23,9 @@ const checks = await Promise.all(targets.map(async ([repo, origin]) => {
   const loginHtml = await login.text(), constructorHtml = await constructor.text(), classicHtml = await classic.text();
   assert.equal(login.status, 401); assert.ok(loginHtml.includes('data-eye')); assert.ok(!loginHtml.includes("Usá tu usuario y contraseña para volver al casino y a tu chat."));
   assert.ok(loginHtml.includes("text-align:center")); assert.equal(constructor.status, 200); assert.equal(classic.status, 200);
-  assert.ok(constructorHtml.includes('<h1 id="entry-stage">Creando tu cuenta</h1>')); assert.ok(classicHtml.includes('<h1 id="entry-stage">Ingresando a la plataforma</h1>'));
-  assert.ok(constructorHtml.includes('if(false){preactivate')); assert.ok(classicHtml.includes('if(true){preactivate'));
   for (const html of [constructorHtml, classicHtml]) {
+    assert.ok(html.includes("Ingresando a tu cuenta…"));
+    assert.ok(!html.includes('data-stop="account"'));
     assert.ok(html.includes('function entryFeedback()'));
     assert.ok(html.includes('next.disabled=true'));
     assert.ok(html.includes('aria-busy="false">Continuar a la plataforma'));

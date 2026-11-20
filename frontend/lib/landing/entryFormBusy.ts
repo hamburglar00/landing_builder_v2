@@ -1,6 +1,6 @@
 /** Included in the early synchronous submit handler, before the deferred landing runtime. */
 export const ENTRY_FORM_BUSY_SCRIPT = `
-function setEntryFormBusy(action,busy) {
+function setEntryFormBusy(action,busy,creationScreen) {
   var form=action && action.closest && action.closest('form');
   if(!form)return false;
   var status=form.querySelector('[data-template7-creating]');
@@ -9,7 +9,8 @@ function setEntryFormBusy(action,busy) {
     status.setAttribute('data-template7-creating','');
     status.setAttribute('role','status');
     status.style.cssText='text-align:center;padding:12px 0';
-    status.innerHTML='Creando tu cuenta…<div class="entry-progress" data-start="initial" data-phase="creating" role="progressbar" aria-label="Creando tu cuenta" style="margin:10px auto 0;--entry-primary:var(--t9-primary,currentColor);--entry-accent:var(--t9-secondary,currentColor);--entry-track:rgba(128,128,128,.25)"><span class="entry-progress-track"><span class="entry-progress-fill"></span></span></div>';
+    if(!creationScreen)status.textContent='Ingresando a tu cuenta…';
+    else status.innerHTML='Creando tu cuenta…<div class="entry-progress" data-start="initial" data-phase="creating" role="progressbar" aria-label="Creando tu cuenta" style="margin:10px auto 0;--entry-primary:var(--t9-primary,currentColor);--entry-accent:var(--t9-secondary,currentColor);--entry-track:rgba(128,128,128,.25)"><span class="entry-progress-track"><span class="entry-progress-fill"></span></span></div>';
     action.after(status);
   }
   if(!status)return false;

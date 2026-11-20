@@ -3,9 +3,10 @@ import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { createHash } from 'node:crypto';
+import { loadProductPaths } from './product-worktrees.mjs';
 
 const root = fileURLToPath(new URL("../", import.meta.url));
-const classicRoot = path.resolve(process.env.LANDING_CLASSIC_ROOT || path.join(root, "../landing-prueba-1"));
+const classicRoot = path.resolve(process.env.LANDING_CLASSIC_ROOT || loadProductPaths()("landing-prueba-1"));
 const require = createRequire(path.join(root, "frontend/package.json"));
 const { build } = require("esbuild");
 const target = path.join(classicRoot, "lib/template7/shared.cjs");

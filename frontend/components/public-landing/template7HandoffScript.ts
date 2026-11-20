@@ -32,7 +32,7 @@ export function buildTemplate7HandoffRuntimeScript(accountPresentation = false):
       var token=url.searchParams.get("t"),funnel=url.searchParams.get("ef"),entryWait=url.searchParams.get("ew"),skin=url.pathname==="/prepare"?url.searchParams.get("skin"):null;
       url.search="";url.searchParams.set("t",token);
       if(funnel)url.searchParams.set("ef",funnel);
-      if(entryWait&&url.pathname==="/start")url.searchParams.set("ew",entryWait);
+      if(entryWait)url.searchParams.set("ew",entryWait);
       if(skin)url.searchParams.set("skin",skin);
       return url;
     }
@@ -47,9 +47,13 @@ export function buildTemplate7HandoffRuntimeScript(accountPresentation = false):
     function navigateTemplate7Handoff(raw${accountPresentation ? ", newNameSubmit" : ""}) {
       var url = template7CheckedHandoff(raw);${accountPresentation ? `
       var presentation = "";
-      if (cfg.creationScreen && url.pathname === "/prepare" && url.searchParams.get("t").startsWith("p1.")) {
-        presentation = newNameSubmit ? "#creando-cuenta" : "#verificando-cuenta";
-        if(window.__T7_REMEMBER_RETURN_VIEW__)window.__T7_REMEMBER_RETURN_VIEW__();
+      if (url.pathname === "/prepare" && url.searchParams.get("t").startsWith("p1.")) {
+        if (cfg.creationScreen) {
+          presentation = newNameSubmit ? "#creando-cuenta" : "#verificando-cuenta";
+          if(window.__T7_REMEMBER_RETURN_VIEW__)window.__T7_REMEMBER_RETURN_VIEW__();
+        } else if (cfg.template === 7 && !cfg.template8 && newNameSubmit === false) {
+          presentation = "#verificando-cuenta";
+        }
       }` : ""}
       try { window.localStorage.setItem("template7:gateway-visited:" + url.origin, String(Date.now())); } catch(e) {}
       // Some embedded browsers omit pagehide on a fast handoff. Queue diagnostics
