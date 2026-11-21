@@ -1,5 +1,13 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
+## 21/11 — Continuar en el navegador desde Facebook e Instagram
+
+Para los accesos de landing y de gerencia de Rey de Ases, Ases del Norte, Ganamos NET y Multi Skin, incluido el Worker de Ganamos+, el clic explícito en «Continuar» desde Android puede abrir el navegador externo. En iPhone la guía permite usar el menú de la app o copiar el enlace y pegarlo en Safari. El jugador puede continuar en el navegador actual. En los modos de ingreso directo, la salida al navegador se ofrece como una opción dentro del acceso autenticado.
+
+El gateway prepara un pase opaco de un solo uso, con vencimiento de dos minutos, a partir de la sesión exacta que se mostró al jugador. El destino conserva cuenta, asesor, gerencia, skin y atribución. La URL lleva el pase en el fragmento. Atrio y NexoBet usan sus propios almacenes, validan la pertenencia al emitir y canjear y conservan únicamente una huella del pase y un sobre cifrado de sesión. El traspaso no crea un jugador, un segundo chat ni una conversión.
+
+La aceptación en dispositivos incluye abrir los anuncios desde Facebook e Instagram en Android y iPhone, continuar, copiar el CBU, volver de la app del banco al mismo chat y abrir el selector de comprobantes. Se comprueban el doble toque, el pase vencido y el bloqueo de la apertura externa.
+
 ## 20/11 — Ingreso al gateway, tracking de asesores y saldo en supervisión
 
 Builder muestra «Ingresó al gateway» en ámbar cuando Atrio conserva el saludo automático del jugador asociado al CTA de esa landing. El primer mensaje humano y la carga mantienen sus propias etapas. La métrica usa los clics del período y admite ingresos posteriores. El ingreso es una medición interna.
