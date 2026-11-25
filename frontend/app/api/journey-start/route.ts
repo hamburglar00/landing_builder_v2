@@ -1,3 +1,4 @@
+import { captureAtrioMetaView } from "@/lib/tracking/atrioMetaView.server";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
       body && typeof body === "object" && !Array.isArray(body)
         ? (body as Record<string, unknown>)
         : {};
+    if (payload.event_name === "AtrioMetaView") return captureAtrioMetaView(request, payload);
     const eventName = cleanText(payload.event_name, 80);
     if (eventName !== "LandingPageView" && eventName !== "PageView") {
       return NextResponse.json({ error: "evento invalido" }, { status: 400 });

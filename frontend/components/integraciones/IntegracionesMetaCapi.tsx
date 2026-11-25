@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { MetaPurchaseDeliveryHistory } from "./MetaPurchaseDeliveryHistory";
 import { TrashIcon } from "@/components/ui/TrashIcon";
 import { useActionMessage, ActionNotice, useActionResult } from "@/components/ui/ActionNotice";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -93,6 +94,8 @@ type PixelEditDraft = {
   send_lead_capi: boolean;
   send_complete_registration_capi: boolean;
   meta_ads_only_capi: boolean;
+  send_atrio_view_content?: boolean;
+  send_atrio_initiate_checkout?: boolean;
   send_purchase_capi: boolean;
   include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
@@ -812,6 +815,8 @@ export default function IntegracionesMetaCapi() {
       send_lead_capi: px.send_lead_capi !== false,
       send_complete_registration_capi: px.send_complete_registration_capi === true,
       meta_ads_only_capi: px.meta_ads_only_capi === true,
+        send_atrio_view_content: px.send_atrio_view_content === true,
+        send_atrio_initiate_checkout: px.send_atrio_initiate_checkout === true,
       send_purchase_capi: px.send_purchase_capi !== false,
       include_purchase_type_capi: px.include_purchase_type_capi !== false,
       send_first_purchase_capi: px.send_first_purchase_capi !== false,
@@ -865,6 +870,8 @@ export default function IntegracionesMetaCapi() {
         send_lead_capi: !!draft.send_lead_capi,
         send_complete_registration_capi: !!draft.send_complete_registration_capi,
         meta_ads_only_capi: !!draft.meta_ads_only_capi,
+        send_atrio_view_content: draft.send_atrio_view_content === true,
+        send_atrio_initiate_checkout: draft.send_atrio_initiate_checkout === true,
         send_purchase_capi: !!draft.send_purchase_capi,
         include_purchase_type_capi: !!draft.include_purchase_type_capi,
         send_first_purchase_capi: !!draft.send_first_purchase_capi,
@@ -930,6 +937,8 @@ export default function IntegracionesMetaCapi() {
         send_lead_capi: px.send_lead_capi !== false,
         send_complete_registration_capi: px.send_complete_registration_capi === true,
         meta_ads_only_capi: px.meta_ads_only_capi === true,
+        send_atrio_view_content: px.send_atrio_view_content === true,
+        send_atrio_initiate_checkout: px.send_atrio_initiate_checkout === true,
         send_purchase_capi: px.send_purchase_capi !== false,
         include_purchase_type_capi: px.include_purchase_type_capi !== false,
         send_first_purchase_capi: px.send_first_purchase_capi !== false,
@@ -950,6 +959,8 @@ export default function IntegracionesMetaCapi() {
         send_lead_capi: px.send_lead_capi !== false,
         send_complete_registration_capi: px.send_complete_registration_capi === true,
         meta_ads_only_capi: px.meta_ads_only_capi === true,
+        send_atrio_view_content: px.send_atrio_view_content === true,
+        send_atrio_initiate_checkout: px.send_atrio_initiate_checkout === true,
         send_purchase_capi: px.send_purchase_capi !== false,
         include_purchase_type_capi: px.include_purchase_type_capi !== false,
         send_first_purchase_capi: px.send_first_purchase_capi !== false,
@@ -1025,6 +1036,8 @@ export default function IntegracionesMetaCapi() {
       {saveMsg && (
         <ActionNotice message={saveMsg} tone={saveMsgTone} noticeKey={saveMsgNoticeKey} />
       )}
+
+      {activeIntegration === "meta" && userId ? <MetaPurchaseDeliveryHistory userId={userId} /> : null}
 
       {activeIntegration === "menu" ? (
         <IntegrationMenu
@@ -2115,6 +2128,18 @@ export default function IntegracionesMetaCapi() {
                 <div className="pixel-settings-group mt-3">
                   <h5 className="mb-2 text-xs font-semibold text-zinc-300">Tipos de evento</h5>
                   <p className="mb-3 text-xs text-zinc-400">Sólo se envían los tipos activados aquí. Cambiar el filtro de origen no activa Contact, Lead, CompleteRegistration ni Purchase.</p>
+                  <SettingsSwitch
+                    checked={draft.send_atrio_view_content === true}
+                    label="ViewContent ? Atrio"
+                    help="Env?a por Pixel y CAPI cuando la visita actual llega desde Meta Ads."
+                    onChange={() => setDraft(p => p && { ...p, send_atrio_view_content: !p.send_atrio_view_content })}
+                  />
+                  <SettingsSwitch
+                    checked={draft.send_atrio_initiate_checkout === true}
+                    label="InitiateCheckout ? Atrio"
+                    help="Env?a por CAPI cuando el casino confirma que cre? una cuenta."
+                    onChange={() => setDraft(p => p && { ...p, send_atrio_initiate_checkout: !p.send_atrio_initiate_checkout })}
+                  />
                   <SettingsSwitch
                     checked={draft.send_contact_capi}
                     label="Contact"

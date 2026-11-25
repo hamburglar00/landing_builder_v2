@@ -4237,6 +4237,26 @@ async function sendToMetaCAPI(
   const baseDelayMs = 500;
   const metaPayloadRaw = JSON.stringify(body);
   let transport = metaTransportLog(apiUrl, 1);
+  async function recordPurchaseDelivery(status: "sent" | "failed", responseRaw: string) {
+    if (eventName !== "Purchase") return;
+    let receipt: { events_received?: number; fbtrace_id?: string; error?: { code?: number; error_subcode?: number } } = {};
+    try { receipt = JSON.parse(responseRaw) ?? {}; } catch { /* An invalid response carries no Meta receipt. */ }
+    const result = await db.from("meta_purchase_delivery_history").insert({
+      user_id: row.user_id, conversion_id: rowId, landing_id: row.landing_id || null,
+      landing_label: row.landing_name || null,
+      operation_reference: row.purchase_transaction_id || null,
+      event_id: eventId, amount: canonicalCustomData?.value || null,
+      currency: canonicalCustomData?.currency || null, purchase_type: purchaseType,
+      status, meta_response: {
+        events_received: typeof receipt.events_received === "number" ? receipt.events_received : null,
+        error_code: typeof receipt.error?.code === "number" ? receipt.error.code : null,
+        error_subcode: typeof receipt.error?.error_subcode === "number" ? receipt.error.error_subcode : null,
+        trace_id: typeof receipt.fbtrace_id === "string" ? receipt.fbtrace_id.slice(0, 100) : null,
+      }
+    });
+    if (result.error) console.warn("[purchase-delivery] result unavailable", { eventId, code: result.error.code });
+  }
+
 
   const persistError = async (
     detail: string,
@@ -4255,6 +4275,7 @@ async function sendToMetaCAPI(
     if (traceDatasetId) updates.dataset_id = traceDatasetId;
     if (retryableField) updates[retryableField] = retryable;
     await db.from("conversions").update(updates).eq("id", rowId);
+    await recordPurchaseDelivery("failed", responseRaw);
     await writeLog(
       db,
       row.user_id,
@@ -4308,6 +4329,7 @@ async function sendToMetaCAPI(
         if (traceDatasetId) updates.dataset_id = traceDatasetId;
         if (retryableField) updates[retryableField] = false;
         await db.from("conversions").update(updates).eq("id", rowId);
+        await recordPurchaseDelivery("sent", resText);
         const primaryLogOk = await writeLog(
           db,
           row.user_id,

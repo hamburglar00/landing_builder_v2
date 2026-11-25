@@ -1832,3 +1832,9 @@ Esta decisión sustituye la paleta azul del 5 de noviembre. Se aplica al constru
 ### Interacciones del chat de gateway
 
 Las estadísticas deben permitir ver, para una landing en circulación, cuántos clientes tocan los chips, «Copiar CBU» o el botón para subir un comprobante. Abrir el selector de archivos cuenta como interacción aunque el cliente lo cierre. La entrega del comprobante se distingue del clic inicial. Las métricas usan la atribución comprobada de la entrada y categorías de acción. Los datos bancarios, nombres de archivos y contenido del chat quedan fuera de estos eventos.
+
+## Instalaci?n, Inbox y eventos de Meta ? 25/11/2026
+
+ViewContent se habilita por p?xel para visitas actuales de Meta Ads en landings de Atrio; Pixel y CAPI conservan el mismo identificador una vez por sesi?n y landing. InitiateCheckout corresponde a un alta nueva confirmada y se env?a por servidor una vez por cuenta. Ambos interruptores arrancan apagados. Purchase conserva su origen actual. El historial guarda resultados de env?os nuevos sin reprocesar compras hist?ricas.
+
+Atrio y NexoBet comparten los filtros del Inbox y las preferencias de instalaci?n. El bloqueo opcional difiere la primera tarjeta bancaria y est? apagado por defecto. La difusi?n de texto y promociones se limita a suscripciones push activas. La bandeja inicial usa solicitudes manuales de carga. Los hitos de retiro se muestran cuando la operaci?n correspondiente est? confirmada.

@@ -265,7 +265,8 @@ async function handleTemplate7StartInner(
     if (account.created) {
       try {
         deps.recordAccountCreated?.({ userId: landing.user_id, landingId: landing.id,
-          promoCode: payload.promo_code, providerAccountId: player.player_provider_account_id, agencyId: player.agency_id });
+          promoCode: payload.promo_code, providerAccountId: player.player_provider_account_id, agencyId: player.agency_id,
+          meta: { request, landing, fbc: payload.attribution?.fbc, fbp: payload.attribution?.fbp } });
       } catch { /* Internal statistics must not change the result of an account operation. */ }
     }
     const configuredWait = gatewayEntryWait(effectiveConfig.gatewayEntry);

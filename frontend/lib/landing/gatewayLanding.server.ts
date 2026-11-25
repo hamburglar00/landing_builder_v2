@@ -1,3 +1,4 @@
+import { gatewayLandingBasePath } from "../gateway-landing-paths";
 import { GATEWAY_LANDING_BODY_LIMIT, GATEWAY_LANDING_PROOF_HEADER, isGatewayLandingOperation, isGatewayLandingSlug, verifyGatewayLandingRequest, type GatewayLandingClaims, type GatewayLandingProvider, type GatewayLandingResource } from "../gateway-landing-contract";
 import { resolveEffectiveLandingConfig } from "./effectiveLandingConfig";
 import { gatewayOriginFor } from "../reyDeAses/gatewayOrigins";
@@ -81,6 +82,7 @@ export async function handleGatewayLanding(request: Request, path: { provider: s
     let payload: unknown; try { payload = JSON.parse(body); } catch { return denied(400); }
     if (!payloadMatches(operation, payload, row, claims)) return denied(400);
     const headers = new Headers({ "Content-Type": contentType, Origin: claims.origin, "User-Agent": claims.userAgent });
+    headers.set("X-Builder-Verified-Landing-Source", claims.origin + gatewayLandingBasePath("builder", row.name));
     if (cookie) headers.set("Cookie", cookie);
     if (claims.clientIp) { headers.set("X-Forwarded-For", claims.clientIp); headers.set("X-Real-IP", claims.clientIp); }
     const internal = new Request(new URL(`/api/${operation}`, claims.origin), { method: "POST", headers, body });

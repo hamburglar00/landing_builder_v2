@@ -682,7 +682,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false, acco
 
       function scheduleOfficialMetaParamBuilder() {
         var run = function () {
-          void scopedFbc.collectNative(String(cfg.metaEbpCollectorSrc || ""));
+          void scopedFbc.collectNative(String(cfg.metaEbpCollectorSrc || "")).then(submitAtrioMetaView);
           Promise.all([
             loadOfficialMetaParamBuilder(),
             collectMetaClientIpProof()
@@ -972,7 +972,32 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false, acco
         };
       }
 
+      function submitAtrioMetaView() {
+        if (!isAtrioDestination() || !cfg.pixelId || !cfg.landingId || !window.crypto || !crypto.randomUUID) return;
+        var identityKey = "atrio-meta-view-session:" + cfg.landingId;
+        try {
+          var session = sessionStorage.getItem(identityKey);
+          if (!session) { session = crypto.randomUUID(); sessionStorage.setItem(identityKey, session); }
+          var sentKey = identityKey + ":pixel";
+          if (sessionStorage.getItem(sentKey)) return;
+          var tracking = collectMetaTrackingParams(queryParams());
+          var scope = tracking.landing_attribution;
+          if (!tracking.fbc || !scope || !["url", "referrer", "sdk_fresh"].includes(scope.fbc_source)) return;
+          fetch((cfg.apiBase || "/api") + "/journey-start", { method: "POST", keepalive: true,
+            headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+              event_name: "AtrioMetaView", landing_id: cfg.landingId, slug: cfg.slug, sessionId: session, fbc: tracking.fbc, fbp: tracking.fbp, provenance: scope
+            })
+          }).then(function (response) { return response.ok ? response.json() : null; }).then(function (event) {
+            if (!event || !event.eventId || event.pixel !== cfg.pixelId ||
+              typeof window.fbq !== "function" || sessionStorage.getItem(sentKey)) return;
+            window.fbq("trackSingle", event.pixel, "ViewContent", {}, { eventID: event.eventId });
+            sessionStorage.setItem(sentKey, event.eventId);
+          }).catch(function () {});
+        } catch (_) {}
+      }
+
       function recordLandingJourneyStart() {
+        submitAtrioMetaView();
         if (journeyStartInFlight || !cfg.landingId) return;
         var params = queryParams();
         var identity = resolveIdentity(params);

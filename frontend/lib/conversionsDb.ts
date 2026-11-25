@@ -87,6 +87,8 @@ export interface PixelConfig {
   send_lead_capi: boolean;
   send_complete_registration_capi: boolean;
   meta_ads_only_capi: boolean;
+  send_atrio_view_content?: boolean;
+  send_atrio_initiate_checkout?: boolean;
   send_purchase_capi: boolean;
   include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
@@ -822,6 +824,8 @@ export async function upsertPixelConfig(input: {
   send_lead_capi?: boolean;
   send_complete_registration_capi?: boolean;
   meta_ads_only_capi?: boolean;
+  send_atrio_view_content?: boolean;
+  send_atrio_initiate_checkout?: boolean;
   send_purchase_capi?: boolean;
   include_purchase_type_capi?: boolean;
   send_first_purchase_capi?: boolean;
@@ -865,6 +869,9 @@ export async function upsertPixelConfig(input: {
   }
   if (input.meta_ads_only_capi !== undefined) {
     body.meta_ads_only_capi = input.meta_ads_only_capi;
+  }
+  for (const key of ["send_atrio_view_content", "send_atrio_initiate_checkout"] as const) {
+    if (input[key] !== undefined) body[key] = input[key];
   }
   if (input.send_geo_capi !== undefined) {
     body.send_geo_capi = input.send_geo_capi;
