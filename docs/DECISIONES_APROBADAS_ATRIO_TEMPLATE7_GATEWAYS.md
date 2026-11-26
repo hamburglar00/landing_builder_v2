@@ -1838,3 +1838,10 @@ Las estadísticas deben permitir ver, para una landing en circulación, cuántos
 ViewContent se habilita por p?xel para visitas actuales de Meta Ads en landings de Atrio; Pixel y CAPI conservan el mismo identificador una vez por sesi?n y landing. InitiateCheckout corresponde a un alta nueva confirmada y se env?a por servidor una vez por cuenta. Ambos interruptores arrancan apagados. Purchase conserva su origen actual. El historial guarda resultados de env?os nuevos sin reprocesar compras hist?ricas.
 
 Atrio y NexoBet comparten los filtros del Inbox y las preferencias de instalaci?n. El bloqueo opcional difiere la primera tarjeta bancaria y est? apagado por defecto. La difusi?n de texto y promociones se limita a suscripciones push activas. La bandeja inicial usa solicitudes manuales de carga. Los hitos de retiro se muestran cuando la operaci?n correspondiente est? confirmada.
+
+
+### Retiro en el chat y medición de ingreso (26/11/2026, local)
+
+El chip Retirar abre el formulario dentro del historial del jugador en Atrio y NexoBet. La consulta firmada toma el saldo y el mínimo de la cuenta y gerencia asociadas al chat. El formulario acepta CBU o CVU. La solicitud usa el envío y los estados del circuito vigente.
+
+El recorrido de preparación distingue credenciales visibles, clic en Continuar, acceso preparado y sesión confirmada. La medición compartida llega a los cuatro gateways, al Worker de Ganamos+ y a los colectores de Builder, Clásico y NexoBet. Las fases de creación se trasladan mediante tiempos numéricos permitidos. El alta evita repetir la consulta de destino y la validación de gerencia consulta en paralelo dos fuentes antes de comprobar su coincidencia.

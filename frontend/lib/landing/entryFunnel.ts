@@ -5,7 +5,7 @@ export const ENTRY_FUNNEL_EVENTS = [
   "whatsapp_field_visible", "whatsapp_field_focus", "whatsapp_field_started", "whatsapp_form_submitted",
   "cta_clicked", "destination_ready", "account_ready", "login_confirmed", "gateway_loaded",
   "iframe_loaded", "chat_bootstrap_ready", "welcome_ready", "wallet_ready",
-  "chat_usable", "chat_ready", "entry_error", "visibility_hidden", "resumed", "stage_timing", "casino_account_ready", "entry_retry", "attempt_started", "cta_available", "outbound_requested",
+  "chat_usable", "chat_ready", "entry_error", "visibility_hidden", "resumed", "stage_timing", "casino_account_ready", "entry_retry", "attempt_started", "cta_available", "outbound_requested", "credentials_visible", "continue_clicked", "access_ready",
 ] as const;
 export const ENTRY_FUNNEL_PHASES = [
   "phone_owner", "phone_plan", "phone_cache", "phone_select", "phone_total",

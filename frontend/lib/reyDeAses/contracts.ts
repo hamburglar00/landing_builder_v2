@@ -51,6 +51,7 @@ export type Api2ResolveAccountRequest = {
   agency_id?: number;
   manager_id?: number;
   external_user_id: string;
+  request_id?: string;
   name: string;
   target_provider: TargetProvider;
   advisor_id: string;

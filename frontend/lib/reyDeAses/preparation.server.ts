@@ -217,6 +217,8 @@ export async function handleTemplate7PreparationAccount(
       // Diagnostics originate in the authenticated, decrypted preparation. No token/name is returned.
       const body = await result.json();
       const failure = json({ ...body, entry_funnel: diagnosticContext }, result.status);
+      const timing = result.headers.get("server-timing");
+      if (timing) failure.headers.set("Server-Timing", timing);
       const retryAfter = result.headers.get("retry-after");
       if (retryAfter && /^\d{1,4}$/.test(retryAfter)) failure.headers.set("retry-after", retryAfter);
       return failure;

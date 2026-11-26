@@ -255,7 +255,7 @@ async function handleTemplate7StartInner(
     ), resolveInput);
     const accountStartedAt = performance.now();
     const account = await timedServerStage("template7_start", "account_resolve", () => deps.resolveAccount({
-      external_user_id: player.player_id, manager_id: player.manager_id, agency_id: player.agency_id,
+      external_user_id: player.player_id, ...("request_id" in trace ? { request_id: String(trace.request_id) } : {}), manager_id: player.manager_id, agency_id: player.agency_id,
       name: payload.name, target_provider: provider, advisor_id: resolvedAdvisor.advisorId,
       advisor_slug: resolvedAdvisor.advisorSlug, ...(skinCode ? { skin_code: skinCode } : {}),
     }), undefined, trace);
@@ -299,7 +299,11 @@ async function handleTemplate7StartInner(
     response.headers.set("Server-Timing", template7ServerTiming(prepared.accountResolutionMs!, account.created, stageTimings, account.provisionTiming));
     return response;
   } catch (error) {
-    if (error instanceof TargetIntegrationError) return json({ error: error.code, retryable: error.retryable }, 503);
+    if (error instanceof TargetIntegrationError) {
+      const response = json({ error: error.code, retryable: error.retryable }, 503);
+      if (error.provisionTiming) response.headers.set("Server-Timing", error.provisionTiming);
+      return response;
+    }
     return json({ error: "service_unavailable" }, 503);
   } finally {
     logServerFlowTotal("template7_start", flowStartedAt, trace);

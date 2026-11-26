@@ -46,6 +46,10 @@ with attempts as (
     coalesce(max(provider),'unknown') as provider,coalesce(max(skin),'') as skin,
     bool_or(event_name='entry_retry') as retried,
     min(elapsed_ms) filter(where event_name='cta_clicked') as cta_ms,
+    min(elapsed_ms) filter(where event_name='credentials_visible') as credentials_ms,
+    min(elapsed_ms) filter(where event_name='continue_clicked') as continue_ms,
+    min(elapsed_ms) filter(where event_name='access_ready') as access_ready_ms,
+    min(elapsed_ms) filter(where event_name='login_confirmed') as confirmed_ms,
     min(elapsed_ms) filter(where event_name='chat_usable') as usable_ms,
     min(elapsed_ms) filter(where event_name='chat_ready') as complete_ms
   from public.entry_funnel_events
@@ -54,6 +58,12 @@ with attempts as (
 ), timed as (
   select a.*,f.form_ms,
     case when usable_ms>=cta_ms then usable_ms-cta_ms end as entry_ms,
+    case when credentials_ms>=cta_ms then credentials_ms-cta_ms end as to_credentials_ms,
+    case when continue_ms>=credentials_ms then continue_ms-credentials_ms end as reading_ms,
+    case when access_ready_ms>=credentials_ms then access_ready_ms-credentials_ms end as ready_after_credentials_ms,
+    case when access_ready_ms>=continue_ms then access_ready_ms-continue_ms
+      when access_ready_ms<continue_ms then 0 end as waiting_after_continue_ms,
+    case when confirmed_ms>=continue_ms then confirmed_ms-continue_ms end as continue_to_confirmed_ms,
     case when complete_ms>=cta_ms then complete_ms-cta_ms end as with_welcome_wallet_ms,
     case when attempt_number=1 and cta_ms>=f.form_ms then cta_ms-f.form_ms end as before_submit_ms
   from attempts a
@@ -66,6 +76,12 @@ select landing_id,template,provider,skin,account_kind,retried,entry_strategy,
   coalesce(engine,'unknown') as engine,coalesce(release,'unknown') as release,
   coalesce(environment,'unknown') as environment,coalesce(source,'unknown') as source,
   count(*) as observed_attempts,count(entry_ms) as complete_timings,
+  count(to_credentials_ms) as credentials_timings,
+  percentile_cont(.5) within group(order by to_credentials_ms) as click_to_credentials_p50_ms,
+  percentile_cont(.5) within group(order by reading_ms) as credentials_to_continue_p50_ms,
+  percentile_cont(.5) within group(order by ready_after_credentials_ms) as credentials_to_access_ready_p50_ms,
+  percentile_cont(.5) within group(order by waiting_after_continue_ms) as continue_to_access_ready_p50_ms,
+  percentile_cont(.5) within group(order by continue_to_confirmed_ms) as continue_to_confirmed_p50_ms,
   percentile_cont(.5) within group(order by entry_ms) as click_to_usable_p50_ms,
   percentile_cont(.9) within group(order by entry_ms) as click_to_usable_p90_ms,
   percentile_cont(.95) within group(order by entry_ms) as click_to_usable_p95_ms,
