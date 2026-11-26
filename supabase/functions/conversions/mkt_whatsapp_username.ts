@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 export const MKT_WHATSAPP_USERNAME_ACTION = "MKT_WHATSAPP_USERNAME";
+export const PLAYER_USERNAME_ACTION = "PLAYER_USERNAME";
 
 type Payload = Record<string, unknown>;
 type Lead = {
@@ -17,6 +18,7 @@ export type MktUsernameDelivery = {
   phone: string;
   promo: string;
   occurredAt: number;
+  milestone?: "first_message" | "requested" | "sent";
 };
 
 const text = (value: unknown) => String(value ?? "").trim();
@@ -49,7 +51,13 @@ export async function recordMktWhatsAppUsername(
   if (!secret || secret.length < 32) {
     return reply(503, "Observación no disponible");
   }
-  const leadId = text(payload.lead_action_event_id);
+  const action = text(payload.action) || MKT_WHATSAPP_USERNAME_ACTION;
+  if (action !== MKT_WHATSAPP_USERNAME_ACTION && action !== PLAYER_USERNAME_ACTION) {
+    return reply(422, "Observación inválida");
+  }
+  const leadId = text(action === PLAYER_USERNAME_ACTION
+    ? payload.first_customer_message_action_event_id
+    : payload.lead_action_event_id);
   const managerId = text(payload.manager_id);
   const agencyId = text(payload.agency_id);
   const phone = text(payload.phone);
@@ -83,7 +91,7 @@ export async function recordMktWhatsAppUsername(
     (byte) => Number.parseInt(byte, 16),
   );
   const signedFields = JSON.stringify([
-    MKT_WHATSAPP_USERNAME_ACTION,
+    action,
     name,
     leadId,
     managerId,
@@ -138,7 +146,7 @@ export async function recordMktWhatsAppUsername(
     .eq("id", matches[0].id).eq("user_id", profile.id).eq("status", "processed")
     .is(field, null);
   if (updateError) return reply(503, "No se pudo guardar la observación");
-  if (kind === "sent" && sendMeta) {
+  if (sendMeta && (kind === "sent" || action === PLAYER_USERNAME_ACTION)) {
     try {
       await sendMeta({
         leadId: matches[0].id,
@@ -147,6 +155,7 @@ export async function recordMktWhatsAppUsername(
         phone,
         promo,
         occurredAt,
+        milestone: kind,
       });
     } catch {
       return reply(503, "No se pudo registrar el envío a Meta");

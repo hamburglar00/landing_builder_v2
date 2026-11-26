@@ -43,6 +43,7 @@ import { canViewClientIntegration } from "@/lib/clientModules";
 import { IntegrationMenu } from "./IntegrationMenu";
 import { useCurrencyScope } from "@/components/currency/CurrencyScope";
 import { WorkspaceCapiControl } from "./WorkspaceCapiControl";
+import { validWhatsappMetaMapping, whatsappMetaEvents, whatsappMilestones, type WhatsappMetaEvent, type WhatsappMetaMapping } from "@/lib/whatsappMetaMilestones";
 
 const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "carga", label: "Carga" },
@@ -98,6 +99,7 @@ type PixelEditDraft = {
   send_atrio_initiate_checkout?: boolean;
   send_whatsapp_view_content?: boolean;
   whatsapp_username_meta_event?: "off" | "CompleteRegistration" | "InitiateCheckout";
+  whatsapp_milestone_meta_events?: WhatsappMetaMapping | null;
   send_purchase_capi: boolean;
   include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
@@ -821,6 +823,7 @@ export default function IntegracionesMetaCapi() {
         send_atrio_initiate_checkout: px.send_atrio_initiate_checkout === true,
         send_whatsapp_view_content: px.send_whatsapp_view_content === true,
         whatsapp_username_meta_event: px.whatsapp_username_meta_event ?? "off",
+        whatsapp_milestone_meta_events: px.whatsapp_milestone_meta_events ?? null,
       send_purchase_capi: px.send_purchase_capi !== false,
       include_purchase_type_capi: px.include_purchase_type_capi !== false,
       send_first_purchase_capi: px.send_first_purchase_capi !== false,
@@ -843,6 +846,9 @@ export default function IntegracionesMetaCapi() {
     const pixel = draft.pixel_id.replace(/\D/g, "").trim();
     const token = draft.meta_access_token.trim();
     if (!pixel || !token) return setSaveMsg("Pixel y token son obligatorios.");
+    if (draft.whatsapp_milestone_meta_events && !validWhatsappMetaMapping(draft.whatsapp_milestone_meta_events)) {
+      return setSaveMsg("Asigná cada evento de Meta a un solo hito.");
+    }
     if (
       draft.send_purchase_capi &&
       draft.include_purchase_type_capi &&
@@ -878,6 +884,7 @@ export default function IntegracionesMetaCapi() {
         send_atrio_initiate_checkout: draft.send_atrio_initiate_checkout === true,
         send_whatsapp_view_content: draft.send_whatsapp_view_content === true,
         whatsapp_username_meta_event: draft.whatsapp_username_meta_event ?? "off",
+        whatsapp_milestone_meta_events: draft.whatsapp_milestone_meta_events,
         send_purchase_capi: !!draft.send_purchase_capi,
         include_purchase_type_capi: !!draft.include_purchase_type_capi,
         send_first_purchase_capi: !!draft.send_first_purchase_capi,
@@ -2156,23 +2163,40 @@ export default function IntegracionesMetaCapi() {
                     help="Envía por Pixel y CAPI cuando la visita actual llega desde Meta Ads."
                     onChange={() => setDraft(p => p && { ...p, send_whatsapp_view_content: !p.send_whatsapp_view_content })}
                   />
-                  <label className="block py-3 text-xs text-zinc-300">
-                    Cuenta entregada por el cajero · WhatsApp MKT
-                    <select
-                      value={draft.whatsapp_username_meta_event ?? "off"}
-                      onChange={(e) => {
-                        const event = e.target.value;
-                        if (event === "off" || event === "CompleteRegistration" || event === "InitiateCheckout") {
-                          setDraft(p => p && { ...p, whatsapp_username_meta_event: event });
-                        }
-                      }}
-                      className="mt-1 block rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-100"
-                    >
-                      <option value="off">Desactivado</option>
-                      <option value="CompleteRegistration">CompleteRegistration</option>
-                      <option value="InitiateCheckout">InitiateCheckout</option>
-                    </select>
-                  </label>
+                  <fieldset className="my-3 grid gap-3">
+                    <legend className="mb-2 text-xs font-semibold text-zinc-300">Hitos de WhatsApp</legend>
+                    <p className="text-xs text-zinc-400">Elegí qué envía cada hito por CAPI. Las estadísticas cuentan el recorrido interno.</p>
+                    {whatsappMilestones.map(({ key, label }) => {
+                      const mapping: WhatsappMetaMapping = draft.whatsapp_milestone_meta_events ?? {
+                        first_message: draft.send_lead_capi ? "Lead" : "off",
+                        username_requested: "off",
+                        username_sent: draft.whatsapp_username_meta_event ?? "off",
+                      };
+                      const assigned = whatsappMilestones.filter((step) => step.key !== key).map((step) => mapping[step.key]);
+                      return (
+                        <label key={key} className="block text-xs text-zinc-300">
+                          {label}
+                          <select
+                            value={mapping[key]}
+                            onChange={(e) => {
+                              const event = e.target.value as WhatsappMetaEvent;
+                              const next = { ...mapping, [key]: event };
+                              if (validWhatsappMetaMapping(next)) {
+                                setDraft((p) => p && { ...p, whatsapp_milestone_meta_events: next });
+                              }
+                            }}
+                            className="mt-1 block rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-100"
+                          >
+                            {whatsappMetaEvents.map((event) => (
+                              <option key={event} value={event} disabled={event !== "off" && assigned.includes(event)}>
+                                {event === "off" ? "Desactivado" : event}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      );
+                    })}
+                  </fieldset>
                   <SettingsSwitch
                     checked={draft.send_contact_capi}
                     label="Contact"
@@ -2182,13 +2206,13 @@ export default function IntegracionesMetaCapi() {
                   <SettingsSwitch
                     checked={draft.send_lead_capi}
                     label="Lead"
-                    help="Envía el evento Lead mediante Meta CAPI."
+                    help="Controla el envío tradicional de Lead. Los hitos asignados arriba usan su propia configuración."
                     onChange={() => setDraft((p) => (p ? { ...p, send_lead_capi: !p.send_lead_capi } : p))}
                   />
                   <SettingsSwitch
                     checked={draft.send_complete_registration_capi}
                     label="CompleteRegistration"
-                    help="Envía el registro completo por Meta CAPI. Por defecto está apagado."
+                    help="Controla el envío tradicional de CompleteRegistration. Los hitos asignados arriba usan su propia configuración."
                     onChange={() => setDraft((p) => (p ? { ...p, send_complete_registration_capi: !p.send_complete_registration_capi } : p))}
                   />
                   <SettingsSwitch

@@ -68,4 +68,25 @@ Deno.test("WhatsApp delivery respects the pixel and workspace and reserves the e
 
   await sendMktWhatsAppUsernameMeta(db, { ...lead, leadId: "second-inbox-row" }, send);
   assertEquals(sent[1].body.data[0].event_name, "CompleteRegistration");
+
+  tables.conversions_pixel_configs[0].whatsapp_milestone_meta_events = {
+    first_message: "off", username_requested: "Lead", username_sent: "InitiateCheckout",
+  };
+  const mapped = { ...lead, leadId: "mapped-inbox-row" };
+  await sendMktWhatsAppUsernameMeta(db, { ...mapped, milestone: "first_message" }, send);
+  assertEquals(sent.length, 2);
+  await sendMktWhatsAppUsernameMeta(db, { ...mapped, milestone: "requested" }, send);
+  await sendMktWhatsAppUsernameMeta(db, { ...mapped, milestone: "sent" }, send);
+  assertEquals(sent.slice(2).map((item) => item.body.data[0].event_name), ["Lead", "InitiateCheckout"]);
+
+  tables.conversions_pixel_configs[0].whatsapp_milestone_meta_events = {
+    first_message: "Lead", username_requested: "off", username_sent: "InitiateCheckout",
+  };
+  const firstMessage = { ...mapped, leadId: "different-journey", milestone: "first_message" as const };
+  await sendMktWhatsAppUsernameMeta(db, firstMessage, send);
+  tables.conversions_pixel_configs[0].whatsapp_milestone_meta_events = {
+    first_message: "CompleteRegistration", username_requested: "off", username_sent: "InitiateCheckout",
+  };
+  await sendMktWhatsAppUsernameMeta(db, firstMessage, send);
+  assertEquals(sent.slice(4).map((item) => item.body.data[0].event_name), ["Lead"]);
 });

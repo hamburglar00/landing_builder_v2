@@ -6,6 +6,7 @@ import { STATISTICS_ORIGINS, computeChannelFunnel, createStatisticsChannelResolv
   statisticsRate, statisticsTemporalRows, countStatisticsVisitConversions, computeStatisticsPurchasePlayers } from "../lib/conversionJourneyStats";
 import { gatewayEntryCohort, statisticsMessageCoverage, filterConversionsByActivityRange } from "../lib/conversionJourneyStats";
 import { projectInternalConversion } from "../lib/internalConversionEvents";
+import { validWhatsappMetaMapping } from "../lib/whatsappMetaMilestones";
 
 const time = Math.floor(Date.parse("2026-11-04T15:00:00Z") / 1000);
 const range = { start: new Date("2026-11-04T00:00:00Z"), end: new Date("2026-11-04T23:59:59.999Z") };
@@ -16,6 +17,37 @@ const row = (id: string, extra: Partial<ConversionRow> = {}): ConversionRow => (
 const contact = (id: string, channel: "whatsapp" | "atrio", extra: Partial<ConversionRow> = {}) => row(id, {
   contact_event_id: `c-${id}`, contact_event_time: time,
   contact_payload_raw: JSON.stringify({ cta_destination: channel, landing_cta_meta_event: "CompleteRegistration", source_platform: "landing" }), ...extra,
+});
+
+test("WhatsApp internal conversation keeps historical dates, registration and purchase ratios", () => {
+  const base = [
+    contact("lead", "whatsapp", {
+      lead_event_id: "message", lead_event_time: time + 1,
+      registration_event_id: "account", registration_event_time: time + 2,
+      purchase_event_id: "first", purchase_event_time: time + 3, purchase_type: "first", valor: 4000,
+    }),
+    row("repeat", { purchase_event_id: "repeat", purchase_event_time: time + 4, purchase_type: "repeat", valor: 2000 }),
+  ];
+  const migrated = [
+    { ...base[0], internal_events_version: 1, lead_event_id: "", lead_event_time: null,
+      cta_clicked_event_id: base[0].contact_event_id, cta_clicked_event_time: time,
+      conversation_started_event_id: "message", conversation_started_event_time: time + 1,
+      purchase_confirmed_event_id: "first", purchase_confirmed_event_time: time + 3 },
+    base[1],
+  ];
+  for (const window of [range, { start: new Date((time + 2) * 1000), end: range.end }]) {
+    const stats = (items: ConversionRow[]) => computeChannelFunnel(
+      dedupeStatisticsEvents(scopeStatisticsStages(items, window)), "whatsapp",
+    );
+    assert.deepEqual(stats(migrated), stats(base));
+  }
+  assert.deepEqual(computeStatisticsPurchasePlayers(base), computeStatisticsPurchasePlayers(migrated));
+});
+
+test("WhatsApp mappings allow off multiple times and each Meta event once", () => {
+  assert.equal(validWhatsappMetaMapping({ first_message: "off", username_requested: "off", username_sent: "Lead" }), true);
+  assert.equal(validWhatsappMetaMapping({ first_message: "Lead", username_requested: "CompleteRegistration", username_sent: "InitiateCheckout" }), true);
+  assert.equal(validWhatsappMetaMapping({ first_message: "Lead", username_requested: "off", username_sent: "Lead" }), false);
 });
 
 test("gateway counts distinct scoped CTA arrivals including later visits and distinguishes missing measurements", () => {

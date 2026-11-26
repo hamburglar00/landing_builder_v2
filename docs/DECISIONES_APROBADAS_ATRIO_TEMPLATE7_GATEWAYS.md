@@ -1845,3 +1845,9 @@ Atrio y NexoBet comparten los filtros del Inbox y las preferencias de instalaci?
 El chip Retirar abre el formulario dentro del historial del jugador en Atrio y NexoBet. La consulta firmada toma el saldo y el mínimo de la cuenta y gerencia asociadas al chat. El formulario acepta CBU o CVU. La solicitud usa el envío y los estados del circuito vigente.
 
 El recorrido de preparación distingue credenciales visibles, clic en Continuar, acceso preparado y sesión confirmada. La medición compartida llega a los cuatro gateways, al Worker de Ganamos+ y a los colectores de Builder, Clásico y NexoBet. Las fases de creación se trasladan mediante tiempos numéricos permitidos. El alta evita repetir la consulta de destino y la validación de gerencia consulta en paralelo dos fuentes antes de comprobar su coincidencia.
+
+### Hitos de WhatsApp y Meta CAPI (26/11/2026)
+
+En Builder, el primer mensaje atribuido, la solicitud de usuario y la primera entrega de una cuenta nueva son hitos independientes. Cada píxel puede asignar Lead, CompleteRegistration o InitiateCheckout a un hito, con un uso por evento y la opción de desactivarlo. Las configuraciones existentes conservan su envío previo hasta editar la asignación. Las estadísticas conservan la conversación iniciada como base del porcentaje de primera carga y el alta confirmada como evidencia de cuenta creada.
+
+API2 envía FIRST_CUSTOMER_MESSAGE, PLAYER_USERNAME y WHATSAPP_ACCOUNT_CREATED al receptor de Builder. Los receptores personalizados conservan su contrato. Builder también acepta los nombres anteriores. La entrega de Full Carga se vincula al pedido original y requiere confirmación del canal. La integración usa claves de webhook derivadas de la configuración existente. PageView, ViewContent, Contact, Purchase y las recompras mantienen sus recorridos; Atrio y NexoBet conservan sus asignaciones y servicios.

@@ -91,6 +91,7 @@ export interface PixelConfig {
   send_atrio_initiate_checkout?: boolean;
   send_whatsapp_view_content?: boolean;
   whatsapp_username_meta_event?: "off" | "CompleteRegistration" | "InitiateCheckout";
+  whatsapp_milestone_meta_events?: import("./whatsappMetaMilestones").WhatsappMetaMapping | null;
   send_purchase_capi: boolean;
   include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
@@ -830,6 +831,7 @@ export async function upsertPixelConfig(input: {
   send_atrio_initiate_checkout?: boolean;
   send_whatsapp_view_content?: boolean;
   whatsapp_username_meta_event?: "off" | "CompleteRegistration" | "InitiateCheckout";
+  whatsapp_milestone_meta_events?: import("./whatsappMetaMilestones").WhatsappMetaMapping | null;
   send_purchase_capi?: boolean;
   include_purchase_type_capi?: boolean;
   send_first_purchase_capi?: boolean;
@@ -879,6 +881,9 @@ export async function upsertPixelConfig(input: {
   }
   if (input.whatsapp_username_meta_event !== undefined) {
     body.whatsapp_username_meta_event = input.whatsapp_username_meta_event;
+  }
+  if (input.whatsapp_milestone_meta_events !== undefined) {
+    body.whatsapp_milestone_meta_events = input.whatsapp_milestone_meta_events;
   }
   if (input.send_geo_capi !== undefined) {
     body.send_geo_capi = input.send_geo_capi;

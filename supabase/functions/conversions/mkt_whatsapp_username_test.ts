@@ -7,9 +7,9 @@ const name = "fixture";
 const action = "MKT_WHATSAPP_USERNAME";
 const time = Math.floor(Date.now() / 1000);
 
-function signed(kind: "requested" | "sent", occurredAt = time) {
+function signed(kind: "requested" | "sent", occurredAt = time, eventAction = action) {
   const fields = [
-    action,
+    eventAction,
     name,
     "381",
     "24",
@@ -20,7 +20,10 @@ function signed(kind: "requested" | "sent", occurredAt = time) {
     occurredAt,
   ];
   return {
-    lead_action_event_id: fields[2],
+    action: eventAction,
+    ...(eventAction === "PLAYER_USERNAME"
+      ? { first_customer_message_action_event_id: fields[2] }
+      : { lead_action_event_id: fields[2] }),
     manager_id: fields[3],
     agency_id: fields[4],
     phone: fields[5],
@@ -32,6 +35,20 @@ function signed(kind: "requested" | "sent", occurredAt = time) {
     ).digest("hex"),
   };
 }
+
+Deno.test("common WhatsApp action records a request and dispatches its configured milestone", async () => {
+  const { db } = fixture();
+  const milestones: string[] = [];
+  const response = await recordMktWhatsAppUsername(
+    db, name, signed("requested", time, "PLAYER_USERNAME"), secret,
+    (event) => {
+      milestones.push(event.milestone ?? "");
+      return Promise.resolve();
+    },
+  );
+  assertEquals(response.status, 200);
+  assertEquals(milestones, ["requested"]);
+});
 
 function fixture() {
   const profile = { id: "owner", nombre: name };

@@ -1,5 +1,5 @@
-import { MKT_WHATSAPP_USERNAME_ACTION, recordMktWhatsAppUsername } from "./mkt_whatsapp_username.ts";
-import { sendMktWhatsAppUsernameMeta } from "./mkt_whatsapp_username_meta.ts";
+import { MKT_WHATSAPP_USERNAME_ACTION, PLAYER_USERNAME_ACTION, recordMktWhatsAppUsername } from "./mkt_whatsapp_username.ts";
+import { sendMktWhatsAppUsernameMeta, type WhatsappMilestoneMetaEvents } from "./mkt_whatsapp_username_meta.ts";
 import { evaluateMetaReceipt, requiresMetaReceiptReview } from "./meta_receipt.ts";
 import { metaTransportLog, type MetaTransportLogFields } from "./meta_transport_log.ts";
 import {
@@ -128,6 +128,7 @@ interface PixelConfigRow {
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
   is_default: boolean;
+  whatsapp_milestone_meta_events?: WhatsappMilestoneMetaEvents | null;
 }
 
 interface ChatraceCapiConfig {
@@ -204,6 +205,7 @@ interface ConversionRow {
   contact_payload_raw: string;
   lead_event_id: string;
   lead_event_time: number | null;
+  conversation_started_event_id?: string | null;
   lead_payload_raw: string;
   purchase_event_id: string;
   purchase_event_time: number | null;
@@ -371,6 +373,7 @@ const canonicalInboundAction = (value: unknown): string => {
   const compact = raw.replace(/[\s_-]+/g, "").toUpperCase();
   if (
     compact === "COMPLETEREGISTRATION" ||
+    compact === "WHATSAPPACCOUNTCREATED" ||
     compact === "COMPLETATIONREGISTRATION" ||
     compact === "COMPLETEDREGISTRATION"
   ) {
@@ -5383,6 +5386,8 @@ async function handleLead(
   const leadEventTime = toValidEventTime(
     p.lead_event_time || p.event_time || Math.floor(Date.now() / 1000),
   );
+  const isWhatsappFirstMessage = !isAtrioSource && Boolean(cleanPhone) &&
+    (/^[1-9]\d*$/.test(norm(p.manager_id)) || ["chatrace", "whatsapp_cloud_api"].includes(normalizedSourcePlatform(inboundSourcePlatform)));
   const matchSourceToken = leadMatchMode === "promo_code"
     ? "match_source:promo_code"
     : leadMatchMode === "atrio_phone_fallback"
@@ -5922,6 +5927,28 @@ async function handleLead(
     );
   }
 
+  const whatsappPixel = trustedJourneyPixel(fullRow);
+  const whatsappMapping = pixelConfigs.find((pixel) => norm(pixel.pixel_id) === whatsappPixel)
+    ?.whatsapp_milestone_meta_events;
+  if (
+    isWhatsappFirstMessage && whatsappMapping && leadMatchMode === "promo_code" &&
+    normalizedSourcePlatform(fullRow.source_platform) !== "whatsapp_cloud_api" &&
+    !norm(fullRow.atrio_id) && !norm(fullRow.lead_atrio_id)
+  ) {
+    if (fullRow.conversation_started_event_id === leadEventId) {
+      await sendMktWhatsAppUsernameMeta(db, {
+        leadId: norm(p.action_event_id) || leadEventId,
+        userId: landing.user_id,
+        conversionId: targetId!,
+        phone: cleanPhone,
+        promo: promoCode,
+        occurredAt: leadEventTime,
+        milestone: "first_message",
+      });
+    }
+    return textResponse("Primer mensaje procesado.");
+  }
+
   const ok = await sendToMetaCAPI(
     db,
     effectiveConfig,
@@ -6179,6 +6206,12 @@ async function handleCompleteRegistration(
       pixelConfigs,
       fullRow.pixel_id || fullRow.meta_pixel_id,
     );
+    if (
+      norm(p.action) === "WHATSAPP_ACCOUNT_CREATED" && matchMode === "promo_code" &&
+      pixelConfigs.some((pixel) => norm(pixel.pixel_id) === trustedJourneyPixel(fullRow) && pixel.whatsapp_milestone_meta_events)
+    ) {
+      return textResponse("Alta de cuenta registrada.");
+    }
     const ok = await sendToMetaCAPI(
       db,
       effectiveConfig,
@@ -8224,9 +8257,10 @@ async function handleConversions(
     requestDiagnostics.set(db, diagnostics);
     if (purchaseIngest) purchaseIngestRequests.set(db, purchaseIngest);
 
-    if (!purchaseIngest && norm(params.action).toUpperCase() === MKT_WHATSAPP_USERNAME_ACTION) {
+    const usernameAction = norm(params.action).toUpperCase();
+    if (!purchaseIngest && [MKT_WHATSAPP_USERNAME_ACTION, PLAYER_USERNAME_ACTION].includes(usernameAction)) {
       return await recordMktWhatsAppUsername(
-        db, name, params, Deno.env.get("PBADMIN_EXTENSIONS_SECRET"),
+        db, name, { ...params, action: usernameAction }, Deno.env.get("PBADMIN_EXTENSIONS_SECRET"),
         (lead) => sendMktWhatsAppUsernameMeta(db, lead),
       );
     }
@@ -8460,7 +8494,7 @@ async function handleConversions(
     const { data: pixelConfigsData, error: pixelConfigsError } = await db
       .from("conversions_pixel_configs")
       .select(
-        "user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, send_complete_registration_capi, meta_ads_only_capi, send_purchase_capi, include_purchase_type_capi, send_first_purchase_capi, send_repeat_purchase_capi, repeat_purchase_capi_window_days, purchase_capi_min_amount_enabled, purchase_capi_min_amount, send_geo_capi, geo_use_ipapi, geo_fill_only_when_missing, is_default",
+        "user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, send_complete_registration_capi, meta_ads_only_capi, send_purchase_capi, include_purchase_type_capi, send_first_purchase_capi, send_repeat_purchase_capi, repeat_purchase_capi_window_days, purchase_capi_min_amount_enabled, purchase_capi_min_amount, send_geo_capi, geo_use_ipapi, geo_fill_only_when_missing, is_default, whatsapp_milestone_meta_events",
       )
       .eq("user_id", userId);
     if (purchaseIngest && pixelConfigsError) {
