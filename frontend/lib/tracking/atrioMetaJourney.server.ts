@@ -56,7 +56,14 @@ export async function reserveAtrioMetaJourney(input: {
 }) {
   const { landing, name } = input;
   const raw = resolveEffectiveLandingConfig(landing.config, landing.landing_config);
-  if (raw.ctaDestination !== "atrio" || name === "ViewContent" && !sessionIdPattern.test(input.key)) return null;
+  const isAtrio = raw.ctaDestination === "atrio";
+  const isWhatsApp = raw.ctaDestination === "whatsapp" ||
+    (!raw.ctaDestination && !["template7", "template8", "template9"].includes(String(raw.template)));
+  if (name === "ViewContent") {
+    if ((!isAtrio && !isWhatsApp) || !sessionIdPattern.test(input.key)) return null;
+  } else if (!isAtrio) {
+    return null;
+  }
   const source = sourceUrl(input.request, landing.name);
   if (!source) return null;
   const sources = landing.landing_config as { tracking?: { pixelId?: string } } | null;
@@ -64,7 +71,7 @@ export async function reserveAtrioMetaJourney(input: {
   if (!/^\d{5,25}$/.test(pixel)) return null;
   const db = getSupabaseServerClient();
   const [pixelResult, workspaceResult] = await Promise.all([
-    db.from("conversions_pixel_configs").select("meta_access_token,meta_api_version,meta_ads_only_capi,send_atrio_view_content,send_atrio_initiate_checkout")
+    db.from("conversions_pixel_configs").select("meta_access_token,meta_api_version,meta_ads_only_capi,send_atrio_view_content,send_atrio_initiate_checkout,send_whatsapp_view_content")
       .eq("user_id", landing.user_id).eq("pixel_id", pixel).maybeSingle(),
     db.from("conversions_config").select("capi_workspace_settings").eq("user_id", landing.user_id).maybeSingle(),
   ]);
@@ -74,7 +81,8 @@ export async function reserveAtrioMetaJourney(input: {
   const fbc = name === "ViewContent"
     ? currentVisitFbc(input.fbc, input.provenance, landing.id, pixel, landing.workspace_currency)
     : normalizeFbc(input.fbc);
-  if (name === "ViewContent" ? !settings.send_atrio_view_content || !fbc
+  const sendViewContent = isAtrio ? settings.send_atrio_view_content : settings.send_whatsapp_view_content;
+  if (name === "ViewContent" ? !sendViewContent || !fbc
       : !settings.send_atrio_initiate_checkout || settings.meta_ads_only_capi && !fbc) return null;
   const fbp = typeof input.fbp === "string" && /^fb\.\d\.\d{13}\.\d{1,24}$/.test(input.fbp) ? input.fbp : "";
   const eventId = createHash("sha256").update([landing.user_id, name, name === "ViewContent" ? landing.id : "", input.key].join(":")).digest("hex");

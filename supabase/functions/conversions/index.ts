@@ -1,3 +1,5 @@
+import { MKT_WHATSAPP_USERNAME_ACTION, recordMktWhatsAppUsername } from "./mkt_whatsapp_username.ts";
+import { sendMktWhatsAppUsernameMeta } from "./mkt_whatsapp_username_meta.ts";
 import { evaluateMetaReceipt, requiresMetaReceiptReview } from "./meta_receipt.ts";
 import { metaTransportLog, type MetaTransportLogFields } from "./meta_transport_log.ts";
 import {
@@ -375,7 +377,7 @@ const canonicalInboundAction = (value: unknown): string => {
     return "COMPLETEREGISTRATION";
   }
   if (compact === "CONTACT") return "CONTACT";
-  if (compact === "LEAD") return "LEAD";
+  if (compact === "LEAD" || compact === "FIRSTCUSTOMERMESSAGE") return "LEAD";
   if (compact === "PURCHASE") return "PURCHASE";
   return raw.toUpperCase();
 };
@@ -8221,6 +8223,13 @@ async function handleConversions(
     });
     requestDiagnostics.set(db, diagnostics);
     if (purchaseIngest) purchaseIngestRequests.set(db, purchaseIngest);
+
+    if (!purchaseIngest && norm(params.action).toUpperCase() === MKT_WHATSAPP_USERNAME_ACTION) {
+      return await recordMktWhatsAppUsername(
+        db, name, params, Deno.env.get("PBADMIN_EXTENSIONS_SECRET"),
+        (lead) => sendMktWhatsAppUsernameMeta(db, lead),
+      );
+    }
 
     // Lookup client by nombre in profiles.
     const profileQuery = db

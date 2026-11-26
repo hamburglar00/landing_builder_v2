@@ -96,6 +96,8 @@ type PixelEditDraft = {
   meta_ads_only_capi: boolean;
   send_atrio_view_content?: boolean;
   send_atrio_initiate_checkout?: boolean;
+  send_whatsapp_view_content?: boolean;
+  whatsapp_username_meta_event?: "off" | "CompleteRegistration" | "InitiateCheckout";
   send_purchase_capi: boolean;
   include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
@@ -817,6 +819,8 @@ export default function IntegracionesMetaCapi() {
       meta_ads_only_capi: px.meta_ads_only_capi === true,
         send_atrio_view_content: px.send_atrio_view_content === true,
         send_atrio_initiate_checkout: px.send_atrio_initiate_checkout === true,
+        send_whatsapp_view_content: px.send_whatsapp_view_content === true,
+        whatsapp_username_meta_event: px.whatsapp_username_meta_event ?? "off",
       send_purchase_capi: px.send_purchase_capi !== false,
       include_purchase_type_capi: px.include_purchase_type_capi !== false,
       send_first_purchase_capi: px.send_first_purchase_capi !== false,
@@ -872,6 +876,8 @@ export default function IntegracionesMetaCapi() {
         meta_ads_only_capi: !!draft.meta_ads_only_capi,
         send_atrio_view_content: draft.send_atrio_view_content === true,
         send_atrio_initiate_checkout: draft.send_atrio_initiate_checkout === true,
+        send_whatsapp_view_content: draft.send_whatsapp_view_content === true,
+        whatsapp_username_meta_event: draft.whatsapp_username_meta_event ?? "off",
         send_purchase_capi: !!draft.send_purchase_capi,
         include_purchase_type_capi: !!draft.include_purchase_type_capi,
         send_first_purchase_capi: !!draft.send_first_purchase_capi,
@@ -939,6 +945,8 @@ export default function IntegracionesMetaCapi() {
         meta_ads_only_capi: px.meta_ads_only_capi === true,
         send_atrio_view_content: px.send_atrio_view_content === true,
         send_atrio_initiate_checkout: px.send_atrio_initiate_checkout === true,
+        send_whatsapp_view_content: px.send_whatsapp_view_content === true,
+        whatsapp_username_meta_event: px.whatsapp_username_meta_event ?? "off",
         send_purchase_capi: px.send_purchase_capi !== false,
         include_purchase_type_capi: px.include_purchase_type_capi !== false,
         send_first_purchase_capi: px.send_first_purchase_capi !== false,
@@ -961,6 +969,8 @@ export default function IntegracionesMetaCapi() {
         meta_ads_only_capi: px.meta_ads_only_capi === true,
         send_atrio_view_content: px.send_atrio_view_content === true,
         send_atrio_initiate_checkout: px.send_atrio_initiate_checkout === true,
+        send_whatsapp_view_content: px.send_whatsapp_view_content === true,
+        whatsapp_username_meta_event: px.whatsapp_username_meta_event ?? "off",
         send_purchase_capi: px.send_purchase_capi !== false,
         include_purchase_type_capi: px.include_purchase_type_capi !== false,
         send_first_purchase_capi: px.send_first_purchase_capi !== false,
@@ -2140,6 +2150,29 @@ export default function IntegracionesMetaCapi() {
                     help="Env?a por CAPI cuando el casino confirma que cre? una cuenta."
                     onChange={() => setDraft(p => p && { ...p, send_atrio_initiate_checkout: !p.send_atrio_initiate_checkout })}
                   />
+                  <SettingsSwitch
+                    checked={draft.send_whatsapp_view_content === true}
+                    label="ViewContent · WhatsApp"
+                    help="Envía por Pixel y CAPI cuando la visita actual llega desde Meta Ads."
+                    onChange={() => setDraft(p => p && { ...p, send_whatsapp_view_content: !p.send_whatsapp_view_content })}
+                  />
+                  <label className="block py-3 text-xs text-zinc-300">
+                    Cuenta entregada por el cajero · WhatsApp MKT
+                    <select
+                      value={draft.whatsapp_username_meta_event ?? "off"}
+                      onChange={(e) => {
+                        const event = e.target.value;
+                        if (event === "off" || event === "CompleteRegistration" || event === "InitiateCheckout") {
+                          setDraft(p => p && { ...p, whatsapp_username_meta_event: event });
+                        }
+                      }}
+                      className="mt-1 block rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-100"
+                    >
+                      <option value="off">Desactivado</option>
+                      <option value="CompleteRegistration">CompleteRegistration</option>
+                      <option value="InitiateCheckout">InitiateCheckout</option>
+                    </select>
+                  </label>
                   <SettingsSwitch
                     checked={draft.send_contact_capi}
                     label="Contact"

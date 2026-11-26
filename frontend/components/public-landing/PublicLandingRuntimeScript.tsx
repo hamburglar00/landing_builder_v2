@@ -973,7 +973,7 @@ export function buildPublicLandingRuntimeSource(includeEntryFunnel = false, acco
       }
 
       function submitAtrioMetaView() {
-        if (!isAtrioDestination() || !cfg.pixelId || !cfg.landingId || !window.crypto || !crypto.randomUUID) return;
+        if (!cfg.pixelId || !cfg.landingId || !window.crypto || !crypto.randomUUID) return;
         var identityKey = "atrio-meta-view-session:" + cfg.landingId;
         try {
           var session = sessionStorage.getItem(identityKey);

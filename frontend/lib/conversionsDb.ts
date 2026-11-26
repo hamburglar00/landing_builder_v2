@@ -89,6 +89,8 @@ export interface PixelConfig {
   meta_ads_only_capi: boolean;
   send_atrio_view_content?: boolean;
   send_atrio_initiate_checkout?: boolean;
+  send_whatsapp_view_content?: boolean;
+  whatsapp_username_meta_event?: "off" | "CompleteRegistration" | "InitiateCheckout";
   send_purchase_capi: boolean;
   include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
@@ -826,6 +828,8 @@ export async function upsertPixelConfig(input: {
   meta_ads_only_capi?: boolean;
   send_atrio_view_content?: boolean;
   send_atrio_initiate_checkout?: boolean;
+  send_whatsapp_view_content?: boolean;
+  whatsapp_username_meta_event?: "off" | "CompleteRegistration" | "InitiateCheckout";
   send_purchase_capi?: boolean;
   include_purchase_type_capi?: boolean;
   send_first_purchase_capi?: boolean;
@@ -870,8 +874,11 @@ export async function upsertPixelConfig(input: {
   if (input.meta_ads_only_capi !== undefined) {
     body.meta_ads_only_capi = input.meta_ads_only_capi;
   }
-  for (const key of ["send_atrio_view_content", "send_atrio_initiate_checkout"] as const) {
+  for (const key of ["send_atrio_view_content", "send_atrio_initiate_checkout", "send_whatsapp_view_content"] as const) {
     if (input[key] !== undefined) body[key] = input[key];
+  }
+  if (input.whatsapp_username_meta_event !== undefined) {
+    body.whatsapp_username_meta_event = input.whatsapp_username_meta_event;
   }
   if (input.send_geo_capi !== undefined) {
     body.send_geo_capi = input.send_geo_capi;
