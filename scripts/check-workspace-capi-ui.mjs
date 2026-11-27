@@ -76,6 +76,11 @@ for(const [engine,type]of[['Chromium',browsers.chromium],['WebKit',browsers.webk
   await purchaseRow.getByRole('cell',{name:'—',exact:true}).waitFor();
   await purchaseRow.getByRole('cell',{name:/Fallido · 100/}).waitFor();
   await historyTitle.click();
+  await page.getByRole('button',{name:'AÑADIR PIXEL',exact:true}).click();
+  const pixelIdBox=await page.getByLabel('ID del píxel',{exact:true}).boundingBox();
+  const currencyBox=await page.getByRole('button',{name:'Moneda CAPI',exact:true}).boundingBox();
+  assert.ok(pixelIdBox&&currencyBox&&Math.abs(pixelIdBox.y-currencyBox.y)<1&&currencyBox.x>pixelIdBox.x);
+  await page.getByRole('button',{name:'Cancelar',exact:true}).click();
   const edit=page.getByRole('button',{name:'Editar píxel 19000001'});await edit.click();const modal=page.locator('.integration-edit-modal');await modal.waitFor();
   const ms=name=>modal.getByRole('switch',{name,exact:true});
   const tab=name=>modal.getByRole('tab',{name,exact:true});

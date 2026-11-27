@@ -2012,11 +2012,16 @@ export default function IntegracionesMetaCapi() {
           if (["pixelId", "token"].includes((event.target as HTMLInputElement).name)) { setNeedsTestCode(false); setQuickTestCode(""); }
         }}>
           <div className="w-full max-w-xl rounded-xl border border-zinc-700 bg-zinc-900 p-4">
-            <h3 className="text-sm font-semibold text-zinc-100">Añadir pixel</h3>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <input name="pixelId" value={quickPixelId} onChange={(e) => setQuickPixelId(e.target.value.replace(/\D/g, ""))} placeholder="Pixel ID" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
+            <h3 className="text-sm font-semibold text-zinc-100">Añadir píxel</h3>
+            <div className="mt-3 grid grid-cols-2 items-end gap-3">
+              <label className="block min-w-0">
+                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-zinc-500">ID del píxel</span>
+                <input name="pixelId" value={quickPixelId} onChange={(e) => setQuickPixelId(e.target.value.replace(/\D/g, ""))} placeholder="Pixel ID" className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
+              </label>
               <CustomSelect
-                label="Moneda default CAPI del pixel"
+                label="Moneda CAPI"
+                ariaLabel="Moneda CAPI"
+                className="min-w-0"
                 value={quickCurrency}
                 options={META_CURRENCY_OPTIONS.map((currency) => ({
                   value: currency,
@@ -2026,16 +2031,16 @@ export default function IntegracionesMetaCapi() {
                 labelClassName="text-[11px] font-semibold uppercase tracking-wide text-zinc-500"
                 buttonClassName="h-9 px-3 text-sm"
               />
-              <input value={quickComment} onChange={(e) => setQuickComment(e.target.value)} placeholder="Identificación (opcional)" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
-              <input name="token" type="password" autoComplete="off" value={quickToken} onChange={(e) => setQuickToken(e.target.value)} placeholder="Access token" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
-              {needsTestCode ? <input value={quickTestCode} maxLength={100} autoComplete="off" onChange={event => setQuickTestCode(event.target.value)} placeholder="Código de Probar eventos de Meta" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" /> : null}
+              <input value={quickComment} onChange={(e) => setQuickComment(e.target.value)} placeholder="Identificación (opcional)" className="col-span-2 h-9 min-w-0 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
+              <input name="token" type="password" autoComplete="off" value={quickToken} onChange={(e) => setQuickToken(e.target.value)} placeholder="Access token" className="col-span-2 h-9 min-w-0 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
+              {needsTestCode ? <input value={quickTestCode} maxLength={100} autoComplete="off" onChange={event => setQuickTestCode(event.target.value)} placeholder="Código de Probar eventos de Meta" className="col-span-2 h-9 min-w-0 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" /> : null}
             </div>
             <p className="mt-2 text-xs text-zinc-400">{needsTestCode ? "Administrador de eventos de Meta → seleccioná este píxel → Probar eventos → copiá el código TEST… y volvé a probar." : "Comprobá el envío a Meta con el ID y el token. La prueba es automática."}</p>
             <ActionNotice message={connectionResult?.message} tone={connectionResult?.ok ? "success" : "error"} noticeKey={connectionResultNoticeKey} />
             <ActionNotice message={quickErr} tone="error" noticeKey={quickErrNoticeKey} />
-            <div className="mt-4 flex justify-end gap-2">
-              <button type="button" disabled={saving || testingConnection} onClick={() => void testConnection()} className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 disabled:opacity-60">{testingConnection ? "Probando…" : "Probar conexión"}</button>
-              <button type="button" onClick={() => { connectionVersion.current++; setConnectionResult(null); setQuickOpen(false); }} className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300">Cancelar</button>
+            <div className="mt-4 flex flex-wrap justify-end gap-2">
+              <button type="button" disabled={saving || testingConnection} onClick={() => void testConnection()} className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-zinc-100 transition hover:bg-zinc-700 disabled:opacity-60">{testingConnection ? "Probando…" : "Probar conexión"}</button>
+              <button type="button" onClick={() => { connectionVersion.current++; setConnectionResult(null); setQuickOpen(false); }} className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-zinc-100 transition hover:bg-zinc-700">Cancelar</button>
               <button disabled={saving || testingConnection} type="button" onClick={() => void handleQuickSave()} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-900 disabled:opacity-60">Guardar</button>
             </div>
           </div>
@@ -2109,7 +2114,6 @@ export default function IntegracionesMetaCapi() {
               <details className="pixel-settings-group mb-4">
                 <summary className="cursor-pointer text-sm font-semibold text-zinc-100">Conexión y credenciales <span className="ml-1 text-[11px] font-normal text-zinc-500">· {draft.meta_currency} · datos protegidos</span></summary>
                 <div className="mt-3 flex items-center justify-end gap-2">
-                  <HelpTooltip label="Datos protegidos" text="El ID, la moneda y el token están bloqueados para evitar cambios accidentales. Desbloquealos sólo cuando necesites modificarlos." />
                   <button type="button" onClick={() => setEditSensitiveFields((v) => !v)} className="ui-button ui-button-secondary h-8 min-h-8">
                     {editSensitiveFields ? "Bloquear datos" : "Editar datos"}
                   </button>

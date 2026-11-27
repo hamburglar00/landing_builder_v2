@@ -1851,3 +1851,7 @@ El recorrido de preparación distingue credenciales visibles, clic en Continuar,
 En Builder, el primer mensaje atribuido, la solicitud de usuario y la primera entrega de una cuenta nueva son hitos independientes. Cada píxel puede asignar Lead, CompleteRegistration o InitiateCheckout a un hito, con un uso por evento y la opción de desactivarlo. Las configuraciones existentes conservan su envío previo hasta editar la asignación. Las estadísticas conservan la conversación iniciada como base del porcentaje de primera carga y el alta confirmada como evidencia de cuenta creada.
 
 API2 envía FIRST_CUSTOMER_MESSAGE, PLAYER_USERNAME y WHATSAPP_ACCOUNT_CREATED al receptor de Builder. Los receptores personalizados conservan su contrato. Builder también acepta los nombres anteriores. La entrega de Full Carga se vincula al pedido original y requiere confirmación del canal. La integración usa claves de webhook derivadas de la configuración existente. PageView, ViewContent, Contact, Purchase y las recompras mantienen sus recorridos; Atrio y NexoBet conservan sus asignaciones y servicios.
+
+### Recordatorios de escritorio en Atrio y NexoBet (26/11/2026)
+
+La instalación del panel se ofrece automáticamente solo en dispositivos móviles. La activación de notificaciones y la conexión de Telegram conservan los controles de Configuración.
