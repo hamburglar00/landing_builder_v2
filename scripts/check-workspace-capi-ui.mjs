@@ -12,11 +12,17 @@ const artifacts=path.join(root,'.vercel/validation-pixel-tabs-20261026');await m
 const uid='19000000-0000-4000-8000-000000000001';
 const pixel={id:'19000000-0000-4000-8000-000000000002',user_id:uid,pixel_id:'19000001',meta_access_token:'synthetic',comment:'Campaña de prueba',meta_currency:'ARS',meta_api_version:'v25.0',send_contact_capi:true,send_lead_capi:true,send_complete_registration_capi:false,meta_ads_only_capi:true,send_purchase_capi:true,include_purchase_type_capi:true,send_first_purchase_capi:true,send_repeat_purchase_capi:true,repeat_purchase_capi_window_days:null,purchase_capi_min_amount_enabled:false,purchase_capi_min_amount:0,send_geo_capi:true,geo_use_ipapi:true,geo_fill_only_when_missing:true,is_default:true};
 const fixture=`
-window.fixture={config:{...${JSON.stringify(pixel)},capi_workspace_settings:{}},pixel:${JSON.stringify(pixel)},writes:[],fail:false,hold:false};
+window.fixture={config:{...${JSON.stringify(pixel)},capi_workspace_settings:{}},pixel:${JSON.stringify(pixel)},writes:[],purchaseHistory:[],fail:false,hold:false};
 const f=window.fixture;
 export const supabase={auth:{getUser:async()=>({data:{user:{id:'${uid}'}}})},
 rpc:async(name,args)=>{f.writes.push({rpc:name,args});if(name!=='set_workspace_capi_enabled')throw Error('Unexpected RPC');if(f.hold)await new Promise(r=>f.release=r);if(f.fail)return{error:{message:'synthetic failure'}};f.config.capi_workspace_settings[args.p_currency]=args.p_enabled;return{data:f.config.capi_workspace_settings,error:null};},
-from(table){let body=null;const q={select(){return q},eq(){return q},order(){return q},maybeSingle(){return q},upsert(value){body=value;return q},then(resolve){if(body){f.writes.push({table,body});if(table==='conversions_config')Object.assign(f.config,body);else if(table==='conversions_pixel_configs')Object.assign(f.pixel,body);else throw Error('Unexpected write');}const data=table==='profiles'?{nombre:'synthetic-client',role:'client'}:table==='conversions_config'?f.config:table==='conversions_pixel_configs'?[f.pixel]:[];return Promise.resolve({data:structuredClone(data),error:null}).then(resolve)}};return q;}};`;
+from(table){
+ if(table==='meta_purchase_delivery_history'){
+  const history={select:()=>history,eq:()=>history,order:()=>history,limit:async()=>({data:structuredClone(f.purchaseHistory),error:null})};
+  return history;
+ }
+ let body=null;const q={select(){return q},eq(){return q},order(){return q},maybeSingle(){return q},upsert(value){body=value;return q},then(resolve){if(body){f.writes.push({table,body});if(table==='conversions_config')Object.assign(f.config,body);else if(table==='conversions_pixel_configs')Object.assign(f.pixel,body);else throw Error('Unexpected write');}const data=table==='profiles'?{nombre:'synthetic-client',role:'client'}:table==='conversions_config'?f.config:table==='conversions_pixel_configs'?[f.pixel]:[];return Promise.resolve({data:structuredClone(data),error:null}).then(resolve)}};return q;
+}};`;
 const permissions={show_kommo:false,show_chatrace:false,show_atrio:true,show_whatsapp_api:true,show_followups:true};
 const ui=await build({absWorkingDir:frontend,stdin:{contents:`import React,{useState}from'react';import{createRoot}from'react-dom/client';import Integration from'./components/integraciones/IntegracionesMetaCapi';import{AppConfirmProvider}from'./components/ui/AppConfirmDialog';import{ClientModulePermissionsContext}from'./components/clients/ClientModulePermissions';import{CurrencyFixture}from'@/components/currency/CurrencyScope';function App(){const[open,setOpen]=useState(true);return <CurrencyFixture><button onClick={()=>setOpen(v=>!v)}>Montar pantalla</button>{open&&<AppConfirmProvider><ClientModulePermissionsContext.Provider value={${JSON.stringify(permissions)}}><Integration/></ClientModulePermissionsContext.Provider></AppConfirmProvider>}</CurrencyFixture>}createRoot(document.getElementById('root')).render(<App/>);`,resolveDir:frontend,loader:'tsx'},bundle:true,write:false,platform:'browser',format:'iife',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"','process.env.NEXT_PUBLIC_SUPABASE_URL':'"https://fixture.test"'},plugins:[{name:'fixture-io',setup(b){
  b.onResolve({filter:/^@\/lib\/supabaseClient$/},()=>({path:'db',namespace:'fixture'}));
@@ -54,6 +60,20 @@ for(const [engine,type]of[['Chromium',browsers.chromium],['WebKit',browsers.webk
   assert.equal(await sw.getAttribute('aria-checked'),'true');await scope.selectOption('PYG');await page.getByRole('status').filter({hasText:'CAPI activo en PYG'}).waitFor();
   await sw.click();await page.getByRole('status').filter({hasText:'CAPI desactivado en PYG'}).waitFor();
   await page.getByRole('button',{name:'Montar pantalla'}).click();await page.getByRole('button',{name:'Montar pantalla'}).click();await sw.waitFor();assert.equal(await sw.getAttribute('aria-checked'),'false');
+  const historyTitle=page.getByText('Historial de envíos de compras',{exact:true});
+  const history=page.locator('details').filter({has:historyTitle});
+  await historyTitle.click();
+  await history.getByText('Todavía no hay envíos registrados.',{exact:true}).waitFor();
+  await page.evaluate(()=>window.fixture.purchaseHistory.push({
+   id:1,landing_label:'Denis',operation_reference:null,event_id:'fixture-purchase',amount:1500,currency:'ARS',
+   purchase_type:'repeat',status:'failed',meta_response:{error_code:100,trace_id:'fixture-trace'},created_at:'2026-11-25T13:00:00Z',
+  }));
+  await history.getByRole('button',{name:'Actualizar',exact:true}).click();
+  await history.getByRole('columnheader',{name:'Operación',exact:true}).waitFor();
+  const purchaseRow=history.getByRole('row').filter({hasText:'fixture-purchase'});
+  await purchaseRow.getByRole('cell',{name:'—',exact:true}).waitFor();
+  await purchaseRow.getByRole('cell',{name:/Fallido · 100/}).waitFor();
+  await historyTitle.click();
   const edit=page.getByRole('button',{name:'Editar píxel 19000001'});await edit.click();const modal=page.locator('.integration-edit-modal');await modal.waitFor();
   const ms=name=>modal.getByRole('switch',{name,exact:true});
   const tab=name=>modal.getByRole('tab',{name,exact:true});

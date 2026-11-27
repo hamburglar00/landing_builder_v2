@@ -29,24 +29,24 @@ export function MetaPurchaseDeliveryHistory({ userId }: { userId: string }) {
   return <details className="pixel-settings-group" onToggle={event => {
     if (event.currentTarget.open && !state.loading && !state.rows) void load();
   }}>
-    <summary className="cursor-pointer font-semibold">Historial de env?os de compras</summary>
+    <summary className="cursor-pointer font-semibold">Historial de envíos de compras</summary>
     <button className="ui-button ui-button-secondary mt-3" type="button" disabled={state.loading} onClick={() => void load()}>Actualizar</button>
-    {state.loading ? <p role="status" className="my-3 text-sm">Consultando env?os?</p> : null}
+    {state.loading ? <p role="status" className="my-3 text-sm">Consultando envíos…</p> : null}
     {state.error ? <p role="alert" className="my-3 text-sm text-red-300">No se pudo cargar el historial.</p> : null}
     {state.rows?.length ? <div className="mt-3 overflow-x-auto"><table className="min-w-full text-left text-xs">
-      <thead><tr>{["Fecha", "Landing", "Operaci?n", "Importe", "Tipo", "Evento", "Respuesta de Meta"].map(title =>
+      <thead><tr>{["Fecha", "Landing", "Operación", "Importe", "Tipo", "Evento", "Respuesta de Meta"].map(title =>
         <th key={title} scope="col" className="whitespace-nowrap p-2">{title}</th>)}</tr></thead>
       <tbody>{state.rows.map(row => <tr key={row.id} className="border-t border-zinc-500/20">
         <td className="whitespace-nowrap p-2">{date.format(new Date(row.created_at))}</td>
-        <td className="p-2">{row.landing_label || "?"}</td>
-        <td className="p-2">{row.operation_reference || "?"}</td>
-        <td className="whitespace-nowrap p-2">{row.amount ?? "?"} {row.currency}</td>
-        <td className="p-2">{row.purchase_type === "repeat" ? "Recompra" : row.purchase_type === "first" ? "Primera compra" : "?"}</td>
+        <td className="p-2">{row.landing_label || "—"}</td>
+        <td className="p-2">{row.operation_reference || "—"}</td>
+        <td className="whitespace-nowrap p-2">{row.amount ?? "—"} {row.currency}</td>
+        <td className="p-2">{row.purchase_type === "repeat" ? "Recompra" : row.purchase_type === "first" ? "Primera compra" : "—"}</td>
         <td className="break-all p-2 font-mono">{row.event_id}</td>
         <td className="p-2">{row.status === "sent" ? "Aceptado" : "Fallido"}
-          {row.meta_response.error_code ? " ? " + row.meta_response.error_code : ""}
+          {row.meta_response.error_code ? " · " + row.meta_response.error_code : ""}
           {row.meta_response.trace_id ? <small className="block">{row.meta_response.trace_id}</small> : null}</td>
       </tr>)}</tbody>
-    </table></div> : !state.loading && state.rows && !state.error ? <p className="my-3 text-sm">Todav?a no hay env?os registrados.</p> : null}
+    </table></div> : !state.loading && state.rows && !state.error ? <p className="my-3 text-sm">Todavía no hay envíos registrados.</p> : null}
   </details>;
 }
