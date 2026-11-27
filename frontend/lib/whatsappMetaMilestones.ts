@@ -6,7 +6,7 @@ export type AssignableWhatsappMetaEvent = typeof assignableWhatsappMetaEvents[nu
 export const whatsappMilestones = [
   { key: "first_message", label: "Primer mensaje de la conversación" },
   { key: "username_requested", label: "Solicitud de usuario" },
-  { key: "username_sent", label: "Entrega de cuenta nueva" },
+  { key: "username_sent", label: "Entrega de usuario" },
 ] as const;
 
 export type WhatsappMilestone = typeof whatsappMilestones[number]["key"];

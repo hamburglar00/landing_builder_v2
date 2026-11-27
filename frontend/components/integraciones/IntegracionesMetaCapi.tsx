@@ -2164,6 +2164,11 @@ export default function IntegracionesMetaCapi() {
                 </div>
                 <section aria-label="WhatsApp" className="pixel-settings-group mt-3">
                   <h5 className="mb-1 text-sm font-semibold text-zinc-100">WhatsApp</h5>
+                  {!draft.whatsapp_milestone_meta_events && !draft.whatsapp_event_assignments && (
+                    <p className="mb-2 text-xs leading-relaxed text-zinc-400">
+                      Hasta que guardes una asignación de hitos para WhatsApp, los switches Lead y CompleteRegistration de Atrio también rigen esos envíos en WhatsApp.
+                    </p>
+                  )}
                   <SettingsSwitch
                     checked={draft.send_whatsapp_view_content === true}
                     label="ViewContent"
@@ -2237,13 +2242,13 @@ export default function IntegracionesMetaCapi() {
                   <SettingsSwitch
                     checked={draft.send_lead_capi}
                     label="Lead"
-                    help="Envía por CAPI al completar el formulario si la landing tiene Lead como evento del botón. También controla el envío tradicional de Lead de WhatsApp cuando el píxel usa la configuración anterior."
+                    help="Envía por CAPI al completar el formulario si la landing tiene Lead como evento del botón."
                     onChange={() => setDraft((p) => (p ? { ...p, send_lead_capi: !p.send_lead_capi } : p))}
                   />
                   <SettingsSwitch
                     checked={draft.send_complete_registration_capi}
                     label="CompleteRegistration"
-                    help="Envía por CAPI al completar el formulario si la landing tiene CompleteRegistration como evento del botón. También controla el envío tradicional de CompleteRegistration de WhatsApp."
+                    help="Envía por CAPI al completar el formulario si la landing tiene CompleteRegistration como evento del botón."
                     onChange={() => setDraft((p) => (p ? { ...p, send_complete_registration_capi: !p.send_complete_registration_capi } : p))}
                   />
                   <SettingsSwitch

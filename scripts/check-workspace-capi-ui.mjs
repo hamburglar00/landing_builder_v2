@@ -99,6 +99,8 @@ for(const [engine,type]of[['Chromium',browsers.chromium],['WebKit',browsers.webk
   await edit.click();assert.equal(await tab('General').getAttribute('aria-selected'),'true');await tab('Purchase').click();assert.equal(await ms('First Purchase').getAttribute('aria-checked'),'false');
   await tab('Eventos').click();
   await milestone('Lead').getByText('Primer mensaje de la conversación',{exact:true}).waitFor();
+  const legacyNote=whatsapp.getByText('Hasta que guardes una asignación de hitos para WhatsApp',{exact:false});
+  await legacyNote.waitFor();
   assert.equal(await milestone('CompleteRegistration').count(),0);
   await whatsappSwitch('ViewContent').click();
   assert.equal(await atrioSwitch('ViewContent').getAttribute('aria-checked'),'false');
@@ -107,7 +109,7 @@ for(const [engine,type]of[['Chromium',browsers.chromium],['WebKit',browsers.webk
   await milestone('CompleteRegistration').click();
   const firstMessage=page.getByRole('option',{name:'Primer mensaje de la conversación',exact:true});
   assert.equal(await firstMessage.isDisabled(),true);
-  await page.getByRole('option',{name:'Entrega de cuenta nueva',exact:true}).click();
+  await page.getByRole('option',{name:'Entrega de usuario',exact:true}).click();
   await whatsappSwitch('Lead').click();
   assert.equal(await milestone('Lead').count(),0);
   assert.equal(await atrioSwitch('Lead').getAttribute('aria-checked'),'true');
@@ -124,6 +126,7 @@ for(const [engine,type]of[['Chromium',browsers.chromium],['WebKit',browsers.webk
   assert.equal(mapped.send_atrio_view_content,false);
   await edit.click();await tab('Eventos').click();
   assert.equal(await whatsappSwitch('Lead').getAttribute('aria-checked'),'false');
+  assert.equal(await legacyNote.count(),0);
   await milestone('InitiateCheckout').getByText('Primer mensaje de la conversación',{exact:true}).waitFor();
   await modal.getByRole('button',{name:'Cancelar',exact:true}).click();
   if(engine==='Chromium'&&viewport.width===1366)await page.screenshot({path:path.join(artifacts,'workspace-desktop.png')});
