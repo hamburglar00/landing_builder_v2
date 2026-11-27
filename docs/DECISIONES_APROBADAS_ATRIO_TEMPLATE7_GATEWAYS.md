@@ -1855,3 +1855,7 @@ API2 envía FIRST_CUSTOMER_MESSAGE, PLAYER_USERNAME y WHATSAPP_ACCOUNT_CREATED a
 ### Recordatorios de escritorio en Atrio y NexoBet (26/11/2026)
 
 La instalación del panel se ofrece automáticamente solo en dispositivos móviles. La activación de notificaciones y la conexión de Telegram conservan los controles de Configuración.
+
+## Guía para subir comprobantes · 27/11/2026
+
+El paso 2 indica que la captura de la galería debe mostrar el COELSA ID o número de operación. La guía desenfoca el chat y la página del gateway mientras está abierta. Su botón «Subir comprobante» tiene un pulso breve que respeta la preferencia de movimiento reducido. Fuente Atrio, con la misma presentación en NexoBet y los cuatro gateways. Se conserva el selector de archivos y el flujo de carga.

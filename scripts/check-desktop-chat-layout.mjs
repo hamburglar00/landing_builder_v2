@@ -14,10 +14,21 @@ const { chromium, webkit } = requireBuilder(path.join(process.env.APPDATA, "npm/
 const cssPath = path.join(atrio, "src/app/globals.css");
 const chatCss = (await requireAtrio("postcss")([requireAtrio("@tailwindcss/postcss")({ base: atrio })])
   .process(await readFile(cssPath, "utf8"), { from: cssPath })).css;
+const receiptCss = await readFile(path.join(atrio, "src/components/client-profile.css"), "utf8");
 const bundle = await build({ absWorkingDir: atrio, stdin: { resolveDir: atrio, loader: "tsx", contents: `
-  import React from 'react'; import {createRoot} from 'react-dom/client';
+  import React, {useState} from 'react'; import {createRoot} from 'react-dom/client';
   import {ChatTextMessageBubble} from './src/components/chat-text-message-bubble';
-  function App(){return <main>{Array.from({length:100},(_,i)=><div data-chat-message-row key={i} style={{display:'flex',margin:'6px 12px',justifyContent:i%2?'flex-end':'flex-start'}}><ChatTextMessageBubble text={i%3?'*Mensaje* de prueba '+i:'*Credenciales:*\\nUsuario: prueba'+i+'\\nClave: fixture'} meta={<small>17:30</small>} bubbleClassName="bg-white text-black max-w-[88%] px-4 py-2.5 rounded-[18px] text-[13.5px] leading-5"/></div>)}</main>};
+  import {ClientReceiptGuide} from './src/components/client-receipt-guide';
+  function syncGuide(open) { parent.postMessage({source:'atrio-widget',type:'atrio.widget.receipt-guide',open},'https://fixture.test'); }
+  function App(){
+    const [guideOpen, setGuideOpen] = useState(false);
+    const closeGuide = () => setGuideOpen(false);
+    return <main data-widget-template="whatsapp"><section>
+      <button onClick={() => setGuideOpen(true)}>Abrir guía</button>
+      {guideOpen && <ClientReceiptGuide onClose={closeGuide} onUpload={closeGuide} onVisibilityChange={syncGuide} />}
+      <div data-fixture-chat-history>{Array.from({length:100},(_,i)=><div data-chat-message-row key={i} style={{display:'flex',margin:'6px 12px',justifyContent:i%2?'flex-end':'flex-start'}}><ChatTextMessageBubble text={i%3?'*Mensaje* de prueba '+i:'*Credenciales:*\\nUsuario: prueba'+i+'\\nClave: fixture'} meta={<small>17:30</small>} bubbleClassName="bg-white text-black max-w-[88%] px-4 py-2.5 rounded-[18px] text-[13.5px] leading-5"/></div>)}</div>
+    </section></main>;
+  }
   createRoot(document.getElementById('root')).render(<App/>);
 ` }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' } });
 const results = [];
@@ -40,7 +51,7 @@ for (const [engine, browserType] of [["Chromium", chromium], ["WebKit", webkit]]
         });
         await page.route("https://chat.test/**", route => {
           frameNavigations++;
-          return route.fulfill({contentType:"text/html",body:`<!doctype html><html><head><style>${chatCss}</style></head><body style="margin:0;background:#efe7e1"><div id="root"></div><script>${bundle.outputFiles[0].text}</script><script>window.fixtureInstance=Math.random();window.sizeEvents=[];window.addEventListener('resize',()=>sizeEvents.push({width:innerWidth,height:innerHeight}));parent.postMessage({source:'atrio-widget',type:'atrio.widget.ready'},'https://fixture.test');</script></body></html>`});
+          return route.fulfill({contentType:"text/html",body:`<!doctype html><html><head><style>${chatCss}\n${receiptCss}</style></head><body style="margin:0;background:#efe7e1"><div id="root"></div><script>${bundle.outputFiles[0].text}</script><script>window.fixtureInstance=Math.random();window.sizeEvents=[];window.addEventListener('resize',()=>sizeEvents.push({width:innerWidth,height:innerHeight}));parent.postMessage({source:'atrio-widget',type:'atrio.widget.ready'},'https://fixture.test');</script></body></html>`});
         });
         await page.goto("https://fixture.test/");
         const shell = page.locator("#gateway-chat-shell");
@@ -49,6 +60,16 @@ for (const [engine, browserType] of [["Chromium", chromium], ["WebKit", webkit]]
         await page.waitForFunction(()=>document.querySelector("#gateway-chat-shell").dataset.motion==="open");
         const frame = page.frameLocator("#gateway-chat-shell iframe");
         await frame.locator("strong").first().waitFor();
+        const backdrop = page.locator("#gateway-chat-backdrop");
+        const baseFilter = await backdrop.evaluate(element => getComputedStyle(element).backdropFilter);
+        await frame.getByRole("button", {name:"Abrir guía"}).click();
+        const guide = frame.getByRole("dialog", {name:"Cómo enviar tu comprobante"});
+        await guide.waitFor();
+        assert.equal(await frame.locator("[data-fixture-chat-history]").evaluate(element => getComputedStyle(element).filter), "blur(6px)");
+        await page.waitForFunction(() => getComputedStyle(document.querySelector("#gateway-chat-backdrop")).backdropFilter === "blur(6px)");
+        await guide.getByRole("button", {name:"Cerrar guía de comprobante"}).click();
+        await guide.waitFor({state:"hidden"});
+        await page.waitForFunction(filter => getComputedStyle(document.querySelector("#gateway-chat-backdrop")).backdropFilter === filter, baseFilter);
         await page.waitForTimeout(100);
         const original = await frame.locator("body").evaluate(()=>({width:innerWidth,height:innerHeight,instance:window.fixtureInstance}));
         await frame.locator("body").evaluate(()=>{window.sizeEvents=[];});
@@ -57,8 +78,9 @@ for (const [engine, browserType] of [["Chromium", chromium], ["WebKit", webkit]]
           await page.waitForFunction(()=>document.querySelector("#gateway-chat-shell").dataset.motion==="closed");
           const closed=await shell.evaluate(element=>({width:element.offsetWidth,visibility:getComputedStyle(element).visibility,inert:element.inert,filter:getComputedStyle(document.querySelector("#gateway-chat-backdrop")).backdropFilter}));
           assert.equal(closed.visibility,"hidden"); assert.equal(closed.inert,true);
-          if (touch) { assert.equal(closed.width,0); assert.ok(closed.filter.includes("blur(4px)")); }
-          else { assert.ok(closed.width>0); assert.equal(closed.filter,"none"); }
+          assert.equal(closed.filter,"none");
+          if (touch) assert.equal(closed.width,0);
+          else assert.ok(closed.width>0);
           // Click the actual region occupied by the hidden desktop chat.
           const clicksBefore=await page.evaluate(()=>window.providerClicks||0);
           await page.mouse.click(touch?400:1800,touch?100:600);
@@ -72,7 +94,7 @@ for (const [engine, browserType] of [["Chromium", chromium], ["WebKit", webkit]]
           if (!touch) assert.deepEqual(current.resizes,[],"Desktop opening/closing must never resize all real Atrio bubbles");
         }
         assert.equal(frameNavigations,1); assert.deepEqual(errors,[]);
-        results.push({engine,repo,touch,messages:100,cycles:2,stableDesktopViewport:!touch,touchLayoutPreserved:touch,hiddenChatPassesClicks:true,iframeReused:true});
+        results.push({engine,repo,touch,messages:100,cycles:2,stableDesktopViewport:!touch,touchLayoutPreserved:touch,hiddenChatPassesClicks:true,iframeReused:true,receiptGuideBackdrop:true});
         await page.close();
       }
     }
