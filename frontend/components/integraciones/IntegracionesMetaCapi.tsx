@@ -43,7 +43,14 @@ import { canViewClientIntegration } from "@/lib/clientModules";
 import { IntegrationMenu } from "./IntegrationMenu";
 import { useCurrencyScope } from "@/components/currency/CurrencyScope";
 import { WorkspaceCapiControl } from "./WorkspaceCapiControl";
-import { validWhatsappMetaMapping, whatsappMetaEvents, whatsappMilestones, type WhatsappMetaEvent, type WhatsappMetaMapping } from "@/lib/whatsappMetaMilestones";
+import {
+  assignableWhatsappMetaEvents,
+  toWhatsappMetaAssignments,
+  toWhatsappMetaMapping,
+  whatsappMilestones,
+  type WhatsappMetaAssignments,
+  type WhatsappMetaMapping,
+} from "@/lib/whatsappMetaMilestones";
 
 const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "carga", label: "Carga" },
@@ -100,6 +107,7 @@ type PixelEditDraft = {
   send_whatsapp_view_content?: boolean;
   whatsapp_username_meta_event?: "off" | "CompleteRegistration" | "InitiateCheckout";
   whatsapp_milestone_meta_events?: WhatsappMetaMapping | null;
+  whatsapp_event_assignments?: WhatsappMetaAssignments;
   send_purchase_capi: boolean;
   include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
@@ -112,6 +120,14 @@ type PixelEditDraft = {
   geo_fill_only_when_missing: boolean;
   is_default: boolean;
 };
+
+function getWhatsappEventAssignments(draft: PixelEditDraft): WhatsappMetaAssignments {
+  return draft.whatsapp_event_assignments ?? toWhatsappMetaAssignments(draft.whatsapp_milestone_meta_events ?? {
+    first_message: draft.send_lead_capi ? "Lead" : "off",
+    username_requested: "off",
+    username_sent: draft.whatsapp_username_meta_event ?? "off",
+  });
+}
 
 type ActiveIntegration = "menu" | "meta" | "constructor" | "kommo" | "chatrace";
 
@@ -334,6 +350,8 @@ export default function IntegracionesMetaCapi() {
   const pixelSettingsId = useId();
   const editBodyRef = useRef<HTMLDivElement>(null);
   const purchaseSelectionInvalid = Boolean(draft?.send_purchase_capi && draft.include_purchase_type_capi && !draft.send_first_purchase_capi && !draft.send_repeat_purchase_capi);
+  const whatsappEventAssignments = draft ? getWhatsappEventAssignments(draft) : {};
+  const whatsappMappingInvalid = draft?.whatsapp_event_assignments !== undefined && toWhatsappMetaMapping(whatsappEventAssignments) === null;
 
   function selectEditTab(tab: PixelSettingsTab) {
     setEditTab(tab);
@@ -819,11 +837,11 @@ export default function IntegracionesMetaCapi() {
       send_lead_capi: px.send_lead_capi !== false,
       send_complete_registration_capi: px.send_complete_registration_capi === true,
       meta_ads_only_capi: px.meta_ads_only_capi === true,
-        send_atrio_view_content: px.send_atrio_view_content === true,
-        send_atrio_initiate_checkout: px.send_atrio_initiate_checkout === true,
-        send_whatsapp_view_content: px.send_whatsapp_view_content === true,
-        whatsapp_username_meta_event: px.whatsapp_username_meta_event ?? "off",
-        whatsapp_milestone_meta_events: px.whatsapp_milestone_meta_events ?? null,
+      send_atrio_view_content: px.send_atrio_view_content === true,
+      send_atrio_initiate_checkout: px.send_atrio_initiate_checkout === true,
+      send_whatsapp_view_content: px.send_whatsapp_view_content === true,
+      whatsapp_username_meta_event: px.whatsapp_username_meta_event ?? "off",
+      whatsapp_milestone_meta_events: px.whatsapp_milestone_meta_events ?? null,
       send_purchase_capi: px.send_purchase_capi !== false,
       include_purchase_type_capi: px.include_purchase_type_capi !== false,
       send_first_purchase_capi: px.send_first_purchase_capi !== false,
@@ -846,8 +864,10 @@ export default function IntegracionesMetaCapi() {
     const pixel = draft.pixel_id.replace(/\D/g, "").trim();
     const token = draft.meta_access_token.trim();
     if (!pixel || !token) return setSaveMsg("Pixel y token son obligatorios.");
-    if (draft.whatsapp_milestone_meta_events && !validWhatsappMetaMapping(draft.whatsapp_milestone_meta_events)) {
-      return setSaveMsg("Asigná cada evento de Meta a un solo hito.");
+    const assignments = draft.whatsapp_event_assignments;
+    const whatsappMapping = assignments ? toWhatsappMetaMapping(assignments) : draft.whatsapp_milestone_meta_events;
+    if (assignments && whatsappMapping === null) {
+      return setSaveMsg("Elegí un hito distinto para cada evento de WhatsApp activo.");
     }
     if (
       draft.send_purchase_capi &&
@@ -884,7 +904,7 @@ export default function IntegracionesMetaCapi() {
         send_atrio_initiate_checkout: draft.send_atrio_initiate_checkout === true,
         send_whatsapp_view_content: draft.send_whatsapp_view_content === true,
         whatsapp_username_meta_event: draft.whatsapp_username_meta_event ?? "off",
-        whatsapp_milestone_meta_events: draft.whatsapp_milestone_meta_events,
+        whatsapp_milestone_meta_events: whatsappMapping,
         send_purchase_capi: !!draft.send_purchase_capi,
         include_purchase_type_capi: !!draft.include_purchase_type_capi,
         send_first_purchase_capi: !!draft.send_first_purchase_capi,
@@ -2127,7 +2147,7 @@ export default function IntegracionesMetaCapi() {
               {editTab === "events" ?
               <section className="py-4">
                 <h4 className="text-sm font-semibold text-zinc-100">Eventos enviados a Meta</h4>
-                <div className="pixel-settings-group mt-3">
+                <div className="mt-2 px-[calc(0.75rem+1px)]">
                   <SettingsSwitch
                     checked={draft.meta_ads_only_capi}
                     label="Solo eventos de Meta Ads"
@@ -2142,86 +2162,103 @@ export default function IntegracionesMetaCapi() {
                     )}
                   </div>
                 </div>
-                <div className="pixel-settings-group mt-3">
-                  <h5 className="mb-2 text-xs font-semibold text-zinc-300">Tipos de evento</h5>
-                  <p className="mb-3 text-xs text-zinc-400">Sólo se envían los tipos activados aquí. Cambiar el filtro de origen no activa Contact, Lead, CompleteRegistration ni Purchase.</p>
-                  <SettingsSwitch
-                    checked={draft.send_atrio_view_content === true}
-                    label="ViewContent ? Atrio"
-                    help="Env?a por Pixel y CAPI cuando la visita actual llega desde Meta Ads."
-                    onChange={() => setDraft(p => p && { ...p, send_atrio_view_content: !p.send_atrio_view_content })}
-                  />
-                  <SettingsSwitch
-                    checked={draft.send_atrio_initiate_checkout === true}
-                    label="InitiateCheckout ? Atrio"
-                    help="Env?a por CAPI cuando el casino confirma que cre? una cuenta."
-                    onChange={() => setDraft(p => p && { ...p, send_atrio_initiate_checkout: !p.send_atrio_initiate_checkout })}
-                  />
+                <section aria-label="WhatsApp" className="pixel-settings-group mt-3">
+                  <h5 className="mb-1 text-sm font-semibold text-zinc-100">WhatsApp</h5>
                   <SettingsSwitch
                     checked={draft.send_whatsapp_view_content === true}
-                    label="ViewContent · WhatsApp"
+                    label="ViewContent"
                     help="Envía por Pixel y CAPI cuando la visita actual llega desde Meta Ads."
-                    onChange={() => setDraft(p => p && { ...p, send_whatsapp_view_content: !p.send_whatsapp_view_content })}
+                    onChange={() => setDraft((p) => p && { ...p, send_whatsapp_view_content: !p.send_whatsapp_view_content })}
                   />
-                  <fieldset className="my-3 grid gap-3">
-                    <legend className="mb-2 text-xs font-semibold text-zinc-300">Hitos de WhatsApp</legend>
-                    <p className="text-xs text-zinc-400">Elegí qué envía cada hito por CAPI. Las estadísticas cuentan el recorrido interno.</p>
-                    {whatsappMilestones.map(({ key, label }) => {
-                      const mapping: WhatsappMetaMapping = draft.whatsapp_milestone_meta_events ?? {
-                        first_message: draft.send_lead_capi ? "Lead" : "off",
-                        username_requested: "off",
-                        username_sent: draft.whatsapp_username_meta_event ?? "off",
-                      };
-                      const assigned = whatsappMilestones.filter((step) => step.key !== key).map((step) => mapping[step.key]);
-                      return (
-                        <label key={key} className="block text-xs text-zinc-300">
-                          {label}
-                          <select
-                            value={mapping[key]}
-                            onChange={(e) => {
-                              const event = e.target.value as WhatsappMetaEvent;
-                              const next = { ...mapping, [key]: event };
-                              if (validWhatsappMetaMapping(next)) {
-                                setDraft((p) => p && { ...p, whatsapp_milestone_meta_events: next });
-                              }
-                            }}
-                            className="mt-1 block rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-100"
-                          >
-                            {whatsappMetaEvents.map((event) => (
-                              <option key={event} value={event} disabled={event !== "off" && assigned.includes(event)}>
-                                {event === "off" ? "Desactivado" : event}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                      );
-                    })}
-                  </fieldset>
                   <SettingsSwitch
                     checked={draft.send_contact_capi}
                     label="Contact"
                     help="Envía el evento Contact mediante Meta CAPI."
                     onChange={() => setDraft((p) => (p ? { ...p, send_contact_capi: !p.send_contact_capi } : p))}
                   />
+                  {assignableWhatsappMetaEvents.map((event) => {
+                    const selected = whatsappEventAssignments[event];
+                    const options = whatsappMilestones.map(({ key, label }) => ({
+                      value: key,
+                      label,
+                      disabled: assignableWhatsappMetaEvents.some((other) => other !== event && whatsappEventAssignments[other] === key),
+                    }));
+                    return (
+                      <div key={event} className="border-b border-zinc-800/60 [&>div:first-child]:border-b-0">
+                        <SettingsSwitch
+                          checked={selected !== undefined}
+                          label={event}
+                          help="Envía por CAPI en el hito elegido. Las estadísticas se calculan con los hitos internos."
+                          onChange={() => setDraft((p) => {
+                            if (!p) return p;
+                            const assignments = { ...getWhatsappEventAssignments(p) };
+                            if (assignments[event] === undefined) assignments[event] = null;
+                            else delete assignments[event];
+                            return { ...p, whatsapp_event_assignments: assignments };
+                          })}
+                        />
+                        {selected !== undefined && (
+                          <CustomSelect
+                            ariaLabel={`Hito para ${event}`}
+                            value={selected ?? ""}
+                            options={options}
+                            onChange={(value) => {
+                              const milestone = whatsappMilestones.find(({ key }) => key === value);
+                              if (milestone) {
+                                setDraft((p) => p && {
+                                  ...p,
+                                  whatsapp_event_assignments: { ...getWhatsappEventAssignments(p), [event]: milestone.key },
+                                });
+                              }
+                            }}
+                            placeholder="Elegí un hito"
+                            className="pb-2"
+                            portal
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                  <SettingsSwitch
+                    checked={draft.send_purchase_capi}
+                    label="Purchase"
+                    help="Control de envíos por CAPI compartido por WhatsApp y Atrio. Las conversiones internas se siguen registrando."
+                    onChange={() => setDraft((p) => (p ? { ...p, send_purchase_capi: !p.send_purchase_capi } : p))}
+                  />
+                </section>
+                <section aria-label="Atrio" className="pixel-settings-group mt-3">
+                  <h5 className="mb-1 text-sm font-semibold text-zinc-100">Atrio</h5>
+                  <SettingsSwitch
+                    checked={draft.send_atrio_view_content === true}
+                    label="ViewContent"
+                    help="Envía por Pixel y CAPI cuando la visita actual llega desde Meta Ads."
+                    onChange={() => setDraft((p) => p && { ...p, send_atrio_view_content: !p.send_atrio_view_content })}
+                  />
                   <SettingsSwitch
                     checked={draft.send_lead_capi}
                     label="Lead"
-                    help="Controla el envío tradicional de Lead. Los hitos asignados arriba usan su propia configuración."
+                    help="Envía por CAPI al completar el formulario si la landing tiene Lead como evento del botón. También controla el envío tradicional de Lead de WhatsApp cuando el píxel usa la configuración anterior."
                     onChange={() => setDraft((p) => (p ? { ...p, send_lead_capi: !p.send_lead_capi } : p))}
                   />
                   <SettingsSwitch
                     checked={draft.send_complete_registration_capi}
                     label="CompleteRegistration"
-                    help="Controla el envío tradicional de CompleteRegistration. Los hitos asignados arriba usan su propia configuración."
+                    help="Envía por CAPI al completar el formulario si la landing tiene CompleteRegistration como evento del botón. También controla el envío tradicional de CompleteRegistration de WhatsApp."
                     onChange={() => setDraft((p) => (p ? { ...p, send_complete_registration_capi: !p.send_complete_registration_capi } : p))}
+                  />
+                  <SettingsSwitch
+                    checked={draft.send_atrio_initiate_checkout === true}
+                    label="InitiateCheckout"
+                    help="Envía por CAPI cuando el casino confirma la creación de la cuenta."
+                    onChange={() => setDraft((p) => p && { ...p, send_atrio_initiate_checkout: !p.send_atrio_initiate_checkout })}
                   />
                   <SettingsSwitch
                     checked={draft.send_purchase_capi}
                     label="Purchase"
-                    help="Control general del envío de compras a Meta CAPI. Las conversiones internas se siguen registrando."
+                    help="Control de envíos por CAPI compartido por WhatsApp y Atrio. Las conversiones internas se siguen registrando."
                     onChange={() => setDraft((p) => (p ? { ...p, send_purchase_capi: !p.send_purchase_capi } : p))}
                   />
-                </div>
+                </section>
               </section> : null}
 
               {editTab === "purchase" ?
@@ -2349,10 +2386,11 @@ export default function IntegracionesMetaCapi() {
             </div>
             <div className="shrink-0 border-t border-[var(--color-border-subtle)] bg-[rgba(11,15,21,0.96)] px-3 py-3 sm:px-4">
               {purchaseSelectionInvalid ? <p role="status" className="mb-2 text-xs leading-5 text-amber-300">Elegí First Purchase, Repeat Purchase o ambas en la pestaña Purchase para poder guardar.</p> : null}
+              {whatsappMappingInvalid ? <p role="status" className="mb-2 text-xs leading-5 text-amber-300">Elegí un hito distinto para cada evento de WhatsApp activo.</p> : null}
               <div className="flex justify-end gap-2">
               <button type="button" onClick={() => { setEditOpen(false); setDraft(null); setEditSensitiveFields(false); }} className="ui-button ui-button-secondary">Cancelar</button>
               <button
-                disabled={saving || purchaseSelectionInvalid}
+                disabled={saving || purchaseSelectionInvalid || whatsappMappingInvalid}
                 type="button"
                 onClick={() => void handleEditSave()}
                 className="ui-button ui-button-primary"

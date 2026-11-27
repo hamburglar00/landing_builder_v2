@@ -22,18 +22,28 @@ const ui=await build({absWorkingDir:frontend,stdin:{contents:`import React,{useS
  b.onResolve({filter:/^@\/lib\/supabaseClient$/},()=>({path:'db',namespace:'fixture'}));
  b.onResolve({filter:/^@\/components\/currency\/CurrencyScope$/},()=>({path:'scope',namespace:'fixture'}));
  b.onLoad({filter:/.*/,namespace:'fixture'},({path:p})=>({contents:p==='db'?fixture:`import React,{useContext,useState,createContext}from'react';const C=createContext(null);export const useCurrencyScope=()=>useContext(C);export function CurrencyFixture({children}){const[currencyScope,setCurrencyScope]=useState('ARS');return <C.Provider value={{currencyScope,setCurrencyScope}}><select aria-label="Workspace" value={currencyScope} onChange={e=>setCurrencyScope(e.target.value)}><option>ARS</option><option>PYG</option></select>{children}</C.Provider>}`,loader:p==='db'?'js':'tsx',resolveDir:frontend}));
-}}]});
+}}],outfile:path.join(artifacts,'fixture.js'),banner:{js:'globalThis.process = { env: {} };'}});
 const source=await readFile(path.join(frontend,'app/globals.css'),'utf8');
-const css=(await postcss([tailwind({base:frontend})]).process(source,{from:path.join(frontend,'app/globals.css')})).css;
+const js=ui.outputFiles.find(file=>file.path.endsWith('.js')).text;
+const moduleCss=ui.outputFiles.find(file=>file.path.endsWith('.css'))?.text??'';
+const css=(await postcss([tailwind({base:frontend})]).process(source,{from:path.join(frontend,'app/globals.css')})).css+moduleCss;
 const checks=[];
 for(const [engine,type]of[['Chromium',browsers.chromium],['WebKit',browsers.webkit]]){
  const browser=await type.launch({headless:true});
  try{for(const viewport of[{width:320,height:568},{width:390,height:844},{width:844,height:390},{width:1366,height:768}]){
   const page=await browser.newPage({viewport});const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.route('**/*',r=>new URL(r.request().url()).hostname==='fixture.test'?r.fulfill({contentType:'text/html',body:`<html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style></head><body><main class="mx-auto max-w-6xl space-y-4 p-4"><div id="root"></div></main><script>${ui.outputFiles[0].text}</script></body></html>`}):r.abort());
+  await page.route('**/*',r=>{
+   const url=new URL(r.request().url());
+   if(url.hostname!=='fixture.test')return r.abort();
+   if(url.pathname==='/fixture.js')return r.fulfill({contentType:'text/javascript',body:js});
+   return r.fulfill({contentType:'text/html',body:`<html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style></head><body><main class="mx-auto max-w-6xl space-y-4 p-4"><div id="root"></div></main><script src="/fixture.js"></script></body></html>`});
+  });
   await page.goto('https://fixture.test/settings?section=meta');
   const sw=page.getByRole('switch',{name:'Enviar eventos por CAPI',exact:true}),scope=page.getByRole('combobox',{name:'Workspace'});
-  await sw.waitFor();assert.equal(await sw.getAttribute('aria-checked'),'true');
+  await sw.waitFor({timeout:5000}).catch(async error=>{
+   throw new Error(`No se cargó la pantalla de Meta CAPI. ${errors.join(' ')} ${(await page.locator('body').innerText()).slice(0,500)}`,{cause:error});
+  });
+  assert.equal(await sw.getAttribute('aria-checked'),'true');
   await scope.selectOption('PYG');await sw.click();await page.getByRole('status').filter({hasText:'CAPI desactivado en PYG'}).waitFor();
   await scope.selectOption('ARS');assert.equal(await sw.getAttribute('aria-checked'),'true');
   await scope.selectOption('PYG');assert.equal(await sw.getAttribute('aria-checked'),'false');
@@ -47,6 +57,12 @@ for(const [engine,type]of[['Chromium',browsers.chromium],['WebKit',browsers.webk
   const edit=page.getByRole('button',{name:'Editar píxel 19000001'});await edit.click();const modal=page.locator('.integration-edit-modal');await modal.waitFor();
   const ms=name=>modal.getByRole('switch',{name,exact:true});
   const tab=name=>modal.getByRole('tab',{name,exact:true});
+  const whatsapp=modal.getByRole('region',{name:'WhatsApp',exact:true});
+  const atrio=modal.getByRole('region',{name:'Atrio',exact:true});
+  const whatsappSwitch=name=>whatsapp.getByRole('switch',{name,exact:true});
+  const atrioSwitch=name=>atrio.getByRole('switch',{name,exact:true});
+  const milestone=name=>whatsapp.getByRole('button',{name:`Hito para ${name}`,exact:true});
+  const savePixel=modal.getByRole('button',{name:'Guardar',exact:true});
   assert.equal(await modal.getByRole('tab').count(),4);assert.equal(await tab('General').getAttribute('aria-selected'),'true');
   await tab('General').focus();await page.keyboard.press('End');assert.equal(await tab('Ubicación').getAttribute('aria-selected'),'true');
   await page.keyboard.press('ArrowRight');assert.equal(await tab('General').getAttribute('aria-selected'),'true');
@@ -56,8 +72,9 @@ for(const [engine,type]of[['Chromium',browsers.chromium],['WebKit',browsers.webk
   // Cancelling must not persist either pixel fields or workspace settings.
   await ms('Contact').click();await modal.getByRole('button',{name:'Cancelar',exact:true}).click();await edit.click();assert.equal(await tab('General').getAttribute('aria-selected'),'true');assert.equal(await modal.getByLabel('Nombre para reconocerlo').inputValue(),'Campaña de prueba');
   await modal.getByLabel('Nombre para reconocerlo').fill('Campaña editada');await tab('Eventos').click();assert.equal(await ms('Contact').getAttribute('aria-checked'),'true');
-  await ms('Purchase').click();await tab('Purchase').click();await modal.getByText('Activá Purchase en Eventos para configurar el envío de compras.').waitFor();assert.equal(await ms('Clasificar Purchase (first/repeat)').count(),0);
-  await modal.getByRole('button',{name:'Ir a Eventos'}).click();await ms('Purchase').click();await tab('Purchase').click();
+  await whatsappSwitch('Purchase').click();assert.equal(await atrioSwitch('Purchase').getAttribute('aria-checked'),'false');
+  await tab('Purchase').click();await modal.getByText('Activá Purchase en Eventos para configurar el envío de compras.').waitFor();assert.equal(await ms('Clasificar Purchase (first/repeat)').count(),0);
+  await modal.getByRole('button',{name:'Ir a Eventos'}).click();await atrioSwitch('Purchase').click();assert.equal(await whatsappSwitch('Purchase').getAttribute('aria-checked'),'true');await tab('Purchase').click();
   await ms('Clasificar Purchase (first/repeat)').click();assert.equal(await ms('First Purchase').count(),0);await ms('Clasificar Purchase (first/repeat)').click();
   await ms('First Purchase').click();await ms('Repeat Purchase').click();await tab('General').click();assert.equal(await modal.getByRole('button',{name:'Guardar',exact:true}).isDisabled(),true);await modal.getByRole('status').filter({hasText:'para poder guardar'}).waitFor();await tab('Purchase').click();await ms('Repeat Purchase').click();
   await ms('Limitar envío de Repeat Purchase').click();await modal.locator('button[aria-haspopup="listbox"]:enabled').click();await modal.getByRole('option',{name:'14 días',exact:true}).click();
@@ -76,9 +93,39 @@ for(const [engine,type]of[['Chromium',browsers.chromium],['WebKit',browsers.webk
   }
   await modal.getByRole('button',{name:'Guardar',exact:true}).click();await modal.waitFor({state:'hidden'});
   const saved=await page.evaluate(()=>window.fixture);assert.equal(saved.pixel.comment,'Campaña editada');assert.equal(saved.pixel.send_first_purchase_capi,false);assert.equal(saved.pixel.repeat_purchase_capi_window_days,14);assert.equal(saved.pixel.purchase_capi_min_amount,1500);assert.deepEqual(saved.config.capi_workspace_settings,{PYG:false});
+  assert.equal(saved.pixel.whatsapp_milestone_meta_events,null);
   assert.ok(saved.writes.filter(w=>w.table==='conversions_config').every(w=>!Object.hasOwn(w.body,'capi_workspace_settings')));
   assert.ok(saved.writes.filter(w=>w.rpc).every(w=>w.args.p_user_id===uid&&w.args.p_currency==='PYG'));
-  await edit.click();assert.equal(await tab('General').getAttribute('aria-selected'),'true');await tab('Purchase').click();assert.equal(await ms('First Purchase').getAttribute('aria-checked'),'false');await modal.getByRole('button',{name:'Cancelar',exact:true}).click();
+  await edit.click();assert.equal(await tab('General').getAttribute('aria-selected'),'true');await tab('Purchase').click();assert.equal(await ms('First Purchase').getAttribute('aria-checked'),'false');
+  await tab('Eventos').click();
+  await milestone('Lead').getByText('Primer mensaje de la conversación',{exact:true}).waitFor();
+  assert.equal(await milestone('CompleteRegistration').count(),0);
+  await whatsappSwitch('ViewContent').click();
+  assert.equal(await atrioSwitch('ViewContent').getAttribute('aria-checked'),'false');
+  await whatsappSwitch('CompleteRegistration').click();
+  assert.equal(await savePixel.isDisabled(),true);
+  await milestone('CompleteRegistration').click();
+  const firstMessage=page.getByRole('option',{name:'Primer mensaje de la conversación',exact:true});
+  assert.equal(await firstMessage.isDisabled(),true);
+  await page.getByRole('option',{name:'Entrega de cuenta nueva',exact:true}).click();
+  await whatsappSwitch('Lead').click();
+  assert.equal(await milestone('Lead').count(),0);
+  assert.equal(await atrioSwitch('Lead').getAttribute('aria-checked'),'true');
+  await whatsappSwitch('InitiateCheckout').click();
+  await milestone('InitiateCheckout').click();
+  assert.equal(await firstMessage.isEnabled(),true);
+  await firstMessage.click();
+  assert.equal(await savePixel.isEnabled(),true);
+  await savePixel.click();await modal.waitFor({state:'hidden'});
+  const mapped=await page.evaluate(()=>window.fixture.pixel);
+  assert.deepEqual(mapped.whatsapp_milestone_meta_events,{first_message:'InitiateCheckout',username_requested:'off',username_sent:'CompleteRegistration'});
+  assert.equal(mapped.send_complete_registration_capi,false);
+  assert.equal(mapped.send_whatsapp_view_content,true);
+  assert.equal(mapped.send_atrio_view_content,false);
+  await edit.click();await tab('Eventos').click();
+  assert.equal(await whatsappSwitch('Lead').getAttribute('aria-checked'),'false');
+  await milestone('InitiateCheckout').getByText('Primer mensaje de la conversación',{exact:true}).waitFor();
+  await modal.getByRole('button',{name:'Cancelar',exact:true}).click();
   if(engine==='Chromium'&&viewport.width===1366)await page.screenshot({path:path.join(artifacts,'workspace-desktop.png')});
   assert.deepEqual(errors,[]);checks.push({engine,viewport,workspaceIsolation:true,persistAndFailure:true,pixelSave:true,responsive:true});await page.close();
  }}finally{await browser.close();}
