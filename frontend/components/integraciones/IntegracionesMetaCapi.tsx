@@ -1074,8 +1074,6 @@ export default function IntegracionesMetaCapi() {
         <ActionNotice message={saveMsg} tone={saveMsgTone} noticeKey={saveMsgNoticeKey} />
       )}
 
-      {activeIntegration === "meta" && userId ? <MetaPurchaseDeliveryHistory userId={userId} /> : null}
-
       {activeIntegration === "menu" ? (
         <IntegrationMenu
           permissions={modulePermissions}
@@ -1988,6 +1986,8 @@ export default function IntegracionesMetaCapi() {
             </div>
           )}
         </div>
+
+        {userId ? <MetaPurchaseDeliveryHistory userId={userId} /> : null}
 
         <div className="mt-3 rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-[11px] text-amber-200">
           <p className="font-semibold">Confirma que tus eventos estan llegando a Meta!</p>

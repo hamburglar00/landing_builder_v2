@@ -62,6 +62,8 @@ for(const [engine,type]of[['Chromium',browsers.chromium],['WebKit',browsers.webk
   await page.getByRole('button',{name:'Montar pantalla'}).click();await page.getByRole('button',{name:'Montar pantalla'}).click();await sw.waitFor();assert.equal(await sw.getAttribute('aria-checked'),'false');
   const historyTitle=page.getByText('Historial de envíos de compras',{exact:true});
   const history=page.locator('details').filter({has:historyTitle});
+  const lastPixel=page.getByRole('button',{name:'Editar píxel 19000001'});
+  assert.ok((await history.boundingBox()).y>(await lastPixel.boundingBox()).y);
   await historyTitle.click();
   await history.getByText('Todavía no hay envíos registrados.',{exact:true}).waitFor();
   await page.evaluate(()=>window.fixture.purchaseHistory.push({
