@@ -1859,3 +1859,18 @@ La instalación del panel se ofrece automáticamente solo en dispositivos móvil
 ## Guía para subir comprobantes · 27/11/2026
 
 El paso 2 indica que la captura de la galería debe mostrar el COELSA ID o número de operación. La guía desenfoca el chat y la página del gateway mientras está abierta. Su botón «Subir comprobante» tiene un pulso breve que respeta la preferencia de movimiento reducido. Fuente Atrio, con la misma presentación en NexoBet y los cuatro gateways. Se conserva el selector de archivos y el flujo de carga.
+
+
+### Publicación del 27/11/2026
+
+| Servicio | Dominio comprobado | Commit | Despliegue activo |
+| --- | --- | --- | --- |
+| Atrio | www.atrio.website | `a554090` | `dpl_Ao5D1XJHkQ4cY6hqqP6QnbsK7ctB` |
+| NexoBet | www.nexobet.fun | `998d5a3` | `dpl_Ckt5xDatevDwnk4sP4V71qREqBaB` |
+| Rey de Ases | www.reydeases.fun | `4a9b573` | `dpl_Fz111uQjAjVjPdZ5eBfeQEU3j5ud` |
+| Ases del Norte | www.asesdelnorte.online | `22d9f1e` | `dpl_uTi7eRyqVJXcuYEN37QzcEYX1TJG` |
+| Ganamos NET | www.ganamosnet.icu | `b08f493` | `dpl_HQURkWEsftYmVSy9nESfFPXo7Mfn` |
+| Ganamos+ en Vercel | multi-skin-gateway.vercel.app | `d09f189` | `dpl_3VpsEN8nJBHUmzodT3t3pDsSBSWy` |
+| Ganamos+ en Cloudflare | ganamosnet.global | `c93f038` | `0e108ad6-926d-4f41-95b4-d37345892d91` |
+
+Los despliegues parten de la revisión activa de cada servicio. Se verificó en los dominios públicos que Atrio y NexoBet cargan la guía nueva y que los cuatro gateways sirven los archivos del lote. Las pruebas locales cubrieron el cierre, el movimiento reducido, el selector de archivos y el desenfoque en Chromium y WebKit. El lote es de interfaz y se publicó sin migraciones.
